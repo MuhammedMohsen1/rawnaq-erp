@@ -1,4 +1,3 @@
-import 'package:flutter/material.dart';
 import '../../domain/entities/task_entity.dart';
 import '../../domain/enums/task_status.dart';
 import '../../domain/enums/task_type.dart';
@@ -73,10 +72,9 @@ class MockTasksDataSource {
         projectName: 'فيلا العبدالله',
         assigneeId: 'tm-1',
         assignee: _teamMembers[0],
-        startDate: saturday,
-        endDate: saturday.add(const Duration(days: 1)),
+        startDate: DateTime(saturday.year, saturday.month, saturday.day, 9, 0),
+        endDate: DateTime(saturday.year, saturday.month, saturday.day + 1, 17, 0),
         status: TaskStatus.inProgress,
-        taskTime: const TimeOfDay(hour: 9, minute: 0),
         notes: 'تصميم الواجهات الرئيسية للموقع',
       ),
       // Appointment
@@ -86,13 +84,12 @@ class MockTasksDataSource {
         taskType: TaskType.appointment,
         assigneeId: 'tm-1',
         assignee: _teamMembers[0],
-        startDate: saturday.add(const Duration(days: 2)),
-        endDate: saturday.add(const Duration(days: 2)),
+        startDate: DateTime(saturday.year, saturday.month, saturday.day + 2, 10, 30),
+        endDate: DateTime(saturday.year, saturday.month, saturday.day + 2, 10, 30),
         status: TaskStatus.waiting,
         customerName: 'محمد العبدالله',
         customerPhone: '+966501234567',
         locationLink: 'https://maps.google.com/?q=24.7136,46.6753',
-        taskTime: const TimeOfDay(hour: 10, minute: 30),
       ),
       // Work Task
       TaskEntity(
@@ -103,10 +100,9 @@ class MockTasksDataSource {
         projectName: 'برج التجارة',
         assigneeId: 'tm-1',
         assignee: _teamMembers[0],
-        startDate: saturday.add(const Duration(days: 4)),
-        endDate: saturday.add(const Duration(days: 6)),
+        startDate: DateTime(saturday.year, saturday.month, saturday.day + 4, 10, 0),
+        endDate: DateTime(saturday.year, saturday.month, saturday.day + 6, 16, 0),
         status: TaskStatus.delayed,
-        taskTime: const TimeOfDay(hour: 10, minute: 0),
         notes: 'إعداد الرسومات التنفيذية للمطبخ',
       ),
 
@@ -120,8 +116,8 @@ class MockTasksDataSource {
         projectName: 'فيلا العبدالله',
         assigneeId: 'tm-2',
         assignee: _teamMembers[1],
-        startDate: saturday.add(const Duration(days: 1)),
-        endDate: saturday.add(const Duration(days: 3)),
+        startDate: DateTime(saturday.year, saturday.month, saturday.day + 1, 9, 0),
+        endDate: DateTime(saturday.year, saturday.month, saturday.day + 3, 17, 0),
         status: TaskStatus.inProgress,
         notes: 'تعديلات العميل على التصميم',
       ),
@@ -132,13 +128,12 @@ class MockTasksDataSource {
         taskType: TaskType.appointment,
         assigneeId: 'tm-2',
         assignee: _teamMembers[1],
-        startDate: saturday.add(const Duration(days: 4)),
-        endDate: saturday.add(const Duration(days: 4)),
+        startDate: DateTime(saturday.year, saturday.month, saturday.day + 4, 14, 0),
+        endDate: DateTime(saturday.year, saturday.month, saturday.day + 4, 14, 0),
         status: TaskStatus.waiting,
         customerName: 'فاطمة السعيد',
         customerPhone: '+966507654321',
         locationLink: 'شارع الملك فهد، جدة',
-        taskTime: const TimeOfDay(hour: 14, minute: 0),
       ),
       // General Task
       TaskEntity(
@@ -147,8 +142,8 @@ class MockTasksDataSource {
         taskType: TaskType.generalTask,
         assigneeId: 'tm-2',
         assignee: _teamMembers[1],
-        startDate: saturday.add(const Duration(days: 5)),
-        endDate: saturday.add(const Duration(days: 5)),
+        startDate: DateTime(saturday.year, saturday.month, saturday.day + 5, 10, 0),
+        endDate: DateTime(saturday.year, saturday.month, saturday.day + 5, 14, 0),
         status: TaskStatus.waiting,
         notes: 'تحديث ملف عروض الأسعار للعملاء الجدد',
       ),
@@ -163,8 +158,8 @@ class MockTasksDataSource {
         projectName: 'برج التجارة',
         assigneeId: 'tm-3',
         assignee: _teamMembers[2],
-        startDate: saturday,
-        endDate: saturday,
+        startDate: DateTime(saturday.year, saturday.month, saturday.day, 8, 0),
+        endDate: DateTime(saturday.year, saturday.month, saturday.day, 12, 0),
         status: TaskStatus.completed,
         notes: 'اجتماع انطلاق المشروع',
       ),
@@ -177,8 +172,8 @@ class MockTasksDataSource {
         projectName: 'شقة جدة',
         assigneeId: 'tm-3',
         assignee: _teamMembers[2],
-        startDate: saturday.add(const Duration(days: 1)),
-        endDate: saturday.add(const Duration(days: 2)),
+        startDate: DateTime(saturday.year, saturday.month, saturday.day + 1, 9, 0),
+        endDate: DateTime(saturday.year, saturday.month, saturday.day + 2, 15, 0),
         status: TaskStatus.inProgress,
       ),
       // Appointment
@@ -188,13 +183,12 @@ class MockTasksDataSource {
         taskType: TaskType.appointment,
         assigneeId: 'tm-3',
         assignee: _teamMembers[2],
-        startDate: saturday.add(const Duration(days: 3)),
-        endDate: saturday.add(const Duration(days: 3)),
+        startDate: DateTime(saturday.year, saturday.month, saturday.day + 3, 11, 0),
+        endDate: DateTime(saturday.year, saturday.month, saturday.day + 3, 11, 0),
         status: TaskStatus.waiting,
         customerName: 'معرض الديكور الحديث',
         customerPhone: '+966512345678',
         locationLink: 'https://maps.google.com/?q=21.5433,39.1728',
-        taskTime: const TimeOfDay(hour: 11, minute: 0),
       ),
       // General Task
       TaskEntity(
@@ -203,8 +197,8 @@ class MockTasksDataSource {
         taskType: TaskType.generalTask,
         assigneeId: 'tm-3',
         assignee: _teamMembers[2],
-        startDate: saturday.add(const Duration(days: 6)),
-        endDate: saturday.add(const Duration(days: 6)),
+        startDate: DateTime(saturday.year, saturday.month, saturday.day + 6, 14, 0),
+        endDate: DateTime(saturday.year, saturday.month, saturday.day + 6, 17, 0),
         status: TaskStatus.waiting,
         notes: 'إعداد التقرير الأسبوعي للإدارة',
       ),
@@ -219,8 +213,8 @@ class MockTasksDataSource {
         projectName: 'مكتب شركة التقنية',
         assigneeId: 'tm-4',
         assignee: _teamMembers[3],
-        startDate: saturday,
-        endDate: saturday.add(const Duration(days: 2)),
+        startDate: DateTime(saturday.year, saturday.month, saturday.day, 9, 0),
+        endDate: DateTime(saturday.year, saturday.month, saturday.day + 2, 17, 0),
         status: TaskStatus.completed,
       ),
       // Work Task
@@ -232,8 +226,8 @@ class MockTasksDataSource {
         projectName: 'مكتب شركة التقنية',
         assigneeId: 'tm-4',
         assignee: _teamMembers[3],
-        startDate: saturday.add(const Duration(days: 3)),
-        endDate: saturday.add(const Duration(days: 4)),
+        startDate: DateTime(saturday.year, saturday.month, saturday.day + 3, 9, 0),
+        endDate: DateTime(saturday.year, saturday.month, saturday.day + 4, 17, 0),
         status: TaskStatus.inProgress,
       ),
       // Appointment
@@ -243,13 +237,12 @@ class MockTasksDataSource {
         taskType: TaskType.appointment,
         assigneeId: 'tm-4',
         assignee: _teamMembers[3],
-        startDate: saturday.add(const Duration(days: 5)),
-        endDate: saturday.add(const Duration(days: 5)),
+        startDate: DateTime(saturday.year, saturday.month, saturday.day + 5, 16, 0),
+        endDate: DateTime(saturday.year, saturday.month, saturday.day + 5, 16, 0),
         status: TaskStatus.waiting,
         customerName: 'خالد التميمي',
         customerPhone: '+966509876543',
         locationLink: 'مقر شركة التقنية، الرياض',
-        taskTime: const TimeOfDay(hour: 16, minute: 0),
         notes: 'عرض تصميم المكتب على المدير التنفيذي',
       ),
 
@@ -263,8 +256,8 @@ class MockTasksDataSource {
         projectName: 'مكتب شركة التقنية',
         assigneeId: 'tm-5',
         assignee: _teamMembers[4],
-        startDate: saturday.add(const Duration(days: 1)),
-        endDate: saturday.add(const Duration(days: 2)),
+        startDate: DateTime(saturday.year, saturday.month, saturday.day + 1, 7, 0),
+        endDate: DateTime(saturday.year, saturday.month, saturday.day + 2, 16, 0),
         status: TaskStatus.completed,
       ),
       // Work Task
@@ -276,8 +269,8 @@ class MockTasksDataSource {
         projectName: 'فيلا العبدالله',
         assigneeId: 'tm-5',
         assignee: _teamMembers[4],
-        startDate: saturday.add(const Duration(days: 3)),
-        endDate: saturday.add(const Duration(days: 6)),
+        startDate: DateTime(saturday.year, saturday.month, saturday.day + 3, 7, 0),
+        endDate: DateTime(saturday.year, saturday.month, saturday.day + 6, 16, 0),
         status: TaskStatus.inProgress,
       ),
       // Appointment
@@ -287,13 +280,12 @@ class MockTasksDataSource {
         taskType: TaskType.appointment,
         assigneeId: 'tm-5',
         assignee: _teamMembers[4],
-        startDate: saturday.add(const Duration(days: 4)),
-        endDate: saturday.add(const Duration(days: 4)),
+        startDate: DateTime(saturday.year, saturday.month, saturday.day + 4, 9, 0),
+        endDate: DateTime(saturday.year, saturday.month, saturday.day + 4, 9, 0),
         status: TaskStatus.waiting,
         customerName: 'مؤسسة المواد الحديثة',
         customerPhone: '+966511112222',
         locationLink: 'مستودع المواد، المنطقة الصناعية',
-        taskTime: const TimeOfDay(hour: 9, minute: 0),
       ),
       // General Task
       TaskEntity(
@@ -302,8 +294,8 @@ class MockTasksDataSource {
         taskType: TaskType.generalTask,
         assigneeId: 'tm-5',
         assignee: _teamMembers[4],
-        startDate: saturday,
-        endDate: saturday,
+        startDate: DateTime(saturday.year, saturday.month, saturday.day, 13, 0),
+        endDate: DateTime(saturday.year, saturday.month, saturday.day, 16, 0),
         status: TaskStatus.completed,
         notes: 'جرد وتحديث قائمة أدوات الموقع',
       ),
@@ -313,6 +305,152 @@ class MockTasksDataSource {
   /// Add a new task
   void addTask(TaskEntity task) {
     _tasks.add(task);
+  }
+
+  /// Update an existing task
+  void updateTask(TaskEntity updatedTask) {
+    final index = _tasks.indexWhere((t) => t.id == updatedTask.id);
+    if (index != -1) {
+      _tasks[index] = updatedTask;
+    }
+  }
+
+  /// Delete a task
+  void deleteTask(String taskId) {
+    _tasks.removeWhere((t) => t.id == taskId);
+  }
+
+  /// Get draft tasks (no assignee)
+  List<TaskEntity> getDraftTasks() {
+    return _tasks.where((t) => t.isDraft || t.assigneeId == null).toList();
+  }
+
+  /// Assign a draft task to an employee
+  /// The task starts from [newStartDate] but preserves its original time
+  void assignTask(String taskId, String assigneeId, DateTime newStartDate) {
+    final index = _tasks.indexWhere((t) => t.id == taskId);
+    if (index != -1) {
+      final task = _tasks[index];
+      final assignee = _teamMembers.firstWhere(
+        (m) => m.id == assigneeId,
+        orElse: () => _teamMembers.first,
+      );
+      
+      // Calculate duration in days
+      final durationDays = task.endDateOnly.difference(task.startDateOnly).inDays;
+      
+      // Create new start date preserving original time
+      final newStart = DateTime(
+        newStartDate.year,
+        newStartDate.month,
+        newStartDate.day,
+        task.startDate.hour,
+        task.startDate.minute,
+      );
+      
+      // Create new end date preserving original time
+      final newEndDate = DateTime(
+        newStartDate.year,
+        newStartDate.month,
+        newStartDate.day + durationDays,
+        task.endDate.hour,
+        task.endDate.minute,
+      );
+      
+      _tasks[index] = task.copyWith(
+        assigneeId: assigneeId,
+        assignee: assignee,
+        startDate: newStart,
+        endDate: newEndDate,
+        isDraft: false,
+      );
+    }
+  }
+
+  /// Update task dates (for drag and drop)
+  /// The task moves to [newStartDate] but preserves:
+  /// - Original start/end times
+  /// - Original duration in days
+  /// Optionally changes assignee if [newAssigneeId] is provided
+  void updateTaskDates(String taskId, DateTime newStartDate, {String? newAssigneeId}) {
+    final index = _tasks.indexWhere((t) => t.id == taskId);
+    if (index != -1) {
+      final task = _tasks[index];
+      
+      // Calculate duration in days (date-only)
+      final durationDays = task.endDateOnly.difference(task.startDateOnly).inDays;
+      
+      // Create new start date preserving original time
+      final newStart = DateTime(
+        newStartDate.year,
+        newStartDate.month,
+        newStartDate.day,
+        task.startDate.hour,
+        task.startDate.minute,
+      );
+      
+      // Create new end date preserving original time and duration
+      final newEnd = DateTime(
+        newStartDate.year,
+        newStartDate.month,
+        newStartDate.day + durationDays,
+        task.endDate.hour,
+        task.endDate.minute,
+      );
+      
+      // Get new assignee if changing
+      TeamMemberEntity? newAssignee;
+      String? finalAssigneeId = task.assigneeId;
+      if (newAssigneeId != null && newAssigneeId != task.assigneeId) {
+        newAssignee = _teamMembers.firstWhere(
+          (m) => m.id == newAssigneeId,
+          orElse: () => _teamMembers.first,
+        );
+        finalAssigneeId = newAssigneeId;
+      }
+      
+      _tasks[index] = task.copyWith(
+        startDate: newStart,
+        endDate: newEnd,
+        assigneeId: finalAssigneeId,
+        assignee: newAssignee ?? task.assignee,
+      );
+    }
+  }
+
+  /// Update task with full details (for edit dialog)
+  void updateTaskFull(
+    String taskId, {
+    DateTime? startDate,
+    DateTime? endDate,
+    String? assigneeId,
+    TaskStatus? status,
+    String? name,
+    String? notes,
+  }) {
+    final index = _tasks.indexWhere((t) => t.id == taskId);
+    if (index != -1) {
+      final task = _tasks[index];
+      
+      TeamMemberEntity? newAssignee;
+      if (assigneeId != null && assigneeId != task.assigneeId) {
+        newAssignee = _teamMembers.firstWhere(
+          (m) => m.id == assigneeId,
+          orElse: () => _teamMembers.first,
+        );
+      }
+      
+      _tasks[index] = task.copyWith(
+        startDate: startDate ?? task.startDate,
+        endDate: endDate ?? task.endDate,
+        assigneeId: assigneeId ?? task.assigneeId,
+        assignee: newAssignee ?? task.assignee,
+        status: status ?? task.status,
+        name: name ?? task.name,
+        notes: notes ?? task.notes,
+        isDraft: false,
+      );
+    }
   }
 
   /// Get all tasks
@@ -391,9 +529,9 @@ class MockTasksDataSource {
   List<TeamMemberEntity> getMembersWithOverload() {
     final Map<String, int> taskCounts = {};
     for (final task in _tasks) {
-      if (task.status != TaskStatus.completed) {
-        taskCounts[task.assigneeId] =
-            (taskCounts[task.assigneeId] ?? 0) + 1;
+      if (task.status != TaskStatus.completed && task.assigneeId != null) {
+        taskCounts[task.assigneeId!] =
+            (taskCounts[task.assigneeId!] ?? 0) + 1;
       }
     }
 

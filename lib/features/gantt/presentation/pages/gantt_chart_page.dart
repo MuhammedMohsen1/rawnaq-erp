@@ -8,10 +8,9 @@ import '../../../tasks/domain/enums/task_type.dart';
 import '../../../tasks/data/datasources/mock_tasks_datasource.dart';
 import '../../../projects/domain/entities/team_member_entity.dart';
 import '../widgets/gantt_filters_widget.dart';
-import '../widgets/gantt_warnings_widget.dart';
-import '../widgets/status_legend_widget.dart';
-import '../widgets/add_task_dialog.dart';
+import '../widgets/add_task_dialog_simple.dart';
 import '../widgets/appointment_widgets.dart';
+import '../widgets/edit_task_dialog.dart';
 
 /// Gantt Chart page for task visualization
 class GanttChartPage extends StatefulWidget {
@@ -28,8 +27,10 @@ class _GanttChartPageState extends State<GanttChartPage> {
   bool _showTeamTasks = true;
   String? _selectedMemberId;
   bool _showWarnings = true;
+  bool _isDraftPanelExpanded = true;
 
   late List<TaskEntity> _tasks;
+  late List<TaskEntity> _draftTasks;
   late List<TeamMemberEntity> _teamMembers;
   late List<TeamMemberEntity> _overloadedMembers;
   late List<String> _delayedProjects;
@@ -44,17 +45,22 @@ class _GanttChartPageState extends State<GanttChartPage> {
     _teamMembers = _dataSource.getTeamMembers();
     _overloadedMembers = _dataSource.getMembersWithOverload();
     _delayedProjects = _dataSource.getDelayedProjects();
+    _draftTasks = _dataSource.getDraftTasks();
     _applyFilters();
   }
 
   void _applyFilters() {
     setState(() {
       if (_showTeamTasks) {
-        _tasks = _dataSource.getTasks(assigneeId: _selectedMemberId);
+        _tasks = _dataSource.getTasks(assigneeId: _selectedMemberId)
+            .where((t) => !t.isDraft && t.assigneeId != null)
+            .toList();
       } else {
-        // In real app, this would filter by current user
-        _tasks = _dataSource.getTasks(assigneeId: 'tm-1');
+        _tasks = _dataSource.getTasks(assigneeId: 'tm-1')
+            .where((t) => !t.isDraft && t.assigneeId != null)
+            .toList();
       }
+      _draftTasks = _dataSource.getDraftTasks();
     });
   }
 
@@ -67,14 +73,12 @@ class _GanttChartPageState extends State<GanttChartPage> {
     _applyFilters();
   }
 
-  /// Get start date (Saturday of current week)
   DateTime _getStartDate() {
     final now = DateTime.now();
     switch (_selectedPeriod) {
       case GanttTimePeriod.today:
         return DateTime(now.year, now.month, now.day);
       case GanttTimePeriod.week:
-        // Week starts on Saturday
         int daysToSubtract = (now.weekday + 1) % 7;
         return DateTime(now.year, now.month, now.day - daysToSubtract);
       case GanttTimePeriod.month:
@@ -85,25 +89,38 @@ class _GanttChartPageState extends State<GanttChartPage> {
   }
 
   int _getViewDays() {
+    final now = DateTime.now();
     switch (_selectedPeriod) {
       case GanttTimePeriod.today:
         return 1;
       case GanttTimePeriod.week:
-        return 7; // Saturday to Friday
+        return 7;
       case GanttTimePeriod.month:
-        return 30;
+        // Calculate actual days in current month
+        return _daysInMonth(now.year, now.month);
       case GanttTimePeriod.threeMonths:
-        return 90;
+        // Calculate actual days in 3-month period
+        final startMonth = now.month - 2;
+        final startYear = startMonth <= 0 ? now.year - 1 : now.year;
+        final adjustedStartMonth = startMonth <= 0 ? startMonth + 12 : startMonth;
+        int totalDays = 0;
+        for (int i = 0; i < 3; i++) {
+          int m = adjustedStartMonth + i;
+          int y = startYear;
+          if (m > 12) {
+            m -= 12;
+            y++;
+          }
+          totalDays += _daysInMonth(y, m);
+        }
+        return totalDays;
     }
   }
 
-  void _showAddTaskDialog({String? memberId, DateTime? date}) {
+  void _showAddTaskDialog() {
     showDialog(
       context: context,
-      builder: (context) => AddTaskDialog(
-        teamMembers: _teamMembers,
-        preselectedMemberId: memberId,
-        preselectedDate: date,
+      builder: (context) => AddTaskDialogSimple(
         onTaskAdded: (task) {
           setState(() {
             _dataSource.addTask(task);
@@ -112,7 +129,7 @@ class _GanttChartPageState extends State<GanttChartPage> {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text('تم إضافة المهمة: ${task.name}'),
-              backgroundColor: AppColors.statusCompleted,
+              backgroundColor: AppColors.statusOnHold,
             ),
           );
         },
@@ -127,19 +144,70 @@ class _GanttChartPageState extends State<GanttChartPage> {
     );
   }
 
+  void _onTaskDropped(TaskEntity task, String assigneeId, DateTime date) {
+    setState(() {
+      if (task.isDraft || task.assigneeId == null) {
+        // Assign draft task to employee starting from dropped date
+        _dataSource.assignTask(task.id, assigneeId, date);
+      } else {
+        // Update existing task - new start date (keeps duration), optionally new assignee
+        _dataSource.updateTaskDates(task.id, date, newAssigneeId: assigneeId);
+      }
+      _applyFilters();
+    });
+
+    final action = (task.isDraft || task.assigneeId == null) 
+        ? 'تم تعيين المهمة' 
+        : (task.assigneeId != assigneeId ? 'تم نقل المهمة' : 'تم تحديث تاريخ المهمة');
+    
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('$action: ${task.name}'),
+        backgroundColor: AppColors.statusCompleted,
+      ),
+    );
+  }
+
+  void _showEditTaskDialog(TaskEntity task) {
+    showDialog(
+      context: context,
+      builder: (context) => EditTaskDialog(
+        task: task,
+        teamMembers: _teamMembers,
+        onTaskUpdated: (updatedTask) {
+          setState(() {
+            _dataSource.updateTask(updatedTask);
+            _applyFilters();
+          });
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('تم تحديث المهمة: ${updatedTask.name}'),
+              backgroundColor: AppColors.statusCompleted,
+            ),
+          );
+        },
+        onTaskDeleted: () {
+          setState(() {
+            _dataSource.deleteTask(task.id);
+            _applyFilters();
+          });
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('تم حذف المهمة: ${task.name}'),
+              backgroundColor: AppColors.statusDelayed,
+            ),
+          );
+        },
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final startDate = _getStartDate();
 
     return Scaffold(
       backgroundColor: AppColors.sidebarBackground,
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => _showAddTaskDialog(),
-        backgroundColor: AppColors.primary,
-        foregroundColor: AppColors.scaffoldBackground,
-        icon: const Icon(Icons.add),
-        label: const Text('إضافة مهمة'),
-      ),
       body: Padding(
         padding: const EdgeInsets.all(24),
         child: Column(
@@ -152,49 +220,29 @@ class _GanttChartPageState extends State<GanttChartPage> {
             ),
             const SizedBox(height: 24),
 
-            // Filters
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: AppColors.cardBackground,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: AppColors.border),
-              ),
-              child: GanttFiltersWidget(
-                selectedPeriod: _selectedPeriod,
-                showTeamTasks: _showTeamTasks,
-                selectedMemberId: _selectedMemberId,
-                teamMembers: _teamMembers,
-                onPeriodChanged: (period) {
-                  setState(() => _selectedPeriod = period);
-                },
-                onTeamTasksChanged: (showTeam) {
-                  setState(() => _showTeamTasks = showTeam);
-                },
-                onMemberChanged: (memberId) {
-                  setState(() => _selectedMemberId = memberId);
-                },
-                onApplyFilters: _applyFilters,
-                onClearFilters: _clearFilters,
-              ),
+            // Filters row (compact)
+            GanttFiltersWidget(
+              selectedPeriod: _selectedPeriod,
+              showTeamTasks: _showTeamTasks,
+              selectedMemberId: _selectedMemberId,
+              teamMembers: _teamMembers,
+              onPeriodChanged: (period) {
+                setState(() => _selectedPeriod = period);
+              },
+              onTeamTasksChanged: (showTeam) {
+                setState(() => _showTeamTasks = showTeam);
+              },
+              onMemberChanged: (memberId) {
+                setState(() => _selectedMemberId = memberId);
+              },
+              onApplyFilters: _applyFilters,
+              onClearFilters: _clearFilters,
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 12),
 
-            // Warnings
-            if (_showWarnings)
-              GanttWarningsWidget(
-                overloadedMembers: _overloadedMembers,
-                delayedProjects: _delayedProjects,
-                onDismiss: () {
-                  setState(() => _showWarnings = false);
-                },
-              ),
-
-            // Status Legend
-            const Padding(
-              padding: EdgeInsets.symmetric(vertical: 12),
-              child: StatusLegendWidget(),
-            ),
+            // Draft tasks + Warnings + Legend (compact row)
+            _buildCompactInfoBar(),
+            const SizedBox(height: 12),
 
             // Gantt Chart
             Expanded(
@@ -211,6 +259,282 @@ class _GanttChartPageState extends State<GanttChartPage> {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  /// Compact info bar: Draft tasks (expandable) + Warnings + Status Legend
+  Widget _buildCompactInfoBar() {
+    return Container(
+      decoration: BoxDecoration(
+        color: AppColors.cardBackground,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: AppColors.border),
+      ),
+      child: Column(
+        children: [
+          // Main row: Draft tasks toggle + Warnings + Legend
+          InkWell(
+            onTap: () => setState(() => _isDraftPanelExpanded = !_isDraftPanelExpanded),
+            borderRadius: BorderRadius.circular(10),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              child: Row(
+                children: [
+                  // Draft tasks badge
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: _draftTasks.isEmpty
+                          ? AppColors.surfaceColor
+                          : AppColors.statusOnHold.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Icons.pending_actions,
+                          size: 16,
+                          color: _draftTasks.isEmpty
+                              ? AppColors.textMuted
+                              : AppColors.statusOnHold,
+                        ),
+                        const SizedBox(width: 6),
+                        Text(
+                          'معلقة: ${_draftTasks.length}',
+                          style: TextStyle(
+                            color: _draftTasks.isEmpty
+                                ? AppColors.textMuted
+                                : AppColors.statusOnHold,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        const SizedBox(width: 4),
+                        Icon(
+                          _isDraftPanelExpanded ? Icons.expand_less : Icons.expand_more,
+                          size: 16,
+                          color: AppColors.textMuted,
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+
+                  // Warnings (compact)
+                  if (_overloadedMembers.isNotEmpty)
+                    _buildCompactWarning(
+                      icon: Icons.warning_amber,
+                      text: 'مثقل: ${_overloadedMembers.length}',
+                      color: AppColors.statusDelayed,
+                    ),
+                  if (_delayedProjects.isNotEmpty)
+                    _buildCompactWarning(
+                      icon: Icons.schedule,
+                      text: 'متأخر: ${_delayedProjects.length}',
+                      color: AppColors.statusOnHold,
+                    ),
+
+                  const Spacer(),
+
+                  // Add task button
+                  TextButton.icon(
+                    onPressed: _showAddTaskDialog,
+                    icon: const Icon(Icons.add, size: 16),
+                    label: const Text('إضافة مهمة'),
+                    style: TextButton.styleFrom(
+                      foregroundColor: AppColors.primary,
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      textStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+                    ),
+                  ),
+
+                  const SizedBox(width: 8),
+                  Container(width: 1, height: 24, color: AppColors.divider),
+                  const SizedBox(width: 8),
+
+                  // Status legend (inline)
+                  ..._buildInlineLegend(),
+                ],
+              ),
+            ),
+          ),
+
+          // Expandable draft tasks
+          if (_isDraftPanelExpanded && _draftTasks.isNotEmpty) ...[
+            const Divider(height: 1, color: AppColors.divider),
+            Padding(
+              padding: const EdgeInsets.all(12),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Icon(Icons.touch_app, size: 14, color: AppColors.textMuted),
+                      const SizedBox(width: 6),
+                      Text(
+                        'اسحب المهمة إلى الموظف لتعيينها',
+                        style: TextStyle(fontSize: 11, color: AppColors.textMuted),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 10),
+                  SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: Row(
+                      children: _draftTasks.map((task) {
+                        return Padding(
+                          padding: const EdgeInsets.only(left: 10),
+                          child: _buildDraggableDraftChip(task),
+                        );
+                      }).toList(),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCompactWarning({
+    required IconData icon,
+    required String text,
+    required Color color,
+  }) {
+    return Container(
+      margin: const EdgeInsets.only(left: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(4),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 14, color: color),
+          const SizedBox(width: 4),
+          Text(
+            text,
+            style: TextStyle(fontSize: 11, color: color, fontWeight: FontWeight.w500),
+          ),
+        ],
+      ),
+    );
+  }
+
+  List<Widget> _buildInlineLegend() {
+    final items = [
+      (TaskStatus.inProgress, 'جاري'),
+      (TaskStatus.completed, 'مكتمل'),
+      (TaskStatus.waiting, 'انتظار'),
+      (TaskStatus.delayed, 'متأخر'),
+    ];
+
+    return items.map((item) {
+      return Padding(
+        padding: const EdgeInsets.only(left: 10),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 10,
+              height: 10,
+              decoration: BoxDecoration(
+                color: item.$1.color,
+                borderRadius: BorderRadius.circular(3),
+              ),
+            ),
+            const SizedBox(width: 4),
+            Text(
+              item.$2,
+              style: TextStyle(fontSize: 11, color: AppColors.textSecondary),
+            ),
+          ],
+        ),
+      );
+    }).toList();
+  }
+
+  Widget _buildDraggableDraftChip(TaskEntity task) {
+    return Draggable<TaskEntity>(
+      data: task,
+      feedback: Material(
+        elevation: 8,
+        borderRadius: BorderRadius.circular(8),
+        child: _buildDraftChipContent(task, isDragging: true),
+      ),
+      childWhenDragging: Opacity(
+        opacity: 0.3,
+        child: _buildDraftChipContent(task),
+      ),
+      child: _buildDraftChipContent(task),
+    );
+  }
+
+  Widget _buildDraftChipContent(TaskEntity task, {bool isDragging = false}) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: isDragging ? AppColors.cardBackground : AppColors.surfaceColor,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(
+          color: isDragging ? AppColors.primary : AppColors.border,
+          width: isDragging ? 2 : 1,
+        ),
+        boxShadow: isDragging
+            ? [BoxShadow(color: AppColors.primary.withValues(alpha: 0.3), blurRadius: 12)]
+            : null,
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            task.taskType.icon,
+            size: 14,
+            color: task.taskType.color,
+          ),
+          const SizedBox(width: 6),
+          ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 150),
+            child: Text(
+              task.name,
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w500,
+                color: isDragging ? AppColors.primary : AppColors.textPrimary,
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+          if (task.projectName != null) ...[
+            const SizedBox(width: 8),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+              decoration: BoxDecoration(
+                color: AppColors.primary.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(4),
+              ),
+              child: Text(
+                task.projectName!,
+                style: TextStyle(
+                  fontSize: 10,
+                  color: AppColors.primary,
+                ),
+              ),
+            ),
+          ],
+          const SizedBox(width: 6),
+          Icon(
+            Icons.drag_indicator,
+            size: 14,
+            color: isDragging ? AppColors.primary : AppColors.textMuted,
+          ),
+        ],
       ),
     );
   }
@@ -241,22 +565,20 @@ class _GanttChartPageState extends State<GanttChartPage> {
   }
 
   Widget _buildGanttChart(DateTime startDate) {
-    final days = _getViewDays();
-    final displayDays = days > 7 ? 7 : days;
+    final displayDays = _getViewDays();
 
-    // Group tasks by employee
     final tasksByEmployee = <String, List<TaskEntity>>{};
     for (final member in _teamMembers) {
       tasksByEmployee[member.id] =
           _tasks.where((task) => task.assigneeId == member.id).toList();
     }
 
-    return Column(
-      children: [
-        // Header with dates
-        _buildDateHeader(startDate, displayDays),
+    // For month/3-month views, wrap in horizontal scroll
+    final needsHorizontalScroll = displayDays > 14;
 
-        // Employee rows
+    Widget chartContent = Column(
+      children: [
+        _buildDateHeader(startDate, displayDays),
         Expanded(
           child: ListView.builder(
             itemCount: _teamMembers.length,
@@ -271,6 +593,20 @@ class _GanttChartPageState extends State<GanttChartPage> {
         ),
       ],
     );
+
+    if (needsHorizontalScroll) {
+      // Calculate minimum width for comfortable viewing (60px per day)
+      final minWidth = 200.0 + (displayDays * 60.0);
+      return SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: SizedBox(
+          width: minWidth,
+          child: chartContent,
+        ),
+      );
+    }
+
+    return chartContent;
   }
 
   Widget _buildDateHeader(DateTime startDate, int displayDays) {
@@ -288,7 +624,6 @@ class _GanttChartPageState extends State<GanttChartPage> {
       ),
       child: Row(
         children: [
-          // Employee name column header
           Container(
             width: 200,
             padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -303,11 +638,15 @@ class _GanttChartPageState extends State<GanttChartPage> {
               style: AppTextStyles.tableHeader,
             ),
           ),
-          // Date columns with vertical lines
           Expanded(
             child: Row(
               children: List.generate(displayDays, (i) {
-                final date = startDate.add(Duration(days: i));
+                // Create a normalized date for this column
+                final date = DateTime(
+                  startDate.year,
+                  startDate.month,
+                  startDate.day + i,
+                );
                 final isToday = _isToday(date);
                 final isWeekend = date.weekday == DateTime.friday;
 
@@ -378,6 +717,30 @@ class _GanttChartPageState extends State<GanttChartPage> {
         date.day == now.day;
   }
 
+  /// Calculate the number of days between two dates using raw year/month/day values
+  /// This avoids any timezone/DateTime object issues
+  int _daysBetweenDates(int fromYear, int fromMonth, int fromDay, 
+                        int toYear, int toMonth, int toDay) {
+    final fromJulian = _toJulianDay(fromYear, fromMonth, fromDay);
+    final toJulian = _toJulianDay(toYear, toMonth, toDay);
+    return toJulian - fromJulian;
+  }
+
+  /// Convert a date to Julian day number (accurate calendar calculation)
+  int _toJulianDay(int year, int month, int day) {
+    final a = (14 - month) ~/ 12;
+    final y = year + 4800 - a;
+    final m = month + 12 * a - 3;
+    return day + (153 * m + 2) ~/ 5 + 365 * y + y ~/ 4 - y ~/ 100 + y ~/ 400 - 32045;
+  }
+  
+  /// Get the actual number of days in a month
+  int _daysInMonth(int year, int month) {
+    // Use DateTime to get the last day of the month
+    final lastDayOfMonth = DateTime(year, month + 1, 0);
+    return lastDayOfMonth.day;
+  }
+
   Widget _buildEmployeeRow(
     TeamMemberEntity member,
     List<TaskEntity> tasks,
@@ -393,7 +756,6 @@ class _GanttChartPageState extends State<GanttChartPage> {
       ),
       child: Row(
         children: [
-          // Employee info column
           Container(
             width: 200,
             padding: const EdgeInsets.all(12),
@@ -404,7 +766,6 @@ class _GanttChartPageState extends State<GanttChartPage> {
             ),
             child: Row(
               children: [
-                // Avatar
                 CircleAvatar(
                   radius: 18,
                   backgroundColor: AppColors.primary.withValues(alpha: 0.2),
@@ -418,7 +779,6 @@ class _GanttChartPageState extends State<GanttChartPage> {
                   ),
                 ),
                 const SizedBox(width: 10),
-                // Name and role
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -445,7 +805,6 @@ class _GanttChartPageState extends State<GanttChartPage> {
               ],
             ),
           ),
-          // Gantt bar area with vertical lines
           Expanded(
             child: _buildGanttBarsForEmployee(
                 member, tasks, startDate, displayDays),
@@ -461,7 +820,16 @@ class _GanttChartPageState extends State<GanttChartPage> {
     DateTime startDate,
     int displayDays,
   ) {
-    final endDate = startDate.add(Duration(days: displayDays));
+    // Calculate end date using DateTime constructor (handles month overflow correctly)
+    final endDate = DateTime(startDate.year, startDate.month, startDate.day + displayDays);
+    
+    // Store chart bounds as raw values for Julian day calculation
+    final chartStartYear = startDate.year;
+    final chartStartMonth = startDate.month;
+    final chartStartDay = startDate.day;
+    final chartEndYear = endDate.year;
+    final chartEndMonth = endDate.month;
+    final chartEndDay = endDate.day;
 
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -469,75 +837,127 @@ class _GanttChartPageState extends State<GanttChartPage> {
 
         return Stack(
           children: [
-            // Clickable day cells
+            // Drop targets for each day
             Row(
               children: List.generate(displayDays, (i) {
-                final date = startDate.add(Duration(days: i));
-                final isToday = _isToday(date);
-                final isWeekend = date.weekday == DateTime.friday;
+                // Create a normalized date for this column (midnight local)
+                final columnDate = DateTime(
+                  startDate.year,
+                  startDate.month,
+                  startDate.day + i,
+                );
+                final isToday = _isToday(columnDate);
+                final isWeekend = columnDate.weekday == DateTime.friday;
 
                 return Expanded(
-                  child: InkWell(
-                    onTap: () => _showAddTaskDialog(
-                      memberId: member.id,
-                      date: date,
-                    ),
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: isToday
-                            ? AppColors.primary.withValues(alpha: 0.05)
-                            : (isWeekend
-                                ? AppColors.surfaceColor.withValues(alpha: 0.2)
-                                : null),
-                        border: const Border(
-                          left: BorderSide(color: AppColors.border, width: 1),
+                  child: DragTarget<TaskEntity>(
+                    onWillAcceptWithDetails: (details) => true,
+                    onAcceptWithDetails: (details) {
+                      _onTaskDropped(details.data, member.id, columnDate);
+                    },
+                    builder: (context, candidateData, rejectedData) {
+                      final isHovering = candidateData.isNotEmpty;
+                      return Container(
+                        decoration: BoxDecoration(
+                          color: isHovering
+                              ? AppColors.primary.withValues(alpha: 0.2)
+                              : (isToday
+                                  ? AppColors.primary.withValues(alpha: 0.05)
+                                  : (isWeekend
+                                      ? AppColors.surfaceColor
+                                          .withValues(alpha: 0.2)
+                                      : null)),
+                          border: Border(
+                            left: const BorderSide(
+                                color: AppColors.border, width: 1),
+                          ),
                         ),
-                      ),
-                    ),
+                        child: isHovering
+                            ? Center(
+                                child: Container(
+                                  padding: const EdgeInsets.all(4),
+                                  decoration: BoxDecoration(
+                                    color: AppColors.primary,
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: const Icon(
+                                    Icons.add,
+                                    color: Colors.white,
+                                    size: 16,
+                                  ),
+                                ),
+                              )
+                            : null,
+                      );
+                    },
                   ),
                 );
               }),
             ),
             // Task bars and appointment circles
+            // Note: RTL layout - position from RIGHT to match header display
             ...tasks.map((task) {
-              // Check if task is visible in this range
-              if (task.endDate.isBefore(startDate) ||
-                  task.startDate.isAfter(endDate)) {
+              // Extract raw year/month/day values directly from task dates
+              final taskStartYear = task.startDate.year;
+              final taskStartMonth = task.startDate.month;
+              final taskStartDay = task.startDate.day;
+              final taskEndYear = task.endDate.year;
+              final taskEndMonth = task.endDate.month;
+              final taskEndDay = task.endDate.day;
+
+              // Calculate Julian days for comparison
+              final taskStartJulian = _toJulianDay(taskStartYear, taskStartMonth, taskStartDay);
+              final taskEndJulian = _toJulianDay(taskEndYear, taskEndMonth, taskEndDay);
+              final chartStartJulian = _toJulianDay(chartStartYear, chartStartMonth, chartStartDay);
+              final chartEndJulian = _toJulianDay(chartEndYear, chartEndMonth, chartEndDay);
+
+              // Skip tasks outside the visible range
+              if (taskEndJulian < chartStartJulian || taskStartJulian > chartEndJulian) {
                 return const SizedBox.shrink();
               }
 
-              final taskStart = task.startDate.isBefore(startDate)
-                  ? startDate
-                  : task.startDate;
-              final taskEnd =
-                  task.endDate.isAfter(endDate) ? endDate : task.endDate;
+              // Clamp task dates to visible range (using Julian days)
+              final visibleStartJulian = taskStartJulian < chartStartJulian 
+                  ? chartStartJulian 
+                  : taskStartJulian;
+              final visibleEndJulian = taskEndJulian > chartEndJulian 
+                  ? chartEndJulian 
+                  : taskEndJulian;
 
-              final startOffset =
-                  taskStart.difference(startDate).inDays.toDouble();
+              // Calculate offset from chart start (in days)
+              final startOffset = visibleStartJulian - chartStartJulian;
+              
+              // Calculate duration (inclusive)
+              final duration = visibleEndJulian - visibleStartJulian + 1;
 
               if (task.isAppointment) {
-                // Render as circle for appointments
-                final circleLeft = startOffset * dayWidth + (dayWidth / 2) - 16;
+                // RTL: position from RIGHT (first day is on the right)
+                final circleRight = startOffset * dayWidth + (dayWidth / 2) - 16;
 
                 return Positioned(
-                  left: circleLeft,
+                  right: circleRight,
                   top: 20,
                   child: AppointmentCircle(
                     task: task,
                     onTap: () => _showAppointmentDetails(task),
+                    onDoubleTap: () => _showEditTaskDialog(task),
                   ),
                 );
               } else {
-                // Render as bar for work tasks and general tasks
-                final duration =
-                    taskEnd.difference(taskStart).inDays.toDouble() + 1;
-                final barLeft = startOffset * dayWidth;
-                final barWidth = duration * dayWidth;
+                // RTL: position bar from RIGHT, calculate end position
+                // Task starts at startOffset from right, ends at (startOffset + duration)
+                final barRight = startOffset * dayWidth + 4;
+                final barWidth = duration * dayWidth - 8;
 
                 return Positioned(
-                  left: barLeft + 4,
+                  right: barRight,
                   top: 20,
-                  child: _buildTaskBar(task, barWidth, constraints.maxWidth - barLeft - 8),
+                  child: _DraggableTaskBar(
+                    task: task,
+                    width: barWidth,
+                    maxWidth: constraints.maxWidth - barRight,
+                    onDoubleTap: () => _showEditTaskDialog(task),
+                  ),
                 );
               }
             }),
@@ -546,14 +966,91 @@ class _GanttChartPageState extends State<GanttChartPage> {
       },
     );
   }
+}
 
-  Widget _buildTaskBar(TaskEntity task, double barWidth, double maxWidth) {
+/// Draggable task bar widget
+class _DraggableTaskBar extends StatelessWidget {
+  final TaskEntity task;
+  final double width;
+  final double maxWidth;
+  final VoidCallback? onDoubleTap;
+
+  const _DraggableTaskBar({
+    required this.task,
+    required this.width,
+    required this.maxWidth,
+    this.onDoubleTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
     final color = task.taskType == TaskType.generalTask
         ? TaskType.generalTask.color
         : task.status.color;
 
+    return GestureDetector(
+      onDoubleTap: onDoubleTap,
+      child: Draggable<TaskEntity>(
+        data: task,
+        feedback: Material(
+          elevation: 8,
+          borderRadius: BorderRadius.circular(6),
+          child: Container(
+            width: (width - 8).clamp(40, maxWidth),
+            height: 32,
+            decoration: BoxDecoration(
+              color: color,
+              borderRadius: BorderRadius.circular(6),
+              boxShadow: [
+                BoxShadow(
+                  color: color.withValues(alpha: 0.5),
+                  blurRadius: 12,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            padding: const EdgeInsets.symmetric(horizontal: 8),
+            alignment: Alignment.centerRight,
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  task.taskType.icon,
+                  color: Colors.white.withValues(alpha: 0.8),
+                  size: 14,
+                ),
+                const SizedBox(width: 6),
+                Expanded(
+                  child: Text(
+                    task.name,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+        childWhenDragging: Opacity(
+          opacity: 0.4,
+          child: _buildBar(color),
+        ),
+        child: Tooltip(
+          message: 'انقر مرتين للتعديل',
+          child: _buildBar(color),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildBar(Color color) {
     return Container(
-      width: (barWidth - 8).clamp(40, maxWidth),
+      width: (width - 8).clamp(40, maxWidth),
       height: 32,
       decoration: BoxDecoration(
         color: color,
@@ -571,7 +1068,6 @@ class _GanttChartPageState extends State<GanttChartPage> {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          // Task type indicator
           Icon(
             task.taskType.icon,
             color: Colors.white.withValues(alpha: 0.8),

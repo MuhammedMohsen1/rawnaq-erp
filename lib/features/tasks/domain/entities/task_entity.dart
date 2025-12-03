@@ -5,24 +5,30 @@ import '../enums/task_type.dart';
 import '../../../projects/domain/entities/team_member_entity.dart';
 
 /// Represents a task in the system
+/// - For work/general tasks: startDate and endDate include both date AND time
+/// - For appointments: single-point event, endDate equals startDate
 class TaskEntity extends Equatable {
   final String id;
   final String name;
   final TaskType taskType;
   final TaskStatus status;
-  final String assigneeId;
+  final String? assigneeId; // Nullable for draft tasks
   final TeamMemberEntity? assignee;
+  
+  /// Start date and time of the task (includes time component)
   final DateTime startDate;
+  
+  /// End date and time of the task (includes time component)
+  /// For appointments, this equals startDate
   final DateTime endDate;
+  
   final String? notes;
   final DateTime? createdAt;
+  final bool isDraft; // Draft tasks have no assignee
 
   // Work Task fields (project-related)
   final String? projectId;
   final String? projectName;
-
-  // Time field (for work tasks and appointments)
-  final TimeOfDay? taskTime;
 
   // Appointment fields
   final String? customerName;
@@ -34,17 +40,16 @@ class TaskEntity extends Equatable {
     required this.name,
     required this.taskType,
     required this.status,
-    required this.assigneeId,
+    this.assigneeId,
     this.assignee,
     required this.startDate,
     required this.endDate,
     this.notes,
     this.createdAt,
+    this.isDraft = false,
     // Work task fields
     this.projectId,
     this.projectName,
-    // Time field
-    this.taskTime,
     // Appointment fields
     this.customerName,
     this.customerPhone,
@@ -63,9 +68,9 @@ class TaskEntity extends Equatable {
         endDate,
         notes,
         createdAt,
+        isDraft,
         projectId,
         projectName,
-        taskTime,
         customerName,
         customerPhone,
         locationLink,
@@ -83,27 +88,28 @@ class TaskEntity extends Equatable {
     DateTime? endDate,
     String? notes,
     DateTime? createdAt,
+    bool? isDraft,
     String? projectId,
     String? projectName,
-    TimeOfDay? taskTime,
     String? customerName,
     String? customerPhone,
     String? locationLink,
+    bool clearAssignee = false,
   }) {
     return TaskEntity(
       id: id ?? this.id,
       name: name ?? this.name,
       taskType: taskType ?? this.taskType,
       status: status ?? this.status,
-      assigneeId: assigneeId ?? this.assigneeId,
-      assignee: assignee ?? this.assignee,
+      assigneeId: clearAssignee ? null : (assigneeId ?? this.assigneeId),
+      assignee: clearAssignee ? null : (assignee ?? this.assignee),
       startDate: startDate ?? this.startDate,
       endDate: endDate ?? this.endDate,
       notes: notes ?? this.notes,
       createdAt: createdAt ?? this.createdAt,
+      isDraft: isDraft ?? this.isDraft,
       projectId: projectId ?? this.projectId,
       projectName: projectName ?? this.projectName,
-      taskTime: taskTime ?? this.taskTime,
       customerName: customerName ?? this.customerName,
       customerPhone: customerPhone ?? this.customerPhone,
       locationLink: locationLink ?? this.locationLink,
@@ -115,15 +121,19 @@ class TaskEntity extends Equatable {
     return DateTime.now().isAfter(endDate) && status != TaskStatus.completed;
   }
 
-  /// Get the duration in days
+  /// Get the duration in days (date-only comparison)
   int get durationDays {
-    return endDate.difference(startDate).inDays + 1;
+    final startDateOnly = DateTime(startDate.year, startDate.month, startDate.day);
+    final endDateOnly = DateTime(endDate.year, endDate.month, endDate.day);
+    return endDateOnly.difference(startDateOnly).inDays + 1;
   }
 
   /// Get remaining days until due date
   int get remainingDays {
     final now = DateTime.now();
-    return endDate.difference(now).inDays;
+    final endDateOnly = DateTime(endDate.year, endDate.month, endDate.day);
+    final nowDateOnly = DateTime(now.year, now.month, now.day);
+    return endDateOnly.difference(nowDateOnly).inDays;
   }
 
   /// Check if this is an appointment (displayed as circle)
@@ -135,16 +145,60 @@ class TaskEntity extends Equatable {
   /// Check if this task is related to a project
   bool get hasProject => projectId != null && projectName != null;
 
-  /// Get formatted task time
-  String? get formattedTaskTime {
-    if (taskTime == null) return null;
-    final hour = taskTime!.hourOfPeriod == 0 ? 12 : taskTime!.hourOfPeriod;
-    final minute = taskTime!.minute.toString().padLeft(2, '0');
-    final period = taskTime!.period == DayPeriod.am ? 'ص' : 'م';
+  /// Get start date only (without time)
+  DateTime get startDateOnly => DateTime(startDate.year, startDate.month, startDate.day);
+
+  /// Get end date only (without time)
+  DateTime get endDateOnly => DateTime(endDate.year, endDate.month, endDate.day);
+
+  /// Get start time as TimeOfDay
+  TimeOfDay get startTimeOfDay => TimeOfDay(hour: startDate.hour, minute: startDate.minute);
+
+  /// Get end time as TimeOfDay
+  TimeOfDay get endTimeOfDay => TimeOfDay(hour: endDate.hour, minute: endDate.minute);
+
+  /// Get formatted start time
+  String get formattedStartTime {
+    final hour = startDate.hour % 12 == 0 ? 12 : startDate.hour % 12;
+    final minute = startDate.minute.toString().padLeft(2, '0');
+    final period = startDate.hour < 12 ? 'ص' : 'م';
     return '$hour:$minute $period';
   }
 
-  /// Alias for backward compatibility
-  TimeOfDay? get appointmentTime => taskTime;
-  String? get formattedAppointmentTime => formattedTaskTime;
+  /// Get formatted end time
+  String get formattedEndTime {
+    final hour = endDate.hour % 12 == 0 ? 12 : endDate.hour % 12;
+    final minute = endDate.minute.toString().padLeft(2, '0');
+    final period = endDate.hour < 12 ? 'ص' : 'م';
+    return '$hour:$minute $period';
+  }
+
+  /// Alias for backward compatibility - uses startDate time
+  String? get formattedTaskTime => formattedStartTime;
+  
+  /// Alias for appointments
+  String? get formattedAppointmentTime => formattedStartTime;
+
+  /// Helper to create new start datetime preserving time when date changes
+  static DateTime combineDateAndTime(DateTime date, DateTime timeSource) {
+    return DateTime(
+      date.year,
+      date.month,
+      date.day,
+      timeSource.hour,
+      timeSource.minute,
+      timeSource.second,
+    );
+  }
+
+  /// Helper to create datetime from date and TimeOfDay
+  static DateTime dateWithTimeOfDay(DateTime date, TimeOfDay time) {
+    return DateTime(
+      date.year,
+      date.month,
+      date.day,
+      time.hour,
+      time.minute,
+    );
+  }
 }

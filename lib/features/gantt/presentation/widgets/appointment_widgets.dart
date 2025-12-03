@@ -440,14 +440,17 @@ class AppointmentDetailsDialog extends StatelessWidget {
 }
 
 /// Circle widget for appointment display on Gantt chart
+/// Supports: tap for details, double-tap for edit, drag to reschedule
 class AppointmentCircle extends StatefulWidget {
   final TaskEntity task;
   final VoidCallback onTap;
+  final VoidCallback? onDoubleTap;
 
   const AppointmentCircle({
     super.key,
     required this.task,
     required this.onTap,
+    this.onDoubleTap,
   });
 
   @override
@@ -505,31 +508,73 @@ class _AppointmentCircleState extends State<AppointmentCircle> {
           _removeTooltip();
           widget.onTap();
         },
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 200),
-          width: _isHovered ? 38 : 32,
-          height: _isHovered ? 38 : 32,
-          decoration: BoxDecoration(
-            color: widget.task.status.color,
-            shape: BoxShape.circle,
-            boxShadow: [
-              BoxShadow(
-                color: widget.task.status.color.withValues(alpha: _isHovered ? 0.5 : 0.3),
-                blurRadius: _isHovered ? 8 : 4,
-                offset: const Offset(0, 2),
+        onDoubleTap: widget.onDoubleTap != null
+            ? () {
+                _removeTooltip();
+                widget.onDoubleTap!();
+              }
+            : null,
+        child: Draggable<TaskEntity>(
+          data: widget.task,
+          feedback: Material(
+            elevation: 8,
+            shape: const CircleBorder(),
+            child: Container(
+              width: 38,
+              height: 38,
+              decoration: BoxDecoration(
+                color: widget.task.status.color,
+                shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(
+                    color: widget.task.status.color.withValues(alpha: 0.5),
+                    blurRadius: 12,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
               ),
-            ],
-            border: _isHovered
-                ? Border.all(color: Colors.white, width: 2)
-                : null,
-          ),
-          child: Center(
-            child: Icon(
-              Icons.calendar_today,
-              color: Colors.white,
-              size: _isHovered ? 18 : 14,
+              child: const Center(
+                child: Icon(Icons.calendar_today, color: Colors.white, size: 18),
+              ),
             ),
           ),
+          childWhenDragging: Opacity(
+            opacity: 0.3,
+            child: _buildCircle(),
+          ),
+          child: Tooltip(
+            message: 'انقر مرتين للتعديل',
+            child: _buildCircle(),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCircle() {
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 200),
+      width: _isHovered ? 38 : 32,
+      height: _isHovered ? 38 : 32,
+      decoration: BoxDecoration(
+        color: widget.task.status.color,
+        shape: BoxShape.circle,
+        boxShadow: [
+          BoxShadow(
+            color: widget.task.status.color.withValues(alpha: _isHovered ? 0.5 : 0.3),
+            blurRadius: _isHovered ? 8 : 4,
+            offset: const Offset(0, 2),
+          ),
+        ],
+        border: _isHovered
+            ? Border.all(color: Colors.white, width: 2)
+            : null,
+      ),
+      child: Center(
+        child: Icon(
+          Icons.calendar_today,
+          color: Colors.white,
+          size: _isHovered ? 18 : 14,
         ),
       ),
     );
