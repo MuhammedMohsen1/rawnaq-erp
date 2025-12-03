@@ -168,6 +168,25 @@ class _GanttChartPageState extends State<GanttChartPage> {
     );
   }
 
+  /// Called when a task is resized by dragging its edges
+  void _onTaskResized(TaskEntity task, DateTime newStart, DateTime newEnd) {
+    setState(() {
+      final updatedTask = task.copyWith(
+        startDate: newStart,
+        endDate: newEnd,
+      );
+      _dataSource.updateTask(updatedTask);
+      _applyFilters();
+    });
+    
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('تم تعديل مدة المهمة: ${task.name}'),
+        backgroundColor: AppColors.statusCompleted,
+      ),
+    );
+  }
+
   void _showEditTaskDialog(TaskEntity task) {
     showDialog(
       context: context,
@@ -740,6 +759,40 @@ class _GanttChartPageState extends State<GanttChartPage> {
     final lastDayOfMonth = DateTime(year, month + 1, 0);
     return lastDayOfMonth.day;
   }
+  
+  /// Convert time to fraction of day (0.0 to 1.0)
+  /// 00:00 = 0.0, 12:00 = 0.5, 23:59 = ~1.0
+  double _timeToFraction(DateTime dateTime) {
+    return (dateTime.hour * 60 + dateTime.minute) / (24 * 60);
+  }
+  
+  /// Convert a pixel offset within a day to DateTime
+  /// Used for resizing task bars
+  DateTime _fractionToDateTime(DateTime baseDate, double fraction) {
+    final totalMinutes = (fraction * 24 * 60).round();
+    final hours = totalMinutes ~/ 60;
+    final minutes = totalMinutes % 60;
+    return DateTime(
+      baseDate.year,
+      baseDate.month,
+      baseDate.day,
+      hours.clamp(0, 23),
+      minutes.clamp(0, 59),
+    );
+  }
+  
+  /// Calculate precise position including time offset (for RTL layout)
+  /// Returns the position from the RIGHT edge of the chart
+  double _calculateTaskPosition(
+    int taskYear, int taskMonth, int taskDay,
+    int chartStartYear, int chartStartMonth, int chartStartDay,
+    double timeFraction,
+    double dayWidth,
+  ) {
+    final dayOffset = _toJulianDay(taskYear, taskMonth, taskDay) - 
+                      _toJulianDay(chartStartYear, chartStartMonth, chartStartDay);
+    return (dayOffset + timeFraction) * dayWidth;
+  }
 
   Widget _buildEmployeeRow(
     TeamMemberEntity member,
@@ -916,6 +969,10 @@ class _GanttChartPageState extends State<GanttChartPage> {
                 return const SizedBox.shrink();
               }
 
+              // Calculate time fractions for sub-day positioning
+              final startTimeFraction = _timeToFraction(task.startDate);
+              final endTimeFraction = _timeToFraction(task.endDate);
+
               // Clamp task dates to visible range (using Julian days)
               final visibleStartJulian = taskStartJulian < chartStartJulian 
                   ? chartStartJulian 
@@ -924,18 +981,33 @@ class _GanttChartPageState extends State<GanttChartPage> {
                   ? chartEndJulian 
                   : taskEndJulian;
 
-              // Calculate offset from chart start (in days)
-              final startOffset = visibleStartJulian - chartStartJulian;
+              // Calculate precise offset including time (in day fractions)
+              // If task starts before chart, use chart start (0.0 time fraction)
+              final visibleStartTimeFraction = taskStartJulian < chartStartJulian 
+                  ? 0.0 
+                  : startTimeFraction;
+              // If task ends after chart, use chart end (1.0 time fraction)
+              final visibleEndTimeFraction = taskEndJulian > chartEndJulian 
+                  ? 1.0 
+                  : endTimeFraction;
+
+              // Calculate offset from chart start (in days + time fraction)
+              final startOffset = (visibleStartJulian - chartStartJulian) + visibleStartTimeFraction;
               
-              // Calculate duration (inclusive)
-              final duration = visibleEndJulian - visibleStartJulian + 1;
+              // Calculate duration including time fractions
+              // Duration = (end day - start day) + (end time fraction - start time fraction)
+              final durationDays = visibleEndJulian - visibleStartJulian;
+              final durationWithTime = durationDays + (visibleEndTimeFraction - visibleStartTimeFraction);
+              // Ensure minimum visible width
+              final duration = durationWithTime < 0.1 ? 0.1 : durationWithTime;
 
               if (task.isAppointment) {
-                // RTL: position from RIGHT (first day is on the right)
-                final circleRight = startOffset * dayWidth + (dayWidth / 2) - 16;
+                // RTL: position from RIGHT with time-based offset
+                // Appointments are positioned at their exact time within the day
+                final circleRight = startOffset * dayWidth + (dayWidth * 0.5 * (1 - startTimeFraction * 2).abs()) - 16;
 
                 return Positioned(
-                  right: circleRight,
+                  right: startOffset * dayWidth,
                   top: 20,
                   child: AppointmentCircle(
                     task: task,
@@ -944,19 +1016,20 @@ class _GanttChartPageState extends State<GanttChartPage> {
                   ),
                 );
               } else {
-                // RTL: position bar from RIGHT, calculate end position
-                // Task starts at startOffset from right, ends at (startOffset + duration)
-                final barRight = startOffset * dayWidth + 4;
-                final barWidth = duration * dayWidth - 8;
+                // RTL: position bar from RIGHT with time-based precision
+                final barRight = startOffset * dayWidth;
+                final barWidth = duration * dayWidth;
 
                 return Positioned(
                   right: barRight,
                   top: 20,
-                  child: _DraggableTaskBar(
+                  child: _ResizableTaskBar(
                     task: task,
                     width: barWidth,
                     maxWidth: constraints.maxWidth - barRight,
+                    dayWidth: dayWidth,
                     onDoubleTap: () => _showEditTaskDialog(task),
+                    onResized: (newStart, newEnd) => _onTaskResized(task, newStart, newEnd),
                   ),
                 );
               }
@@ -968,126 +1041,275 @@ class _GanttChartPageState extends State<GanttChartPage> {
   }
 }
 
-/// Draggable task bar widget
-class _DraggableTaskBar extends StatelessWidget {
+/// Resizable and draggable task bar widget
+/// Features:
+/// - Drag handles on left/right edges to resize (adjust start/end times)
+/// - Center drag to move the entire task
+/// - Double-tap to edit
+class _ResizableTaskBar extends StatefulWidget {
   final TaskEntity task;
   final double width;
   final double maxWidth;
+  final double dayWidth;
   final VoidCallback? onDoubleTap;
+  final void Function(DateTime newStart, DateTime newEnd)? onResized;
 
-  const _DraggableTaskBar({
+  const _ResizableTaskBar({
     required this.task,
     required this.width,
     required this.maxWidth,
+    required this.dayWidth,
     this.onDoubleTap,
+    this.onResized,
   });
 
   @override
-  Widget build(BuildContext context) {
-    final color = task.taskType == TaskType.generalTask
-        ? TaskType.generalTask.color
-        : task.status.color;
+  State<_ResizableTaskBar> createState() => _ResizableTaskBarState();
+}
 
-    return GestureDetector(
-      onDoubleTap: onDoubleTap,
-      child: Draggable<TaskEntity>(
-        data: task,
-        feedback: Material(
-          elevation: 8,
-          borderRadius: BorderRadius.circular(6),
-          child: Container(
-            width: (width - 8).clamp(40, maxWidth),
+class _ResizableTaskBarState extends State<_ResizableTaskBar> {
+  bool _isHovering = false;
+  bool _isResizingStart = false;
+  bool _isResizingEnd = false;
+  double _resizeDelta = 0;
+  double _positionOffset = 0; // For shifting position during start resize
+  
+  static const double _handleWidth = 8.0;
+  static const double _minBarWidth = 20.0;
+
+  Color get _color => widget.task.taskType == TaskType.generalTask
+      ? TaskType.generalTask.color
+      : widget.task.status.color;
+
+  @override
+  Widget build(BuildContext context) {
+    final effectiveWidth = (widget.width + _resizeDelta).clamp(_minBarWidth, widget.maxWidth);
+    
+    // Apply position offset when resizing from start (right handle in RTL)
+    // This makes the right edge move instead of the left edge
+    return Transform.translate(
+      offset: Offset(_positionOffset, 0),
+      child: MouseRegion(
+        onEnter: (_) => setState(() => _isHovering = true),
+        onExit: (_) => setState(() => _isHovering = false),
+        child: GestureDetector(
+          onDoubleTap: widget.onDoubleTap,
+          child: SizedBox(
+            width: effectiveWidth,
             height: 32,
-            decoration: BoxDecoration(
-              color: color,
-              borderRadius: BorderRadius.circular(6),
-              boxShadow: [
-                BoxShadow(
-                  color: color.withValues(alpha: 0.5),
-                  blurRadius: 12,
-                  offset: const Offset(0, 4),
-                ),
-              ],
-            ),
-            padding: const EdgeInsets.symmetric(horizontal: 8),
-            alignment: Alignment.centerRight,
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(
-                  task.taskType.icon,
-                  color: Colors.white.withValues(alpha: 0.8),
-                  size: 14,
-                ),
-                const SizedBox(width: 6),
-                Expanded(
-                  child: Text(
-                    task.name,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 11,
-                      fontWeight: FontWeight.w600,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
+            child: Stack(
+            children: [
+              // Main bar (draggable for moving)
+              Positioned.fill(
+                left: _handleWidth,
+                right: _handleWidth,
+                child: Draggable<TaskEntity>(
+                  data: widget.task,
+                  feedback: Material(
+                    elevation: 8,
+                    borderRadius: BorderRadius.circular(6),
+                    child: _buildBarContent(effectiveWidth - _handleWidth * 2),
+                  ),
+                  childWhenDragging: Opacity(
+                    opacity: 0.4,
+                    child: _buildBarContent(effectiveWidth - _handleWidth * 2),
+                  ),
+                  child: Tooltip(
+                    message: 'اسحب لنقل • انقر مرتين للتعديل',
+                    child: _buildBarContent(effectiveWidth - _handleWidth * 2),
                   ),
                 ),
-              ],
-            ),
+              ),
+              
+              // Full bar background (for visual continuity)
+              Positioned.fill(
+                child: IgnorePointer(
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: _color,
+                      borderRadius: BorderRadius.circular(6),
+                      boxShadow: [
+                        BoxShadow(
+                          color: _color.withValues(alpha: 0.3),
+                          blurRadius: 4,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+              
+              // Content overlay
+              Positioned.fill(
+                child: IgnorePointer(
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    alignment: Alignment.centerRight,
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          widget.task.taskType.icon,
+                          color: Colors.white.withValues(alpha: 0.8),
+                          size: 14,
+                        ),
+                        const SizedBox(width: 6),
+                        Expanded(
+                          child: Text(
+                            widget.task.name,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 11,
+                              fontWeight: FontWeight.w600,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+              
+              // Right resize handle (for RTL: adjusts START time)
+              Positioned(
+                right: 0,
+                top: 0,
+                bottom: 0,
+                child: _buildResizeHandle(
+                  isStart: true,
+                  isActive: _isResizingStart,
+                ),
+              ),
+              
+              // Left resize handle (for RTL: adjusts END time)
+              Positioned(
+                left: 0,
+                top: 0,
+                bottom: 0,
+                child: _buildResizeHandle(
+                  isStart: false,
+                  isActive: _isResizingEnd,
+                ),
+              ),
+            ],
           ),
         ),
-        childWhenDragging: Opacity(
-          opacity: 0.4,
-          child: _buildBar(color),
-        ),
-        child: Tooltip(
-          message: 'انقر مرتين للتعديل',
-          child: _buildBar(color),
+      ),
+      ),
+    );
+  }
+
+  Widget _buildBarContent(double width) {
+    return Container(
+      width: width.clamp(_minBarWidth, widget.maxWidth),
+      height: 32,
+      decoration: BoxDecoration(
+        color: _color,
+        borderRadius: BorderRadius.circular(6),
+      ),
+    );
+  }
+
+  Widget _buildResizeHandle({required bool isStart, required bool isActive}) {
+    return GestureDetector(
+      onHorizontalDragStart: (_) {
+        setState(() {
+          if (isStart) {
+            _isResizingStart = true;
+          } else {
+            _isResizingEnd = true;
+          }
+          _resizeDelta = 0;
+          _positionOffset = 0;
+        });
+      },
+      onHorizontalDragUpdate: (details) {
+        setState(() {
+          // RTL layout: RIGHT = earlier dates, LEFT = later dates
+          if (isStart) {
+            // Right handle in RTL = start time
+            // Dragging right (positive delta) = earlier start = wider bar
+            _resizeDelta += details.delta.dx;
+            // Shift position to make RIGHT edge move (not left edge)
+            _positionOffset += details.delta.dx;
+          } else {
+            // Left handle in RTL = end time
+            // Dragging left (negative delta) = later end = wider bar
+            _resizeDelta -= details.delta.dx;
+            // No position offset needed - left edge naturally moves
+          }
+        });
+      },
+      onHorizontalDragEnd: (_) {
+        _applyResize(isStart);
+        setState(() {
+          _isResizingStart = false;
+          _isResizingEnd = false;
+          _resizeDelta = 0;
+          _positionOffset = 0;
+        });
+      },
+      child: MouseRegion(
+        cursor: SystemMouseCursors.resizeColumn,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 150),
+          width: _handleWidth,
+          decoration: BoxDecoration(
+            color: (_isHovering || isActive)
+                ? Colors.white.withValues(alpha: 0.3)
+                : Colors.transparent,
+            borderRadius: BorderRadius.horizontal(
+              left: isStart ? Radius.zero : const Radius.circular(6),
+              right: isStart ? const Radius.circular(6) : Radius.zero,
+            ),
+          ),
+          child: (_isHovering || isActive)
+              ? Center(
+                  child: Container(
+                    width: 3,
+                    height: 16,
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.6),
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                )
+              : null,
         ),
       ),
     );
   }
 
-  Widget _buildBar(Color color) {
-    return Container(
-      width: (width - 8).clamp(40, maxWidth),
-      height: 32,
-      decoration: BoxDecoration(
-        color: color,
-        borderRadius: BorderRadius.circular(6),
-        boxShadow: [
-          BoxShadow(
-            color: color.withValues(alpha: 0.3),
-            blurRadius: 4,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      padding: const EdgeInsets.symmetric(horizontal: 8),
-      alignment: Alignment.centerRight,
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(
-            task.taskType.icon,
-            color: Colors.white.withValues(alpha: 0.8),
-            size: 14,
-          ),
-          const SizedBox(width: 6),
-          Expanded(
-            child: Text(
-              task.name,
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 11,
-                fontWeight: FontWeight.w600,
-              ),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
-          ),
-        ],
-      ),
-    );
+  void _applyResize(bool isStart) {
+    if (widget.onResized == null) return;
+    
+    // Calculate the time change based on pixel delta
+    // Each dayWidth pixels = 24 hours
+    final hoursChanged = (_resizeDelta / widget.dayWidth) * 24;
+    
+    DateTime newStart = widget.task.startDate;
+    DateTime newEnd = widget.task.endDate;
+    
+    if (isStart) {
+      // Adjusting start time (right handle in RTL)
+      // Positive delta (dragged right) = earlier start = subtract time
+      newStart = widget.task.startDate.subtract(
+        Duration(minutes: (hoursChanged * 60).round()),
+      );
+    } else {
+      // Adjusting end time (left handle in RTL)
+      // Positive delta (dragged left) = later end = add time
+      newEnd = widget.task.endDate.add(
+        Duration(minutes: (hoursChanged * 60).round()),
+      );
+    }
+    
+    // Ensure start is before end
+    if (newStart.isBefore(newEnd)) {
+      widget.onResized!(newStart, newEnd);
+    }
   }
 }
