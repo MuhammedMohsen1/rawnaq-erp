@@ -1,0 +1,150 @@
+{
+  "@@locale": "ar",
+  "appTitle": "رونق",
+  "@appTitle": {
+    "description": "عنوان التطبيق"
+  },
+  
+  "welcomeBack": "أهلاً بعودتك!",
+  "@welcomeBack": {
+    "description": "رسالة الترحيب في صفحة تسجيل الدخول"
+  },
+  
+  "signInToPortal": "سجل دخولك إلى نظام إدارة المشاريع",
+  "@signInToPortal": {
+    "description": "العنوان الفرعي لصفحة تسجيل الدخول"
+  },
+  
+  "emailAddress": "البريد الإلكتروني",
+  "enterYourEmail": "أدخل بريدك الإلكتروني",
+  "password": "كلمة المرور",
+  "enterYourPassword": "أدخل كلمة المرور",
+  "signIn": "تسجيل الدخول",
+  "needHelp": "تحتاج مساعدة؟ تواصل مع مدير النظام",
+  "logout": "تسجيل الخروج",
+  "forgotPassword": "نسيت كلمة المرور؟",
+  "resetPassword": "إعادة تعيين كلمة المرور",
+  
+  "dashboard": "لوحة القيادة",
+  "projects": "المشاريع",
+  "ganttChart": "مخطط جانت",
+  "tasks": "المهام",
+  "reports": "التقارير",
+  "settings": "الإعدادات",
+  "help": "المساعدة",
+  
+  "projectsList": "قائمة المشاريع",
+  "createNewProject": "إنشاء مشروع جديد",
+  "searchProject": "ابحث عن مشروع بالاسم...",
+  "resetFilters": "إعادة تعيين",
+  
+  "projectName": "اسم المشروع",
+  "status": "الحالة",
+  "progress": "التقدم",
+  "startDate": "تاريخ البدء",
+  "endDate": "تاريخ الانتهاء",
+  "actions": "إجراءات",
+  
+  "statusAll": "الحالة: الكل",
+  "statusActive": "نشط",
+  "statusCompleted": "مكتمل",
+  "statusDelayed": "متأخر",
+  "statusOnHold": "معلق",
+  
+  "projectManager": "مدير المشروع",
+  "teamMember": "عضو الفريق",
+  
+  "tableView": "عرض الجدول",
+  "cardView": "عرض البطاقات",
+  
+  "showing": "عرض",
+  "of": "من",
+  "previous": "السابق",
+  "next": "التالي",
+  
+  "view": "عرض",
+  "edit": "تعديل",
+  "delete": "حذف",
+  
+  "confirmDelete": "تأكيد الحذف",
+  "confirmDeleteMessage": "هل أنت متأكد من حذف المشروع \"{name}\"؟",
+  "@confirmDeleteMessage": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "cancel": "إلغاء",
+  
+  "totalProjects": "إجمالي المشاريع",
+  "activeProjects": "مشاريع نشطة",
+  "completedProjects": "مشاريع مكتملة",
+  "delayedProjects": "مشاريع متأخرة",
+  
+  "quickActions": "إجراءات سريعة",
+  "newProject": "مشروع جديد",
+  "viewProjects": "عرض المشاريع",
+  
+  "noProjects": "لا توجد مشاريع",
+  "noProjectsDescription": "لم يتم إنشاء أي مشاريع بعد",
+  
+  "comingSoon": "قريباً",
+  "tasksComingSoon": "قريباً - إدارة المهام والأنشطة",
+  "reportsComingSoon": "قريباً - تقارير وإحصائيات المشاريع",
+  "settingsComingSoon": "قريباً - إعدادات الحساب والتطبيق",
+  
+  "companyName": "اسم الشركة",
+  "projectManagement": "إدارة المشاريع",
+  
+  "error": "خطأ",
+  "retry": "إعادة المحاولة",
+  "success": "نجاح",
+  "loading": "جاري التحميل...",
+  
+  "unauthorized": "غير مصرح",
+  "unauthorizedMessage": "ليس لديك صلاحية للوصول إلى هذه الصفحة",
+  "goBack": "العودة",
+
+  "pageNotFound": "الصفحة غير موجودة",
+  "pageNotFoundMessage": "الصفحة التي تبحث عنها غير موجودة",
+  
+  "ganttChartTitle": "مخطط جانت - توزيع المهام",
+  "today": "اليوم",
+  "week": "الأسبوع",
+  "month": "الشهر",
+  "threeMonths": "3 شهور",
+  "myTasksOnly": "مهامي فقط",
+  "teamTasks": "مهام الفريق",
+  "applyFilters": "تطبيق الفلاتر",
+  "clearFilters": "مسح الفلاتر",
+  "employee": "الموظف",
+  "all": "الكل",
+  "taskList": "الموظفين",
+  
+  "taskStatusInProgress": "قيد التنفيذ",
+  "taskStatusCompleted": "مكتمل",
+  "taskStatusWaiting": "في الانتظار",
+  "taskStatusDelayed": "متأخر",
+  
+  "importantWarnings": "تحذيرات هامة",
+  "employeesOverloaded": "{count} موظفين يتجاوزون طاقة العمل هذا الأسبوع",
+  "@employeesOverloaded": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "projectDelayed": "مشروع \"{name}\" متأخر عن الموعد المحدد",
+  "@projectDelayed": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  
+  "noTasks": "لا توجد مهام",
+  "noTasksFound": "لم يتم العثور على مهام في الفترة المحددة"
+}

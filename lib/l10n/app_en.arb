@@ -1,0 +1,150 @@
+{
+  "@@locale": "en",
+  "appTitle": "Rawnaq",
+  "@appTitle": {
+    "description": "Application title"
+  },
+  
+  "welcomeBack": "Welcome Back!",
+  "@welcomeBack": {
+    "description": "Welcome message on login page"
+  },
+  
+  "signInToPortal": "Sign in to Project Management System",
+  "@signInToPortal": {
+    "description": "Subtitle for login page"
+  },
+  
+  "emailAddress": "Email Address",
+  "enterYourEmail": "Enter your email",
+  "password": "Password",
+  "enterYourPassword": "Enter your password",
+  "signIn": "Sign In",
+  "needHelp": "Need help? Contact your system administrator",
+  "logout": "Logout",
+  "forgotPassword": "Forgot Password?",
+  "resetPassword": "Reset Password",
+
+  "dashboard": "Dashboard",
+  "projects": "Projects",
+  "ganttChart": "Gantt Chart",
+  "tasks": "Tasks",
+  "reports": "Reports",
+  "settings": "Settings",
+  "help": "Help",
+  
+  "projectsList": "Projects List",
+  "createNewProject": "Create New Project",
+  "searchProject": "Search project by name...",
+  "resetFilters": "Reset",
+  
+  "projectName": "Project Name",
+  "status": "Status",
+  "progress": "Progress",
+  "startDate": "Start Date",
+  "endDate": "End Date",
+  "actions": "Actions",
+  
+  "statusAll": "Status: All",
+  "statusActive": "Active",
+  "statusCompleted": "Completed",
+  "statusDelayed": "Delayed",
+  "statusOnHold": "On Hold",
+  
+  "projectManager": "Project Manager",
+  "teamMember": "Team Member",
+  
+  "tableView": "Table View",
+  "cardView": "Card View",
+  
+  "showing": "Showing",
+  "of": "of",
+  "previous": "Previous",
+  "next": "Next",
+  
+  "view": "View",
+  "edit": "Edit",
+  "delete": "Delete",
+  
+  "confirmDelete": "Confirm Delete",
+  "confirmDeleteMessage": "Are you sure you want to delete the project \"{name}\"?",
+  "@confirmDeleteMessage": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "cancel": "Cancel",
+  
+  "totalProjects": "Total Projects",
+  "activeProjects": "Active Projects",
+  "completedProjects": "Completed Projects",
+  "delayedProjects": "Delayed Projects",
+  
+  "quickActions": "Quick Actions",
+  "newProject": "New Project",
+  "viewProjects": "View Projects",
+  
+  "noProjects": "No Projects",
+  "noProjectsDescription": "No projects have been created yet",
+  
+  "comingSoon": "Coming Soon",
+  "tasksComingSoon": "Coming Soon - Task and Activity Management",
+  "reportsComingSoon": "Coming Soon - Project Reports and Statistics",
+  "settingsComingSoon": "Coming Soon - Account and App Settings",
+  
+  "companyName": "Company Name",
+  "projectManagement": "Project Management",
+  
+  "error": "Error",
+  "retry": "Retry",
+  "success": "Success",
+  "loading": "Loading...",
+
+  "unauthorized": "Unauthorized",
+  "unauthorizedMessage": "You do not have permission to access this page",
+  "goBack": "Go Back",
+  
+  "pageNotFound": "Page Not Found",
+  "pageNotFoundMessage": "The page you are looking for does not exist",
+  
+  "ganttChartTitle": "Gantt Chart - Task Distribution",
+  "today": "Today",
+  "week": "Week",
+  "month": "Month",
+  "threeMonths": "3 Months",
+  "myTasksOnly": "My Tasks Only",
+  "teamTasks": "Team Tasks",
+  "applyFilters": "Apply Filters",
+  "clearFilters": "Clear Filters",
+  "employee": "Employee",
+  "all": "All",
+  "taskList": "Employees",
+  
+  "taskStatusInProgress": "In Progress",
+  "taskStatusCompleted": "Completed",
+  "taskStatusWaiting": "Waiting",
+  "taskStatusDelayed": "Delayed",
+  
+  "importantWarnings": "Important Warnings",
+  "employeesOverloaded": "{count} employees are overloaded this week",
+  "@employeesOverloaded": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "projectDelayed": "Project \"{name}\" is delayed",
+  "@projectDelayed": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  
+  "noTasks": "No Tasks",
+  "noTasksFound": "No tasks found for the selected period"
+}
