@@ -1,72 +1,62 @@
-# Rawnaq
+🏗️ نظام إدارة شركة تشطيبات متكامل (Construction & Design ERP)
+📋 نظرة عامة (Overview)
+نظام تقني وإداري مخصص لشركات التشطيبات الصغيرة والمتوسطة، يربط بين قسم التصميم (الهرمي) وقسم التنفيذ، مع دورة حياة مرنة للمشاريع تبدأ من المعاينة وحتى تسليم المفتاح.
 
-**First Milestone** 🎯
+🚀 المميزات الأساسية (Core Features)
+1. هيكلية الإدارة المرنة (Scalable Hierarchy)
 
-Rawnaq is a comprehensive project management platform designed specifically for interior design teams and operational staff. The application provides powerful tools to streamline workflows, manage projects, coordinate team activities, and enhance collaboration between design and operational departments.
+نظام الأدوار (Role-Based Access): فصل الصلاحيات بين (Junior Engineer / Senior / Admin).
 
-## Features
+مسار الاعتماد (Approval Workflow): أي مخرج (تصميم أو مقايسة) لا ينتقل للمرحلة التالية إلا بعد اعتماد "المراجع الفني".
 
-- **Project Management** - Create, track, and manage interior design projects from concept to completion
-- **Team Collaboration** - Coordinate between interior design teams and operational staff seamlessly
-- **Task Tracking** - Assign, monitor, and complete tasks with real-time progress updates
-- **Dashboard & Reports** - Visual analytics and reports to track project performance
-- **Multi-platform Support** - Available on Web, iOS, Android, Windows, macOS, and Linux
+قابلية التوسع: إمكانية نقل مهام المراجعة من "الأدمن" إلى "مهندس سينيور" مستقبلاً بضغطة زر دون تغيير في بنية النظام.
 
-## Tech Stack
+2. دورة حياة المشروع (Dual-Track System)
 
-- **Framework**: Flutter 3.8+
-- **State Management**: flutter_bloc, Provider
-- **Navigation**: go_router
-- **Network**: Dio, Retrofit
-- **Storage**: SharedPreferences
-- **Dependency Injection**: get_it, injectable
-- **Firebase**: Analytics, Messaging, Notifications
+مسار التصميم: نظام مراجعات هرمي يبدأ من المهندس الصغير وصولاً للمهندس الكبير ثم العميل.
 
-## Getting Started
+مسار التنفيذ المباشر: إمكانية فتح مشروع "تنفيذ فقط" وتخطي مرحلة التصميم، مع رفع ملفات العميل الخارجية.
 
-### Prerequisites
+3. نظام التسعير الواقعي (Field-Based Pricing)
 
-- Flutter SDK (^3.8.1)
-- Dart SDK
-- Firebase project configured
+التسعير الميداني: يعتمد على مدخلات مهندس الموقع (المراقب) بناءً على معاينة الواقع وأسعار السوق الحالية.
 
-### Installation
+المراجعة السعرية: تمر المقايسة بـ "فلتر مراجعة" من الإدارة قبل إصدار العقد لضمان هوامش الربح ودقة الكميات.
 
-1. Clone the repository:
-```bash
-git clone <repository-url>
-cd rawnaq
-```
+توليد عروض الأسعار: استخراج PDF احترافي بـ Logo الشركة من البيانات المدخلة.
 
-2. Install dependencies:
-```bash
-flutter pub get
-```
+4. الإدارة المالية المرنة (Smart Accounting)
 
-3. Generate required files:
-```bash
-dart run build_runner build --delete-conflicting-outputs
-```
+جدولة الدفعات (Custom Payment Milestones): إمكانية تحديد عدد ونسب الدفعات (3 دفعات أو أكثر) بشكل مخصص لكل عقد.
 
-4. Run the application:
-```bash
-flutter run
-```
+الربط بالإنجاز: لا يتم تفعيل "مهام التنفيذ" في المرحلة التالية إلا بعد تأكيد المحاسب لاستلام الدفعة المالية المرتبطة بها.
 
-## Project Structure
+5. إدارة المهام والتوثيق (Task Management & Logs)
 
-```
-lib/
-├── core/           # Core utilities, constants, services, and shared widgets
-├── features/       # Feature modules (auth, dashboard, reports, etc.)
-├── l10n/           # Localization files (English & Arabic)
-└── main.dart       # Application entry point
-```
+توثيق المراحل: إلزام المهندس برفع صور "قبل وبعد" واستلامات فنية لكل بند (السباكة، الكهرباء، إلخ).
 
-## Localization
+سجل النشاط (Audit Logs): تتبع دقيق لكل تعديل في الأسعار أو المواعيد (مين اللي عدل؟ وعدل إيه؟ وإمتى؟).
 
-The app supports both English and Arabic languages with RTL support.
+🛠️ تدفق العمل (Technical Workflow)
+Lead Capture: تسجيل بيانات العميل ونوع الخدمة (تصميم/تنفيذ).
 
-## License
+Estimation: مهندس الموقع يرفع بيانات المعاينة والأسعار.
 
-Copyright © 2025 Rawnaq. All rights reserved.
+Vetting: الأدمن يراجع المقايسة فنيًا وماليًا.
+
+Contracting: العميل يوافق -> يتم تحديد جدول الدفعات.
+
+Activation: عند دفع أول دفعة، المشروع يتحول من "Quotation" إلى "Active Project".
+
+Operation: فتح التاسكات لمهندس الموقع مع مراقبة الإنجاز والصور.
+
+Handover: تسليم نهائي وأرشفة المشروع.
+
+📈 الرؤية المستقبلية (Future Roadmap)
+إضافة بوابة عملاء (Client Portal) لمتابعة التطور والصور.
+
+نظام تنبيهات تلقائي (Auto-Reminders) بمواعيد الدفعات.
+
+ربط المخازن والموردين بأوامر التوريد مباشرة.
+
+ملاحظة: تم تصميم هذا النظام ليناسب "المكاتب الطموحة" التي تبدأ بفريق صغير ولكنها تضع أساساً بروفيشنال للنمو.

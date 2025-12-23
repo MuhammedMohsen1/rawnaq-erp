@@ -3,7 +3,8 @@ import 'package:intl/intl.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_text_styles.dart';
 import '../../../tasks/domain/enums/task_type.dart';
-import '../../../tasks/domain/enums/task_status.dart' show TaskStatus, TaskStatusExtension;
+import '../../../tasks/domain/enums/task_status.dart'
+    show TaskStatus, TaskStatusExtension;
 import '../../../tasks/domain/entities/task_entity.dart';
 import '../../../projects/domain/entities/team_member_entity.dart';
 
@@ -175,11 +176,7 @@ class _AddTaskDialogState extends State<AddTaskDialog>
               color: AppColors.primary.withValues(alpha: 0.15),
               borderRadius: BorderRadius.circular(10),
             ),
-            child: Icon(
-              Icons.add_task,
-              color: AppColors.primary,
-              size: 24,
-            ),
+            child: Icon(Icons.add_task, color: AppColors.primary, size: 24),
           ),
           const SizedBox(width: 16),
           Expanded(
@@ -206,9 +203,7 @@ class _AddTaskDialogState extends State<AddTaskDialog>
 
   Widget _buildTaskTypeTabs() {
     return Container(
-      decoration: const BoxDecoration(
-        color: AppColors.surfaceColor,
-      ),
+      decoration: const BoxDecoration(color: AppColors.surfaceColor),
       child: TabBar(
         controller: _tabController,
         indicatorColor: AppColors.primary,
@@ -282,7 +277,10 @@ class _AddTaskDialogState extends State<AddTaskDialog>
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('الموظف المسؤول${isRequired ? ' *' : ''}', style: AppTextStyles.inputLabel),
+        Text(
+          'الموظف المسؤول${isRequired ? ' *' : ''}',
+          style: AppTextStyles.inputLabel,
+        ),
         const SizedBox(height: 8),
         Container(
           decoration: BoxDecoration(
@@ -363,14 +361,15 @@ class _AddTaskDialogState extends State<AddTaskDialog>
             onChanged: (value) {
               setState(() {
                 _selectedProjectId = value;
-                _selectedProjectName = AddTaskDialog.mockProjects
-                    .firstWhere((p) => p['id'] == value)['name'];
+                _selectedProjectName = AddTaskDialog.mockProjects.firstWhere(
+                  (p) => p['id'] == value,
+                )['name'];
               });
             },
             validator: (value) =>
                 _currentTaskType == TaskType.workTask && value == null
-                    ? 'يرجى اختيار المشروع'
-                    : null,
+                ? 'يرجى اختيار المشروع'
+                : null,
           ),
         ),
         const SizedBox(height: 16),
@@ -447,9 +446,7 @@ class _AddTaskDialogState extends State<AddTaskDialog>
                 const SizedBox(width: 12),
                 Expanded(
                   child: Text(
-                    _taskTime != null
-                        ? _formatTime(_taskTime!)
-                        : 'اختر الوقت',
+                    _taskTime != null ? _formatTime(_taskTime!) : 'اختر الوقت',
                     style: _taskTime != null
                         ? AppTextStyles.inputText
                         : AppTextStyles.inputHint,
@@ -519,8 +516,11 @@ class _AddTaskDialogState extends State<AddTaskDialog>
             ),
             child: Row(
               children: [
-                Icon(Icons.calendar_today,
-                    color: AppColors.textMuted, size: 20),
+                Icon(
+                  Icons.calendar_today,
+                  color: AppColors.textMuted,
+                  size: 20,
+                ),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Text(
@@ -666,12 +666,13 @@ class _AddTaskDialogState extends State<AddTaskDialog>
               borderRadius: BorderRadius.circular(8),
               borderSide: const BorderSide(color: AppColors.primary),
             ),
-            contentPadding:
-                const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 12,
+              vertical: 14,
+            ),
           ),
           validator: required
-              ? (value) =>
-                  value?.isEmpty == true ? 'هذا الحقل مطلوب' : null
+              ? (value) => value?.isEmpty == true ? 'هذا الحقل مطلوب' : null
               : null,
         ),
       ],
@@ -704,14 +705,18 @@ class _AddTaskDialogState extends State<AddTaskDialog>
                   Icon(
                     Icons.drafts_outlined,
                     size: 18,
-                    color: _saveAsDraft ? AppColors.primary : AppColors.textMuted,
+                    color: _saveAsDraft
+                        ? AppColors.primary
+                        : AppColors.textMuted,
                   ),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
                       'حفظ كمسودة (بدون تعيين موظف)',
                       style: AppTextStyles.bodyMedium.copyWith(
-                        color: _saveAsDraft ? AppColors.primary : AppColors.textSecondary,
+                        color: _saveAsDraft
+                            ? AppColors.primary
+                            : AppColors.textSecondary,
                       ),
                     ),
                   ),
@@ -726,7 +731,10 @@ class _AddTaskDialogState extends State<AddTaskDialog>
                 style: OutlinedButton.styleFrom(
                   foregroundColor: AppColors.textSecondary,
                   side: const BorderSide(color: AppColors.border),
-                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 24,
+                    vertical: 12,
+                  ),
                 ),
                 child: const Text('إلغاء'),
               ),
@@ -734,11 +742,14 @@ class _AddTaskDialogState extends State<AddTaskDialog>
               ElevatedButton(
                 onPressed: _submitForm,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: _saveAsDraft 
-                      ? AppColors.statusOnHold 
+                  backgroundColor: _saveAsDraft
+                      ? AppColors.statusOnHold
                       : AppColors.primary,
                   foregroundColor: AppColors.scaffoldBackground,
-                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 24,
+                    vertical: 12,
+                  ),
                 ),
                 child: Text(_saveAsDraft ? 'حفظ كمسودة' : 'إضافة المهمة'),
               ),
@@ -805,21 +816,22 @@ class _AddTaskDialogState extends State<AddTaskDialog>
           ? _startDate!
           : _endDate!,
       notes: _notesController.text.isNotEmpty ? _notesController.text : null,
-      projectId: _currentTaskType == TaskType.workTask ? _selectedProjectId : null,
-      projectName: _currentTaskType == TaskType.workTask ? _selectedProjectName : null,
+      projectId: _currentTaskType == TaskType.workTask
+          ? _selectedProjectId
+          : null,
+      projectName: _currentTaskType == TaskType.workTask
+          ? _selectedProjectName
+          : null,
       customerName: _currentTaskType == TaskType.appointment
           ? _customerNameController.text
           : null,
       customerPhone: _currentTaskType == TaskType.appointment
           ? _customerPhoneController.text
           : null,
-      locationLink: _currentTaskType == TaskType.appointment &&
+      locationLink:
+          _currentTaskType == TaskType.appointment &&
               _locationLinkController.text.isNotEmpty
           ? _locationLinkController.text
-          : null,
-      taskTime: (_currentTaskType == TaskType.appointment || 
-                 _currentTaskType == TaskType.workTask) 
-          ? _taskTime 
           : null,
     );
 
@@ -836,4 +848,3 @@ class _AddTaskDialogState extends State<AddTaskDialog>
     );
   }
 }
-

@@ -122,16 +122,28 @@ class _GanttChartPageState extends State<GanttChartPage> {
       context: context,
       builder: (context) => AddTaskDialogSimple(
         onTaskAdded: (task) {
+          bool wasAdjusted = false;
           setState(() {
-            _dataSource.addTask(task);
+            wasAdjusted = _dataSource.addTask(task);
             _applyFilters();
           });
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('تم إضافة المهمة: ${task.name}'),
-              backgroundColor: AppColors.statusOnHold,
-            ),
-          );
+          
+          if (wasAdjusted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('تم إضافة المهمة: ${task.name}\nتم تعديل الوقت تلقائياً لتجنب التعارض'),
+                backgroundColor: AppColors.warning,
+                duration: const Duration(seconds: 4),
+              ),
+            );
+          } else {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('تم إضافة المهمة: ${task.name}'),
+                backgroundColor: AppColors.statusOnHold,
+              ),
+            );
+          }
         },
       ),
     );
@@ -145,13 +157,14 @@ class _GanttChartPageState extends State<GanttChartPage> {
   }
 
   void _onTaskDropped(TaskEntity task, String assigneeId, DateTime date) {
+    bool wasAdjusted = false;
     setState(() {
       if (task.isDraft || task.assigneeId == null) {
         // Assign draft task to employee starting from dropped date
-        _dataSource.assignTask(task.id, assigneeId, date);
+        wasAdjusted = _dataSource.assignTask(task.id, assigneeId, date);
       } else {
         // Update existing task - new start date (keeps duration), optionally new assignee
-        _dataSource.updateTaskDates(task.id, date, newAssigneeId: assigneeId);
+        wasAdjusted = _dataSource.updateTaskDates(task.id, date, newAssigneeId: assigneeId);
       }
       _applyFilters();
     });
@@ -160,31 +173,83 @@ class _GanttChartPageState extends State<GanttChartPage> {
         ? 'تم تعيين المهمة' 
         : (task.assigneeId != assigneeId ? 'تم نقل المهمة' : 'تم تحديث تاريخ المهمة');
     
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('$action: ${task.name}'),
-        backgroundColor: AppColors.statusCompleted,
-      ),
-    );
+    if (wasAdjusted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('$action: ${task.name}\nتم تعديل الوقت تلقائياً لتجنب التعارض'),
+          backgroundColor: AppColors.warning,
+          duration: const Duration(seconds: 4),
+        ),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('$action: ${task.name}'),
+          backgroundColor: AppColors.statusCompleted,
+        ),
+      );
+    }
   }
 
   /// Called when a task is resized by dragging its edges
   void _onTaskResized(TaskEntity task, DateTime newStart, DateTime newEnd) {
+    // Skip conflict check for appointments
+    if (task.taskType == TaskType.appointment || task.assigneeId == null) {
+      setState(() {
+        final updatedTask = task.copyWith(
+          startDate: newStart,
+          endDate: newEnd,
+        );
+        _dataSource.updateTask(updatedTask);
+        _applyFilters();
+      });
+      
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('تم تعديل مدة المهمة: ${task.name}'),
+          backgroundColor: AppColors.statusCompleted,
+        ),
+      );
+      return;
+    }
+    
+    // Check for conflicts and auto-adjust
+    final duration = newEnd.difference(newStart);
+    final adjustedStart = _dataSource.findNextAvailableSlot(
+      task.assigneeId!,
+      newStart,
+      duration,
+      excludeTaskId: task.id,
+    );
+    
+    final wasAdjusted = adjustedStart != newStart;
+    final adjustedEnd = wasAdjusted ? adjustedStart.add(duration) : newEnd;
+    
     setState(() {
       final updatedTask = task.copyWith(
-        startDate: newStart,
-        endDate: newEnd,
+        startDate: wasAdjusted ? adjustedStart : newStart,
+        endDate: adjustedEnd,
       );
       _dataSource.updateTask(updatedTask);
       _applyFilters();
     });
     
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('تم تعديل مدة المهمة: ${task.name}'),
-        backgroundColor: AppColors.statusCompleted,
-      ),
-    );
+    if (wasAdjusted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('تم تعديل مدة المهمة: ${task.name}\nتم تعديل الوقت تلقائياً لتجنب التعارض'),
+          backgroundColor: AppColors.warning,
+          duration: const Duration(seconds: 4),
+        ),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('تم تعديل مدة المهمة: ${task.name}'),
+          backgroundColor: AppColors.statusCompleted,
+        ),
+      );
+    }
   }
 
   void _showEditTaskDialog(TaskEntity task) {

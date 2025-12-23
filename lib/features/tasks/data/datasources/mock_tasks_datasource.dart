@@ -302,9 +302,137 @@ class MockTasksDataSource {
     ]);
   }
 
-  /// Add a new task
-  void addTask(TaskEntity task) {
-    _tasks.add(task);
+  // ============ CONFLICT DETECTION ============
+  
+  /// Check if a time slot has conflicts with existing tasks for an employee
+  /// Only checks work tasks and general tasks (not appointments)
+  /// Returns list of conflicting tasks
+  List<TaskEntity> _getConflictingTasks(
+    String assigneeId,
+    DateTime start,
+    DateTime end, {
+    String? excludeTaskId,
+  }) {
+    return _tasks.where((task) {
+      // Skip if it's the same task we're editing
+      if (excludeTaskId != null && task.id == excludeTaskId) return false;
+      // Skip if different assignee
+      if (task.assigneeId != assigneeId) return false;
+      // Skip appointments - they don't cause conflicts
+      if (task.taskType == TaskType.appointment) return false;
+      // Skip draft tasks
+      if (task.isDraft || task.assigneeId == null) return false;
+      
+      // Check for time overlap
+      // Two tasks overlap if: task.start < end AND task.end > start
+      return task.startDate.isBefore(end) && task.endDate.isAfter(start);
+    }).toList();
+  }
+  
+  /// Find the next available time slot for an employee
+  /// Returns adjusted start date that avoids conflicts
+  /// Only considers work tasks and general tasks (not appointments)
+  DateTime findNextAvailableSlot(
+    String assigneeId,
+    DateTime desiredStart,
+    Duration duration, {
+    String? excludeTaskId,
+  }) {
+    final desiredEnd = desiredStart.add(duration);
+    
+    // Get conflicting tasks
+    final conflicts = _getConflictingTasks(
+      assigneeId,
+      desiredStart,
+      desiredEnd,
+      excludeTaskId: excludeTaskId,
+    );
+    
+    // No conflicts - return the desired start
+    if (conflicts.isEmpty) {
+      return desiredStart;
+    }
+    
+    // Sort conflicts by end date
+    conflicts.sort((a, b) => a.endDate.compareTo(b.endDate));
+    
+    // Find the latest end time among conflicts
+    DateTime latestEnd = desiredStart;
+    for (final conflict in conflicts) {
+      if (conflict.endDate.isAfter(latestEnd)) {
+        latestEnd = conflict.endDate;
+      }
+    }
+    
+    // Start after the latest conflict ends
+    // Add a small buffer (1 minute) to ensure no overlap
+    DateTime newStart = latestEnd.add(const Duration(minutes: 1));
+    
+    // Recursively check if the new slot also has conflicts
+    final newEnd = newStart.add(duration);
+    final newConflicts = _getConflictingTasks(
+      assigneeId,
+      newStart,
+      newEnd,
+      excludeTaskId: excludeTaskId,
+    );
+    
+    if (newConflicts.isNotEmpty) {
+      // Recursively find the next available slot
+      return findNextAvailableSlot(
+        assigneeId,
+        newStart,
+        duration,
+        excludeTaskId: excludeTaskId,
+      );
+    }
+    
+    return newStart;
+  }
+  
+  /// Check if adding/moving a task would cause a conflict
+  /// Returns true if there's a conflict, false otherwise
+  bool hasConflict(
+    String assigneeId,
+    DateTime start,
+    DateTime end, {
+    String? excludeTaskId,
+  }) {
+    return _getConflictingTasks(assigneeId, start, end, excludeTaskId: excludeTaskId).isNotEmpty;
+  }
+
+  // ============ TASK OPERATIONS ============
+
+  /// Add a new task (auto-adjusts time if there's a conflict)
+  /// Returns true if the time was adjusted
+  bool addTask(TaskEntity task) {
+    // Skip conflict check for appointments and drafts
+    if (task.taskType == TaskType.appointment || task.isDraft || task.assigneeId == null) {
+      _tasks.add(task);
+      return false;
+    }
+    
+    final duration = task.endDate.difference(task.startDate);
+    final adjustedStart = findNextAvailableSlot(
+      task.assigneeId!,
+      task.startDate,
+      duration,
+    );
+    
+    final wasAdjusted = adjustedStart != task.startDate;
+    
+    if (wasAdjusted) {
+      // Calculate new end date preserving duration
+      final adjustedEnd = adjustedStart.add(duration);
+      _tasks.add(task.copyWith(
+        startDate: adjustedStart,
+        endDate: adjustedEnd,
+      ));
+    } else {
+      _tasks.add(task);
+    }
+    
+    return wasAdjusted;
   }
 
   /// Update an existing task
@@ -327,44 +455,67 @@ class MockTasksDataSource {
 
   /// Assign a draft task to an employee
   /// The task starts from [newStartDate] but preserves its original time
-  void assignTask(String taskId, String assigneeId, DateTime newStartDate) {
+  /// Auto-adjusts time if there's a conflict (for non-appointment tasks)
+  /// Returns true if the time was adjusted
+  bool assignTask(String taskId, String assigneeId, DateTime newStartDate) {
     final index = _tasks.indexWhere((t) => t.id == taskId);
-    if (index != -1) {
-      final task = _tasks[index];
-      final assignee = _teamMembers.firstWhere(
-        (m) => m.id == assigneeId,
-        orElse: () => _teamMembers.first,
+    if (index == -1) return false;
+    
+    final task = _tasks[index];
+    final assignee = _teamMembers.firstWhere(
+      (m) => m.id == assigneeId,
+      orElse: () => _teamMembers.first,
+    );
+    
+    // Calculate duration in days
+    final durationDays = task.endDateOnly.difference(task.startDateOnly).inDays;
+    
+    // Create new start date preserving original time
+    var newStart = DateTime(
+      newStartDate.year,
+      newStartDate.month,
+      newStartDate.day,
+      task.startDate.hour,
+      task.startDate.minute,
+    );
+    
+    // Create new end date preserving original time
+    var newEndDate = DateTime(
+      newStartDate.year,
+      newStartDate.month,
+      newStartDate.day + durationDays,
+      task.endDate.hour,
+      task.endDate.minute,
+    );
+    
+    bool wasAdjusted = false;
+    
+    // Check for conflicts (only for non-appointment tasks)
+    if (task.taskType != TaskType.appointment) {
+      final duration = newEndDate.difference(newStart);
+      final adjustedStart = findNextAvailableSlot(
+        assigneeId,
+        newStart,
+        duration,
+        excludeTaskId: taskId,
       );
       
-      // Calculate duration in days
-      final durationDays = task.endDateOnly.difference(task.startDateOnly).inDays;
-      
-      // Create new start date preserving original time
-      final newStart = DateTime(
-        newStartDate.year,
-        newStartDate.month,
-        newStartDate.day,
-        task.startDate.hour,
-        task.startDate.minute,
-      );
-      
-      // Create new end date preserving original time
-      final newEndDate = DateTime(
-        newStartDate.year,
-        newStartDate.month,
-        newStartDate.day + durationDays,
-        task.endDate.hour,
-        task.endDate.minute,
-      );
-      
-      _tasks[index] = task.copyWith(
-        assigneeId: assigneeId,
-        assignee: assignee,
-        startDate: newStart,
-        endDate: newEndDate,
-        isDraft: false,
-      );
+      if (adjustedStart != newStart) {
+        wasAdjusted = true;
+        newStart = adjustedStart;
+        newEndDate = adjustedStart.add(duration);
+      }
     }
+    
+    _tasks[index] = task.copyWith(
+      assigneeId: assigneeId,
+      assignee: assignee,
+      startDate: newStart,
+      endDate: newEndDate,
+      isDraft: false,
+    );
+    
+    return wasAdjusted;
   }
 
   /// Update task dates (for drag and drop)
@@ -372,50 +523,72 @@ class MockTasksDataSource {
   /// - Original start/end times
   /// - Original duration in days
   /// Optionally changes assignee if [newAssigneeId] is provided
-  void updateTaskDates(String taskId, DateTime newStartDate, {String? newAssigneeId}) {
+  /// Auto-adjusts time if there's a conflict (for non-appointment tasks)
+  /// Returns true if the time was adjusted
+  bool updateTaskDates(String taskId, DateTime newStartDate, {String? newAssigneeId}) {
     final index = _tasks.indexWhere((t) => t.id == taskId);
-    if (index != -1) {
-      final task = _tasks[index];
-      
-      // Calculate duration in days (date-only)
-      final durationDays = task.endDateOnly.difference(task.startDateOnly).inDays;
-      
-      // Create new start date preserving original time
-      final newStart = DateTime(
-        newStartDate.year,
-        newStartDate.month,
-        newStartDate.day,
-        task.startDate.hour,
-        task.startDate.minute,
-      );
-      
-      // Create new end date preserving original time and duration
-      final newEnd = DateTime(
-        newStartDate.year,
-        newStartDate.month,
-        newStartDate.day + durationDays,
-        task.endDate.hour,
-        task.endDate.minute,
-      );
-      
-      // Get new assignee if changing
-      TeamMemberEntity? newAssignee;
-      String? finalAssigneeId = task.assigneeId;
-      if (newAssigneeId != null && newAssigneeId != task.assigneeId) {
-        newAssignee = _teamMembers.firstWhere(
-          (m) => m.id == newAssigneeId,
-          orElse: () => _teamMembers.first,
-        );
-        finalAssigneeId = newAssigneeId;
-      }
-      
-      _tasks[index] = task.copyWith(
-        startDate: newStart,
-        endDate: newEnd,
-        assigneeId: finalAssigneeId,
-        assignee: newAssignee ?? task.assignee,
+    if (index == -1) return false;
+    
+    final task = _tasks[index];
+    
+    // Calculate duration in days (date-only)
+    final durationDays = task.endDateOnly.difference(task.startDateOnly).inDays;
+    
+    // Create new start date preserving original time
+    var newStart = DateTime(
+      newStartDate.year,
+      newStartDate.month,
+      newStartDate.day,
+      task.startDate.hour,
+      task.startDate.minute,
+    );
+    
+    // Create new end date preserving original time and duration
+    var newEnd = DateTime(
+      newStartDate.year,
+      newStartDate.month,
+      newStartDate.day + durationDays,
+      task.endDate.hour,
+      task.endDate.minute,
+    );
+    
+    // Get new assignee if changing
+    TeamMemberEntity? newAssignee;
+    String? finalAssigneeId = newAssigneeId ?? task.assigneeId;
+    if (newAssigneeId != null && newAssigneeId != task.assigneeId) {
+      newAssignee = _teamMembers.firstWhere(
+        (m) => m.id == newAssigneeId,
+        orElse: () => _teamMembers.first,
       );
     }
+    
+    bool wasAdjusted = false;
+    
+    // Check for conflicts (only for non-appointment tasks)
+    if (task.taskType != TaskType.appointment && finalAssigneeId != null) {
+      final duration = newEnd.difference(newStart);
+      final adjustedStart = findNextAvailableSlot(
+        finalAssigneeId,
+        newStart,
+        duration,
+        excludeTaskId: taskId,
+      );
+      
+      if (adjustedStart != newStart) {
+        wasAdjusted = true;
+        newStart = adjustedStart;
+        newEnd = adjustedStart.add(duration);
+      }
+    }
+    
+    _tasks[index] = task.copyWith(
+      startDate: newStart,
+      endDate: newEnd,
+      assigneeId: finalAssigneeId,
+      assignee: newAssignee ?? task.assignee,
+    );
+    
+    return wasAdjusted;
   }
 
   /// Update task with full details (for edit dialog)
