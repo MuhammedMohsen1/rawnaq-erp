@@ -12,6 +12,7 @@ import '../../features/gantt/presentation/pages/gantt_chart_page.dart';
 import '../../features/settings/presentation/pages/settings_page.dart';
 import '../../features/notifications/presentation/pages/notifications_page.dart';
 import '../../features/projects/presentation/pages/site_engineer_dashboard_page.dart';
+import '../../features/pricing/presentation/pages/under_pricing_page.dart';
 import '../../features/auth/presentation/bloc/auth_bloc.dart';
 import '../widgets/error_page.dart';
 import '../widgets/unauthorized_page.dart';
@@ -46,6 +47,9 @@ class AppRoutes {
 
   // Reminders
   static const String reminders = '/reminders';
+
+  // Pricing
+  static String pricing(String projectId) => '/pricing/$projectId';
 }
 
 class AppRouter {
@@ -194,6 +198,18 @@ class AppRouter {
                 subtitle: 'قريباً - إدارة التذكيرات والمواعيد',
               ),
             ),
+          ),
+
+          // Pricing
+          GoRoute(
+            path: '/pricing/:projectId',
+            pageBuilder: (context, state) {
+              final projectId = state.pathParameters['projectId'] ?? '';
+              return FadePageTransition(
+                key: state.pageKey,
+                child: UnderPricingPage(projectId: projectId),
+              );
+            },
           ),
         ],
       ),
