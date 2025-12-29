@@ -1,0 +1,8 @@
+Flutter Widget Structuring Rules:
+
+- Default to using private widget builder methods (_buildX()) inside the same file
+- Do NOT extract widgets into separate files unless reuse is required
+- Keep build() readable and composed of _buildX() calls
+- Screen-specific UI stays in one file
+- Avoid over-componentization
+- Extract widgets only when they are reused or logically independent

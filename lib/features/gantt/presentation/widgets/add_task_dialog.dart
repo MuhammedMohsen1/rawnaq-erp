@@ -23,6 +23,16 @@ class AddTaskDialog extends StatefulWidget {
     {'id': 'proj-3', 'name': 'شقة جدة'},
     {'id': 'proj-4', 'name': 'مكتب شركة التقنية'},
     {'id': 'proj-5', 'name': 'فندق الملك'},
+    {'id': 'proj-6', 'name': 'مجمع سكني الرياض'},
+    {'id': 'proj-7', 'name': 'مستشفى الخليج'},
+    {'id': 'proj-8', 'name': 'مركز تسوق النخيل'},
+    {'id': 'proj-9', 'name': 'مدرسة الأمل'},
+    {'id': 'proj-10', 'name': 'مبنى المكاتب الإداري'},
+    {'id': 'proj-11', 'name': 'فيلا الشاطئ'},
+    {'id': 'proj-12', 'name': 'عمارة سكنية الطائف'},
+    {'id': 'proj-13', 'name': 'مصنع الإنتاج'},
+    {'id': 'proj-14', 'name': 'ملعب كرة القدم'},
+    {'id': 'proj-15', 'name': 'مستودع التخزين'},
   ];
 
   const AddTaskDialog({
@@ -282,12 +292,7 @@ class _AddTaskDialogState extends State<AddTaskDialog>
           style: AppTextStyles.inputLabel,
         ),
         const SizedBox(height: 8),
-        Container(
-          decoration: BoxDecoration(
-            color: AppColors.inputBackground,
-            borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: AppColors.inputBorder),
-          ),
+        _buildDropdownContainer(
           child: DropdownButtonFormField<String>(
             value: _selectedMemberId,
             decoration: const InputDecoration(
@@ -297,37 +302,50 @@ class _AddTaskDialogState extends State<AddTaskDialog>
             dropdownColor: AppColors.cardBackground,
             style: AppTextStyles.inputText,
             hint: const Text('اختر الموظف', style: AppTextStyles.inputHint),
-            items: widget.teamMembers.map((member) {
-              return DropdownMenuItem(
-                value: member.id,
-                child: Row(
-                  children: [
-                    CircleAvatar(
-                      radius: 14,
-                      backgroundColor: AppColors.primary.withValues(alpha: 0.2),
-                      child: Text(
-                        member.name.substring(0, 1),
-                        style: TextStyle(
-                          color: AppColors.primary,
-                          fontSize: 12,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 10),
-                    Text(member.name),
-                  ],
-                ),
-              );
-            }).toList(),
+            items: widget.teamMembers.map(_buildMemberDropdownItem).toList(),
             onChanged: (value) => setState(() => _selectedMemberId = value),
             validator: (value) {
-              if (_saveAsDraft) return null; // No validation for drafts
+              if (_saveAsDraft) return null;
               return value == null ? 'يرجى اختيار الموظف المسؤول' : null;
             },
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildDropdownContainer({required Widget child}) {
+    return Container(
+      decoration: BoxDecoration(
+        color: AppColors.inputBackground,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: AppColors.inputBorder),
+      ),
+      child: child,
+    );
+  }
+
+  DropdownMenuItem<String> _buildMemberDropdownItem(TeamMemberEntity member) {
+    return DropdownMenuItem(
+      value: member.id,
+      child: Row(
+        children: [
+          CircleAvatar(
+            radius: 14,
+            backgroundColor: AppColors.primary.withValues(alpha: 0.2),
+            child: Text(
+              member.name.substring(0, 1),
+              style: TextStyle(
+                color: AppColors.primary,
+                fontSize: 12,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+          const SizedBox(width: 10),
+          Text(member.name),
+        ],
+      ),
     );
   }
 
@@ -337,14 +355,9 @@ class _AddTaskDialogState extends State<AddTaskDialog>
       children: [
         Text('المشروع *', style: AppTextStyles.inputLabel),
         const SizedBox(height: 8),
-        Container(
-          decoration: BoxDecoration(
-            color: AppColors.inputBackground,
-            borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: AppColors.inputBorder),
-          ),
+        _buildDropdownContainer(
           child: DropdownButtonFormField<String>(
-            value: _selectedProjectId,
+            initialValue: _selectedProjectId,
             decoration: const InputDecoration(
               contentPadding: EdgeInsets.symmetric(horizontal: 12),
               border: InputBorder.none,
@@ -352,20 +365,10 @@ class _AddTaskDialogState extends State<AddTaskDialog>
             dropdownColor: AppColors.cardBackground,
             style: AppTextStyles.inputText,
             hint: const Text('اختر المشروع', style: AppTextStyles.inputHint),
-            items: AddTaskDialog.mockProjects.map((project) {
-              return DropdownMenuItem(
-                value: project['id'],
-                child: Text(project['name']!),
-              );
-            }).toList(),
-            onChanged: (value) {
-              setState(() {
-                _selectedProjectId = value;
-                _selectedProjectName = AddTaskDialog.mockProjects.firstWhere(
-                  (p) => p['id'] == value,
-                )['name'];
-              });
-            },
+            items: AddTaskDialog.mockProjects
+                .map(_buildProjectDropdownItem)
+                .toList(),
+            onChanged: _handleProjectChange,
             validator: (value) =>
                 _currentTaskType == TaskType.workTask && value == null
                 ? 'يرجى اختيار المشروع'
@@ -375,6 +378,26 @@ class _AddTaskDialogState extends State<AddTaskDialog>
         const SizedBox(height: 16),
       ],
     );
+  }
+
+  DropdownMenuItem<String> _buildProjectDropdownItem(
+    Map<String, String> project,
+  ) {
+    return DropdownMenuItem(
+      value: project['id'],
+      child: Text(project['name']!),
+    );
+  }
+
+  void _handleProjectChange(String? value) {
+    setState(() {
+      _selectedProjectId = value;
+      if (value != null) {
+        _selectedProjectName = AddTaskDialog.mockProjects.firstWhere(
+          (p) => p['id'] == value,
+        )['name'];
+      }
+    });
   }
 
   Widget _buildAppointmentFields() {
@@ -413,33 +436,8 @@ class _AddTaskDialogState extends State<AddTaskDialog>
         Text('$label${required ? ' *' : ''}', style: AppTextStyles.inputLabel),
         const SizedBox(height: 8),
         InkWell(
-          onTap: () async {
-            final time = await showTimePicker(
-              context: context,
-              initialTime: _taskTime ?? TimeOfDay.now(),
-              builder: (context, child) {
-                return Theme(
-                  data: Theme.of(context).copyWith(
-                    colorScheme: const ColorScheme.dark(
-                      primary: AppColors.primary,
-                      surface: AppColors.cardBackground,
-                    ),
-                  ),
-                  child: child!,
-                );
-              },
-            );
-            if (time != null) {
-              setState(() => _taskTime = time);
-            }
-          },
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
-            decoration: BoxDecoration(
-              color: AppColors.inputBackground,
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: AppColors.inputBorder),
-            ),
+          onTap: _handleTimePicker,
+          child: _buildInputContainer(
             child: Row(
               children: [
                 Icon(Icons.access_time, color: AppColors.textMuted, size: 20),
@@ -458,6 +456,17 @@ class _AddTaskDialogState extends State<AddTaskDialog>
         ),
       ],
     );
+  }
+
+  Future<void> _handleTimePicker() async {
+    final time = await showTimePicker(
+      context: context,
+      initialTime: _taskTime ?? TimeOfDay.now(),
+      builder: _buildPickerTheme,
+    );
+    if (time != null) {
+      setState(() => _taskTime = time);
+    }
   }
 
   String _formatTime(TimeOfDay time) {
@@ -507,13 +516,7 @@ class _AddTaskDialogState extends State<AddTaskDialog>
         const SizedBox(height: 8),
         InkWell(
           onTap: onTap,
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
-            decoration: BoxDecoration(
-              color: AppColors.inputBackground,
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: AppColors.inputBorder),
-            ),
+          child: _buildInputContainer(
             child: Row(
               children: [
                 Icon(
@@ -544,17 +547,7 @@ class _AddTaskDialogState extends State<AddTaskDialog>
       initialDate: (isStartDate ? _startDate : _endDate) ?? DateTime.now(),
       firstDate: DateTime(2020),
       lastDate: DateTime(2030),
-      builder: (context, child) {
-        return Theme(
-          data: Theme.of(context).copyWith(
-            colorScheme: const ColorScheme.dark(
-              primary: AppColors.primary,
-              surface: AppColors.cardBackground,
-            ),
-          ),
-          child: child!,
-        );
-      },
+      builder: _buildPickerTheme,
     );
 
     if (date != null) {
@@ -574,18 +567,37 @@ class _AddTaskDialogState extends State<AddTaskDialog>
     }
   }
 
+  Widget _buildPickerTheme(BuildContext context, Widget? child) {
+    return Theme(
+      data: Theme.of(context).copyWith(
+        colorScheme: const ColorScheme.dark(
+          primary: AppColors.primary,
+          surface: AppColors.cardBackground,
+        ),
+      ),
+      child: child!,
+    );
+  }
+
+  Widget _buildInputContainer({required Widget child}) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+      decoration: BoxDecoration(
+        color: AppColors.inputBackground,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: AppColors.inputBorder),
+      ),
+      child: child,
+    );
+  }
+
   Widget _buildStatusDropdown() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text('الحالة', style: AppTextStyles.inputLabel),
         const SizedBox(height: 8),
-        Container(
-          decoration: BoxDecoration(
-            color: AppColors.inputBackground,
-            borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: AppColors.inputBorder),
-          ),
+        _buildDropdownContainer(
           child: DropdownButtonFormField<TaskStatus>(
             value: _status,
             decoration: const InputDecoration(
@@ -594,31 +606,33 @@ class _AddTaskDialogState extends State<AddTaskDialog>
             ),
             dropdownColor: AppColors.cardBackground,
             style: AppTextStyles.inputText,
-            items: TaskStatus.values.map((status) {
-              return DropdownMenuItem(
-                value: status,
-                child: Row(
-                  children: [
-                    Container(
-                      width: 12,
-                      height: 12,
-                      decoration: BoxDecoration(
-                        color: status.color,
-                        shape: BoxShape.circle,
-                      ),
-                    ),
-                    const SizedBox(width: 10),
-                    Text(status.arabicName),
-                  ],
-                ),
-              );
-            }).toList(),
+            items: TaskStatus.values.map(_buildStatusDropdownItem).toList(),
             onChanged: (value) {
               if (value != null) setState(() => _status = value);
             },
           ),
         ),
       ],
+    );
+  }
+
+  DropdownMenuItem<TaskStatus> _buildStatusDropdownItem(TaskStatus status) {
+    return DropdownMenuItem(
+      value: status,
+      child: Row(
+        children: [
+          Container(
+            width: 12,
+            height: 12,
+            decoration: BoxDecoration(
+              color: status.color,
+              shape: BoxShape.circle,
+            ),
+          ),
+          const SizedBox(width: 10),
+          Text(status.arabicName),
+        ],
+      ),
     );
   }
 
@@ -762,39 +776,48 @@ class _AddTaskDialogState extends State<AddTaskDialog>
 
   void _submitForm() {
     if (!_formKey.currentState!.validate()) return;
+    if (!_validateForm()) return;
 
-    // Additional validation (skip assignee check if saving as draft)
+    final task = _createTaskEntity();
+    widget.onTaskAdded(task);
+    Navigator.pop(context);
+  }
+
+  bool _validateForm() {
     if (!_saveAsDraft && _selectedMemberId == null) {
       _showError('يرجى اختيار الموظف المسؤول');
-      return;
+      return false;
     }
     if (_startDate == null) {
       _showError('يرجى اختيار تاريخ البداية');
-      return;
+      return false;
     }
     if (_currentTaskType != TaskType.appointment && _endDate == null) {
       _showError('يرجى اختيار تاريخ النهاية');
-      return;
+      return false;
     }
     if (_currentTaskType == TaskType.workTask && _selectedProjectId == null) {
       _showError('يرجى اختيار المشروع');
-      return;
+      return false;
     }
     if (_currentTaskType == TaskType.appointment) {
       if (_customerNameController.text.isEmpty) {
         _showError('يرجى إدخال اسم العميل');
-        return;
+        return false;
       }
       if (_customerPhoneController.text.isEmpty) {
         _showError('يرجى إدخال رقم الهاتف');
-        return;
+        return false;
       }
       if (_taskTime == null) {
         _showError('يرجى اختيار وقت الموعد');
-        return;
+        return false;
       }
     }
+    return true;
+  }
 
+  TaskEntity _createTaskEntity() {
     TeamMemberEntity? assignee;
     if (_selectedMemberId != null) {
       assignee = widget.teamMembers.firstWhere(
@@ -803,7 +826,7 @@ class _AddTaskDialogState extends State<AddTaskDialog>
       );
     }
 
-    final task = TaskEntity(
+    return TaskEntity(
       id: 'task-${DateTime.now().millisecondsSinceEpoch}',
       name: _nameController.text,
       taskType: _currentTaskType,
@@ -834,9 +857,6 @@ class _AddTaskDialogState extends State<AddTaskDialog>
           ? _locationLinkController.text
           : null,
     );
-
-    widget.onTaskAdded(task);
-    Navigator.pop(context);
   }
 
   void _showError(String message) {

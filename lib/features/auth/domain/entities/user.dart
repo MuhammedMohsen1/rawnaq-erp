@@ -7,6 +7,7 @@ class User extends Equatable {
   final String? phone;
   final String? avatar;
   final String role;
+  final List<String>? adminSubRoles; // Admin can have sub-roles
   final bool isActive;
   final DateTime createdAt;
   final DateTime? lastLoginAt;
@@ -20,6 +21,7 @@ class User extends Equatable {
     this.phone,
     this.avatar,
     required this.role,
+    this.adminSubRoles,
     required this.isActive,
     required this.createdAt,
     this.lastLoginAt,
@@ -35,6 +37,9 @@ class User extends Equatable {
       phone: json['phone'] as String?,
       avatar: json['avatar'] as String?,
       role: json['role'] as String,
+      adminSubRoles: json['adminSubRoles'] != null
+          ? List<String>.from(json['adminSubRoles'] as List)
+          : null,
       isActive: json['isActive'] as bool? ?? true,
       createdAt: DateTime.parse(json['createdAt'] as String),
       lastLoginAt: json['lastLoginAt'] != null
@@ -53,6 +58,7 @@ class User extends Equatable {
       'phone': phone,
       'avatar': avatar,
       'role': role,
+      'adminSubRoles': adminSubRoles,
       'isActive': isActive,
       'createdAt': createdAt.toIso8601String(),
       'lastLoginAt': lastLoginAt?.toIso8601String(),
@@ -69,6 +75,7 @@ class User extends Equatable {
     String? phone,
     String? avatar,
     String? role,
+    List<String>? adminSubRoles,
     bool? isActive,
     DateTime? createdAt,
     DateTime? updatedAt,
@@ -83,12 +90,40 @@ class User extends Equatable {
       phone: phone ?? this.phone,
       avatar: avatar ?? this.avatar,
       role: role ?? this.role,
+      adminSubRoles: adminSubRoles ?? this.adminSubRoles,
       isActive: isActive ?? this.isActive,
       createdAt: createdAt ?? this.createdAt,
       lastLoginAt: lastLoginAt ?? this.lastLoginAt,
       openingTime: openingTime ?? this.openingTime,
       closingTime: closingTime ?? this.closingTime,
     );
+  }
+
+  // Role checking methods
+  bool get isAdmin => role == 'admin';
+  bool get isManager => role == 'manager';
+  bool get isSeniorEngineer => role == 'senior_engineer';
+  bool get isJuniorEngineer => role == 'junior_engineer';
+
+  // Admin sub-role checking
+  bool hasAdminSubRole(String subRole) {
+    if (!isAdmin) return false;
+    return adminSubRoles?.contains(subRole) ?? false;
+  }
+
+  bool get isSystemAdmin => isAdmin && (adminSubRoles?.contains('system_admin') ?? true);
+  bool get isProjectAdmin => isAdmin && (adminSubRoles?.contains('project_admin') ?? true);
+  bool get isFinancialAdmin => isAdmin && (adminSubRoles?.contains('financial_admin') ?? true);
+  bool get isTechnicalAdmin => isAdmin && (adminSubRoles?.contains('technical_admin') ?? true);
+
+  // Check if user can access all projects
+  bool get canAccessAllProjects {
+    return isAdmin || isManager || isSeniorEngineer;
+  }
+
+  // Check if user can manage projects
+  bool get canManageProjects {
+    return isAdmin || isManager;
   }
 
   @override
@@ -99,6 +134,7 @@ class User extends Equatable {
     phone,
     avatar,
     role,
+    adminSubRoles,
     isActive,
     createdAt,
     lastLoginAt,

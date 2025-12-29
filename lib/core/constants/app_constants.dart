@@ -66,7 +66,15 @@ class AppConstants {
   // User Roles
   static const String adminRole = 'admin';
   static const String managerRole = 'manager';
+  static const String seniorEngineerRole = 'senior_engineer';
+  static const String juniorEngineerRole = 'junior_engineer';
   static const String staffRole = 'staff';
+
+  // Admin Sub-Roles
+  static const String systemAdminSubRole = 'system_admin';
+  static const String projectAdminSubRole = 'project_admin';
+  static const String financialAdminSubRole = 'financial_admin';
+  static const String technicalAdminSubRole = 'technical_admin';
 
   // Date Formats
   static const String dateFormat = 'dd/MM/yyyy';

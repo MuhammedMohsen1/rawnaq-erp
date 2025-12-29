@@ -4,9 +4,10 @@ import '../constants/app_colors.dart';
 import '../constants/app_text_styles.dart';
 import '../routing/app_router.dart';
 import '../widgets/bottom_nav_bar.dart';
+import '../widgets/top_bar.dart';
 
 /// Main layout with responsive navigation
-/// - Desktop (>= 768px): Sidebar on the right
+/// - Desktop (>= 768px): Sidebar on the left
 /// - Mobile (< 768px): Bottom navigation bar
 class MainLayout extends StatelessWidget {
   final Widget child;
@@ -22,15 +23,25 @@ class MainLayout extends StatelessWidget {
         final isDesktop = constraints.maxWidth >= 768;
 
         if (isDesktop) {
-          // Desktop layout with sidebar on the right
+          // Desktop layout with sidebar on the left
           return Scaffold(
-            backgroundColor: AppColors.sidebarBackground,
+            backgroundColor: AppColors.scaffoldBackground,
             body: Row(
               children: [
-                // Content area
-                Expanded(child: child),
-                // Sidebar (on the right for RTL)
+                // Sidebar (on the left)
                 _Sidebar(currentPath: currentPath),
+                // Content area with top bar
+                Expanded(
+                  child: Column(
+                    children: [
+                      TopBar(
+                        title: _getPageTitle(currentPath),
+                        searchHint: 'ابحث عن المشاريع والمهام...',
+                      ),
+                      Expanded(child: child),
+                    ],
+                  ),
+                ),
               ],
             ),
           );
@@ -45,6 +56,16 @@ class MainLayout extends StatelessWidget {
       },
     );
   }
+
+  String _getPageTitle(String currentPath) {
+    if (currentPath == AppRoutes.dashboard) return 'نظرة عامة';
+    if (currentPath == AppRoutes.projects) return 'المشاريع';
+    if (currentPath == AppRoutes.gantt) return 'مخطط جانت';
+    if (currentPath == AppRoutes.settings) return 'الإعدادات';
+    if (currentPath == '/financial') return 'المالية';
+    if (currentPath == '/team') return 'الفريق';
+    return 'نظرة عامة';
+  }
 }
 
 class _Sidebar extends StatelessWidget {
@@ -58,9 +79,7 @@ class _Sidebar extends StatelessWidget {
       width: 260,
       decoration: const BoxDecoration(
         color: AppColors.sidebarBackground,
-        border: Border(
-          left: BorderSide(color: AppColors.border, width: 1),
-        ),
+        border: Border(right: BorderSide(color: AppColors.border, width: 1)),
       ),
       child: Column(
         children: [
@@ -101,19 +120,19 @@ class _Sidebar extends StatelessWidget {
                   ),
                   _buildNavItem(
                     context: context,
-                    icon: Icons.check_circle_outline,
-                    activeIcon: Icons.check_circle,
-                    label: 'المهام',
-                    path: AppRoutes.tasks,
-                    isActive: currentPath == AppRoutes.tasks,
+                    icon: Icons.account_balance_outlined,
+                    activeIcon: Icons.account_balance,
+                    label: 'المالية',
+                    path: '/financial',
+                    isActive: currentPath == '/financial',
                   ),
                   _buildNavItem(
                     context: context,
-                    icon: Icons.assessment_outlined,
-                    activeIcon: Icons.assessment,
-                    label: 'التقارير',
-                    path: AppRoutes.reports,
-                    isActive: currentPath == AppRoutes.reports,
+                    icon: Icons.people_outlined,
+                    activeIcon: Icons.people,
+                    label: 'الفريق',
+                    path: '/team',
+                    isActive: currentPath == '/team',
                   ),
                 ],
               ),
@@ -154,9 +173,7 @@ class _Sidebar extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: const BoxDecoration(
-        border: Border(
-          bottom: BorderSide(color: AppColors.divider, width: 1),
-        ),
+        border: Border(bottom: BorderSide(color: AppColors.divider, width: 1)),
       ),
       child: Row(
         children: [
@@ -165,7 +182,14 @@ class _Sidebar extends StatelessWidget {
             width: 48,
             height: 48,
             decoration: BoxDecoration(
-              color: AppColors.primary,
+              gradient: const LinearGradient(
+                colors: [
+                  Color(0xFF22C55E), // Green
+                  Color(0xFF3B82F6), // Blue
+                ],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Center(
@@ -183,14 +207,14 @@ class _Sidebar extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'اسم الشركة',
+                  'Rawnaq',
                   style: AppTextStyles.h6.copyWith(
                     color: AppColors.textPrimary,
                   ),
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  'إدارة المشاريع',
+                  'نظام إدارة المشاريع',
                   style: AppTextStyles.caption.copyWith(
                     color: AppColors.textMuted,
                   ),
