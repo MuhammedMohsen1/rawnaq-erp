@@ -10,6 +10,9 @@ import '../../features/projects/presentation/bloc/projects_state.dart';
 import '../../features/projects/data/repositories/projects_repository_impl.dart';
 import '../../features/gantt/presentation/pages/gantt_chart_page.dart';
 import '../../features/settings/presentation/pages/settings_page.dart';
+import '../../features/notifications/presentation/pages/notifications_page.dart';
+import '../../features/projects/presentation/pages/site_engineer_dashboard_page.dart';
+import '../../features/auth/presentation/bloc/auth_bloc.dart';
 import '../widgets/error_page.dart';
 import '../widgets/unauthorized_page.dart';
 import '../layout/main_layout.dart';
@@ -37,6 +40,12 @@ class AppRoutes {
 
   // Settings
   static const String settings = '/settings';
+
+  // Notifications
+  static const String notifications = '/notifications';
+
+  // Reminders
+  static const String reminders = '/reminders';
 }
 
 class AppRouter {
@@ -58,11 +67,8 @@ class AppRouter {
         return AppRoutes.login;
       }
 
-      // If logged in and on auth page, redirect to dashboard
-      if (isLoggedIn && isOnAuthPage) {
-        return AppRoutes.dashboard;
-      }
-
+      // Allow login page to be shown even if logged in (user can logout)
+      // Only redirect from auth pages if explicitly navigating to dashboard
       return null;
     },
     routes: [
@@ -98,7 +104,15 @@ class AppRouter {
             path: AppRoutes.dashboard,
             pageBuilder: (context, state) => FadePageTransition(
               key: state.pageKey,
-              child: const _DashboardPage(),
+              child: BlocBuilder<AuthBloc, AuthState>(
+                builder: (context, authState) {
+                  if (authState is AuthAuthenticated &&
+                      authState.user.isSiteEngineer) {
+                    return const SiteEngineerDashboardPage();
+                  }
+                  return const _DashboardPage();
+                },
+              ),
             ),
           ),
 
@@ -157,6 +171,28 @@ class AppRouter {
             pageBuilder: (context, state) => FadePageTransition(
               key: state.pageKey,
               child: const SettingsPage(),
+            ),
+          ),
+
+          // Notifications
+          GoRoute(
+            path: AppRoutes.notifications,
+            pageBuilder: (context, state) => FadePageTransition(
+              key: state.pageKey,
+              child: const NotificationsPage(),
+            ),
+          ),
+
+          // Reminders
+          GoRoute(
+            path: AppRoutes.reminders,
+            pageBuilder: (context, state) => FadePageTransition(
+              key: state.pageKey,
+              child: const _PlaceholderPage(
+                title: 'التذكيرات',
+                icon: Icons.notifications_active_outlined,
+                subtitle: 'قريباً - إدارة التذكيرات والمواعيد',
+              ),
             ),
           ),
         ],
@@ -296,9 +332,9 @@ class _DashboardPageState extends State<_DashboardPage> {
           Text(
             value,
             style: Theme.of(context).textTheme.headlineLarge?.copyWith(
-              color: Colors.white,
-              fontWeight: FontWeight.bold,
-            ),
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
           ),
           const SizedBox(height: 4),
           Text(
@@ -407,11 +443,11 @@ class _DashboardPageState extends State<_DashboardPage> {
             child: Center(
               child: Text(
                 'تصور الرسم البياني',
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                   color: const Color(0xFF8B949E),
                 ),
               ),
-            ),
+                ),
           ),
         ],
       ),
@@ -463,22 +499,22 @@ class _DashboardPageState extends State<_DashboardPage> {
   Widget _buildRecentUsers(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        color: const Color(0xFF161B22),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFF30363D)),
-      ),
+        decoration: BoxDecoration(
+          color: const Color(0xFF161B22),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: const Color(0xFF30363D)),
+        ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min,
-        children: [
+          mainAxisSize: MainAxisSize.min,
+          children: [
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
+            Text(
                 'المستخدمون الأخيرون',
                 style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  color: Colors.white,
+                    color: Colors.white,
                   fontWeight: FontWeight.bold,
                 ),
               ),
@@ -655,9 +691,9 @@ class _DashboardPageState extends State<_DashboardPage> {
                 'مخزون منخفض من أكياس الأسمنت (النوع 2)',
                 'منذ 5 ساعات',
                 iconColor: const Color(0xFFF59E0B),
-              ),
-            ],
-          ),
+            ),
+          ],
+        ),
         ],
       ),
     );

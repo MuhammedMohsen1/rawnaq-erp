@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import '../constants/app_colors.dart';
 import '../constants/app_text_styles.dart';
 import '../routing/app_router.dart';
 import '../widgets/bottom_nav_bar.dart';
 import '../widgets/top_bar.dart';
+import '../../features/auth/presentation/bloc/auth_bloc.dart';
 
 /// Main layout with responsive navigation
 /// - Desktop (>= 768px): Sidebar on the left
@@ -62,6 +64,8 @@ class MainLayout extends StatelessWidget {
     if (currentPath == AppRoutes.projects) return 'المشاريع';
     if (currentPath == AppRoutes.gantt) return 'مخطط جانت';
     if (currentPath == AppRoutes.settings) return 'الإعدادات';
+    if (currentPath == AppRoutes.notifications) return 'الإشعارات';
+    if (currentPath == AppRoutes.reminders) return 'التذكيرات';
     if (currentPath == '/financial') return 'المالية';
     if (currentPath == '/team') return 'الفريق';
     return 'نظرة عامة';
@@ -92,7 +96,36 @@ class _Sidebar extends StatelessWidget {
           Expanded(
             child: SingleChildScrollView(
               padding: const EdgeInsets.symmetric(horizontal: 12),
-              child: Column(
+              child: BlocBuilder<AuthBloc, AuthState>(
+                builder: (context, authState) {
+                  final isSiteEngineer = authState is AuthAuthenticated &&
+                      authState.user.isSiteEngineer;
+
+                  if (isSiteEngineer) {
+                    // Site Engineer menu items
+                    return Column(
+                      children: [
+                        _buildNavItem(
+                          context: context,
+                          icon: Icons.dashboard_outlined,
+                          activeIcon: Icons.dashboard,
+                          label: 'لوحة التحكم',
+                          path: AppRoutes.dashboard,
+                          isActive: currentPath == AppRoutes.dashboard,
+                        ),
+                        _buildNavItem(
+                          context: context,
+                          icon: Icons.notifications_active_outlined,
+                          activeIcon: Icons.notifications_active,
+                          label: 'التذكيرات',
+                          path: AppRoutes.reminders,
+                          isActive: currentPath == AppRoutes.reminders,
+                        ),
+                      ],
+                    );
+                  } else {
+                    // Manager/Admin menu items
+                    return Column(
                 children: [
                   _buildNavItem(
                     context: context,
@@ -120,21 +153,24 @@ class _Sidebar extends StatelessWidget {
                   ),
                   _buildNavItem(
                     context: context,
-                    icon: Icons.account_balance_outlined,
-                    activeIcon: Icons.account_balance,
-                    label: 'المالية',
-                    path: '/financial',
-                    isActive: currentPath == '/financial',
+                          icon: Icons.account_balance_outlined,
+                          activeIcon: Icons.account_balance,
+                          label: 'المالية',
+                          path: '/financial',
+                          isActive: currentPath == '/financial',
                   ),
                   _buildNavItem(
                     context: context,
-                    icon: Icons.people_outlined,
-                    activeIcon: Icons.people,
-                    label: 'الفريق',
-                    path: '/team',
-                    isActive: currentPath == '/team',
+                          icon: Icons.people_outlined,
+                          activeIcon: Icons.people,
+                          label: 'الفريق',
+                          path: '/team',
+                          isActive: currentPath == '/team',
                   ),
                 ],
+                    );
+                  }
+                },
               ),
             ),
           ),

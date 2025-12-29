@@ -15,13 +15,28 @@ class MockAuthRepository implements AuthRepository {
 
     // Mock credentials - in development, any valid email format will work
     if (email.contains('@') && password.length >= 6) {
+      // Determine role based on email
+      final String role;
+      final String name;
+
+      if (email.toLowerCase().contains('engineer') ||
+          email.toLowerCase().contains('site') ||
+          email.toLowerCase() == 'engineer@rawnaq.com' ||
+          email.toLowerCase() == 'site@rawnaq.com') {
+        role = 'site_engineer';
+        name = 'مهندس موقع';
+      } else {
+        role = 'manager';
+        name = 'مدير المشاريع';
+      }
+
       final mockUser = {
         'id': '1',
         'email': email,
-        'name': 'مدير المشاريع',
+        'name': name,
         'phone': '+966501234567',
         'avatar': null,
-        'role': 'manager',
+        'role': role,
         'isActive': true,
         'createdAt': DateTime.now().toIso8601String(),
       };
@@ -31,7 +46,9 @@ class MockAuthRepository implements AuthRepository {
         'user': mockUser,
       });
     } else {
-      return const Left(UnauthorizedFailure(message: 'بيانات الدخول غير صحيحة'));
+      return const Left(
+        UnauthorizedFailure(message: 'بيانات الدخول غير صحيحة'),
+      );
     }
   }
 

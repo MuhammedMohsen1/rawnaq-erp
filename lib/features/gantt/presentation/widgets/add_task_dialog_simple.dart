@@ -19,10 +19,7 @@ class AddTaskDialogSimple extends StatefulWidget {
     {'id': 'proj-5', 'name': 'فندق الملك'},
   ];
 
-  const AddTaskDialogSimple({
-    super.key,
-    required this.onTaskAdded,
-  });
+  const AddTaskDialogSimple({super.key, required this.onTaskAdded});
 
   @override
   State<AddTaskDialogSimple> createState() => _AddTaskDialogSimpleState();
@@ -36,7 +33,7 @@ class _AddTaskDialogSimpleState extends State<AddTaskDialogSimple>
   // Common fields
   final _nameController = TextEditingController();
   final _notesController = TextEditingController();
-  
+
   // Date and time fields
   DateTime? _startDate;
   TimeOfDay? _startTime;
@@ -190,9 +187,7 @@ class _AddTaskDialogSimpleState extends State<AddTaskDialogSimple>
 
   Widget _buildTaskTypeTabs() {
     return Container(
-      decoration: const BoxDecoration(
-        color: AppColors.surfaceColor,
-      ),
+      decoration: const BoxDecoration(color: AppColors.surfaceColor),
       child: TabBar(
         controller: _tabController,
         indicatorColor: AppColors.primary,
@@ -274,7 +269,7 @@ class _AddTaskDialogSimpleState extends State<AddTaskDialogSimple>
             border: Border.all(color: AppColors.inputBorder),
           ),
           child: DropdownButtonFormField<String>(
-            value: _selectedProjectId,
+            initialValue: _selectedProjectId,
             decoration: const InputDecoration(
               contentPadding: EdgeInsets.symmetric(horizontal: 12),
               border: InputBorder.none,
@@ -297,8 +292,8 @@ class _AddTaskDialogSimpleState extends State<AddTaskDialogSimple>
             },
             validator: (value) =>
                 _currentTaskType == TaskType.workTask && value == null
-                    ? 'يرجى اختيار المشروع'
-                    : null,
+                ? 'يرجى اختيار المشروع'
+                : null,
           ),
         ),
       ],
@@ -370,7 +365,9 @@ class _AddTaskDialogSimpleState extends State<AddTaskDialogSimple>
           const SizedBox(height: 16),
           Text(
             'تاريخ ووقت النهاية *',
-            style: AppTextStyles.inputLabel.copyWith(fontWeight: FontWeight.w600),
+            style: AppTextStyles.inputLabel.copyWith(
+              fontWeight: FontWeight.w600,
+            ),
           ),
           const SizedBox(height: 8),
           Row(
@@ -580,12 +577,13 @@ class _AddTaskDialogSimpleState extends State<AddTaskDialogSimple>
               borderRadius: BorderRadius.circular(8),
               borderSide: const BorderSide(color: AppColors.primary),
             ),
-            contentPadding:
-                const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 12,
+              vertical: 14,
+            ),
           ),
           validator: required
-              ? (value) =>
-                  value?.isEmpty == true ? 'هذا الحقل مطلوب' : null
+              ? (value) => value?.isEmpty == true ? 'هذا الحقل مطلوب' : null
               : null,
         ),
       ],
@@ -690,15 +688,20 @@ class _AddTaskDialogSimpleState extends State<AddTaskDialogSimple>
       startDate: startDateTime,
       endDate: endDateTime,
       notes: _notesController.text.isNotEmpty ? _notesController.text : null,
-      projectId: _currentTaskType == TaskType.workTask ? _selectedProjectId : null,
-      projectName: _currentTaskType == TaskType.workTask ? _selectedProjectName : null,
+      projectId: _currentTaskType == TaskType.workTask
+          ? _selectedProjectId
+          : null,
+      projectName: _currentTaskType == TaskType.workTask
+          ? _selectedProjectName
+          : null,
       customerName: _currentTaskType == TaskType.appointment
           ? _customerNameController.text
           : null,
       customerPhone: _currentTaskType == TaskType.appointment
           ? _customerPhoneController.text
           : null,
-      locationLink: _currentTaskType == TaskType.appointment &&
+      locationLink:
+          _currentTaskType == TaskType.appointment &&
               _locationLinkController.text.isNotEmpty
           ? _locationLinkController.text
           : null,

@@ -26,7 +26,6 @@ class _GanttChartPageState extends State<GanttChartPage> {
   GanttTimePeriod _selectedPeriod = GanttTimePeriod.week;
   bool _showTeamTasks = true;
   String? _selectedMemberId;
-  bool _showWarnings = true;
   bool _isDraftPanelExpanded = true;
 
   late List<TaskEntity> _tasks;
@@ -52,11 +51,13 @@ class _GanttChartPageState extends State<GanttChartPage> {
   void _applyFilters() {
     setState(() {
       if (_showTeamTasks) {
-        _tasks = _dataSource.getTasks(assigneeId: _selectedMemberId)
+        _tasks = _dataSource
+            .getTasks(assigneeId: _selectedMemberId)
             .where((t) => !t.isDraft && t.assigneeId != null)
             .toList();
       } else {
-        _tasks = _dataSource.getTasks(assigneeId: 'tm-1')
+        _tasks = _dataSource
+            .getTasks(assigneeId: 'tm-1')
             .where((t) => !t.isDraft && t.assigneeId != null)
             .toList();
       }
@@ -102,7 +103,9 @@ class _GanttChartPageState extends State<GanttChartPage> {
         // Calculate actual days in 3-month period
         final startMonth = now.month - 2;
         final startYear = startMonth <= 0 ? now.year - 1 : now.year;
-        final adjustedStartMonth = startMonth <= 0 ? startMonth + 12 : startMonth;
+        final adjustedStartMonth = startMonth <= 0
+            ? startMonth + 12
+            : startMonth;
         int totalDays = 0;
         for (int i = 0; i < 3; i++) {
           int m = adjustedStartMonth + i;
@@ -127,11 +130,13 @@ class _GanttChartPageState extends State<GanttChartPage> {
             wasAdjusted = _dataSource.addTask(task);
             _applyFilters();
           });
-          
+
           if (wasAdjusted) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
-                content: Text('تم إضافة المهمة: ${task.name}\nتم تعديل الوقت تلقائياً لتجنب التعارض'),
+                content: Text(
+                  'تم إضافة المهمة: ${task.name}\nتم تعديل الوقت تلقائياً لتجنب التعارض',
+                ),
                 backgroundColor: AppColors.warning,
                 duration: const Duration(seconds: 4),
               ),
@@ -164,19 +169,27 @@ class _GanttChartPageState extends State<GanttChartPage> {
         wasAdjusted = _dataSource.assignTask(task.id, assigneeId, date);
       } else {
         // Update existing task - new start date (keeps duration), optionally new assignee
-        wasAdjusted = _dataSource.updateTaskDates(task.id, date, newAssigneeId: assigneeId);
+        wasAdjusted = _dataSource.updateTaskDates(
+          task.id,
+          date,
+          newAssigneeId: assigneeId,
+        );
       }
       _applyFilters();
     });
 
-    final action = (task.isDraft || task.assigneeId == null) 
-        ? 'تم تعيين المهمة' 
-        : (task.assigneeId != assigneeId ? 'تم نقل المهمة' : 'تم تحديث تاريخ المهمة');
-    
+    final action = (task.isDraft || task.assigneeId == null)
+        ? 'تم تعيين المهمة'
+        : (task.assigneeId != assigneeId
+              ? 'تم نقل المهمة'
+              : 'تم تحديث تاريخ المهمة');
+
     if (wasAdjusted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('$action: ${task.name}\nتم تعديل الوقت تلقائياً لتجنب التعارض'),
+          content: Text(
+            '$action: ${task.name}\nتم تعديل الوقت تلقائياً لتجنب التعارض',
+          ),
           backgroundColor: AppColors.warning,
           duration: const Duration(seconds: 4),
         ),
@@ -196,14 +209,11 @@ class _GanttChartPageState extends State<GanttChartPage> {
     // Skip conflict check for appointments
     if (task.taskType == TaskType.appointment || task.assigneeId == null) {
       setState(() {
-        final updatedTask = task.copyWith(
-          startDate: newStart,
-          endDate: newEnd,
-        );
+        final updatedTask = task.copyWith(startDate: newStart, endDate: newEnd);
         _dataSource.updateTask(updatedTask);
         _applyFilters();
       });
-      
+
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('تم تعديل مدة المهمة: ${task.name}'),
@@ -212,7 +222,7 @@ class _GanttChartPageState extends State<GanttChartPage> {
       );
       return;
     }
-    
+
     // Check for conflicts and auto-adjust
     final duration = newEnd.difference(newStart);
     final adjustedStart = _dataSource.findNextAvailableSlot(
@@ -221,10 +231,10 @@ class _GanttChartPageState extends State<GanttChartPage> {
       duration,
       excludeTaskId: task.id,
     );
-    
+
     final wasAdjusted = adjustedStart != newStart;
     final adjustedEnd = wasAdjusted ? adjustedStart.add(duration) : newEnd;
-    
+
     setState(() {
       final updatedTask = task.copyWith(
         startDate: wasAdjusted ? adjustedStart : newStart,
@@ -233,11 +243,13 @@ class _GanttChartPageState extends State<GanttChartPage> {
       _dataSource.updateTask(updatedTask);
       _applyFilters();
     });
-    
+
     if (wasAdjusted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('تم تعديل مدة المهمة: ${task.name}\nتم تعديل الوقت تلقائياً لتجنب التعارض'),
+          content: Text(
+            'تم تعديل مدة المهمة: ${task.name}\nتم تعديل الوقت تلقائياً لتجنب التعارض',
+          ),
           backgroundColor: AppColors.warning,
           duration: const Duration(seconds: 4),
         ),
@@ -298,10 +310,7 @@ class _GanttChartPageState extends State<GanttChartPage> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Header
-            Text(
-              'مخطط جانت - توزيع المهام',
-              style: AppTextStyles.pageTitle,
-            ),
+            Text('مخطط جانت - توزيع المهام', style: AppTextStyles.pageTitle),
             const SizedBox(height: 24),
 
             // Filters row (compact)
@@ -359,7 +368,8 @@ class _GanttChartPageState extends State<GanttChartPage> {
         children: [
           // Main row: Draft tasks toggle + Warnings + Legend
           InkWell(
-            onTap: () => setState(() => _isDraftPanelExpanded = !_isDraftPanelExpanded),
+            onTap: () =>
+                setState(() => _isDraftPanelExpanded = !_isDraftPanelExpanded),
             borderRadius: BorderRadius.circular(10),
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
@@ -367,7 +377,10 @@ class _GanttChartPageState extends State<GanttChartPage> {
                 children: [
                   // Draft tasks badge
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 6,
+                    ),
                     decoration: BoxDecoration(
                       color: _draftTasks.isEmpty
                           ? AppColors.surfaceColor
@@ -397,7 +410,9 @@ class _GanttChartPageState extends State<GanttChartPage> {
                         ),
                         const SizedBox(width: 4),
                         Icon(
-                          _isDraftPanelExpanded ? Icons.expand_less : Icons.expand_more,
+                          _isDraftPanelExpanded
+                              ? Icons.expand_less
+                              : Icons.expand_more,
                           size: 16,
                           color: AppColors.textMuted,
                         ),
@@ -429,8 +444,14 @@ class _GanttChartPageState extends State<GanttChartPage> {
                     label: const Text('إضافة مهمة'),
                     style: TextButton.styleFrom(
                       foregroundColor: AppColors.primary,
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                      textStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 6,
+                      ),
+                      textStyle: const TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                   ),
 
@@ -455,11 +476,18 @@ class _GanttChartPageState extends State<GanttChartPage> {
                 children: [
                   Row(
                     children: [
-                      Icon(Icons.touch_app, size: 14, color: AppColors.textMuted),
+                      Icon(
+                        Icons.touch_app,
+                        size: 14,
+                        color: AppColors.textMuted,
+                      ),
                       const SizedBox(width: 6),
                       Text(
                         'اسحب المهمة إلى الموظف لتعيينها',
-                        style: TextStyle(fontSize: 11, color: AppColors.textMuted),
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: AppColors.textMuted,
+                        ),
                       ),
                     ],
                   ),
@@ -503,7 +531,11 @@ class _GanttChartPageState extends State<GanttChartPage> {
           const SizedBox(width: 4),
           Text(
             text,
-            style: TextStyle(fontSize: 11, color: color, fontWeight: FontWeight.w500),
+            style: TextStyle(
+              fontSize: 11,
+              color: color,
+              fontWeight: FontWeight.w500,
+            ),
           ),
         ],
       ),
@@ -570,17 +602,18 @@ class _GanttChartPageState extends State<GanttChartPage> {
           width: isDragging ? 2 : 1,
         ),
         boxShadow: isDragging
-            ? [BoxShadow(color: AppColors.primary.withValues(alpha: 0.3), blurRadius: 12)]
+            ? [
+                BoxShadow(
+                  color: AppColors.primary.withValues(alpha: 0.3),
+                  blurRadius: 12,
+                ),
+              ]
             : null,
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(
-            task.taskType.icon,
-            size: 14,
-            color: task.taskType.color,
-          ),
+          Icon(task.taskType.icon, size: 14, color: task.taskType.color),
           const SizedBox(width: 6),
           ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 150),
@@ -605,10 +638,7 @@ class _GanttChartPageState extends State<GanttChartPage> {
               ),
               child: Text(
                 task.projectName!,
-                style: TextStyle(
-                  fontSize: 10,
-                  color: AppColors.primary,
-                ),
+                style: TextStyle(fontSize: 10, color: AppColors.primary),
               ),
             ),
           ],
@@ -628,11 +658,7 @@ class _GanttChartPageState extends State<GanttChartPage> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(
-            Icons.event_note,
-            size: 64,
-            color: AppColors.textMuted,
-          ),
+          Icon(Icons.event_note, size: 64, color: AppColors.textMuted),
           const SizedBox(height: 16),
           Text(
             'لا توجد مهام',
@@ -641,7 +667,9 @@ class _GanttChartPageState extends State<GanttChartPage> {
           const SizedBox(height: 8),
           Text(
             'لم يتم العثور على مهام في الفترة المحددة',
-            style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textMuted),
+            style: AppTextStyles.bodyMedium.copyWith(
+              color: AppColors.textMuted,
+            ),
           ),
         ],
       ),
@@ -653,8 +681,9 @@ class _GanttChartPageState extends State<GanttChartPage> {
 
     final tasksByEmployee = <String, List<TaskEntity>>{};
     for (final member in _teamMembers) {
-      tasksByEmployee[member.id] =
-          _tasks.where((task) => task.assigneeId == member.id).toList();
+      tasksByEmployee[member.id] = _tasks
+          .where((task) => task.assigneeId == member.id)
+          .toList();
     }
 
     // For month/3-month views, wrap in horizontal scroll
@@ -671,7 +700,11 @@ class _GanttChartPageState extends State<GanttChartPage> {
               final memberTasks = tasksByEmployee[member.id] ?? [];
 
               return _buildEmployeeRow(
-                  member, memberTasks, startDate, displayDays);
+                member,
+                memberTasks,
+                startDate,
+                displayDays,
+              );
             },
           ),
         ),
@@ -683,10 +716,7 @@ class _GanttChartPageState extends State<GanttChartPage> {
       final minWidth = 200.0 + (displayDays * 60.0);
       return SingleChildScrollView(
         scrollDirection: Axis.horizontal,
-        child: SizedBox(
-          width: minWidth,
-          child: chartContent,
-        ),
+        child: SizedBox(width: minWidth, child: chartContent),
       );
     }
 
@@ -717,10 +747,7 @@ class _GanttChartPageState extends State<GanttChartPage> {
                 left: BorderSide(color: AppColors.border, width: 1),
               ),
             ),
-            child: Text(
-              'الموظفين',
-              style: AppTextStyles.tableHeader,
-            ),
+            child: Text('الموظفين', style: AppTextStyles.tableHeader),
           ),
           Expanded(
             child: Row(
@@ -740,8 +767,8 @@ class _GanttChartPageState extends State<GanttChartPage> {
                       color: isToday
                           ? AppColors.primary.withValues(alpha: 0.1)
                           : (isWeekend
-                              ? AppColors.surfaceColor.withValues(alpha: 0.3)
-                              : null),
+                                ? AppColors.surfaceColor.withValues(alpha: 0.3)
+                                : null),
                       border: const Border(
                         left: BorderSide(color: AppColors.border, width: 1),
                       ),
@@ -756,8 +783,9 @@ class _GanttChartPageState extends State<GanttChartPage> {
                             color: isToday
                                 ? AppColors.primary
                                 : AppColors.textSecondary,
-                            fontWeight:
-                                isToday ? FontWeight.bold : FontWeight.normal,
+                            fontWeight: isToday
+                                ? FontWeight.bold
+                                : FontWeight.normal,
                           ),
                           textAlign: TextAlign.center,
                         ),
@@ -801,62 +829,31 @@ class _GanttChartPageState extends State<GanttChartPage> {
         date.day == now.day;
   }
 
-  /// Calculate the number of days between two dates using raw year/month/day values
-  /// This avoids any timezone/DateTime object issues
-  int _daysBetweenDates(int fromYear, int fromMonth, int fromDay, 
-                        int toYear, int toMonth, int toDay) {
-    final fromJulian = _toJulianDay(fromYear, fromMonth, fromDay);
-    final toJulian = _toJulianDay(toYear, toMonth, toDay);
-    return toJulian - fromJulian;
-  }
-
   /// Convert a date to Julian day number (accurate calendar calculation)
   int _toJulianDay(int year, int month, int day) {
     final a = (14 - month) ~/ 12;
     final y = year + 4800 - a;
     final m = month + 12 * a - 3;
-    return day + (153 * m + 2) ~/ 5 + 365 * y + y ~/ 4 - y ~/ 100 + y ~/ 400 - 32045;
+    return day +
+        (153 * m + 2) ~/ 5 +
+        365 * y +
+        y ~/ 4 -
+        y ~/ 100 +
+        y ~/ 400 -
+        32045;
   }
-  
+
   /// Get the actual number of days in a month
   int _daysInMonth(int year, int month) {
     // Use DateTime to get the last day of the month
     final lastDayOfMonth = DateTime(year, month + 1, 0);
     return lastDayOfMonth.day;
   }
-  
+
   /// Convert time to fraction of day (0.0 to 1.0)
   /// 00:00 = 0.0, 12:00 = 0.5, 23:59 = ~1.0
   double _timeToFraction(DateTime dateTime) {
     return (dateTime.hour * 60 + dateTime.minute) / (24 * 60);
-  }
-  
-  /// Convert a pixel offset within a day to DateTime
-  /// Used for resizing task bars
-  DateTime _fractionToDateTime(DateTime baseDate, double fraction) {
-    final totalMinutes = (fraction * 24 * 60).round();
-    final hours = totalMinutes ~/ 60;
-    final minutes = totalMinutes % 60;
-    return DateTime(
-      baseDate.year,
-      baseDate.month,
-      baseDate.day,
-      hours.clamp(0, 23),
-      minutes.clamp(0, 59),
-    );
-  }
-  
-  /// Calculate precise position including time offset (for RTL layout)
-  /// Returns the position from the RIGHT edge of the chart
-  double _calculateTaskPosition(
-    int taskYear, int taskMonth, int taskDay,
-    int chartStartYear, int chartStartMonth, int chartStartDay,
-    double timeFraction,
-    double dayWidth,
-  ) {
-    final dayOffset = _toJulianDay(taskYear, taskMonth, taskDay) - 
-                      _toJulianDay(chartStartYear, chartStartMonth, chartStartDay);
-    return (dayOffset + timeFraction) * dayWidth;
   }
 
   Widget _buildEmployeeRow(
@@ -868,9 +865,7 @@ class _GanttChartPageState extends State<GanttChartPage> {
     return Container(
       height: 72,
       decoration: const BoxDecoration(
-        border: Border(
-          bottom: BorderSide(color: AppColors.divider),
-        ),
+        border: Border(bottom: BorderSide(color: AppColors.divider)),
       ),
       child: Row(
         children: [
@@ -925,7 +920,11 @@ class _GanttChartPageState extends State<GanttChartPage> {
           ),
           Expanded(
             child: _buildGanttBarsForEmployee(
-                member, tasks, startDate, displayDays),
+              member,
+              tasks,
+              startDate,
+              displayDays,
+            ),
           ),
         ],
       ),
@@ -939,8 +938,12 @@ class _GanttChartPageState extends State<GanttChartPage> {
     int displayDays,
   ) {
     // Calculate end date using DateTime constructor (handles month overflow correctly)
-    final endDate = DateTime(startDate.year, startDate.month, startDate.day + displayDays);
-    
+    final endDate = DateTime(
+      startDate.year,
+      startDate.month,
+      startDate.day + displayDays,
+    );
+
     // Store chart bounds as raw values for Julian day calculation
     final chartStartYear = startDate.year;
     final chartStartMonth = startDate.month;
@@ -980,14 +983,17 @@ class _GanttChartPageState extends State<GanttChartPage> {
                           color: isHovering
                               ? AppColors.primary.withValues(alpha: 0.2)
                               : (isToday
-                                  ? AppColors.primary.withValues(alpha: 0.05)
-                                  : (isWeekend
-                                      ? AppColors.surfaceColor
-                                          .withValues(alpha: 0.2)
-                                      : null)),
+                                    ? AppColors.primary.withValues(alpha: 0.05)
+                                    : (isWeekend
+                                          ? AppColors.surfaceColor.withValues(
+                                              alpha: 0.2,
+                                            )
+                                          : null)),
                           border: Border(
                             left: const BorderSide(
-                                color: AppColors.border, width: 1),
+                              color: AppColors.border,
+                              width: 1,
+                            ),
                           ),
                         ),
                         child: isHovering
@@ -1024,13 +1030,30 @@ class _GanttChartPageState extends State<GanttChartPage> {
               final taskEndDay = task.endDate.day;
 
               // Calculate Julian days for comparison
-              final taskStartJulian = _toJulianDay(taskStartYear, taskStartMonth, taskStartDay);
-              final taskEndJulian = _toJulianDay(taskEndYear, taskEndMonth, taskEndDay);
-              final chartStartJulian = _toJulianDay(chartStartYear, chartStartMonth, chartStartDay);
-              final chartEndJulian = _toJulianDay(chartEndYear, chartEndMonth, chartEndDay);
+              final taskStartJulian = _toJulianDay(
+                taskStartYear,
+                taskStartMonth,
+                taskStartDay,
+              );
+              final taskEndJulian = _toJulianDay(
+                taskEndYear,
+                taskEndMonth,
+                taskEndDay,
+              );
+              final chartStartJulian = _toJulianDay(
+                chartStartYear,
+                chartStartMonth,
+                chartStartDay,
+              );
+              final chartEndJulian = _toJulianDay(
+                chartEndYear,
+                chartEndMonth,
+                chartEndDay,
+              );
 
               // Skip tasks outside the visible range
-              if (taskEndJulian < chartStartJulian || taskStartJulian > chartEndJulian) {
+              if (taskEndJulian < chartStartJulian ||
+                  taskStartJulian > chartEndJulian) {
                 return const SizedBox.shrink();
               }
 
@@ -1039,38 +1062,37 @@ class _GanttChartPageState extends State<GanttChartPage> {
               final endTimeFraction = _timeToFraction(task.endDate);
 
               // Clamp task dates to visible range (using Julian days)
-              final visibleStartJulian = taskStartJulian < chartStartJulian 
-                  ? chartStartJulian 
+              final visibleStartJulian = taskStartJulian < chartStartJulian
+                  ? chartStartJulian
                   : taskStartJulian;
-              final visibleEndJulian = taskEndJulian > chartEndJulian 
-                  ? chartEndJulian 
+              final visibleEndJulian = taskEndJulian > chartEndJulian
+                  ? chartEndJulian
                   : taskEndJulian;
 
               // Calculate precise offset including time (in day fractions)
               // If task starts before chart, use chart start (0.0 time fraction)
-              final visibleStartTimeFraction = taskStartJulian < chartStartJulian 
-                  ? 0.0 
-                  : startTimeFraction;
+              final visibleStartTimeFraction =
+                  taskStartJulian < chartStartJulian ? 0.0 : startTimeFraction;
               // If task ends after chart, use chart end (1.0 time fraction)
-              final visibleEndTimeFraction = taskEndJulian > chartEndJulian 
-                  ? 1.0 
+              final visibleEndTimeFraction = taskEndJulian > chartEndJulian
+                  ? 1.0
                   : endTimeFraction;
 
               // Calculate offset from chart start (in days + time fraction)
-              final startOffset = (visibleStartJulian - chartStartJulian) + visibleStartTimeFraction;
-              
+              final startOffset =
+                  (visibleStartJulian - chartStartJulian) +
+                  visibleStartTimeFraction;
+
               // Calculate duration including time fractions
               // Duration = (end day - start day) + (end time fraction - start time fraction)
               final durationDays = visibleEndJulian - visibleStartJulian;
-              final durationWithTime = durationDays + (visibleEndTimeFraction - visibleStartTimeFraction);
+              final durationWithTime =
+                  durationDays +
+                  (visibleEndTimeFraction - visibleStartTimeFraction);
               // Ensure minimum visible width
               final duration = durationWithTime < 0.1 ? 0.1 : durationWithTime;
 
               if (task.isAppointment) {
-                // RTL: position from RIGHT with time-based offset
-                // Appointments are positioned at their exact time within the day
-                final circleRight = startOffset * dayWidth + (dayWidth * 0.5 * (1 - startTimeFraction * 2).abs()) - 16;
-
                 return Positioned(
                   right: startOffset * dayWidth,
                   top: 20,
@@ -1094,7 +1116,8 @@ class _GanttChartPageState extends State<GanttChartPage> {
                     maxWidth: constraints.maxWidth - barRight,
                     dayWidth: dayWidth,
                     onDoubleTap: () => _showEditTaskDialog(task),
-                    onResized: (newStart, newEnd) => _onTaskResized(task, newStart, newEnd),
+                    onResized: (newStart, newEnd) =>
+                        _onTaskResized(task, newStart, newEnd),
                   ),
                 );
               }
@@ -1138,7 +1161,7 @@ class _ResizableTaskBarState extends State<_ResizableTaskBar> {
   bool _isResizingEnd = false;
   double _resizeDelta = 0;
   double _positionOffset = 0; // For shifting position during start resize
-  
+
   static const double _handleWidth = 8.0;
   static const double _minBarWidth = 20.0;
 
@@ -1148,8 +1171,11 @@ class _ResizableTaskBarState extends State<_ResizableTaskBar> {
 
   @override
   Widget build(BuildContext context) {
-    final effectiveWidth = (widget.width + _resizeDelta).clamp(_minBarWidth, widget.maxWidth);
-    
+    final effectiveWidth = (widget.width + _resizeDelta).clamp(
+      _minBarWidth,
+      widget.maxWidth,
+    );
+
     // Apply position offset when resizing from start (right handle in RTL)
     // This makes the right edge move instead of the left edge
     return Transform.translate(
@@ -1163,106 +1189,112 @@ class _ResizableTaskBarState extends State<_ResizableTaskBar> {
             width: effectiveWidth,
             height: 32,
             child: Stack(
-            children: [
-              // Main bar (draggable for moving)
-              Positioned.fill(
-                left: _handleWidth,
-                right: _handleWidth,
-                child: Draggable<TaskEntity>(
-                  data: widget.task,
-                  feedback: Material(
-                    elevation: 8,
-                    borderRadius: BorderRadius.circular(6),
-                    child: _buildBarContent(effectiveWidth - _handleWidth * 2),
-                  ),
-                  childWhenDragging: Opacity(
-                    opacity: 0.4,
-                    child: _buildBarContent(effectiveWidth - _handleWidth * 2),
-                  ),
-                  child: Tooltip(
-                    message: 'اسحب لنقل • انقر مرتين للتعديل',
-                    child: _buildBarContent(effectiveWidth - _handleWidth * 2),
-                  ),
-                ),
-              ),
-              
-              // Full bar background (for visual continuity)
-              Positioned.fill(
-                child: IgnorePointer(
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: _color,
+              children: [
+                // Main bar (draggable for moving)
+                Positioned.fill(
+                  left: _handleWidth,
+                  right: _handleWidth,
+                  child: Draggable<TaskEntity>(
+                    data: widget.task,
+                    feedback: Material(
+                      elevation: 8,
                       borderRadius: BorderRadius.circular(6),
-                      boxShadow: [
-                        BoxShadow(
-                          color: _color.withValues(alpha: 0.3),
-                          blurRadius: 4,
-                          offset: const Offset(0, 2),
-                        ),
-                      ],
+                      child: _buildBarContent(
+                        effectiveWidth - _handleWidth * 2,
+                      ),
+                    ),
+                    childWhenDragging: Opacity(
+                      opacity: 0.4,
+                      child: _buildBarContent(
+                        effectiveWidth - _handleWidth * 2,
+                      ),
+                    ),
+                    child: Tooltip(
+                      message: 'اسحب لنقل • انقر مرتين للتعديل',
+                      child: _buildBarContent(
+                        effectiveWidth - _handleWidth * 2,
+                      ),
                     ),
                   ),
                 ),
-              ),
-              
-              // Content overlay
-              Positioned.fill(
-                child: IgnorePointer(
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12),
-                    alignment: Alignment.centerRight,
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(
-                          widget.task.taskType.icon,
-                          color: Colors.white.withValues(alpha: 0.8),
-                          size: 14,
-                        ),
-                        const SizedBox(width: 6),
-                        Expanded(
-                          child: Text(
-                            widget.task.name,
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 11,
-                              fontWeight: FontWeight.w600,
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
+
+                // Full bar background (for visual continuity)
+                Positioned.fill(
+                  child: IgnorePointer(
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: _color,
+                        borderRadius: BorderRadius.circular(6),
+                        boxShadow: [
+                          BoxShadow(
+                            color: _color.withValues(alpha: 0.3),
+                            blurRadius: 4,
+                            offset: const Offset(0, 2),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
                 ),
-              ),
-              
-              // Right resize handle (for RTL: adjusts START time)
-              Positioned(
-                right: 0,
-                top: 0,
-                bottom: 0,
-                child: _buildResizeHandle(
-                  isStart: true,
-                  isActive: _isResizingStart,
+
+                // Content overlay
+                Positioned.fill(
+                  child: IgnorePointer(
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                      alignment: Alignment.centerRight,
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            widget.task.taskType.icon,
+                            color: Colors.white.withValues(alpha: 0.8),
+                            size: 14,
+                          ),
+                          const SizedBox(width: 6),
+                          Expanded(
+                            child: Text(
+                              widget.task.name,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 11,
+                                fontWeight: FontWeight.w600,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
                 ),
-              ),
-              
-              // Left resize handle (for RTL: adjusts END time)
-              Positioned(
-                left: 0,
-                top: 0,
-                bottom: 0,
-                child: _buildResizeHandle(
-                  isStart: false,
-                  isActive: _isResizingEnd,
+
+                // Right resize handle (for RTL: adjusts START time)
+                Positioned(
+                  right: 0,
+                  top: 0,
+                  bottom: 0,
+                  child: _buildResizeHandle(
+                    isStart: true,
+                    isActive: _isResizingStart,
+                  ),
                 ),
-              ),
-            ],
+
+                // Left resize handle (for RTL: adjusts END time)
+                Positioned(
+                  left: 0,
+                  top: 0,
+                  bottom: 0,
+                  child: _buildResizeHandle(
+                    isStart: false,
+                    isActive: _isResizingEnd,
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
-      ),
       ),
     );
   }
@@ -1350,14 +1382,14 @@ class _ResizableTaskBarState extends State<_ResizableTaskBar> {
 
   void _applyResize(bool isStart) {
     if (widget.onResized == null) return;
-    
+
     // Calculate the time change based on pixel delta
     // Each dayWidth pixels = 24 hours
     final hoursChanged = (_resizeDelta / widget.dayWidth) * 24;
-    
+
     DateTime newStart = widget.task.startDate;
     DateTime newEnd = widget.task.endDate;
-    
+
     if (isStart) {
       // Adjusting start time (right handle in RTL)
       // Positive delta (dragged right) = earlier start = subtract time
@@ -1371,7 +1403,7 @@ class _ResizableTaskBarState extends State<_ResizableTaskBar> {
         Duration(minutes: (hoursChanged * 60).round()),
       );
     }
-    
+
     // Ensure start is before end
     if (newStart.isBefore(newEnd)) {
       widget.onResized!(newStart, newEnd);

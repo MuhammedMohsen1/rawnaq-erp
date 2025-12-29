@@ -22,6 +22,7 @@ class _LoginPageState extends State<LoginPage> {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+  AuthState? _previousState;
 
   @override
   void dispose() {
@@ -49,9 +50,14 @@ class _LoginPageState extends State<LoginPage> {
       body: BlocListener<AuthBloc, AuthState>(
         listener: (context, state) {
           log('🚩 UI: AuthBloc state changed to: ${state.runtimeType}');
+          
+          // Only redirect if we just logged in (previous state was AuthLoading)
+          // This prevents auto-redirect when auth state is restored on app startup
           if (state is AuthAuthenticated) {
+            if (_previousState is AuthLoading) {
             log('🚩 UI: تم تسجيل الدخول بنجاح');
             context.go(AppRoutes.dashboard);
+            }
           } else if (state is AuthError) {
             log('🚩 UI: AuthError received: ${state.message}');
             ScaffoldMessenger.of(context).clearSnackBars();
@@ -65,56 +71,31 @@ class _LoginPageState extends State<LoginPage> {
               ),
             );
           }
+          
+          // Update previous state
+          _previousState = state;
         },
         child: SafeArea(
           child: Center(
             child: SingleChildScrollView(
               padding: const EdgeInsets.all(24),
               child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 400),
+                constraints: const BoxConstraints(maxWidth: 450),
                 child: Form(
                   key: _formKey,
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      // Logo and Title
-                      Container(
-                        height: 80,
-                        width: 80,
-                        margin: const EdgeInsets.only(bottom: 32),
-                        decoration: BoxDecoration(
-                          color: AppColors.primary,
-                          shape: BoxShape.circle,
-                          border: Border.all(
-                            color: AppColors.primaryLight,
-                            width: 2,
-                          ),
-                        ),
-                        child: const Icon(
-                          Icons.business,
-                          size: 40,
-                          color: AppColors.white,
-                        ),
-                      ),
+                      const SizedBox(height: 40),
+                      
+                      // Logo and Brand
+                      _buildLogoSection(),
 
-                      Text(
-                        'أهلاً بعودتك!',
-                        style: AppTextStyles.h2.copyWith(
-                          color: AppColors.textPrimary,
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
+                      const SizedBox(height: 48),
 
-                      const SizedBox(height: 8),
-
-                      Text(
-                        'سجل دخولك إلى نظام إدارة المشاريع',
-                        style: AppTextStyles.bodyMedium.copyWith(
-                          color: AppColors.textSecondary,
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
+                      // Welcome Section
+                      _buildWelcomeSection(),
 
                       const SizedBox(height: 48),
 
@@ -130,9 +111,10 @@ class _LoginPageState extends State<LoginPage> {
                           color: AppColors.textMuted,
                         ),
                         validator: Validators.validateEmail,
+                        fillColor: AppColors.inputBackground,
                       ),
 
-                      const SizedBox(height: 24),
+                      const SizedBox(height: 20),
 
                       // Password Field
                       CustomTextField(
@@ -146,6 +128,7 @@ class _LoginPageState extends State<LoginPage> {
                           color: AppColors.textMuted,
                         ),
                         validator: Validators.validatePasswordLogin,
+                        fillColor: AppColors.inputBackground,
                         onTap: () {
                           if (_formKey.currentState!.validate()) {
                             _onLoginPressed();
@@ -164,20 +147,17 @@ class _LoginPageState extends State<LoginPage> {
                             isLoading: state is AuthLoading,
                             width: double.infinity,
                             height: 56,
+                            backgroundColor: AppColors.statusActive,
                           );
                         },
                       ),
 
-                      const SizedBox(height: 32),
+                      const SizedBox(height: 24),
 
                       // Help Text
-                      Text(
-                        'تحتاج مساعدة؟ تواصل مع مدير النظام',
-                        style: AppTextStyles.bodySmall.copyWith(
-                          color: AppColors.textMuted,
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
+                      _buildHelpText(),
+                      
+                      const SizedBox(height: 40),
                     ],
                   ),
                 ),
@@ -185,6 +165,102 @@ class _LoginPageState extends State<LoginPage> {
             ),
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildLogoSection() {
+    return Column(
+      children: [
+        Container(
+          height: 100,
+          width: 100,
+          decoration: BoxDecoration(
+            color: AppColors.statusActive,
+            shape: BoxShape.circle,
+            boxShadow: [
+              BoxShadow(
+                color: AppColors.statusActive.withOpacity(0.3),
+                blurRadius: 20,
+                spreadRadius: 5,
+              ),
+            ],
+          ),
+          child: const Icon(
+            Icons.construction,
+            size: 50,
+            color: AppColors.white,
+          ),
+        ),
+        const SizedBox(height: 24),
+        Text(
+          'Rawnaq',
+          style: AppTextStyles.h1.copyWith(
+            color: AppColors.textPrimary,
+            fontWeight: FontWeight.bold,
+            letterSpacing: 1.2,
+          ),
+        ),
+        const SizedBox(height: 8),
+        Text(
+          'نظام إدارة المشاريع',
+          style: AppTextStyles.bodyMedium.copyWith(
+            color: AppColors.textSecondary,
+            fontSize: 16,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildWelcomeSection() {
+    return Column(
+      children: [
+        Text(
+          'أهلاً بعودتك!',
+          style: AppTextStyles.h2.copyWith(
+            color: AppColors.textPrimary,
+            fontWeight: FontWeight.bold,
+          ),
+          textAlign: TextAlign.center,
+        ),
+        const SizedBox(height: 12),
+        Text(
+          'سجل دخولك للوصول إلى لوحة التحكم',
+          style: AppTextStyles.bodyMedium.copyWith(
+            color: AppColors.textSecondary,
+          ),
+          textAlign: TextAlign.center,
+        ),
+      ],
+    );
+  }
+
+  Widget _buildHelpText() {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppColors.cardBackground,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppColors.border),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            Icons.help_outline,
+            size: 18,
+            color: AppColors.textMuted,
+          ),
+          const SizedBox(width: 8),
+          Text(
+            'تحتاج مساعدة؟ تواصل مع مدير النظام',
+            style: AppTextStyles.bodySmall.copyWith(
+              color: AppColors.textMuted,
+            ),
+            textAlign: TextAlign.center,
+          ),
+        ],
       ),
     );
   }

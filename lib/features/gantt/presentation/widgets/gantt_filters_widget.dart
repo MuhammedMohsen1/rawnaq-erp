@@ -1,15 +1,9 @@
 import 'package:flutter/material.dart';
 import '../../../../core/constants/app_colors.dart';
-import '../../../../core/constants/app_text_styles.dart';
 import '../../../projects/domain/entities/team_member_entity.dart';
 
 /// Time period options for Gantt chart
-enum GanttTimePeriod {
-  today,
-  week,
-  month,
-  threeMonths,
-}
+enum GanttTimePeriod { today, week, month, threeMonths }
 
 extension GanttTimePeriodExtension on GanttTimePeriod {
   String get arabicName {
@@ -89,14 +83,14 @@ class GanttFiltersWidget extends StatelessWidget {
         const Spacer(),
 
         // Clear filters (icon only when filters applied)
-        if (selectedMemberId != null || selectedPeriod != GanttTimePeriod.week || !showTeamTasks)
+        if (selectedMemberId != null ||
+            selectedPeriod != GanttTimePeriod.week ||
+            !showTeamTasks)
           IconButton(
             onPressed: onClearFilters,
             icon: const Icon(Icons.filter_alt_off, size: 20),
             tooltip: 'مسح الفلاتر',
-            style: IconButton.styleFrom(
-              foregroundColor: AppColors.textMuted,
-            ),
+            style: IconButton.styleFrom(foregroundColor: AppColors.textMuted),
           ),
       ],
     );
@@ -130,7 +124,9 @@ class GanttFiltersWidget extends StatelessWidget {
               child: Text(
                 period.arabicName,
                 style: TextStyle(
-                  color: isSelected ? AppColors.scaffoldBackground : AppColors.textSecondary,
+                  color: isSelected
+                      ? AppColors.scaffoldBackground
+                      : AppColors.textSecondary,
                   fontSize: 13,
                   fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
                 ),
@@ -188,7 +184,9 @@ class GanttFiltersWidget extends StatelessWidget {
         duration: const Duration(milliseconds: 150),
         padding: const EdgeInsets.symmetric(horizontal: 10),
         decoration: BoxDecoration(
-          color: isSelected ? AppColors.primary.withValues(alpha: 0.15) : Colors.transparent,
+          color: isSelected
+              ? AppColors.primary.withValues(alpha: 0.15)
+              : Colors.transparent,
           borderRadius: BorderRadius.circular(8),
           border: isSelected
               ? Border.all(color: AppColors.primary.withValues(alpha: 0.3))
@@ -239,24 +237,20 @@ class GanttFiltersWidget extends StatelessWidget {
               const SizedBox(width: 6),
               Text(
                 'كل الموظفين',
-                style: TextStyle(
-                  color: AppColors.textSecondary,
-                  fontSize: 12,
-                ),
+                style: TextStyle(color: AppColors.textSecondary, fontSize: 12),
               ),
             ],
           ),
           icon: Icon(
             Icons.arrow_drop_down,
-            color: selectedMemberId != null ? AppColors.primary : AppColors.textMuted,
+            color: selectedMemberId != null
+                ? AppColors.primary
+                : AppColors.textMuted,
             size: 20,
           ),
           isDense: true,
           dropdownColor: AppColors.cardBackground,
-          style: TextStyle(
-            color: AppColors.textPrimary,
-            fontSize: 12,
-          ),
+          style: TextStyle(color: AppColors.textPrimary, fontSize: 12),
           items: [
             DropdownMenuItem(
               value: null,
@@ -269,31 +263,30 @@ class GanttFiltersWidget extends StatelessWidget {
                 ],
               ),
             ),
-            ...teamMembers.map((member) => DropdownMenuItem(
-                  value: member.id,
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      CircleAvatar(
-                        radius: 10,
-                        backgroundColor: AppColors.primary.withValues(alpha: 0.2),
-                        child: Text(
-                          member.name.substring(0, 1),
-                          style: TextStyle(
-                            color: AppColors.primary,
-                            fontSize: 10,
-                            fontWeight: FontWeight.bold,
-                          ),
+            ...teamMembers.map(
+              (member) => DropdownMenuItem(
+                value: member.id,
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    CircleAvatar(
+                      radius: 10,
+                      backgroundColor: AppColors.primary.withValues(alpha: 0.2),
+                      child: Text(
+                        member.name.substring(0, 1),
+                        style: TextStyle(
+                          color: AppColors.primary,
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
                         ),
                       ),
-                      const SizedBox(width: 6),
-                      Text(
-                        member.name,
-                        style: const TextStyle(fontSize: 12),
-                      ),
-                    ],
-                  ),
-                )),
+                    ),
+                    const SizedBox(width: 6),
+                    Text(member.name, style: const TextStyle(fontSize: 12)),
+                  ],
+                ),
+              ),
+            ),
           ],
           onChanged: (value) {
             onMemberChanged(value);

@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 import '../constants/app_colors.dart';
 import '../constants/app_text_styles.dart';
+import '../routing/app_router.dart';
+import '../../features/auth/presentation/bloc/auth_bloc.dart';
 
 /// Top bar component with title, search, notifications, and user profile
 class TopBar extends StatelessWidget {
@@ -82,49 +86,67 @@ class TopBar extends StatelessWidget {
                 size: 20,
               ),
               onPressed: () {
-                // TODO: Handle notifications
+                context.go(AppRoutes.notifications);
               },
             ),
           ),
           const SizedBox(width: 12),
           // User profile
-          Row(
-            children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                mainAxisSize: MainAxisSize.min,
+          BlocBuilder<AuthBloc, AuthState>(
+            builder: (context, authState) {
+              String userName = 'المستخدم';
+              String userRole = 'مدير';
+              
+              if (authState is AuthAuthenticated) {
+                userName = authState.user.name;
+                if (authState.user.isSiteEngineer) {
+                  userRole = 'مهندس موقع';
+                } else if (authState.user.isManager) {
+                  userRole = 'مدير';
+                } else if (authState.user.isAdmin) {
+                  userRole = 'مدير';
+                }
+              }
+              
+              return Row(
                 children: [
-                  Text(
-                    'Mahmoud Mohsen',
-                    style: AppTextStyles.bodyMedium.copyWith(
-                      color: AppColors.textPrimary,
-                      fontWeight: FontWeight.w500,
-                    ),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        userName,
+                        style: AppTextStyles.bodyMedium.copyWith(
+                          color: AppColors.textPrimary,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        userRole,
+                        style: AppTextStyles.caption.copyWith(
+                          color: AppColors.textMuted,
+                        ),
+                      ),
+                    ],
                   ),
-                  const SizedBox(height: 2),
-                  Text(
-                    'Admin',
-                    style: AppTextStyles.caption.copyWith(
-                      color: AppColors.textMuted,
+                  const SizedBox(width: 12),
+                  Container(
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      color: AppColors.primary,
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.person,
+                      color: AppColors.scaffoldBackground,
+                      size: 20,
                     ),
                   ),
                 ],
-              ),
-              const SizedBox(width: 12),
-              Container(
-                width: 40,
-                height: 40,
-                decoration: BoxDecoration(
-                  color: AppColors.primary,
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(
-                  Icons.person,
-                  color: AppColors.scaffoldBackground,
-                  size: 20,
-                ),
-              ),
-            ],
+              );
+            },
           ),
         ],
       ),

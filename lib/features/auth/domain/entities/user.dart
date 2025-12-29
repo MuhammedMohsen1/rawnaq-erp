@@ -104,6 +104,7 @@ class User extends Equatable {
   bool get isManager => role == 'manager';
   bool get isSeniorEngineer => role == 'senior_engineer';
   bool get isJuniorEngineer => role == 'junior_engineer';
+  bool get isSiteEngineer => role == 'site_engineer';
 
   // Admin sub-role checking
   bool hasAdminSubRole(String subRole) {

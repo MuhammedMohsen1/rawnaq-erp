@@ -68,6 +68,7 @@ class AppConstants {
   static const String managerRole = 'manager';
   static const String seniorEngineerRole = 'senior_engineer';
   static const String juniorEngineerRole = 'junior_engineer';
+  static const String siteEngineerRole = 'site_engineer';
   static const String staffRole = 'staff';
 
   // Admin Sub-Roles

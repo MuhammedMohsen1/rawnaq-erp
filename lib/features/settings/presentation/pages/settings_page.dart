@@ -18,10 +18,7 @@ class SettingsPage extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Header
-            Text(
-              'الإعدادات',
-              style: AppTextStyles.pageTitle,
-            ),
+            Text('الإعدادات', style: AppTextStyles.pageTitle),
             const SizedBox(height: 8),
             Text(
               'تخصيص إعدادات التطبيق والحساب',
@@ -50,7 +47,7 @@ class SettingsPage extends StatelessWidget {
                 trailing: Switch(
                   value: true,
                   onChanged: null, // Disabled for now
-                  activeColor: AppColors.primary,
+                  activeThumbColor: AppColors.primary,
                 ),
               ),
             ),
@@ -69,7 +66,7 @@ class SettingsPage extends StatelessWidget {
                     trailing: Switch(
                       value: true,
                       onChanged: (value) {},
-                      activeColor: AppColors.primary,
+                      activeThumbColor: AppColors.primary,
                     ),
                   ),
                   const Divider(color: AppColors.divider, height: 1),
@@ -79,7 +76,7 @@ class SettingsPage extends StatelessWidget {
                     trailing: Switch(
                       value: true,
                       onChanged: (value) {},
-                      activeColor: AppColors.primary,
+                      activeThumbColor: AppColors.primary,
                     ),
                   ),
                 ],
@@ -126,10 +123,7 @@ class SettingsPage extends StatelessWidget {
           children: [
             Icon(icon, color: AppColors.primary, size: 20),
             const SizedBox(width: 8),
-            Text(
-              title,
-              style: AppTextStyles.sectionTitle,
-            ),
+            Text(title, style: AppTextStyles.sectionTitle),
           ],
         ),
         const SizedBox(height: 12),
@@ -161,15 +155,9 @@ class SettingsPage extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    title,
-                    style: AppTextStyles.tableCellBold,
-                  ),
+                  Text(title, style: AppTextStyles.tableCellBold),
                   const SizedBox(height: 4),
-                  Text(
-                    subtitle,
-                    style: AppTextStyles.caption,
-                  ),
+                  Text(subtitle, style: AppTextStyles.caption),
                 ],
               ),
             ),
@@ -270,10 +258,7 @@ class _LanguageOption extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 2),
-                  Text(
-                    subtitle,
-                    style: AppTextStyles.caption,
-                  ),
+                  Text(subtitle, style: AppTextStyles.caption),
                 ],
               ),
             ),
@@ -284,11 +269,7 @@ class _LanguageOption extends StatelessWidget {
                   color: AppColors.primary,
                   shape: BoxShape.circle,
                 ),
-                child: const Icon(
-                  Icons.check,
-                  color: Colors.white,
-                  size: 16,
-                ),
+                child: const Icon(Icons.check, color: Colors.white, size: 16),
               ),
           ],
         ),
@@ -296,4 +277,3 @@ class _LanguageOption extends StatelessWidget {
     );
   }
 }
-
