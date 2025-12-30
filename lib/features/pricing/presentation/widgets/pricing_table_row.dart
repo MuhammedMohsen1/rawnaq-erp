@@ -26,23 +26,30 @@ class _PricingTableRowState extends State<PricingTableRow> {
   late TextEditingController _descriptionController;
   late TextEditingController _quantityController;
   late TextEditingController _unitPriceController;
-  bool _hasUnitPrice = false;
-  bool _isEditingUnitPrice = false;
+  late TextEditingController _totalController;
+  bool _isUnitPriceMode =
+      false; // false = direct total input, true = quantity × unitPrice
+  DateTime? _lastTapTime;
+  int _tapCount = 0;
 
   @override
   void initState() {
     super.initState();
-    _descriptionController = TextEditingController(text: widget.item.description);
+    _descriptionController = TextEditingController(
+      text: widget.item.description,
+    );
     _quantityController = TextEditingController(
       text: widget.item.quantity?.toString() ?? '',
     );
     _unitPriceController = TextEditingController(
       text: widget.item.unitPrice?.toString() ?? '',
     );
-    // New rows start without unit price (no quantity and no unitPrice)
-    _hasUnitPrice = !widget.isNewRow && 
-                    widget.item.quantity != null && 
-                    widget.item.unitPrice != null;
+    _totalController = TextEditingController(
+      text: widget.item.total > 0 ? widget.item.total.toStringAsFixed(3) : '',
+    );
+    // Check if item already has unit price mode (quantity and unitPrice exist)
+    _isUnitPriceMode =
+        widget.item.quantity != null && widget.item.unitPrice != null;
   }
 
   @override
@@ -50,144 +57,158 @@ class _PricingTableRowState extends State<PricingTableRow> {
     _descriptionController.dispose();
     _quantityController.dispose();
     _unitPriceController.dispose();
+    _totalController.dispose();
     super.dispose();
   }
 
   void _updateTotal() {
-    final quantity = double.tryParse(_quantityController.text) ?? 0.0;
-    final unitPrice = double.tryParse(_unitPriceController.text) ?? 0.0;
-    final total = quantity * unitPrice;
-    
-    if (widget.onChanged != null) {
-      widget.onChanged!(PricingItem(
-        id: widget.item.id,
-        description: _descriptionController.text,
-        quantity: quantity > 0 ? quantity : null,
-        unitPrice: unitPrice > 0 ? unitPrice : null,
-        total: total,
-      ));
+    if (_isUnitPriceMode) {
+      // Calculate from quantity × unitPrice
+      final quantity = double.tryParse(_quantityController.text) ?? 0.0;
+      final unitPrice = double.tryParse(_unitPriceController.text) ?? 0.0;
+      final total = quantity * unitPrice;
+      _totalController.text = total > 0 ? total.toStringAsFixed(3) : '';
+
+      if (widget.onChanged != null) {
+        widget.onChanged!(
+          PricingItem(
+            id: widget.item.id,
+            description: _descriptionController.text,
+            quantity: quantity > 0 ? quantity : null,
+            unitPrice: unitPrice > 0 ? unitPrice : null,
+            total: total,
+          ),
+        );
+      }
+    } else {
+      // Direct total input
+      final total = double.tryParse(_totalController.text) ?? 0.0;
+
+      if (widget.onChanged != null) {
+        widget.onChanged!(
+          PricingItem(
+            id: widget.item.id,
+            description: _descriptionController.text,
+            quantity: null,
+            unitPrice: null,
+            total: total,
+          ),
+        );
+      }
     }
   }
 
-  void _handleDoubleTap() {
-    if (!_hasUnitPrice) {
+  void _handleTripleTap() {
+    final now = DateTime.now();
+    if (_lastTapTime == null ||
+        now.difference(_lastTapTime!) > const Duration(milliseconds: 400)) {
+      _tapCount = 1;
+    } else {
+      _tapCount++;
+    }
+    _lastTapTime = now;
+
+    if (_tapCount == 3) {
+      _tapCount = 0;
+      // Toggle between direct total input and unit price mode
       setState(() {
-        _hasUnitPrice = true;
-        _isEditingUnitPrice = true;
+        _isUnitPriceMode = !_isUnitPriceMode;
+        if (_isUnitPriceMode) {
+          // Switching to unit price mode - initialize if empty
+          if (_quantityController.text.isEmpty &&
+              widget.item.quantity != null) {
+            _quantityController.text = widget.item.quantity.toString();
+          }
+          if (_unitPriceController.text.isEmpty &&
+              widget.item.unitPrice != null) {
+            _unitPriceController.text = widget.item.unitPrice.toString();
+          }
+        }
       });
-    } else if (!_isEditingUnitPrice) {
-      // If already has unit price, allow editing again on double tap
-      setState(() {
-        _isEditingUnitPrice = true;
-      });
     }
-  }
-
-  String _getCostDisplay() {
-    if (!_hasUnitPrice) {
-      return '= -';
-    }
-
-    final quantity = double.tryParse(_quantityController.text);
-    final unitPrice = double.tryParse(_unitPriceController.text);
-
-    if (quantity == null || quantity == 0 || unitPrice == null || unitPrice == 0) {
-      return '= -';
-    }
-
-    final total = quantity * unitPrice;
-    return '${quantity.toStringAsFixed(0)} × ${unitPrice.toStringAsFixed(3)} = ${total.toStringAsFixed(3)}';
   }
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onDoubleTap: _handleDoubleTap,
+      onTap: _handleTripleTap,
       child: Container(
+        margin: const EdgeInsets.only(bottom: 8),
         height: 60.5,
         padding: const EdgeInsets.symmetric(vertical: 8),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(4),
+          color: const Color(0xFF2A313D).withOpacity(0.3),
+        ),
         child: Row(
           children: [
+            SizedBox(width: 8),
             // Item Description
             Expanded(
               flex: 2,
-              child: Container(
-                height: 44,
-                padding: const EdgeInsets.symmetric(horizontal: 13),
-                decoration: BoxDecoration(
-                  color: const Color(0xFF2A313D).withOpacity(0.3),
-                  borderRadius: BorderRadius.circular(4),
+              child: TextField(
+                controller: _descriptionController,
+                style: AppTextStyles.bodyMedium.copyWith(
+                  color: AppColors.textPrimary,
+                  fontSize: 16,
                 ),
-                child: TextField(
-                  controller: _descriptionController,
-                  style: AppTextStyles.bodyMedium.copyWith(
-                    color: AppColors.textPrimary,
+                decoration: InputDecoration(
+                  border: InputBorder.none,
+                  hintText: '-',
+                  hintStyle: TextStyle(
+                    color: AppColors.textPrimary.withOpacity(0.5),
                     fontSize: 16,
                   ),
-                  decoration: const InputDecoration(
-                    border: InputBorder.none,
-                    hintText: '-',
-                    hintStyle: TextStyle(
-                      color: AppColors.textPrimary,
-                      fontSize: 16,
-                    ),
-                  ),
-                  onChanged: (_) {
-                    if (widget.onChanged != null) {
-                      _updateTotal();
-                    }
-                  },
+                  contentPadding: EdgeInsets.zero,
+                  filled: false,
                 ),
+                onChanged: (_) {
+                  if (widget.onChanged != null) {
+                    _updateTotal();
+                  }
+                },
               ),
             ),
             const SizedBox(width: 8),
-            // Cost (KD) - Shows calculation or editable unit price
+            // Cost (KD) - Direct total input or unit price mode
             Expanded(
               flex: 2,
-              child: _isEditingUnitPrice
+              child: _isUnitPriceMode
                   ? Row(
                       children: [
                         // Quantity input
                         Expanded(
-                          child: Container(
-                            height: 44,
-                            padding: const EdgeInsets.symmetric(horizontal: 8),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFF2A313D),
-                              border: Border.all(color: const Color(0xFF363C4A)),
-                              borderRadius: BorderRadius.circular(4),
+                          child: TextField(
+                            controller: _quantityController,
+                            keyboardType: const TextInputType.numberWithOptions(
+                              decimal: true,
                             ),
-                            child: TextField(
-                              controller: _quantityController,
-                              keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                              inputFormatters: [
-                                FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*')),
-                              ],
-                              style: AppTextStyles.bodyMedium.copyWith(
-                                color: AppColors.textPrimary,
-                                fontSize: 16,
+                            inputFormatters: [
+                              FilteringTextInputFormatter.allow(
+                                RegExp(r'^\d*\.?\d*'),
                               ),
-                              textAlign: TextAlign.center,
-                              decoration: const InputDecoration(
-                                border: InputBorder.none,
-                                hintText: '-',
-                                hintStyle: TextStyle(
-                                  color: AppColors.textMuted,
-                                  fontSize: 16,
+                            ],
+                            style: AppTextStyles.bodyMedium.copyWith(
+                              color: AppColors.textPrimary,
+                              fontSize: 16,
+                            ),
+                            textAlign: TextAlign.center,
+                            decoration: InputDecoration(
+                              border: InputBorder.none,
+                              focusedBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(4),
+                                borderSide: BorderSide(
+                                  color: AppColors.primary,
                                 ),
                               ),
-                              onChanged: (_) {
-                                setState(() {
-                                  _isEditingUnitPrice = false;
-                                });
-                                _updateTotal();
-                              },
-                              onSubmitted: (_) {
-                                setState(() {
-                                  _isEditingUnitPrice = false;
-                                });
-                              },
+                              hintText: '-',
+                              hintStyle: TextStyle(
+                                color: AppColors.textMuted,
+                                fontSize: 16,
+                              ),
+                              filled: false,
                             ),
+                            onChanged: (_) => _updateTotal(),
                           ),
                         ),
                         const SizedBox(width: 4),
@@ -201,71 +222,120 @@ class _PricingTableRowState extends State<PricingTableRow> {
                         const SizedBox(width: 4),
                         // Unit price input
                         Expanded(
-                          child: Container(
-                            height: 44,
-                            padding: const EdgeInsets.symmetric(horizontal: 8),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFF2A313D),
-                              border: Border.all(color: const Color(0xFF363C4A)),
-                              borderRadius: BorderRadius.circular(4),
+                          child: TextField(
+                            controller: _unitPriceController,
+                            keyboardType: const TextInputType.numberWithOptions(
+                              decimal: true,
                             ),
-                            child: TextField(
-                              controller: _unitPriceController,
-                              keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                              inputFormatters: [
-                                FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*')),
-                              ],
-                              autofocus: true,
-                              style: AppTextStyles.bodyMedium.copyWith(
-                                color: AppColors.textPrimary,
-                                fontSize: 16,
+                            inputFormatters: [
+                              FilteringTextInputFormatter.allow(
+                                RegExp(r'^\d*\.?\d*'),
                               ),
-                              textAlign: TextAlign.center,
-                              decoration: const InputDecoration(
-                                border: InputBorder.none,
-                                hintText: '-',
-                                hintStyle: TextStyle(
-                                  color: AppColors.textMuted,
-                                  fontSize: 16,
-                                ),
-                              ),
-                              onChanged: (_) {
-                                setState(() {
-                                  _isEditingUnitPrice = false;
-                                });
-                                _updateTotal();
-                              },
-                              onSubmitted: (_) {
-                                setState(() {
-                                  _isEditingUnitPrice = false;
-                                });
-                              },
-                            ),
-                          ),
-                        ),
-                      ],
-                    )
-                  : GestureDetector(
-                      onDoubleTap: _handleDoubleTap,
-                      child: Container(
-                        height: 44,
-                        padding: const EdgeInsets.symmetric(horizontal: 13),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF2A313D),
-                          border: Border.all(color: const Color(0xFF363C4A)),
-                          borderRadius: BorderRadius.circular(4),
-                        ),
-                        child: Center(
-                          child: Text(
-                            _getCostDisplay(),
+                            ],
                             style: AppTextStyles.bodyMedium.copyWith(
                               color: AppColors.textPrimary,
                               fontSize: 16,
                             ),
                             textAlign: TextAlign.center,
+                            decoration: const InputDecoration(
+                              border: InputBorder.none,
+                              hintText: '-',
+                              hintStyle: TextStyle(
+                                color: AppColors.textMuted,
+                                fontSize: 16,
+                              ),
+                              filled: false,
+                            ),
+                            onChanged: (_) => _updateTotal(),
                           ),
                         ),
-                      ),
+                        const SizedBox(width: 4),
+                        const Text(
+                          '=',
+                          style: TextStyle(
+                            color: AppColors.textSecondary,
+                            fontSize: 16,
+                          ),
+                        ),
+                        const SizedBox(width: 4),
+                        // Total display (read-only, calculated)
+                        Expanded(
+                          child: Container(
+                            height: 44,
+                            padding: const EdgeInsets.symmetric(horizontal: 8),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF2A313D),
+                              border: Border.all(
+                                color: const Color(0xFF363C4A),
+                              ),
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                            child: Center(
+                              child: Text(
+                                widget.item.total > 0
+                                    ? widget.item.total.toStringAsFixed(3)
+                                    : '-',
+                                style: AppTextStyles.bodyMedium.copyWith(
+                                  color: AppColors.textPrimary,
+                                  fontSize: 16,
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    )
+                  : Row(
+                      mainAxisSize: MainAxisSize.min,
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Text(
+                          '=',
+                          style: TextStyle(
+                            color: AppColors.textSecondary,
+                            fontSize: 16,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+
+                        Expanded(
+                          child: GestureDetector(
+                            onTap: _handleTripleTap,
+                            child: TextField(
+                              controller: _totalController,
+                              keyboardType:
+                                  const TextInputType.numberWithOptions(
+                                    decimal: true,
+                                  ),
+                              inputFormatters: [
+                                FilteringTextInputFormatter.allow(
+                                  RegExp(r'^\d*\.?\d*'),
+                                ),
+                              ],
+                              style: AppTextStyles.bodyMedium.copyWith(
+                                color: AppColors.textPrimary,
+                                fontSize: 16,
+                              ),
+                              textAlign: TextAlign.center,
+                              decoration: InputDecoration(
+                                border: InputBorder.none,
+                                hintText: '-',
+                                hintStyle: Theme.of(context)
+                                    .textTheme
+                                    .bodyMedium
+                                    ?.copyWith(color: AppColors.textMuted),
+
+                                contentPadding: const EdgeInsets.symmetric(
+                                  horizontal: 0,
+                                ),
+                                filled: false,
+                              ),
+                              onChanged: (_) => _updateTotal(),
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
             ),
             const SizedBox(width: 8),

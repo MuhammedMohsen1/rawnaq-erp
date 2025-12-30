@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_text_styles.dart';
 
-class PricingSummarySidebar extends StatelessWidget {
+class PricingSummarySidebar extends StatefulWidget {
   final double grandTotal;
   final String? lastSaveTime;
   final VoidCallback? onSubmit;
@@ -17,9 +17,18 @@ class PricingSummarySidebar extends StatelessWidget {
   });
 
   @override
+  State<PricingSummarySidebar> createState() => _PricingSummarySidebarState();
+}
+
+class _PricingSummarySidebarState extends State<PricingSummarySidebar> {
+  bool _isCollapsed = false;
+
+  @override
   Widget build(BuildContext context) {
-    return Container(
-      width: 320,
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 300),
+      curve: Curves.easeInOut,
+      width: _isCollapsed ? 60 : 320,
       decoration: BoxDecoration(
         color: const Color(0xFF1C212B),
         border: Border.all(color: const Color(0xFF363C4A)),
@@ -32,44 +41,146 @@ class PricingSummarySidebar extends StatelessWidget {
           ),
         ],
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Header
-          Container(
-            height: 69,
-            padding: const EdgeInsets.all(20),
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                colors: [Color(0xFF1C212B), Color(0xFF232936)],
-                begin: Alignment.centerRight,
-                end: Alignment.centerLeft,
-              ),
-              borderRadius: BorderRadius.only(
-                topLeft: Radius.circular(12),
-                topRight: Radius.circular(12),
-              ),
-            ),
-            child: Row(
-              children: [
-                const Icon(
-                  Icons.calculate,
-                  color: Color(0xFF135BEC),
-                  size: 24,
+      child: AnimatedSwitcher(
+        duration: const Duration(milliseconds: 300),
+        switchInCurve: Curves.easeInOut,
+        switchOutCurve: Curves.easeInOut,
+        transitionBuilder: (child, animation) {
+          return FadeTransition(opacity: animation, child: child);
+        },
+        child: _isCollapsed
+            ? SizedBox(
+                key: const ValueKey('collapsed'),
+                width: 60,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: _buildCollapsedContent(),
                 ),
-                const SizedBox(width: 8),
-                Text(
-                  'ملخص التسعير',
-                  style: AppTextStyles.h4.copyWith(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w700,
+              )
+            : SizedBox(
+                key: const ValueKey('expanded'),
+                width: 320,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: _buildExpandedContent(),
+                ),
+              ),
+      ),
+    );
+  }
+
+  List<Widget> _buildCollapsedContent() {
+    return [
+      // Header
+      Container(
+        height: 69,
+        padding: const EdgeInsets.all(20),
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            colors: [Color(0xFF1C212B), Color(0xFF232936)],
+            begin: Alignment.centerRight,
+            end: Alignment.centerLeft,
+          ),
+          borderRadius: BorderRadius.only(
+            topLeft: Radius.circular(12),
+            topRight: Radius.circular(12),
+          ),
+        ),
+        child: const Icon(Icons.calculate, color: Color(0xFF135BEC), size: 24),
+      ),
+      // Toggle button at bottom
+      Expanded(
+        child: Container(
+          padding: const EdgeInsets.all(16),
+          child: Center(
+            child: Material(
+              color: Colors.transparent,
+              child: InkWell(
+                onTap: () {
+                  setState(() {
+                    _isCollapsed = !_isCollapsed;
+                  });
+                },
+                borderRadius: BorderRadius.circular(12),
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  width: 44,
+                  height: 44,
+                  decoration: BoxDecoration(
+                    color: AppColors.cardBackground.withOpacity(0.8),
+                    border: Border.all(
+                      color: AppColors.border.withOpacity(0.5),
+                      width: 1,
+                    ),
+                    borderRadius: BorderRadius.circular(12),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.1),
+                        blurRadius: 4,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: Center(
+                    child: AnimatedSwitcher(
+                      duration: const Duration(milliseconds: 200),
+                      transitionBuilder: (child, animation) {
+                        return ScaleTransition(scale: animation, child: child);
+                      },
+                      child: Icon(
+                        _isCollapsed ? Icons.chevron_right : Icons.chevron_left,
+                        key: ValueKey<bool>(_isCollapsed),
+                        color: AppColors.textSecondary,
+                        size: 24,
+                      ),
+                    ),
                   ),
                 ),
-              ],
+              ),
             ),
           ),
-          // Content
-          Padding(
+        ),
+      ),
+    ];
+  }
+
+  List<Widget> _buildExpandedContent() {
+    return [
+      // Header
+      Container(
+        height: 69,
+        padding: const EdgeInsets.all(20),
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            colors: [Color(0xFF1C212B), Color(0xFF232936)],
+            begin: Alignment.centerRight,
+            end: Alignment.centerLeft,
+          ),
+          borderRadius: BorderRadius.only(
+            topLeft: Radius.circular(12),
+            topRight: Radius.circular(12),
+          ),
+        ),
+        child: Row(
+          children: [
+            const Icon(Icons.calculate, color: Color(0xFF135BEC), size: 24),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                'ملخص التسعير',
+                style: AppTextStyles.h4.copyWith(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+      // Content
+      Expanded(
+        child: SingleChildScrollView(
+          child: Padding(
             padding: const EdgeInsets.all(25),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -90,7 +201,7 @@ class PricingSummarySidebar extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
                     Text(
-                      grandTotal.toStringAsFixed(0),
+                      widget.grandTotal.toStringAsFixed(0),
                       style: const TextStyle(
                         fontSize: 30,
                         fontWeight: FontWeight.w900,
@@ -127,13 +238,13 @@ class PricingSummarySidebar extends StatelessWidget {
                   padding: const EdgeInsets.symmetric(vertical: 17),
                   decoration: const BoxDecoration(
                     color: Color(0xFF15181E),
-                    border: Border(
-                      top: BorderSide(color: Color(0xFF363C4A)),
-                    ),
+                    border: Border(top: BorderSide(color: Color(0xFF363C4A))),
                   ),
                   child: Center(
                     child: Text(
-                      lastSaveTime != null ? 'آخر حفظ: $lastSaveTime' : 'آخر حفظ: الآن',
+                      widget.lastSaveTime != null
+                          ? 'آخر حفظ: ${widget.lastSaveTime}'
+                          : 'آخر حفظ: الآن',
                       style: AppTextStyles.caption.copyWith(
                         fontSize: 12,
                         color: const Color(0xFF6B7280),
@@ -147,7 +258,7 @@ class PricingSummarySidebar extends StatelessWidget {
                   width: double.infinity,
                   height: 56,
                   child: ElevatedButton(
-                    onPressed: onSubmit,
+                    onPressed: widget.onSubmit,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFF135BEC),
                       foregroundColor: Colors.white,
@@ -160,10 +271,7 @@ class PricingSummarySidebar extends StatelessWidget {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        const Icon(
-                          Icons.send,
-                          size: 24,
-                        ),
+                        const Icon(Icons.send, size: 24),
                         const SizedBox(width: 8),
                         Text(
                           'إرسال التسعير للمراجعة',
@@ -182,7 +290,7 @@ class PricingSummarySidebar extends StatelessWidget {
                   width: double.infinity,
                   height: 50,
                   child: OutlinedButton(
-                    onPressed: onSaveDraft,
+                    onPressed: widget.onSaveDraft,
                     style: OutlinedButton.styleFrom(
                       foregroundColor: const Color(0xFFD1D5DB),
                       side: const BorderSide(color: Color(0xFF363C4A)),
@@ -193,10 +301,7 @@ class PricingSummarySidebar extends StatelessWidget {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        const Icon(
-                          Icons.save_outlined,
-                          size: 24,
-                        ),
+                        const Icon(Icons.save_outlined, size: 24),
                         const SizedBox(width: 8),
                         Text(
                           'حفظ كمسودة',
@@ -246,9 +351,49 @@ class PricingSummarySidebar extends StatelessWidget {
               ],
             ),
           ),
-        ],
+        ),
       ),
-    );
+      // Toggle button at bottom
+      Container(
+        padding: const EdgeInsets.all(16),
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: () {
+              setState(() {
+                _isCollapsed = !_isCollapsed;
+              });
+            },
+            borderRadius: BorderRadius.circular(8),
+            child: Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(vertical: 12),
+              decoration: BoxDecoration(
+                color: AppColors.cardBackground,
+                border: Border.all(color: AppColors.border, width: 1),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 200),
+                    transitionBuilder: (child, animation) {
+                      return FadeTransition(opacity: animation, child: child);
+                    },
+                    child: Icon(
+                      _isCollapsed ? Icons.chevron_right : Icons.chevron_left,
+                      key: ValueKey<bool>(_isCollapsed),
+                      color: AppColors.textSecondary,
+                      size: 20,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    ];
   }
 }
-
