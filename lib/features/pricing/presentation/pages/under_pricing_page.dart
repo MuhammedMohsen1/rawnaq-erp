@@ -484,19 +484,24 @@ class _UnderPricingPageState extends State<UnderPricingPage> {
   }
 
   Widget _buildSidebar() {
-    return PricingSummarySidebar(
-      grandTotal: _pricingData.grandTotal,
-      lastSaveTime: _pricingData.lastSaveTime,
-      onSubmit: () {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('تم إرسال التسعير للمراجعة')),
-        );
-      },
-      onSaveDraft: () {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('تم حفظ المسودة')));
-      },
+    return ConstrainedBox(
+      constraints: BoxConstraints(
+        maxHeight: MediaQuery.of(context).size.height,
+      ),
+      child: PricingSummarySidebar(
+        grandTotal: _pricingData.grandTotal,
+        lastSaveTime: _pricingData.lastSaveTime,
+        onSubmit: () {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('تم إرسال التسعير للمراجعة')),
+          );
+        },
+        onSaveDraft: () {
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(const SnackBar(content: Text('تم حفظ المسودة')));
+        },
+      ),
     );
   }
 }

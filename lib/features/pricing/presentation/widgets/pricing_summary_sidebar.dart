@@ -25,47 +25,58 @@ class _PricingSummarySidebarState extends State<PricingSummarySidebar> {
 
   @override
   Widget build(BuildContext context) {
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 300),
-      curve: Curves.easeInOut,
-      width: _isCollapsed ? 60 : 320,
-      decoration: BoxDecoration(
-        color: const Color(0xFF1C212B),
-        border: Border.all(color: const Color(0xFF363C4A)),
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.4),
-            blurRadius: 20,
-            offset: const Offset(0, 8),
-          ),
-        ],
-      ),
-      child: AnimatedSwitcher(
-        duration: const Duration(milliseconds: 300),
-        switchInCurve: Curves.easeInOut,
-        switchOutCurve: Curves.easeInOut,
-        transitionBuilder: (child, animation) {
-          return FadeTransition(opacity: animation, child: child);
-        },
-        child: _isCollapsed
-            ? SizedBox(
-                key: const ValueKey('collapsed'),
-                width: 60,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: _buildCollapsedContent(),
-                ),
-              )
-            : SizedBox(
-                key: const ValueKey('expanded'),
-                width: 320,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: _buildExpandedContent(),
-                ),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final maxHeight = constraints.maxHeight != double.infinity
+            ? constraints.maxHeight
+            : MediaQuery.of(context).size.height;
+
+        return AnimatedContainer(
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeInOut,
+          width: _isCollapsed ? 60 : 320,
+          constraints: BoxConstraints(minHeight: 0, maxHeight: maxHeight),
+          decoration: BoxDecoration(
+            color: const Color(0xFF1C212B),
+            border: Border.all(color: const Color(0xFF363C4A)),
+            borderRadius: BorderRadius.circular(12),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.4),
+                blurRadius: 20,
+                offset: const Offset(0, 8),
               ),
-      ),
+            ],
+          ),
+          child: AnimatedSwitcher(
+            duration: const Duration(milliseconds: 300),
+            switchInCurve: Curves.easeInOut,
+            switchOutCurve: Curves.easeInOut,
+            transitionBuilder: (child, animation) {
+              return FadeTransition(opacity: animation, child: child);
+            },
+            child: _isCollapsed
+                ? SizedBox(
+                    key: const ValueKey('collapsed'),
+                    width: 60,
+                    height: maxHeight,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: _buildCollapsedContent(),
+                    ),
+                  )
+                : SizedBox(
+                    key: const ValueKey('expanded'),
+                    width: 320,
+                    height: maxHeight,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: _buildExpandedContent(),
+                    ),
+                  ),
+          ),
+        );
+      },
     );
   }
 

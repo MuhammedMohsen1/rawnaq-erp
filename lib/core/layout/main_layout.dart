@@ -35,12 +35,19 @@ class MainLayout extends StatelessWidget {
                 // Content area with top bar
                 Expanded(
                   child: Column(
+                    mainAxisSize: MainAxisSize.max,
                     children: [
                       TopBar(
                         title: _getPageTitle(currentPath),
                         searchHint: 'ابحث عن المشاريع والمهام...',
                       ),
-                      Expanded(child: child),
+                      Expanded(
+                        child: SizedBox(
+                          width: double.infinity,
+                          height: double.infinity,
+                          child: child,
+                        ),
+                      ),
                     ],
                   ),
                 ),
@@ -91,8 +98,8 @@ class _SidebarState extends State<_Sidebar> {
       curve: Curves.fastOutSlowIn,
       width: _isCollapsed ? 100 : 260,
       decoration: const BoxDecoration(
-        color: AppColors.sidebarBackground,
-        border: Border(right: BorderSide(color: AppColors.border, width: 1)),
+        color: Color(0xFF1C2128),
+        border: Border(left: BorderSide(color: Color(0xFF312F31), width: 1)),
       ),
       child: AnimatedSwitcher(
         duration: const Duration(milliseconds: 300),
