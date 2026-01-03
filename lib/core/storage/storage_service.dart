@@ -11,6 +11,10 @@ abstract class StorageService {
   Future<String?> getRefreshToken();
   Future<void> clearRefreshToken();
 
+  Future<void> setSessionId(String sessionId);
+  Future<String?> getSessionId();
+  Future<void> clearSessionId();
+
   Future<void> setUserData(Map<String, dynamic> userData);
   Future<Map<String, dynamic>?> getUserData();
   Future<void> clearUserData();
@@ -71,6 +75,21 @@ class StorageServiceImpl implements StorageService {
   @override
   Future<void> clearRefreshToken() async {
     await _prefs.remove(AppConstants.refreshTokenKey);
+  }
+
+  @override
+  Future<void> setSessionId(String sessionId) async {
+    await _prefs.setString(AppConstants.sessionIdKey, sessionId);
+  }
+
+  @override
+  Future<String?> getSessionId() async {
+    return _prefs.getString(AppConstants.sessionIdKey);
+  }
+
+  @override
+  Future<void> clearSessionId() async {
+    await _prefs.remove(AppConstants.sessionIdKey);
   }
 
   @override

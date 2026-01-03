@@ -28,12 +28,13 @@ class CacheUtils {
     await _storageService.clearRefreshToken();
   }
 
-  /// Clear all user-related data (token, user data, refresh token)
+  /// Clear all user-related data (token, user data, refresh token, sessionId)
   static Future<void> clearAllUserData() async {
     await Future.wait([
       _storageService.clearToken(),
       _storageService.clearUserData(),
       _storageService.clearRefreshToken(),
+      _storageService.clearSessionId(),
     ]);
   }
 

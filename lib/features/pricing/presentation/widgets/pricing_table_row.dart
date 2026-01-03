@@ -150,14 +150,14 @@ class _PricingTableRowState extends State<PricingTableRow> {
                 controller: _descriptionController,
                 style: AppTextStyles.bodyMedium.copyWith(
                   color: AppColors.textPrimary,
-                  fontSize: 16,
+                  fontSize: 14,
                 ),
                 decoration: InputDecoration(
                   border: InputBorder.none,
                   hintText: '-',
                   hintStyle: TextStyle(
                     color: AppColors.textPrimary.withOpacity(0.5),
-                    fontSize: 16,
+                    fontSize: 14,
                   ),
                   contentPadding: EdgeInsets.zero,
                   filled: false,
@@ -190,7 +190,7 @@ class _PricingTableRowState extends State<PricingTableRow> {
                             ],
                             style: AppTextStyles.bodyMedium.copyWith(
                               color: AppColors.textPrimary,
-                              fontSize: 16,
+                              fontSize: 14,
                             ),
                             textAlign: TextAlign.center,
                             decoration: InputDecoration(
@@ -204,8 +204,9 @@ class _PricingTableRowState extends State<PricingTableRow> {
                               hintText: '-',
                               hintStyle: TextStyle(
                                 color: AppColors.textMuted,
-                                fontSize: 16,
+                                fontSize: 18,
                               ),
+                              contentPadding: EdgeInsets.zero,
                               filled: false,
                             ),
                             onChanged: (_) => _updateTotal(),
@@ -234,7 +235,7 @@ class _PricingTableRowState extends State<PricingTableRow> {
                             ],
                             style: AppTextStyles.bodyMedium.copyWith(
                               color: AppColors.textPrimary,
-                              fontSize: 16,
+                              fontSize: 14,
                             ),
                             textAlign: TextAlign.center,
                             decoration: const InputDecoration(
@@ -242,8 +243,9 @@ class _PricingTableRowState extends State<PricingTableRow> {
                               hintText: '-',
                               hintStyle: TextStyle(
                                 color: AppColors.textMuted,
-                                fontSize: 16,
+                                fontSize: 14,
                               ),
+                              contentPadding: EdgeInsets.zero,
                               filled: false,
                             ),
                             onChanged: (_) => _updateTotal(),
@@ -271,15 +273,18 @@ class _PricingTableRowState extends State<PricingTableRow> {
                               borderRadius: BorderRadius.circular(4),
                             ),
                             child: Center(
-                              child: Text(
-                                widget.item.total > 0
-                                    ? widget.item.total.toStringAsFixed(3)
-                                    : '-',
-                                style: AppTextStyles.bodyMedium.copyWith(
-                                  color: AppColors.textPrimary,
-                                  fontSize: 16,
+                              child: FittedBox(
+                                fit: BoxFit.scaleDown,
+                                child: Text(
+                                  widget.item.total > 0
+                                      ? widget.item.total.toStringAsFixed(3)
+                                      : '-',
+                                  style: AppTextStyles.bodyMedium.copyWith(
+                                    color: AppColors.textPrimary,
+                                    fontSize: 13,
+                                  ),
+                                  textAlign: TextAlign.center,
                                 ),
-                                textAlign: TextAlign.center,
                               ),
                             ),
                           ),
@@ -315,7 +320,7 @@ class _PricingTableRowState extends State<PricingTableRow> {
                               ],
                               style: AppTextStyles.bodyMedium.copyWith(
                                 color: AppColors.textPrimary,
-                                fontSize: 16,
+                                fontSize: 14,
                               ),
                               textAlign: TextAlign.center,
                               decoration: InputDecoration(
@@ -324,11 +329,11 @@ class _PricingTableRowState extends State<PricingTableRow> {
                                 hintStyle: Theme.of(context)
                                     .textTheme
                                     .bodyMedium
-                                    ?.copyWith(color: AppColors.textMuted),
-
-                                contentPadding: const EdgeInsets.symmetric(
-                                  horizontal: 0,
-                                ),
+                                    ?.copyWith(
+                                      color: AppColors.textMuted,
+                                      fontSize: 18,
+                                    ),
+                                contentPadding: EdgeInsets.zero,
                                 filled: false,
                               ),
                               onChanged: (_) => _updateTotal(),
@@ -348,7 +353,7 @@ class _PricingTableRowState extends State<PricingTableRow> {
                   onPressed: widget.onDelete,
                   icon: const Icon(
                     Icons.delete_outline,
-                    color: AppColors.textMuted,
+                    color: AppColors.delete,
                     size: 20,
                   ),
                   padding: EdgeInsets.zero,

@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_text_styles.dart';
+import '../../../../core/routing/app_router.dart';
 import '../../domain/entities/team_member_entity.dart';
 import '../bloc/projects_bloc.dart';
 import '../bloc/projects_event.dart';
@@ -298,7 +300,7 @@ class _ProjectsListPageState extends State<ProjectsListPage> {
         return ProjectTableWidget(
           projects: state.filteredProjects,
           onProjectTap: (project) {
-            // TODO: Navigate to project details
+            context.go(AppRoutes.projectDetails(project.id));
           },
           onEditProject: (project) {
             // TODO: Show edit dialog
@@ -321,7 +323,7 @@ class _ProjectsListPageState extends State<ProjectsListPage> {
             return ProjectCardWidget(
               project: project,
               onTap: () {
-                // TODO: Navigate to project details
+                context.go(AppRoutes.projectDetails(project.id));
               },
               onEdit: () {
                 // TODO: Show edit dialog

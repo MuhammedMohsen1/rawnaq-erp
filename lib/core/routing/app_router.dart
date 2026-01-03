@@ -12,6 +12,7 @@ import '../../features/gantt/presentation/pages/gantt_chart_page.dart';
 import '../../features/settings/presentation/pages/settings_page.dart';
 import '../../features/notifications/presentation/pages/notifications_page.dart';
 import '../../features/projects/presentation/pages/site_engineer_dashboard_page.dart';
+import '../../features/projects/presentation/pages/project_details_page.dart';
 import '../../features/pricing/presentation/pages/under_pricing_page.dart';
 import '../../features/auth/presentation/bloc/auth_bloc.dart';
 import '../widgets/error_page.dart';
@@ -50,6 +51,9 @@ class AppRoutes {
 
   // Pricing
   static String pricing(String projectId) => '/pricing/$projectId';
+
+  // Project Details
+  static String projectDetails(String projectId) => '/projects/$projectId';
 }
 
 class AppRouter {
@@ -120,7 +124,24 @@ class AppRouter {
             ),
           ),
 
-          // Projects
+          // Project Details (must come before /projects to avoid route conflict)
+          GoRoute(
+            path: '/projects/:projectId',
+            pageBuilder: (context, state) {
+              final projectId = state.pathParameters['projectId'] ?? '';
+              return FadePageTransition(
+                key: state.pageKey,
+                child: BlocProvider(
+                  create: (context) =>
+                      ProjectsBloc(repository: ProjectsRepositoryImpl())
+                        ..add(const LoadProjects()),
+                  child: ProjectDetailsPage(projectId: projectId),
+                ),
+              );
+            },
+          ),
+
+          // Projects List
           GoRoute(
             path: AppRoutes.projects,
             pageBuilder: (context, state) => FadePageTransition(
@@ -348,9 +369,9 @@ class _DashboardPageState extends State<_DashboardPage> {
           Text(
             value,
             style: Theme.of(context).textTheme.headlineLarge?.copyWith(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                ),
+              color: Colors.white,
+              fontWeight: FontWeight.bold,
+            ),
           ),
           const SizedBox(height: 4),
           Text(
@@ -459,11 +480,11 @@ class _DashboardPageState extends State<_DashboardPage> {
             child: Center(
               child: Text(
                 'تصور الرسم البياني',
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                   color: const Color(0xFF8B949E),
                 ),
               ),
-                ),
+            ),
           ),
         ],
       ),
@@ -515,22 +536,22 @@ class _DashboardPageState extends State<_DashboardPage> {
   Widget _buildRecentUsers(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(24),
-        decoration: BoxDecoration(
-          color: const Color(0xFF161B22),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: const Color(0xFF30363D)),
-        ),
+      decoration: BoxDecoration(
+        color: const Color(0xFF161B22),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: const Color(0xFF30363D)),
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
-          children: [
+        mainAxisSize: MainAxisSize.min,
+        children: [
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-            Text(
+              Text(
                 'المستخدمون الأخيرون',
                 style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    color: Colors.white,
+                  color: Colors.white,
                   fontWeight: FontWeight.bold,
                 ),
               ),
@@ -707,9 +728,9 @@ class _DashboardPageState extends State<_DashboardPage> {
                 'مخزون منخفض من أكياس الأسمنت (النوع 2)',
                 'منذ 5 ساعات',
                 iconColor: const Color(0xFFF59E0B),
-            ),
-          ],
-        ),
+              ),
+            ],
+          ),
         ],
       ),
     );

@@ -7,6 +7,8 @@ import '../routing/app_router.dart';
 import '../widgets/bottom_nav_bar.dart';
 import '../widgets/top_bar.dart';
 import '../../features/auth/presentation/bloc/auth_bloc.dart';
+import '../../features/projects/presentation/bloc/projects_bloc.dart';
+import '../../features/projects/presentation/bloc/projects_state.dart';
 
 /// Main layout with responsive navigation
 /// - Desktop (>= 768px): Sidebar on the left
@@ -19,6 +21,7 @@ class MainLayout extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final currentPath = GoRouterState.of(context).uri.toString();
+    final routeState = GoRouterState.of(context);
 
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -38,7 +41,7 @@ class MainLayout extends StatelessWidget {
                     mainAxisSize: MainAxisSize.max,
                     children: [
                       TopBar(
-                        title: _getPageTitle(currentPath),
+                        title: _getPageTitle(context, currentPath, routeState),
                         searchHint: 'ابحث عن المشاريع والمهام...',
                       ),
                       Expanded(
@@ -66,7 +69,11 @@ class MainLayout extends StatelessWidget {
     );
   }
 
-  String _getPageTitle(String currentPath) {
+  String _getPageTitle(
+    BuildContext context,
+    String currentPath,
+    GoRouterState routeState,
+  ) {
     if (currentPath == AppRoutes.dashboard) return 'نظرة عامة';
     if (currentPath == AppRoutes.projects) return 'المشاريع';
     if (currentPath == AppRoutes.gantt) return 'مخطط جانت';
@@ -75,6 +82,47 @@ class MainLayout extends StatelessWidget {
     if (currentPath == AppRoutes.reminders) return 'التذكيرات';
     if (currentPath == '/financial') return 'المالية';
     if (currentPath == '/team') return 'الفريق';
+
+    // Check if it's a project details page
+    final projectId = routeState.pathParameters['projectId'];
+    if (projectId != null && currentPath.startsWith('/projects/')) {
+      // Try to get project name from bloc
+      try {
+        final projectsState = context.read<ProjectsBloc>().state;
+        if (projectsState is ProjectsLoaded) {
+          final project = projectsState.projects.firstWhere(
+            (p) => p.id == projectId,
+            orElse: () => projectsState.projects.first,
+          );
+          if (project.id == projectId) {
+            return project.name;
+          }
+        }
+      } catch (e) {
+        // Fallback to generic title
+      }
+      return 'تفاصيل المشروع';
+    }
+
+    // Check if it's a pricing page
+    if (projectId != null && currentPath.startsWith('/pricing/')) {
+      try {
+        final projectsState = context.read<ProjectsBloc>().state;
+        if (projectsState is ProjectsLoaded) {
+          final project = projectsState.projects.firstWhere(
+            (p) => p.id == projectId,
+            orElse: () => projectsState.projects.first,
+          );
+          if (project.id == projectId) {
+            return '${project.name} - التسعير';
+          }
+        }
+      } catch (e) {
+        // Fallback to generic title
+      }
+      return 'التسعير';
+    }
+
     return 'نظرة عامة';
   }
 }

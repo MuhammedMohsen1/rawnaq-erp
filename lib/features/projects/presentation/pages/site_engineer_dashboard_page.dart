@@ -81,78 +81,158 @@ class SiteEngineerDashboardPage extends StatelessWidget {
 
   // Mobile layout: Stack vertically
   Widget _buildOngoingProjectsMobile() {
-    return Column(
-      children: [
-        _buildOngoingProjectCard('أبو خالد', 75, 'منذ 5 ساعات'),
-        const SizedBox(height: 16),
-        _buildOngoingProjectCard('أبو خالد', 75, 'منذ 5 ساعات'),
-        const SizedBox(height: 16),
-        _buildOngoingProjectCard('أبو خالد', 75, 'منذ 5 ساعات'),
-        const SizedBox(height: 16),
-        _buildOngoingProjectCard('أبو خالد', 75, 'منذ 5 ساعات'),
-      ],
+    return Builder(
+      builder: (context) => Column(
+        children: [
+          _buildOngoingProjectCard(
+            'أبو خالد',
+            75,
+            'منذ 5 ساعات',
+            projectId: 'proj-1',
+            context: context,
+          ),
+          const SizedBox(height: 16),
+          _buildOngoingProjectCard(
+            'أبو خالد',
+            75,
+            'منذ 5 ساعات',
+            projectId: 'proj-1',
+            context: context,
+          ),
+          const SizedBox(height: 16),
+          _buildOngoingProjectCard(
+            'أبو خالد',
+            75,
+            'منذ 5 ساعات',
+            projectId: 'proj-1',
+            context: context,
+          ),
+          const SizedBox(height: 16),
+          _buildOngoingProjectCard(
+            'أبو خالد',
+            75,
+            'منذ 5 ساعات',
+            projectId: 'proj-1',
+            context: context,
+          ),
+        ],
+      ),
     );
   }
 
   // Tablet layout: 2 columns
   Widget _buildOngoingProjectsTablet() {
-    return Column(
-      children: [
-        Row(
-          children: [
-            Expanded(
-              child: _buildOngoingProjectCard('أبو خالد', 75, 'منذ 5 ساعات'),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: _buildOngoingProjectCard('أبو خالد', 75, 'منذ 5 ساعات'),
-            ),
-          ],
-        ),
-        const SizedBox(height: 16),
-        Row(
-          children: [
-            Expanded(
-              child: _buildOngoingProjectCard('أبو خالد', 75, 'منذ 5 ساعات'),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: _buildOngoingProjectCard('أبو خالد', 75, 'منذ 5 ساعات'),
-            ),
-          ],
-        ),
-      ],
+    return Builder(
+      builder: (context) => Column(
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: _buildOngoingProjectCard(
+                  'أبو خالد',
+                  75,
+                  'منذ 5 ساعات',
+                  projectId: 'proj-1',
+                  context: context,
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: _buildOngoingProjectCard(
+                  'أبو خالد',
+                  75,
+                  'منذ 5 ساعات',
+                  projectId: 'proj-1',
+                  context: context,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              Expanded(
+                child: _buildOngoingProjectCard(
+                  'أبو خالد',
+                  75,
+                  'منذ 5 ساعات',
+                  projectId: 'proj-1',
+                  context: context,
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: _buildOngoingProjectCard(
+                  'أبو خالد',
+                  75,
+                  'منذ 5 ساعات',
+                  projectId: 'proj-1',
+                  context: context,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 
   // Desktop layout: 4 columns
   Widget _buildOngoingProjectsDesktop() {
-    return Row(
-      children: [
-        Expanded(
-          child: _buildOngoingProjectCard('أبو خالد', 75, 'منذ 5 ساعات'),
-        ),
-        const SizedBox(width: 16),
-        Expanded(
-          child: _buildOngoingProjectCard('أبو خالد', 75, 'منذ 5 ساعات'),
-        ),
-        const SizedBox(width: 16),
-        Expanded(
-          child: _buildOngoingProjectCard('أبو خالد', 75, 'منذ 5 ساعات'),
-        ),
-        const SizedBox(width: 16),
-        Expanded(
-          child: _buildOngoingProjectCard('أبو خالد', 75, 'منذ 5 ساعات'),
-        ),
-      ],
+    return Builder(
+      builder: (context) => Row(
+        children: [
+          Expanded(
+            child: _buildOngoingProjectCard(
+              'أبو خالد',
+              75,
+              'منذ 5 ساعات',
+              projectId: 'proj-1',
+              context: context,
+            ),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: _buildOngoingProjectCard(
+              'أبو خالد',
+              75,
+              'منذ 5 ساعات',
+              projectId: 'proj-1',
+              context: context,
+            ),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: _buildOngoingProjectCard(
+              'أبو خالد',
+              75,
+              'منذ 5 ساعات',
+              projectId: 'proj-1',
+              context: context,
+            ),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: _buildOngoingProjectCard(
+              'أبو خالد',
+              75,
+              'منذ 5 ساعات',
+              projectId: 'proj-1',
+              context: context,
+            ),
+          ),
+        ],
+      ),
     );
   }
 
   Widget _buildOngoingProjectCard(
     String projectName,
     int progress,
-    String lastUpdate,
-  ) {
+    String lastUpdate, {
+    String? projectId,
+    BuildContext? context,
+  }) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -227,7 +307,11 @@ class SiteEngineerDashboardPage extends StatelessWidget {
                 child: SizedBox(
                   height: 44,
                   child: ElevatedButton(
-                    onPressed: () {},
+                    onPressed: () {
+                      if (projectId != null && context != null) {
+                        context.go(AppRoutes.projectDetails(projectId));
+                      }
+                    },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppColors.cardBackground,
                       foregroundColor: Colors.white,

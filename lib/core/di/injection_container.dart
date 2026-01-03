@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import '../storage/storage_service.dart';
 import '../network/dio_helper.dart';
 import '../../features/auth/domain/repositories/auth_repository.dart';
-import '../../features/auth/data/repositories/mock_auth_repository.dart';
+import '../../features/auth/data/repositories/auth_repository_impl.dart';
 import '../../features/auth/domain/usecases/auth_usecases.dart';
 import '../../features/auth/presentation/bloc/auth_bloc.dart';
 import '../../features/projects/domain/repositories/projects_repository.dart';
@@ -26,8 +26,8 @@ Future<void> setupDI() async {
   // Network initialization
   DioHelper.init();
 
-  // Auth Repository (using mock for development - no backend needed)
-  getIt.registerLazySingleton<AuthRepository>(() => MockAuthRepository());
+  // Auth Repository (using real implementation with backend API)
+  getIt.registerLazySingleton<AuthRepository>(() => AuthRepositoryImpl());
 
   // Auth Use Cases
   getIt.registerLazySingleton(() => LoginUseCase(getIt()));

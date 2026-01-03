@@ -58,15 +58,42 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         },
         (data) async {
           log('🚩 AuthBloc: Login successful');
-          final token = data['token'] as String;
-          final userJson = data['user'] as Map<String, dynamic>;
-          final user = User.fromJson(userJson);
-          final storageService = getIt<StorageService>();
-          await storageService.setToken(token);
-          await storageService.setUserData(userJson);
-          await Future.delayed(const Duration(milliseconds: 200));
-          if (!emit.isDone) {
-            emit(AuthAuthenticated(user: user, token: token));
+          try {
+            // Data is already extracted from response.data.data by repository
+            final token = data['token'] as String?;
+            final refreshToken = data['refreshToken'] as String?;
+            final sessionId = data['sessionId'] as String?;
+            final userJson = data['user'] as Map<String, dynamic>?;
+
+            if (token == null || userJson == null) {
+              log('🚩 AuthBloc: Missing required fields in login response');
+              if (!emit.isDone) {
+                emit(AuthError(message: 'استجابة غير صحيحة من الخادم'));
+              }
+              return;
+            }
+
+            final user = User.fromJson(userJson);
+
+            // Repository already stores tokens and sessionId, but we ensure it here too
+            final storageService = getIt<StorageService>();
+            await storageService.setToken(token);
+            if (refreshToken != null) {
+              await storageService.setRefreshToken(refreshToken);
+            }
+            if (sessionId != null) {
+              await storageService.setSessionId(sessionId);
+            }
+            await storageService.setUserData(userJson);
+            await Future.delayed(const Duration(milliseconds: 200));
+            if (!emit.isDone) {
+              emit(AuthAuthenticated(user: user, token: token));
+            }
+          } catch (e) {
+            log('🚩 AuthBloc: Error processing login response: $e');
+            if (!emit.isDone) {
+              emit(AuthError(message: 'فشل معالجة استجابة تسجيل الدخول'));
+            }
           }
         },
       );
@@ -89,8 +116,11 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     await result.fold(
       (failure) async => emit(AuthError(message: failure.message)),
       (async_) async {
+        // Repository already clears all tokens and sessionId, but ensure cleanup here too
         final storageService = getIt<StorageService>();
         await storageService.clearToken();
+        await storageService.clearRefreshToken();
+        await storageService.clearSessionId();
         await storageService.clearUserData();
 
         emit(AuthUnauthenticated());

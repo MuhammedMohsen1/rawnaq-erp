@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import '../constants/app_constants.dart';
 import '../storage/storage_service.dart';
 import '../di/injection_container.dart';
+import '../utils/response_code_translator.dart';
 import 'network_config.dart';
 
 class DioHelper {
@@ -155,6 +156,7 @@ class _AuthInterceptor extends Interceptor {
         final storageService = getIt<StorageService>();
         await storageService.clearToken();
         await storageService.clearRefreshToken();
+        await storageService.clearSessionId();
         await storageService.clearUserData();
 
         // Navigate to login page
@@ -173,19 +175,40 @@ class _AuthInterceptor extends Interceptor {
 class _LoggingInterceptor extends Interceptor {
   @override
   void onRequest(RequestOptions options, RequestInterceptorHandler handler) {
-    if (options.data != null) {}
-    if (options.queryParameters.isNotEmpty) {}
+    if (kDebugMode) {
+      print('🌐 [REQUEST] ${options.method} ${options.uri}');
+      if (options.data != null) {
+        print('📦 [REQUEST DATA] ${options.data}');
+      }
+      if (options.queryParameters.isNotEmpty) {
+        print('🔍 [QUERY PARAMS] ${options.queryParameters}');
+      }
+    }
     handler.next(options);
   }
 
   @override
   void onResponse(Response response, ResponseInterceptorHandler handler) {
+    if (kDebugMode) {
+      print('✅ [RESPONSE] ${response.statusCode} ${response.requestOptions.uri}');
+    }
     handler.next(response);
   }
 
   @override
   void onError(DioException err, ErrorInterceptorHandler handler) {
-    if (err.response?.data != null) {}
+    if (kDebugMode) {
+      print('❌ [ERROR] ${err.type}');
+      print('   URL: ${err.requestOptions.uri}');
+      print('   Method: ${err.requestOptions.method}');
+      if (err.response != null) {
+        print('   Status Code: ${err.response?.statusCode}');
+        print('   Response Data: ${err.response?.data}');
+      } else {
+        print('   Message: ${err.message}');
+        print('   Error: ${err.error}');
+      }
+    }
     handler.next(err);
   }
 }
@@ -193,16 +216,31 @@ class _LoggingInterceptor extends Interceptor {
 class _ErrorInterceptor extends Interceptor {
   @override
   void onError(DioException err, ErrorInterceptorHandler handler) {
-    String errorMessage;
+    String errorMessage = AppConstants.unknownError;
 
-    // محاولة استخراج الرسالة من الاستجابة
+    // محاولة استخراج الكود من الاستجابة وترجمته
     final responseData = err.response?.data;
     if (responseData is Map<String, dynamic>) {
-      final msg = responseData['message'];
-      if (msg != null && msg is String && msg.trim().isNotEmpty) {
-        errorMessage = msg;
-      } else {
-        errorMessage = AppConstants.unknownError;
+      // Try to get code first, fallback to message for backward compatibility
+      String? errorCode;
+      if (responseData.containsKey('code')) {
+        errorCode = responseData['code']?.toString();
+      } else if (responseData.containsKey('message')) {
+        // Support legacy message field - check if it's a code pattern
+        final msg = responseData['message']?.toString();
+        if (msg != null && msg.trim().isNotEmpty) {
+          if (msg.contains('_') && msg == msg.toUpperCase()) {
+            // Looks like a code (e.g., "ORDER_CREATED")
+            errorCode = msg;
+          } else {
+            // It's a regular message, use it directly
+            errorMessage = msg;
+          }
+        }
+      }
+      
+      if (errorCode != null) {
+        errorMessage = ResponseCodeTranslator.translate(errorCode);
       }
     } else {
       switch (err.type) {

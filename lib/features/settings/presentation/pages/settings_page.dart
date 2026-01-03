@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_text_styles.dart';
 import '../../../../core/providers/locale_provider.dart';
+import '../../../../core/routing/app_router.dart';
+import '../../../auth/presentation/bloc/auth_bloc.dart';
 
 /// Settings page with language and app configuration
 class SettingsPage extends StatelessWidget {
@@ -10,23 +14,41 @@ class SettingsPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.sidebarBackground,
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Header
-            Text('الإعدادات', style: AppTextStyles.pageTitle),
-            const SizedBox(height: 8),
-            Text(
-              'تخصيص إعدادات التطبيق والحساب',
-              style: AppTextStyles.bodyMedium.copyWith(
-                color: AppColors.textMuted,
-              ),
+    return BlocListener<AuthBloc, AuthState>(
+      listener: (context, state) {
+        if (state is AuthUnauthenticated) {
+          // Navigate to login page after logout
+          context.go(AppRoutes.login);
+        } else if (state is AuthError) {
+          // Show error message if logout fails
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(state.message),
+              backgroundColor: Colors.red,
+              behavior: SnackBarBehavior.floating,
+              margin: const EdgeInsets.all(16),
+              duration: const Duration(seconds: 4),
             ),
-            const SizedBox(height: 32),
+          );
+        }
+      },
+      child: Scaffold(
+        backgroundColor: AppColors.sidebarBackground,
+        body: SingleChildScrollView(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Header
+              Text('الإعدادات', style: AppTextStyles.pageTitle),
+              const SizedBox(height: 8),
+              Text(
+                'تخصيص إعدادات التطبيق والحساب',
+                style: AppTextStyles.bodyMedium.copyWith(
+                  color: AppColors.textMuted,
+                ),
+              ),
+              const SizedBox(height: 32),
 
             // Language Section
             _buildSection(
@@ -105,8 +127,18 @@ class SettingsPage extends StatelessWidget {
                 ],
               ),
             ),
+
+            const SizedBox(height: 24),
+
+            // Account Section with Sign Out
+            _buildSection(
+              title: 'الحساب',
+              icon: Icons.account_circle_outlined,
+              child: const _SignOutButton(),
+            ),
           ],
         ),
+      ),
       ),
     );
   }
@@ -274,6 +306,98 @@ class _LanguageOption extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+class _SignOutButton extends StatelessWidget {
+  const _SignOutButton();
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocBuilder<AuthBloc, AuthState>(
+      builder: (context, state) {
+        final isLoading = state is AuthLoading;
+        
+        return InkWell(
+          onTap: isLoading
+              ? null
+              : () {
+                  // Show confirmation dialog
+                  showDialog(
+                    context: context,
+                    builder: (dialogContext) => AlertDialog(
+                      backgroundColor: AppColors.cardBackground,
+                      title: Text(
+                        'تسجيل الخروج',
+                        style: AppTextStyles.tableCellBold,
+                      ),
+                      content: Text(
+                        'هل أنت متأكد أنك تريد تسجيل الخروج؟',
+                        style: AppTextStyles.bodyMedium,
+                      ),
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.of(dialogContext).pop(),
+                          child: Text(
+                            'إلغاء',
+                            style: TextStyle(color: AppColors.textMuted),
+                          ),
+                        ),
+                        TextButton(
+                          onPressed: () {
+                            Navigator.of(dialogContext).pop();
+                            // Dispatch logout event
+                            context.read<AuthBloc>().add(LogoutRequested());
+                          },
+                          child: Text(
+                            'تسجيل الخروج',
+                            style: TextStyle(color: Colors.red),
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                },
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'تسجيل الخروج',
+                        style: AppTextStyles.tableCellBold.copyWith(
+                          color: Colors.red,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'تسجيل الخروج من حسابك',
+                        style: AppTextStyles.caption,
+                      ),
+                    ],
+                  ),
+                ),
+                if (isLoading)
+                  const SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                else
+                  Icon(
+                    Icons.logout,
+                    color: Colors.red,
+                    size: 20,
+                  ),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 }

@@ -30,6 +30,12 @@ class User extends Equatable {
   });
 
   factory User.fromJson(Map<String, dynamic> json) {
+    // Map accountStatus enum to isActive boolean
+    // Backend returns accountStatus: "ACTIVE" | "SUSPENDED" | "BANNED" | "PENDING"
+    // Flutter uses isActive: true if accountStatus == "ACTIVE", false otherwise
+    final accountStatus = json['accountStatus'] as String?;
+    final isActive = accountStatus == 'ACTIVE';
+
     return User(
       id: json['id'] as String,
       email: json['email'] as String,
@@ -40,7 +46,7 @@ class User extends Equatable {
       adminSubRoles: json['adminSubRoles'] != null
           ? List<String>.from(json['adminSubRoles'] as List)
           : null,
-      isActive: json['isActive'] as bool? ?? true,
+      isActive: json['isActive'] as bool? ?? isActive,
       createdAt: DateTime.parse(json['createdAt'] as String),
       lastLoginAt: json['lastLoginAt'] != null
           ? DateTime.parse(json['lastLoginAt'] as String)

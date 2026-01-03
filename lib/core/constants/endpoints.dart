@@ -1,9 +1,11 @@
 abstract class ApiEndpoints {
   // Base URL - Backend is running on port 3001
-  static const String baseUrl = 'http://localhost:3001/api/v1';
+  // Using 127.0.0.1 instead of localhost to avoid macOS permission issues
+  static const String baseUrl = 'http://127.0.0.1:3001/api/v1';
+  //   static const String baseUrl = 'http://localhost:3001/api/v1';
   //   static const String baseUrl = 'https://beenedeek.com/api/v1';
   // static const String baseUrl =
-  //     'http://10.0.2.2:3001/api/v1'; // Alternative if localhost doesn't work
+  //     'http://10.0.2.2:3001/api/v1'; // For Android emulator
 
   // Auth Endpoints
   static const String login = '/login-portal';
