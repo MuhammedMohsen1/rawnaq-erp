@@ -8,6 +8,7 @@ import '../../features/projects/presentation/bloc/projects_bloc.dart';
 import '../../features/projects/presentation/bloc/projects_event.dart';
 import '../../features/projects/presentation/bloc/projects_state.dart';
 import '../../features/projects/data/repositories/projects_repository_impl.dart';
+import '../../features/projects/domain/enums/project_status.dart';
 import '../../features/gantt/presentation/pages/gantt_chart_page.dart';
 import '../../features/settings/presentation/pages/settings_page.dart';
 import '../../features/notifications/presentation/pages/notifications_page.dart';
@@ -290,48 +291,72 @@ class _DashboardPageState extends State<_DashboardPage> {
   }
 
   Widget _buildStatsCards(BuildContext context) {
-    return Row(
-      children: [
-        Expanded(
-          child: _buildStatCard(
-            context,
-            title: 'المشاريع النشطة',
-            value: '12',
-            icon: Icons.people,
-            color: const Color(0xFF3B82F6),
-          ),
-        ),
-        const SizedBox(width: 16),
-        Expanded(
-          child: _buildStatCard(
-            context,
-            title: 'المشاريع المتأخرة',
-            value: '3',
-            icon: Icons.people,
-            color: const Color(0xFFEF4444),
-          ),
-        ),
-        const SizedBox(width: 16),
-        Expanded(
-          child: _buildStatCard(
-            context,
-            title: 'المشاريع المعلقة',
-            value: '2',
-            icon: Icons.folder,
-            color: const Color(0xFFF59E0B),
-          ),
-        ),
-        const SizedBox(width: 16),
-        Expanded(
-          child: _buildStatCard(
-            context,
-            title: 'المدفوعات المعلقة',
-            value: '\$1,999',
-            icon: Icons.attach_money,
-            color: const Color(0xFF22C55E),
-          ),
-        ),
-      ],
+    return BlocBuilder<ProjectsBloc, ProjectsState>(
+      builder: (context, state) {
+        // Get statistics from state
+        int activeCount = 0;
+        int delayedCount = 0;
+        int onHoldCount = 0;
+        
+        if (state is ProjectsLoaded && state.statistics != null) {
+          activeCount = state.statistics!.active;
+          delayedCount = state.statistics!.delayed;
+          onHoldCount = state.statistics!.onHold;
+        } else if (state is ProjectsLoaded) {
+          // Calculate from projects if statistics not available
+          activeCount = state.projects.where((p) => p.status == ProjectStatus.active).length;
+          delayedCount = state.projects.where((p) => p.status == ProjectStatus.delayed).length;
+          onHoldCount = state.projects.where((p) => p.status == ProjectStatus.onHold).length;
+        }
+
+        return Row(
+          children: [
+            Expanded(
+              child: _buildStatCard(
+                context,
+                title: 'المشاريع النشطة',
+                value: activeCount.toString(),
+                icon: Icons.folder,
+                color: const Color(0xFF3B82F6),
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: _buildStatCard(
+                context,
+                title: 'المشاريع المتأخرة',
+                value: delayedCount.toString(),
+                icon: Icons.warning,
+                color: const Color(0xFFEF4444),
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: _buildStatCard(
+                context,
+                title: 'المشاريع المعلقة',
+                value: onHoldCount.toString(),
+                icon: Icons.pause_circle,
+                color: const Color(0xFFF59E0B),
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: _buildStatCard(
+                context,
+                title: 'المشاريع المكتملة',
+                value: state is ProjectsLoaded && state.statistics != null
+                    ? state.statistics!.completed.toString()
+                    : state is ProjectsLoaded
+                        ? state.projects.where((p) => p.status == ProjectStatus.completed).length.toString()
+                        : '0',
+                icon: Icons.check_circle,
+                color: const Color(0xFF22C55E),
+              ),
+            ),
+          ],
+        );
+      },
     );
   }
 

@@ -5,12 +5,15 @@ import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_text_styles.dart';
 import '../../../../core/routing/app_router.dart';
 import '../../domain/entities/team_member_entity.dart';
+import '../../domain/entities/project_entity.dart';
 import '../bloc/projects_bloc.dart';
 import '../bloc/projects_event.dart';
 import '../bloc/projects_state.dart';
 import '../widgets/project_filters_widget.dart';
 import '../widgets/project_table_widget.dart';
 import '../widgets/project_card_widget.dart';
+import '../widgets/create_project_dialog.dart';
+import '../widgets/edit_project_dialog.dart';
 
 /// Main projects list page with table and card views
 class ProjectsListPage extends StatefulWidget {
@@ -303,7 +306,7 @@ class _ProjectsListPageState extends State<ProjectsListPage> {
             context.go(AppRoutes.projectDetails(project.id));
           },
           onEditProject: (project) {
-            // TODO: Show edit dialog
+            _showEditProjectDialog(context, project);
           },
           onDeleteProject: (project) {
             _showDeleteConfirmation(context, project.id, project.name);
@@ -326,7 +329,7 @@ class _ProjectsListPageState extends State<ProjectsListPage> {
                 context.go(AppRoutes.projectDetails(project.id));
               },
               onEdit: () {
-                // TODO: Show edit dialog
+                _showEditProjectDialog(context, project);
               },
               onDelete: () {
                 _showDeleteConfirmation(context, project.id, project.name);
@@ -392,11 +395,23 @@ class _ProjectsListPageState extends State<ProjectsListPage> {
   }
 
   void _showCreateProjectDialog(BuildContext context) {
-    // TODO: Implement create project dialog
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('سيتم إضافة نموذج إنشاء المشروع قريباً'),
-        backgroundColor: AppColors.info,
+    final projectsBloc = context.read<ProjectsBloc>();
+    showDialog(
+      context: context,
+      builder: (dialogContext) => BlocProvider.value(
+        value: projectsBloc,
+        child: const CreateProjectDialog(),
+      ),
+    );
+  }
+
+  void _showEditProjectDialog(BuildContext context, ProjectEntity project) {
+    final projectsBloc = context.read<ProjectsBloc>();
+    showDialog(
+      context: context,
+      builder: (dialogContext) => BlocProvider.value(
+        value: projectsBloc,
+        child: EditProjectDialog(project: project),
       ),
     );
   }

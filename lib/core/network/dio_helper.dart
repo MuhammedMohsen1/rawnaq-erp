@@ -1,7 +1,6 @@
 import 'package:rawnaq/core/routing/app_router.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
 import '../constants/app_constants.dart';
 import '../storage/storage_service.dart';
 import '../di/injection_container.dart';
@@ -159,9 +158,11 @@ class _AuthInterceptor extends Interceptor {
         await storageService.clearSessionId();
         await storageService.clearUserData();
 
-        // Navigate to login page
-        getIt<GlobalKey<NavigatorState>>().currentState
-            ?.pushNamedAndRemoveUntil(AppRoutes.login, (route) => false);
+        // Navigate to login page using GoRouter
+        // Use Future.microtask to ensure navigation happens on the next frame
+        Future.microtask(() {
+          AppRouter.router.go(AppRoutes.login);
+        });
       }
 
       handler.next(err);

@@ -231,4 +231,9 @@ abstract class ApiEndpoints {
   ) => '/marts/$martId/categories/$categoryId/products-with-gallery';
   static String martProductImageUpdate(String productId) =>
       '/mart-products/$productId/image';
+
+  // Projects Endpoints
+  static const String projects = '/projects';
+  static String projectById(String id) => '/projects/$id';
+  static String updateProjectStatus(String id) => '/projects/$id/status';
 }

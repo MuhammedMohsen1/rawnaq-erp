@@ -99,6 +99,50 @@ class CreateProject extends ProjectsEvent {
   List<Object?> get props => [project];
 }
 
+/// Create a new project with full data
+class CreateProjectWithData extends ProjectsEvent {
+  final String name;
+  final String? description;
+  final String type; // 'DESIGN' or 'EXECUTION'
+  final String primaryDepartmentId;
+  final String? clientName;
+  final String? clientPhone;
+  final String? clientEmail;
+  final DateTime? startDate;
+  final DateTime? endDate;
+  final DateTime? deadline;
+  final int progress;
+
+  const CreateProjectWithData({
+    required this.name,
+    this.description,
+    required this.type,
+    required this.primaryDepartmentId,
+    this.clientName,
+    this.clientPhone,
+    this.clientEmail,
+    this.startDate,
+    this.endDate,
+    this.deadline,
+    this.progress = 0,
+  });
+
+  @override
+  List<Object?> get props => [
+        name,
+        description,
+        type,
+        primaryDepartmentId,
+        clientName,
+        clientPhone,
+        clientEmail,
+        startDate,
+        endDate,
+        deadline,
+        progress,
+      ];
+}
+
 /// Update an existing project
 class UpdateProject extends ProjectsEvent {
   final ProjectEntity project;

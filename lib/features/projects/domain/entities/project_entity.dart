@@ -15,6 +15,8 @@ class ProjectEntity extends Equatable {
   final List<String> teamMemberIds;
   final List<TeamMemberEntity>? teamMembers;
   final String? description;
+  final String? clientName;
+  final String? clientPhone;
   final DateTime? createdAt;
   final DateTime? updatedAt;
 
@@ -30,6 +32,8 @@ class ProjectEntity extends Equatable {
     this.teamMemberIds = const [],
     this.teamMembers,
     this.description,
+    this.clientName,
+    this.clientPhone,
     this.createdAt,
     this.updatedAt,
   });
@@ -47,6 +51,8 @@ class ProjectEntity extends Equatable {
         teamMemberIds,
         teamMembers,
         description,
+        clientName,
+        clientPhone,
         createdAt,
         updatedAt,
       ];
@@ -64,6 +70,8 @@ class ProjectEntity extends Equatable {
     List<String>? teamMemberIds,
     List<TeamMemberEntity>? teamMembers,
     String? description,
+    String? clientName,
+    String? clientPhone,
     DateTime? createdAt,
     DateTime? updatedAt,
   }) {
@@ -79,6 +87,8 @@ class ProjectEntity extends Equatable {
       teamMemberIds: teamMemberIds ?? this.teamMemberIds,
       teamMembers: teamMembers ?? this.teamMembers,
       description: description ?? this.description,
+      clientName: clientName ?? this.clientName,
+      clientPhone: clientPhone ?? this.clientPhone,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );

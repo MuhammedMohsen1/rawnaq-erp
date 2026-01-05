@@ -16,31 +16,54 @@ class ProjectModel extends ProjectEntity {
     super.teamMemberIds,
     super.teamMembers,
     super.description,
+    super.clientName,
+    super.clientPhone,
     super.createdAt,
     super.updatedAt,
   });
 
-  /// Create from JSON
+  /// Create from JSON (backend format)
   factory ProjectModel.fromJson(Map<String, dynamic> json) {
+    // Map backend status to frontend status
+    final backendStatus = json['status'] as String? ?? 'DRAFT';
+    final frontendStatus = _mapBackendStatusToFrontend(backendStatus);
+
+    // Handle nullable dates from backend
+    DateTime? startDate;
+    if (json['startDate'] != null) {
+      startDate = DateTime.parse(json['startDate'] as String);
+    } else {
+      // If no start date, use current date as fallback
+      startDate = DateTime.now();
+    }
+
+    DateTime? endDate;
+    if (json['endDate'] != null) {
+      endDate = DateTime.parse(json['endDate'] as String);
+    } else if (json['deadline'] != null) {
+      endDate = DateTime.parse(json['deadline'] as String);
+    } else {
+      // If no end date, use start date + 30 days as fallback
+      endDate = startDate.add(const Duration(days: 30));
+    }
+
     return ProjectModel(
       id: json['id'] as String,
       name: json['name'] as String,
-      status: ProjectStatusExtension.fromApiString(json['status'] as String),
-      progress: json['progress'] as int,
-      startDate: DateTime.parse(json['startDate'] as String),
-      endDate: DateTime.parse(json['endDate'] as String),
-      managerId: json['managerId'] as String?,
-      manager: json['manager'] != null
-          ? TeamMemberModel.fromJson(json['manager'] as Map<String, dynamic>)
-          : null,
-      teamMemberIds: (json['teamMemberIds'] as List<dynamic>?)
-              ?.map((e) => e as String)
-              .toList() ??
-          [],
-      teamMembers: (json['teamMembers'] as List<dynamic>?)
-          ?.map((e) => TeamMemberModel.fromJson(e as Map<String, dynamic>))
-          .toList(),
+      status: frontendStatus,
+      progress: (json['progress'] as int?) ?? 0,
+      startDate: startDate,
+      endDate: endDate,
+      managerId:
+          json['createdById']
+              as String?, // Use createdById as managerId for now
+      manager: null, // Backend doesn't return manager in project response
+      teamMemberIds:
+          const [], // Backend doesn't return team members in project response
+      teamMembers: null,
       description: json['description'] as String?,
+      clientName: json['clientName'] as String?,
+      clientPhone: json['clientPhone'] as String?,
       createdAt: json['createdAt'] != null
           ? DateTime.parse(json['createdAt'] as String)
           : null,
@@ -48,6 +71,27 @@ class ProjectModel extends ProjectEntity {
           ? DateTime.parse(json['updatedAt'] as String)
           : null,
     );
+  }
+
+  /// Map backend ProjectStatus enum to frontend ProjectStatus
+  /// Backend: DRAFT, UNDER_PRICING, PROFIT_PENDING, PENDING_APPROVAL, EXECUTION, COMPLETED, CANCELLED
+  /// Frontend: active, completed, delayed, onHold
+  static ProjectStatus _mapBackendStatusToFrontend(String backendStatus) {
+    switch (backendStatus.toUpperCase()) {
+      case 'COMPLETED':
+        return ProjectStatus.completed;
+      case 'EXECUTION':
+        return ProjectStatus.active;
+      case 'DRAFT':
+      case 'UNDER_PRICING':
+      case 'PROFIT_PENDING':
+      case 'PENDING_APPROVAL':
+        return ProjectStatus.onHold;
+      case 'CANCELLED':
+        return ProjectStatus.onHold;
+      default:
+        return ProjectStatus.active;
+    }
   }
 
   /// Convert to JSON
@@ -60,8 +104,9 @@ class ProjectModel extends ProjectEntity {
       'startDate': startDate.toIso8601String(),
       'endDate': endDate.toIso8601String(),
       'managerId': managerId,
-      'manager':
-          manager != null ? TeamMemberModel.fromEntity(manager!).toJson() : null,
+      'manager': manager != null
+          ? TeamMemberModel.fromEntity(manager!).toJson()
+          : null,
       'teamMemberIds': teamMemberIds,
       'teamMembers': teamMembers
           ?.map((e) => TeamMemberModel.fromEntity(e).toJson())
@@ -86,6 +131,8 @@ class ProjectModel extends ProjectEntity {
       teamMemberIds: entity.teamMemberIds,
       teamMembers: entity.teamMembers,
       description: entity.description,
+      clientName: entity.clientName,
+      clientPhone: entity.clientPhone,
       createdAt: entity.createdAt,
       updatedAt: entity.updatedAt,
     );
@@ -105,9 +152,10 @@ class ProjectModel extends ProjectEntity {
       teamMemberIds: teamMemberIds,
       teamMembers: teamMembers,
       description: description,
+      clientName: clientName,
+      clientPhone: clientPhone,
       createdAt: createdAt,
       updatedAt: updatedAt,
     );
   }
 }
-

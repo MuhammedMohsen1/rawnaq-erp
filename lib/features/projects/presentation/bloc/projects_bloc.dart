@@ -1,5 +1,6 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../domain/repositories/projects_repository.dart';
+import '../../data/repositories/projects_repository_impl.dart';
 import 'projects_event.dart';
 import 'projects_state.dart';
 
@@ -18,6 +19,7 @@ class ProjectsBloc extends Bloc<ProjectsEvent, ProjectsState> {
     on<FilterByTeamMember>(_onFilterByTeamMember);
     on<ClearFilters>(_onClearFilters);
     on<CreateProject>(_onCreateProject);
+    on<CreateProjectWithData>(_onCreateProjectWithData);
     on<UpdateProject>(_onUpdateProject);
     on<DeleteProject>(_onDeleteProject);
     on<LoadTeamMembers>(_onLoadTeamMembers);
@@ -179,6 +181,82 @@ class ProjectsBloc extends Bloc<ProjectsEvent, ProjectsState> {
       emit(ProjectsOperationInProgress(currentState));
 
       final result = await _repository.createProject(event.project);
+
+      result.fold(
+        (failure) {
+          emit(ProjectsError(
+            message: failure.message,
+            previousState: currentState,
+          ));
+        },
+        (project) {
+          emit(ProjectCreated(
+            project: project,
+            previousState: currentState,
+          ));
+          // Refresh the list
+          add(const RefreshProjects());
+        },
+      );
+    }
+  }
+
+  Future<void> _onCreateProjectWithData(
+    CreateProjectWithData event,
+    Emitter<ProjectsState> emit,
+  ) async {
+    // If not loaded, load projects first
+    if (state is! ProjectsLoaded) {
+      emit(const ProjectsLoading());
+      final loadResult = await _repository.getProjects();
+      
+      await loadResult.fold(
+        (failure) async {
+          emit(ProjectsError(message: failure.message));
+        },
+        (projects) async {
+          final teamMembersResult = await _repository.getTeamMembers();
+          final statisticsResult = await _repository.getProjectStatistics();
+
+          final teamMembers = teamMembersResult.fold(
+            (failure) => <dynamic>[],
+            (members) => members,
+          );
+
+          final statistics = statisticsResult.fold(
+            (failure) => null,
+            (stats) => stats,
+          );
+
+          emit(ProjectsLoaded(
+            projects: projects,
+            filteredProjects: projects,
+            teamMembers: teamMembers.cast(),
+            statistics: statistics,
+          ));
+        },
+      );
+    }
+
+    // Now proceed with creating the project
+    if (state is ProjectsLoaded) {
+      final currentState = state as ProjectsLoaded;
+      emit(ProjectsOperationInProgress(currentState));
+
+      final repository = _repository as ProjectsRepositoryImpl;
+      final result = await repository.createProjectWithData(
+        name: event.name,
+        description: event.description,
+        type: event.type,
+        primaryDepartmentId: event.primaryDepartmentId,
+        clientName: event.clientName,
+        clientPhone: event.clientPhone,
+        clientEmail: event.clientEmail,
+        startDate: event.startDate,
+        endDate: event.endDate,
+        deadline: event.deadline,
+        progress: event.progress,
+      );
 
       result.fold(
         (failure) {
