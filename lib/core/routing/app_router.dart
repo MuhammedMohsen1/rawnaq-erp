@@ -71,13 +71,16 @@ class AppRouter {
           currentPath == AppRoutes.login ||
           currentPath == AppRoutes.resetPassword;
 
+      // If logged in and on auth page, redirect to dashboard
+      if (isLoggedIn && isOnAuthPage) {
+        return AppRoutes.dashboard;
+      }
+
       // If not logged in and not on auth page, redirect to login
       if (!isLoggedIn && !isOnAuthPage) {
         return AppRoutes.login;
       }
 
-      // Allow login page to be shown even if logged in (user can logout)
-      // Only redirect from auth pages if explicitly navigating to dashboard
       return null;
     },
     routes: [
@@ -304,9 +307,19 @@ class _DashboardPageState extends State<_DashboardPage> {
           onHoldCount = state.statistics!.onHold;
         } else if (state is ProjectsLoaded) {
           // Calculate from projects if statistics not available
-          activeCount = state.projects.where((p) => p.status == ProjectStatus.active).length;
-          delayedCount = state.projects.where((p) => p.status == ProjectStatus.delayed).length;
-          onHoldCount = state.projects.where((p) => p.status == ProjectStatus.onHold).length;
+          // Map new statuses to old statistics categories:
+          // active = execution (projects in execution phase)
+          // delayed = 0 (no longer tracked separately)
+          // onHold = draft + underPricing + profitPending + pendingApproval
+          final execution = state.projects.where((p) => p.status == ProjectStatus.execution).length;
+          final draft = state.projects.where((p) => p.status == ProjectStatus.draft).length;
+          final underPricing = state.projects.where((p) => p.status == ProjectStatus.underPricing).length;
+          final profitPending = state.projects.where((p) => p.status == ProjectStatus.profitPending).length;
+          final pendingApproval = state.projects.where((p) => p.status == ProjectStatus.pendingApproval).length;
+          
+          activeCount = execution;
+          delayedCount = 0; // No longer tracked separately
+          onHoldCount = draft + underPricing + profitPending + pendingApproval;
         }
 
         return Row(

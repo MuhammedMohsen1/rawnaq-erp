@@ -236,4 +236,17 @@ abstract class ApiEndpoints {
   static const String projects = '/projects';
   static String projectById(String id) => '/projects/$id';
   static String updateProjectStatus(String id) => '/projects/$id/status';
+
+  // Pricing Endpoints
+  static String pricingVersions(String projectId) => '/projects/$projectId/pricing';
+  static String pricingVersion(String projectId, int version) => '/projects/$projectId/pricing/$version';
+  static String pricingItems(String projectId, int version) => '/projects/$projectId/pricing/$version/items';
+  static String pricingItem(String projectId, int version, String itemId) => '/projects/$projectId/pricing/$version/items/$itemId';
+  static String pricingSubItems(String projectId, int version, String itemId) => '/projects/$projectId/pricing/$version/items/$itemId/sub-items';
+  static String pricingElements(String projectId, int version, String itemId, String subItemId) => '/projects/$projectId/pricing/$version/items/$itemId/sub-items/$subItemId/elements';
+  static String pricingElement(String projectId, int version, String itemId, String subItemId, String elementId) => '/projects/$projectId/pricing/$version/items/$itemId/sub-items/$subItemId/elements/$elementId';
+  static String calculateProfit(String projectId, int version) => '/projects/$projectId/pricing/$version/calculate-profit';
+  static String submitForApproval(String projectId, int version) => '/projects/$projectId/pricing/$version/submit-approval';
+  static String approvePricing(String projectId, int version) => '/projects/$projectId/pricing/$version/approve';
+  static String rejectPricing(String projectId, int version) => '/projects/$projectId/pricing/$version/reject';
 }

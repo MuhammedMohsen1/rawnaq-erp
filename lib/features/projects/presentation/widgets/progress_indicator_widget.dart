@@ -60,14 +60,20 @@ class ProgressIndicatorWidget extends StatelessWidget {
   Color _getProgressColor() {
     if (status != null) {
       switch (status!) {
-        case ProjectStatus.active:
+        case ProjectStatus.draft:
+          return AppColors.textMuted;
+        case ProjectStatus.underPricing:
+          return AppColors.info;
+        case ProjectStatus.profitPending:
+          return AppColors.warning;
+        case ProjectStatus.pendingApproval:
+          return AppColors.warning;
+        case ProjectStatus.execution:
           return AppColors.statusActive;
         case ProjectStatus.completed:
           return AppColors.statusCompleted;
-        case ProjectStatus.delayed:
+        case ProjectStatus.cancelled:
           return AppColors.statusDelayed;
-        case ProjectStatus.onHold:
-          return AppColors.statusOnHold;
       }
     }
 
@@ -77,9 +83,9 @@ class ProgressIndicatorWidget extends StatelessWidget {
     } else if (progress >= 75) {
       return AppColors.statusActive;
     } else if (progress >= 50) {
-      return AppColors.statusOnHold;
+      return AppColors.warning;
     } else {
-      return AppColors.statusDelayed;
+      return AppColors.textMuted;
     }
   }
 }

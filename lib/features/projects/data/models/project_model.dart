@@ -24,9 +24,9 @@ class ProjectModel extends ProjectEntity {
 
   /// Create from JSON (backend format)
   factory ProjectModel.fromJson(Map<String, dynamic> json) {
-    // Map backend status to frontend status
+    // Parse backend status directly using the enum's fromApiString method
     final backendStatus = json['status'] as String? ?? 'DRAFT';
-    final frontendStatus = _mapBackendStatusToFrontend(backendStatus);
+    final frontendStatus = ProjectStatusExtension.fromApiString(backendStatus);
 
     // Handle nullable dates from backend
     DateTime? startDate;
@@ -71,27 +71,6 @@ class ProjectModel extends ProjectEntity {
           ? DateTime.parse(json['updatedAt'] as String)
           : null,
     );
-  }
-
-  /// Map backend ProjectStatus enum to frontend ProjectStatus
-  /// Backend: DRAFT, UNDER_PRICING, PROFIT_PENDING, PENDING_APPROVAL, EXECUTION, COMPLETED, CANCELLED
-  /// Frontend: active, completed, delayed, onHold
-  static ProjectStatus _mapBackendStatusToFrontend(String backendStatus) {
-    switch (backendStatus.toUpperCase()) {
-      case 'COMPLETED':
-        return ProjectStatus.completed;
-      case 'EXECUTION':
-        return ProjectStatus.active;
-      case 'DRAFT':
-      case 'UNDER_PRICING':
-      case 'PROFIT_PENDING':
-      case 'PENDING_APPROVAL':
-        return ProjectStatus.onHold;
-      case 'CANCELLED':
-        return ProjectStatus.onHold;
-      default:
-        return ProjectStatus.active;
-    }
   }
 
   /// Convert to JSON

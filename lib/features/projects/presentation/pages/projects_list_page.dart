@@ -6,6 +6,7 @@ import '../../../../core/constants/app_text_styles.dart';
 import '../../../../core/routing/app_router.dart';
 import '../../domain/entities/team_member_entity.dart';
 import '../../domain/entities/project_entity.dart';
+import '../../domain/enums/project_status.dart';
 import '../bloc/projects_bloc.dart';
 import '../bloc/projects_event.dart';
 import '../bloc/projects_state.dart';
@@ -26,6 +27,7 @@ class ProjectsListPage extends StatefulWidget {
 class _ProjectsListPageState extends State<ProjectsListPage> {
   final TextEditingController _searchController = TextEditingController();
   bool _isTableView = true;
+  bool _isSearchVisible = true;
 
   @override
   void dispose() {
@@ -49,8 +51,15 @@ class _ProjectsListPageState extends State<ProjectsListPage> {
                 const SizedBox(height: 24),
 
                 // Search and filters
-                _buildSearchAndFilters(context, state),
-                const SizedBox(height: 24),
+                Visibility(
+                  visible: _isSearchVisible,
+                  child: Column(
+                    children: [
+                      _buildSearchAndFilters(context, state),
+                      const SizedBox(height: 24),
+                    ],
+                  ),
+                ),
 
                 // View toggle and pagination info
                 _buildViewToggle(context, state),
@@ -74,18 +83,35 @@ class _ProjectsListPageState extends State<ProjectsListPage> {
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Text('قائمة المشاريع', style: AppTextStyles.pageTitle),
-        ElevatedButton.icon(
-          onPressed: () {
-            // TODO: Show create project dialog
-            _showCreateProjectDialog(context);
-          },
-          icon: const Icon(Icons.add, size: 20),
-          label: const Text('إنشاء مشروع جديد'),
-          style: ElevatedButton.styleFrom(
-            backgroundColor: AppColors.buttonPrimary,
-            foregroundColor: AppColors.white,
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-          ),
+        Row(
+          children: [
+            IconButton(
+              onPressed: () {
+                setState(() {
+                  _isSearchVisible = !_isSearchVisible;
+                });
+              },
+              icon: Icon(
+                _isSearchVisible ? Icons.search_off : Icons.search,
+                color: AppColors.textSecondary,
+              ),
+              tooltip: _isSearchVisible ? 'إخفاء البحث' : 'إظهار البحث',
+            ),
+            const SizedBox(width: 8),
+            ElevatedButton.icon(
+              onPressed: () {
+                // TODO: Show create project dialog
+                _showCreateProjectDialog(context);
+              },
+              icon: const Icon(Icons.add, size: 20),
+              label: const Text('إنشاء مشروع جديد'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.secondary,
+                foregroundColor: AppColors.white,
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+              ),
+            ),
+          ],
         ),
       ],
     );
@@ -242,7 +268,7 @@ class _ProjectsListPageState extends State<ProjectsListPage> {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
         decoration: BoxDecoration(
-          color: isSelected ? AppColors.buttonPrimary : Colors.transparent,
+          color: isSelected ? AppColors.secondary : Colors.transparent,
           borderRadius: BorderRadius.circular(8),
         ),
         child: Row(
@@ -303,7 +329,13 @@ class _ProjectsListPageState extends State<ProjectsListPage> {
         return ProjectTableWidget(
           projects: state.filteredProjects,
           onProjectTap: (project) {
-            context.go(AppRoutes.projectDetails(project.id));
+            // Route to pricing page if status is underPricing or pendingApproval
+            if (project.status == ProjectStatus.underPricing ||
+                project.status == ProjectStatus.pendingApproval) {
+              context.go(AppRoutes.pricing(project.id));
+            } else {
+              context.go(AppRoutes.projectDetails(project.id));
+            }
           },
           onEditProject: (project) {
             _showEditProjectDialog(context, project);
@@ -326,7 +358,13 @@ class _ProjectsListPageState extends State<ProjectsListPage> {
             return ProjectCardWidget(
               project: project,
               onTap: () {
-                context.go(AppRoutes.projectDetails(project.id));
+                // Route to pricing page if status is underPricing or pendingApproval
+                if (project.status == ProjectStatus.underPricing ||
+                    project.status == ProjectStatus.pendingApproval) {
+                  context.go(AppRoutes.pricing(project.id));
+                } else {
+                  context.go(AppRoutes.projectDetails(project.id));
+                }
               },
               onEdit: () {
                 _showEditProjectDialog(context, project);

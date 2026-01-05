@@ -77,9 +77,11 @@ class _ProjectDetailsPageState extends State<ProjectDetailsPage> {
         // Handle error
       },
       (transactions) {
-        setState(() {
-          _transactions = transactions;
-        });
+        if (mounted) {
+          setState(() {
+            _transactions = transactions;
+          });
+        }
       },
     );
 
@@ -88,15 +90,19 @@ class _ProjectDetailsPageState extends State<ProjectDetailsPage> {
         // Handle error
       },
       (summary) {
-        setState(() {
-          _financialSummary = summary;
-        });
+        if (mounted) {
+          setState(() {
+            _financialSummary = summary;
+          });
+        }
       },
     );
 
-    setState(() {
-      _isLoading = false;
-    });
+    if (mounted) {
+      setState(() {
+        _isLoading = false;
+      });
+    }
   }
 
   @override
@@ -413,33 +419,29 @@ class _ProjectDetailsPageState extends State<ProjectDetailsPage> {
   }
 
   Color _getStatusColor() {
-    switch (_project?.status) {
-      case ProjectStatus.active:
+    if (_project?.status == null) {
+      return AppColors.textMuted;
+    }
+    switch (_project!.status) {
+      case ProjectStatus.draft:
+        return AppColors.textMuted;
+      case ProjectStatus.underPricing:
+        return AppColors.info;
+      case ProjectStatus.profitPending:
+        return AppColors.warning;
+      case ProjectStatus.pendingApproval:
+        return AppColors.warning;
+      case ProjectStatus.execution:
         return AppColors.statusActive;
       case ProjectStatus.completed:
         return AppColors.statusCompleted;
-      case ProjectStatus.delayed:
+      case ProjectStatus.cancelled:
         return AppColors.statusDelayed;
-      case ProjectStatus.onHold:
-        return AppColors.statusOnHold;
-      default:
-        return AppColors.statusOnHold;
     }
   }
 
   String _getStatusText() {
-    switch (_project?.status) {
-      case ProjectStatus.active:
-        return 'نشط';
-      case ProjectStatus.completed:
-        return 'مكتمل';
-      case ProjectStatus.delayed:
-        return 'متأخر';
-      case ProjectStatus.onHold:
-        return 'معلق';
-      default:
-        return 'غير محدد';
-    }
+    return _project?.status.arabicName ?? 'غير محدد';
   }
 
   void _showDeleteConfirmation(

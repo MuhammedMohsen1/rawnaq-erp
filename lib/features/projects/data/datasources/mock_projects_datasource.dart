@@ -54,7 +54,7 @@ class MockProjectsDataSource {
     ProjectEntity(
       id: 'proj-1',
       name: 'إعادة تصميم الموقع الإلكتروني',
-      status: ProjectStatus.active,
+      status: ProjectStatus.execution,
       progress: 75,
       startDate: DateTime(2024, 6, 1),
       endDate: DateTime(2024, 8, 30),
@@ -84,7 +84,7 @@ class MockProjectsDataSource {
     ProjectEntity(
       id: 'proj-3',
       name: 'حملة التسويق الرقمي Q3',
-      status: ProjectStatus.delayed,
+      status: ProjectStatus.underPricing,
       progress: 40,
       startDate: DateTime(2024, 7, 1),
       endDate: DateTime(2024, 9, 15),
@@ -99,7 +99,7 @@ class MockProjectsDataSource {
     ProjectEntity(
       id: 'proj-4',
       name: 'ترقية البنية التحتية للخوادم',
-      status: ProjectStatus.active,
+      status: ProjectStatus.draft,
       progress: 20,
       startDate: DateTime(2024, 7, 10),
       endDate: DateTime(2024, 10, 31),
@@ -114,7 +114,7 @@ class MockProjectsDataSource {
     ProjectEntity(
       id: 'proj-5',
       name: 'تصميم فيلا الرياض',
-      status: ProjectStatus.active,
+      status: ProjectStatus.execution,
       progress: 60,
       startDate: DateTime(2024, 4, 1),
       endDate: DateTime(2024, 12, 31),
@@ -129,7 +129,7 @@ class MockProjectsDataSource {
     ProjectEntity(
       id: 'proj-6',
       name: 'مكتب شركة التقنية',
-      status: ProjectStatus.onHold,
+      status: ProjectStatus.pendingApproval,
       progress: 35,
       startDate: DateTime(2024, 5, 1),
       endDate: DateTime(2024, 11, 30),
@@ -159,7 +159,7 @@ class MockProjectsDataSource {
     ProjectEntity(
       id: 'proj-8',
       name: 'شقة جدة الفاخرة',
-      status: ProjectStatus.active,
+      status: ProjectStatus.execution,
       progress: 85,
       startDate: DateTime(2024, 3, 15),
       endDate: DateTime(2024, 9, 30),
@@ -174,7 +174,7 @@ class MockProjectsDataSource {
     ProjectEntity(
       id: 'proj-9',
       name: 'معرض السيارات',
-      status: ProjectStatus.delayed,
+      status: ProjectStatus.profitPending,
       progress: 25,
       startDate: DateTime(2024, 6, 1),
       endDate: DateTime(2024, 8, 31),
@@ -189,7 +189,7 @@ class MockProjectsDataSource {
     ProjectEntity(
       id: 'proj-10',
       name: 'فندق الملك عبدالعزيز',
-      status: ProjectStatus.active,
+      status: ProjectStatus.execution,
       progress: 45,
       startDate: DateTime(2024, 1, 1),
       endDate: DateTime(2025, 6, 30),
@@ -288,12 +288,21 @@ class MockProjectsDataSource {
 
   /// Get project statistics
   ProjectStatistics getProjectStatistics() {
+    final execution = _projects.where((p) => p.status == ProjectStatus.execution).length;
+    final completed = _projects.where((p) => p.status == ProjectStatus.completed).length;
+    final onHold = _projects.where((p) => 
+      p.status == ProjectStatus.draft ||
+      p.status == ProjectStatus.underPricing ||
+      p.status == ProjectStatus.profitPending ||
+      p.status == ProjectStatus.pendingApproval
+    ).length;
+    
     return ProjectStatistics(
       total: _projects.length,
-      active: _projects.where((p) => p.status == ProjectStatus.active).length,
-      completed: _projects.where((p) => p.status == ProjectStatus.completed).length,
-      delayed: _projects.where((p) => p.status == ProjectStatus.delayed).length,
-      onHold: _projects.where((p) => p.status == ProjectStatus.onHold).length,
+      active: execution, // Execution is the active state
+      completed: completed,
+      delayed: 0, // No longer tracked separately
+      onHold: onHold,
     );
   }
 }

@@ -102,18 +102,8 @@ class ProjectsApiDataSource {
 
   /// Map frontend ProjectStatus to backend ProjectStatus enum value
   String _mapStatusToBackend(ProjectStatus status) {
-    // Backend statuses: DRAFT, UNDER_PRICING, PROFIT_PENDING, PENDING_APPROVAL, EXECUTION, COMPLETED, CANCELLED
-    // Frontend statuses: active, completed, delayed, onHold
-    switch (status) {
-      case ProjectStatus.active:
-        return 'EXECUTION'; // Most active projects are in execution
-      case ProjectStatus.completed:
-        return 'COMPLETED';
-      case ProjectStatus.delayed:
-        return 'EXECUTION'; // Delayed projects are still in execution
-      case ProjectStatus.onHold:
-        return 'DRAFT'; // On hold projects might be in draft
-    }
+    // Use the extension method to convert to API string format
+    return status.toApiString();
   }
 }
 

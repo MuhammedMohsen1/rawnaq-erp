@@ -1,16 +1,26 @@
 /// Status of a project in the system
+/// Matches the Prisma schema: DRAFT, UNDER_PRICING, PROFIT_PENDING, PENDING_APPROVAL, EXECUTION, COMPLETED, CANCELLED
 enum ProjectStatus {
-  /// Project is actively being worked on
-  active,
+  /// Project is in draft stage
+  draft,
+  
+  /// Project is under pricing review
+  underPricing,
+  
+  /// Project profit is pending calculation
+  profitPending,
+  
+  /// Project is pending approval
+  pendingApproval,
+  
+  /// Project is in execution phase
+  execution,
   
   /// Project has been completed successfully
   completed,
   
-  /// Project is behind schedule
-  delayed,
-  
-  /// Project is temporarily paused
-  onHold,
+  /// Project has been cancelled
+  cancelled,
 }
 
 /// Extension methods for ProjectStatus
@@ -18,28 +28,40 @@ extension ProjectStatusExtension on ProjectStatus {
   /// Get the Arabic display name for the status
   String get arabicName {
     switch (this) {
-      case ProjectStatus.active:
-        return 'نشط';
+      case ProjectStatus.draft:
+        return 'مسودة';
+      case ProjectStatus.underPricing:
+        return 'قيد التسعير';
+      case ProjectStatus.profitPending:
+        return 'انتظار الربح';
+      case ProjectStatus.pendingApproval:
+        return 'في انتظار الموافقة';
+      case ProjectStatus.execution:
+        return 'قيد التنفيذ';
       case ProjectStatus.completed:
         return 'مكتمل';
-      case ProjectStatus.delayed:
-        return 'متأخر';
-      case ProjectStatus.onHold:
-        return 'معلق';
+      case ProjectStatus.cancelled:
+        return 'ملغي';
     }
   }
 
   /// Get the English display name for the status
   String get englishName {
     switch (this) {
-      case ProjectStatus.active:
-        return 'Active';
+      case ProjectStatus.draft:
+        return 'Draft';
+      case ProjectStatus.underPricing:
+        return 'Under Pricing';
+      case ProjectStatus.profitPending:
+        return 'Profit Pending';
+      case ProjectStatus.pendingApproval:
+        return 'Pending Approval';
+      case ProjectStatus.execution:
+        return 'Execution';
       case ProjectStatus.completed:
         return 'Completed';
-      case ProjectStatus.delayed:
-        return 'Delayed';
-      case ProjectStatus.onHold:
-        return 'On Hold';
+      case ProjectStatus.cancelled:
+        return 'Cancelled';
     }
   }
 
@@ -48,17 +70,47 @@ extension ProjectStatusExtension on ProjectStatus {
     return locale == 'ar' ? arabicName : englishName;
   }
 
-  /// Convert status to string for API
+  /// Convert status to string for API (uppercase with underscores)
   String toApiString() {
-    return name;
+    switch (this) {
+      case ProjectStatus.draft:
+        return 'DRAFT';
+      case ProjectStatus.underPricing:
+        return 'UNDER_PRICING';
+      case ProjectStatus.profitPending:
+        return 'PROFIT_PENDING';
+      case ProjectStatus.pendingApproval:
+        return 'PENDING_APPROVAL';
+      case ProjectStatus.execution:
+        return 'EXECUTION';
+      case ProjectStatus.completed:
+        return 'COMPLETED';
+      case ProjectStatus.cancelled:
+        return 'CANCELLED';
+    }
   }
 
   /// Create status from API string
   static ProjectStatus fromApiString(String value) {
-    return ProjectStatus.values.firstWhere(
-      (status) => status.name.toLowerCase() == value.toLowerCase(),
-      orElse: () => ProjectStatus.active,
-    );
+    final upperValue = value.toUpperCase();
+    switch (upperValue) {
+      case 'DRAFT':
+        return ProjectStatus.draft;
+      case 'UNDER_PRICING':
+        return ProjectStatus.underPricing;
+      case 'PROFIT_PENDING':
+        return ProjectStatus.profitPending;
+      case 'PENDING_APPROVAL':
+        return ProjectStatus.pendingApproval;
+      case 'EXECUTION':
+        return ProjectStatus.execution;
+      case 'COMPLETED':
+        return ProjectStatus.completed;
+      case 'CANCELLED':
+        return ProjectStatus.cancelled;
+      default:
+        return ProjectStatus.draft;
+    }
   }
 }
 

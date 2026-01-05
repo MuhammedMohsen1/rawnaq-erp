@@ -8,6 +8,7 @@ class PricingTableRow extends StatefulWidget {
   final PricingItem item;
   final VoidCallback? onDelete;
   final ValueChanged<PricingItem>? onChanged;
+  final VoidCallback? onFieldCompleted; // Called when user finishes editing (blur or submit)
   final bool isNewRow;
 
   const PricingTableRow({
@@ -15,6 +16,7 @@ class PricingTableRow extends StatefulWidget {
     required this.item,
     this.onDelete,
     this.onChanged,
+    this.onFieldCompleted,
     this.isNewRow = false,
   });
 
@@ -210,6 +212,12 @@ class _PricingTableRowState extends State<PricingTableRow> {
                               filled: false,
                             ),
                             onChanged: (_) => _updateTotal(),
+                            onEditingComplete: () {
+                              widget.onFieldCompleted?.call();
+                            },
+                            onSubmitted: (_) {
+                              widget.onFieldCompleted?.call();
+                            },
                           ),
                         ),
                         const SizedBox(width: 4),
@@ -249,6 +257,12 @@ class _PricingTableRowState extends State<PricingTableRow> {
                               filled: false,
                             ),
                             onChanged: (_) => _updateTotal(),
+                            onEditingComplete: () {
+                              widget.onFieldCompleted?.call();
+                            },
+                            onSubmitted: (_) {
+                              widget.onFieldCompleted?.call();
+                            },
                           ),
                         ),
                         const SizedBox(width: 4),
@@ -337,6 +351,12 @@ class _PricingTableRowState extends State<PricingTableRow> {
                                 filled: false,
                               ),
                               onChanged: (_) => _updateTotal(),
+                              onEditingComplete: () {
+                                widget.onFieldCompleted?.call();
+                              },
+                              onSubmitted: (_) {
+                                widget.onFieldCompleted?.call();
+                              },
                             ),
                           ),
                         ),

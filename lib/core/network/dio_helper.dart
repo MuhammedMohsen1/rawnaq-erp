@@ -129,6 +129,8 @@ class DioHelper {
 }
 
 class _AuthInterceptor extends Interceptor {
+  static bool _isRefreshing = false;
+
   @override
   void onRequest(
     RequestOptions options,
@@ -147,26 +149,87 @@ class _AuthInterceptor extends Interceptor {
   @override
   void onError(DioException err, ErrorInterceptorHandler handler) async {
     if (err.response?.statusCode == 401) {
-      // Check if the error is from a login request
+      // Check if the error is from a login or refresh request
       final isLoginRequest = err.requestOptions.path.contains('/login');
+      final isRefreshRequest = err.requestOptions.path.contains('/auth/refresh');
 
-      if (!isLoginRequest) {
-        // Only clear storage and navigate if it's not a login request
-        final storageService = getIt<StorageService>();
-        await storageService.clearToken();
-        await storageService.clearRefreshToken();
-        await storageService.clearSessionId();
-        await storageService.clearUserData();
-
-        // Navigate to login page using GoRouter
-        // Use Future.microtask to ensure navigation happens on the next frame
-        Future.microtask(() {
-          AppRouter.router.go(AppRoutes.login);
-        });
+      if (isLoginRequest || isRefreshRequest) {
+        // Don't try to refresh on login/refresh endpoints
+        handler.next(err);
+        return;
       }
 
-      handler.next(err);
-      return;
+      // Try to refresh the token
+      final storageService = getIt<StorageService>();
+      final refreshToken = await storageService.getRefreshToken();
+      final sessionId = await storageService.getSessionId();
+
+      if (refreshToken != null && sessionId != null && !_isRefreshing) {
+        _isRefreshing = true;
+
+        try {
+          // Attempt to refresh the token
+          final refreshResponse = await DioHelper.dio.post(
+            '/auth/refresh',
+            data: {
+              'refreshToken': refreshToken,
+              'sessionId': sessionId,
+            },
+          );
+
+          if (refreshResponse.statusCode == 200) {
+            final responseData = refreshResponse.data as Map<String, dynamic>;
+            final data = responseData['data'] as Map<String, dynamic>;
+            final newToken = data['token'] as String;
+            final newRefreshToken = data['refreshToken'] as String;
+            final newSessionId = data['sessionId'] as String;
+
+            // Store new tokens
+            await storageService.setToken(newToken);
+            await storageService.setRefreshToken(newRefreshToken);
+            await storageService.setSessionId(newSessionId);
+
+            // Update user data if provided
+            if (data.containsKey('user')) {
+              await storageService.setUserData(
+                data['user'] as Map<String, dynamic>,
+              );
+            }
+
+            // Retry the original request with the new token
+            final opts = err.requestOptions;
+            opts.headers['Authorization'] = 'Bearer $newToken';
+
+            try {
+              final response = await DioHelper.dio.fetch(opts);
+              handler.resolve(response);
+              _isRefreshing = false;
+              return;
+            } catch (e) {
+              // If retry fails, continue to error handling
+            }
+          }
+        } catch (e) {
+          // Refresh failed, will clear storage below
+          if (kDebugMode) {
+            print('🔄 [TOKEN REFRESH] Failed: $e');
+          }
+        } finally {
+          _isRefreshing = false;
+        }
+      }
+
+      // If refresh failed or no refresh token, clear storage and navigate to login
+      await storageService.clearToken();
+      await storageService.clearRefreshToken();
+      await storageService.clearSessionId();
+      await storageService.clearUserData();
+
+      // Navigate to login page using GoRouter
+      // Use Future.microtask to ensure navigation happens on the next frame
+      Future.microtask(() {
+        AppRouter.router.go(AppRoutes.login);
+      });
     }
 
     handler.next(err);

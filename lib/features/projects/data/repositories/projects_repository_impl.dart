@@ -207,19 +207,30 @@ class ProjectsRepositoryImpl implements ProjectsRepository {
 
       // Calculate statistics from the fetched projects
       // Note: These counts are based on the first 100 projects only
-      // For accurate stats, we'd need to fetch all projects or have a dedicated stats endpoint
-      final active = projects
-          .where((p) => p.status == ProjectStatus.active)
+      // Calculate stats based on new status values
+      final draft = projects
+          .where((p) => p.status == ProjectStatus.draft)
+          .length;
+      final underPricing = projects
+          .where((p) => p.status == ProjectStatus.underPricing)
+          .length;
+      final profitPending = projects
+          .where((p) => p.status == ProjectStatus.profitPending)
+          .length;
+      final pendingApproval = projects
+          .where((p) => p.status == ProjectStatus.pendingApproval)
+          .length;
+      final execution = projects
+          .where((p) => p.status == ProjectStatus.execution)
           .length;
       final completed = projects
           .where((p) => p.status == ProjectStatus.completed)
           .length;
-      final delayed = projects
-          .where((p) => p.status == ProjectStatus.delayed)
-          .length;
-      final onHold = projects
-          .where((p) => p.status == ProjectStatus.onHold)
-          .length;
+
+      // Map to old stats format for compatibility (if needed)
+      final active = execution; // Execution is the active state
+      final delayed = 0; // No longer tracked separately
+      final onHold = draft + underPricing + profitPending + pendingApproval;
 
       return Right(
         ProjectStatistics(

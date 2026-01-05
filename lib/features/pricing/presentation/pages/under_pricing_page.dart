@@ -6,14 +6,10 @@ import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_text_styles.dart';
 import '../../../../core/routing/app_router.dart';
 import '../../../../core/utils/responsive_layout.dart';
-import '../../data/mock_pricing_repository.dart';
-import '../../domain/entities/pricing_data.dart';
-import '../../domain/entities/pricing_item.dart';
-import '../../domain/entities/wall_pricing.dart';
-import '../widgets/expense_group_card.dart';
-import '../widgets/wall_pricing_card.dart';
+import '../../data/datasources/pricing_api_datasource.dart';
+import '../../data/models/pricing_version_model.dart';
 import '../widgets/pricing_summary_sidebar.dart';
-import '../../domain/entities/expense_group.dart';
+import '../widgets/pricing_item_card.dart';
 
 class UnderPricingPage extends StatefulWidget {
   final String projectId;
@@ -25,127 +21,275 @@ class UnderPricingPage extends StatefulWidget {
 }
 
 class _UnderPricingPageState extends State<UnderPricingPage> {
-  late PricingData _pricingData;
-  final _mockRepository = MockPricingRepository();
+  final _apiDataSource = PricingApiDataSource();
+  PricingVersionModel? _pricingVersion;
+  bool _isLoading = true;
+  String? _errorMessage;
+  String? _projectName;
+  // Track expanded states for main items (itemId -> isExpanded)
+  final Map<String, bool> _itemExpandedStates = {};
+  // Track expanded states for sub-items (itemId -> {subItemId -> isExpanded})
+  final Map<String, Map<String, bool>> _subItemExpandedStates = {};
 
   @override
   void initState() {
     super.initState();
-    _pricingData = _mockRepository.getPricingData(widget.projectId);
+    _loadPricingData();
   }
 
-  void _updatePricingData(PricingData newData) {
+  Future<void> _loadPricingData() async {
+    // Preserve existing expanded states before reloading
+    final preservedItemStates = Map<String, bool>.from(_itemExpandedStates);
+    final preservedSubItemStates = <String, Map<String, bool>>{};
+    for (var entry in _subItemExpandedStates.entries) {
+      preservedSubItemStates[entry.key] = Map<String, bool>.from(entry.value);
+    }
+
+    // Only show loading on initial load (when we don't have data yet)
+    final isInitialLoad = _pricingVersion == null;
     setState(() {
-      // Recalculate all subtotals and grand total
-      final updatedWalls = newData.walls.map((wall) {
-        final updatedItems = wall.items.map((item) {
-          return item.copyWith(total: item.calculateTotal());
-        }).toList();
-        return wall.copyWith(
-          items: updatedItems,
-          subtotal: updatedItems.fold<double>(
-            0.0,
-            (sum, item) => sum + item.total,
-          ),
-        );
-      }).toList();
-
-      final updatedExpenseGroups = newData.expenseGroups.map((group) {
-        final updatedItems = group.items.map((item) {
-          return item.copyWith(total: item.calculateTotal());
-        }).toList();
-        return group.copyWith(
-          items: updatedItems,
-          subtotal: updatedItems.fold<double>(
-            0.0,
-            (sum, item) => sum + item.total,
-          ),
-        );
-      }).toList();
-
-      final expenseGroupsTotal = updatedExpenseGroups.fold(
-        0.0,
-        (sum, group) => sum + group.subtotal,
-      );
-      final wallsTotal = updatedWalls.fold(
-        0.0,
-        (sum, wall) => sum + wall.subtotal,
-      );
-      final grandTotal = expenseGroupsTotal + wallsTotal;
-
-      _pricingData = newData.copyWith(
-        expenseGroups: updatedExpenseGroups,
-        walls: updatedWalls,
-        grandTotal: grandTotal,
-      );
+      if (isInitialLoad) {
+        _isLoading = true;
+      }
+      _errorMessage = null;
     });
+
+    try {
+      // Get all pricing versions
+      final versions = await _apiDataSource.getPricingVersions(
+        widget.projectId,
+      );
+
+      if (versions.isEmpty) {
+        // Create a new pricing version if none exists
+        _pricingVersion = await _apiDataSource.createPricingVersion(
+          widget.projectId,
+        );
+      } else {
+        // Get the latest version
+        final latestVersion = versions.first;
+        _pricingVersion = await _apiDataSource.getPricingVersion(
+          widget.projectId,
+          latestVersion.version,
+        );
+      }
+
+      // Restore preserved states and initialize new items/sub-items
+      setState(() {
+        _itemExpandedStates.clear();
+        _subItemExpandedStates.clear();
+
+        if (_pricingVersion?.items != null) {
+          for (var item in _pricingVersion!.items!) {
+            // Restore item expanded state or default to true
+            _itemExpandedStates[item.id] = preservedItemStates[item.id] ?? true;
+
+            // Restore sub-item expanded states
+            if (item.subItems != null) {
+              final subItemStates = <String, bool>{};
+              final preservedSubStates = preservedSubItemStates[item.id] ?? {};
+
+              for (var subItem in item.subItems!) {
+                // Restore sub-item expanded state or default to false
+                subItemStates[subItem.id] =
+                    preservedSubStates[subItem.id] ?? false;
+              }
+              _subItemExpandedStates[item.id] = subItemStates;
+            }
+          }
+        }
+      });
+    } catch (e) {
+      setState(() {
+        _errorMessage = 'فشل تحميل بيانات التسعير: ${e.toString()}';
+      });
+    } finally {
+      setState(() {
+        if (isInitialLoad) {
+          _isLoading = false;
+        }
+      });
+    }
   }
 
-  void _addExpenseGroupItem(String groupId) {
-    final groupIndex = _pricingData.expenseGroups.indexWhere(
-      (g) => g.id == groupId,
-    );
-    if (groupIndex == -1) return;
+  Future<void> _addItem() async {
+    if (_pricingVersion == null) return;
 
-    final group = _pricingData.expenseGroups[groupIndex];
-    final newItem = PricingItem(
-      id: 'group-$groupId-${DateTime.now().millisecondsSinceEpoch}',
-      description: '',
-      quantity: null,
-      unitPrice: null,
-      total: 0.0,
-    );
-    final newItems = [...group.items, newItem];
-    final updatedGroup = group.copyWith(
-      items: newItems,
-      subtotal: group.calculateSubtotal(),
+    final nameController = TextEditingController();
+    final result = await showDialog<String>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('إضافة فئة جديدة'),
+        content: TextField(
+          controller: nameController,
+          decoration: const InputDecoration(
+            labelText: 'اسم الفئة',
+            hintText: 'أدخل اسم الفئة',
+          ),
+          autofocus: true,
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('إلغاء'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, nameController.text),
+            child: const Text('إضافة'),
+          ),
+        ],
+      ),
     );
 
-    final newGroups = List<ExpenseGroup>.from(_pricingData.expenseGroups);
-    newGroups[groupIndex] = updatedGroup;
-    _updatePricingData(_pricingData.copyWith(expenseGroups: newGroups));
+    if (result != null && result.isNotEmpty) {
+      try {
+        await _apiDataSource.addPricingItem(
+          widget.projectId,
+          _pricingVersion!.version,
+          name: result,
+        );
+        await _loadPricingData();
+        if (mounted) {
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(const SnackBar(content: Text('تم إضافة الفئة بنجاح')));
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('فشل إضافة الفئة: ${e.toString()}')),
+          );
+        }
+      }
+    }
   }
 
-  void _addWallItem(String wallId) {
-    final wallIndex = _pricingData.walls.indexWhere((w) => w.id == wallId);
-    if (wallIndex == -1) return;
+  Future<void> _addSubItem(String itemId) async {
+    if (_pricingVersion == null) return;
 
-    final wall = _pricingData.walls[wallIndex];
-    final newItem = PricingItem(
-      id: 'wall-$wallId-${DateTime.now().millisecondsSinceEpoch}',
-      description: '',
-      quantity: null,
-      unitPrice: null,
-      total: 0.0,
+    final nameController = TextEditingController();
+    final result = await showDialog<String>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('إضافة فئة فرعية جديدة'),
+        content: TextField(
+          controller: nameController,
+          decoration: const InputDecoration(
+            labelText: 'اسم الفئة الفرعية',
+            hintText: 'أدخل اسم الفئة الفرعية',
+          ),
+          autofocus: true,
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('إلغاء'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, nameController.text),
+            child: const Text('إضافة'),
+          ),
+        ],
+      ),
     );
-    final newItems = [...wall.items, newItem];
-    final updatedWall = wall.copyWith(
-      items: newItems,
-      subtotal: wall.calculateSubtotal(),
-    );
 
-    final newWalls = List<WallPricing>.from(_pricingData.walls);
-    newWalls[wallIndex] = updatedWall;
-    _updatePricingData(_pricingData.copyWith(walls: newWalls));
-  }
-
-  void _addWallImage(String wallId) {
-    // Placeholder for adding image
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(const SnackBar(content: Text('إضافة صورة - قريباً')));
+    if (result != null && result.isNotEmpty) {
+      try {
+        await _apiDataSource.addPricingSubItem(
+          widget.projectId,
+          _pricingVersion!.version,
+          itemId,
+          name: result,
+        );
+        await _loadPricingData();
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('تم إضافة الفئة الفرعية بنجاح')),
+          );
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('فشل إضافة الفئة الفرعية: ${e.toString()}')),
+          );
+        }
+      }
+    }
   }
 
   String _getStatusText() {
-    return 'قيد التسعير';
+    if (_pricingVersion == null) return 'قيد التسعير';
+
+    switch (_pricingVersion!.status) {
+      case 'DRAFT':
+        return 'مسودة';
+      case 'PROFIT_PENDING':
+        return 'انتظار الربح';
+      case 'PENDING_APPROVAL':
+        return 'في انتظار الموافقة';
+      case 'APPROVED':
+        return 'موافق عليه';
+      case 'REJECTED':
+        return 'مرفوض';
+      default:
+        return 'قيد التسعير';
+    }
   }
 
   Color _getStatusColor() {
-    return AppColors.statusOnHold;
+    if (_pricingVersion == null) return AppColors.info;
+
+    switch (_pricingVersion!.status) {
+      case 'DRAFT':
+        return AppColors.textMuted;
+      case 'PROFIT_PENDING':
+        return AppColors.warning;
+      case 'PENDING_APPROVAL':
+        return AppColors.warning;
+      case 'APPROVED':
+        return AppColors.statusCompleted;
+      case 'REJECTED':
+        return AppColors.statusDelayed;
+      default:
+        return AppColors.info;
+    }
   }
 
   @override
   Widget build(BuildContext context) {
+    if (_isLoading) {
+      return const Scaffold(
+        backgroundColor: AppColors.scaffoldBackground,
+        body: Center(
+          child: CircularProgressIndicator(color: AppColors.primary),
+        ),
+      );
+    }
+
+    if (_errorMessage != null) {
+      return Scaffold(
+        backgroundColor: AppColors.scaffoldBackground,
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(Icons.error_outline, size: 64, color: AppColors.error),
+              const SizedBox(height: 16),
+              Text(
+                _errorMessage!,
+                style: AppTextStyles.bodyLarge.copyWith(color: AppColors.error),
+              ),
+              const SizedBox(height: 16),
+              ElevatedButton(
+                onPressed: _loadPricingData,
+                child: const Text('إعادة المحاولة'),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
     return ResponsiveLayout(
       mobile: _buildMobileLayout(),
       tablet: _buildTabletLayout(),
@@ -165,23 +309,9 @@ class _UnderPricingPageState extends State<UnderPricingPage> {
           const SizedBox(height: 24),
           _buildSectionTitle(),
           const SizedBox(height: 16),
-          // Expense Groups (without images)
-          ..._pricingData.expenseGroups.map(
-            (group) => Padding(
-              padding: const EdgeInsets.only(bottom: 16),
-              child: _buildExpenseGroupCard(group),
-            ),
-          ),
+          _buildItemsList(),
           const SizedBox(height: 24),
-          // Walls (with images)
-          ..._pricingData.walls.map(
-            (wall) => Padding(
-              padding: const EdgeInsets.only(bottom: 16),
-              child: _buildWallCard(wall),
-            ),
-          ),
-          const SizedBox(height: 24),
-          _buildAddNewExpensesButton(),
+          _buildAddItemButton(),
           const SizedBox(height: 24),
           _buildSidebar(),
         ],
@@ -209,23 +339,9 @@ class _UnderPricingPageState extends State<UnderPricingPage> {
                   children: [
                     _buildSectionTitle(),
                     const SizedBox(height: 16),
-                    // Expense Groups (without images)
-                    ..._pricingData.expenseGroups.map(
-                      (group) => Padding(
-                        padding: const EdgeInsets.only(bottom: 16),
-                        child: _buildExpenseGroupCard(group),
-                      ),
-                    ),
+                    _buildItemsList(),
                     const SizedBox(height: 24),
-                    // Walls (with images)
-                    ..._pricingData.walls.map(
-                      (wall) => Padding(
-                        padding: const EdgeInsets.only(bottom: 16),
-                        child: _buildWallCard(wall),
-                      ),
-                    ),
-                    const SizedBox(height: 24),
-                    _buildAddNewExpensesButton(),
+                    _buildAddItemButton(),
                   ],
                 ),
               ),
@@ -257,23 +373,9 @@ class _UnderPricingPageState extends State<UnderPricingPage> {
                   children: [
                     _buildSectionTitle(),
                     const SizedBox(height: 16),
-                    // Expense Groups (without images)
-                    ..._pricingData.expenseGroups.map(
-                      (group) => Padding(
-                        padding: const EdgeInsets.only(bottom: 16),
-                        child: _buildExpenseGroupCard(group),
-                      ),
-                    ),
+                    _buildItemsList(),
                     const SizedBox(height: 24),
-                    // Walls (with images)
-                    ..._pricingData.walls.map(
-                      (wall) => Padding(
-                        padding: const EdgeInsets.only(bottom: 16),
-                        child: _buildWallCard(wall),
-                      ),
-                    ),
-                    const SizedBox(height: 24),
-                    _buildAddNewExpensesButton(),
+                    _buildAddItemButton(),
                   ],
                 ),
               ),
@@ -307,7 +409,7 @@ class _UnderPricingPageState extends State<UnderPricingPage> {
         ),
         const SizedBox(width: 8),
         Text(
-          _pricingData.projectName,
+          _projectName ?? 'المشروع',
           style: AppTextStyles.bodyMedium.copyWith(
             color: AppColors.textSecondary,
             fontSize: 14,
@@ -340,7 +442,7 @@ class _UnderPricingPageState extends State<UnderPricingPage> {
           children: [
             Expanded(
               child: Text(
-                _pricingData.projectName,
+                _projectName ?? 'المشروع',
                 style: const TextStyle(
                   fontSize: 30,
                   fontWeight: FontWeight.w900,
@@ -381,14 +483,16 @@ class _UnderPricingPageState extends State<UnderPricingPage> {
             ),
           ],
         ),
-        const SizedBox(height: 8),
-        Text(
-          'العميل: ${_pricingData.clientName} • ${_pricingData.startDate}',
-          style: AppTextStyles.bodyMedium.copyWith(
-            fontSize: 14,
-            color: AppColors.textSecondary,
+        if (_pricingVersion != null) ...[
+          const SizedBox(height: 8),
+          Text(
+            'الإصدار: ${_pricingVersion!.version}',
+            style: AppTextStyles.bodyMedium.copyWith(
+              fontSize: 14,
+              color: AppColors.textSecondary,
+            ),
           ),
-        ),
+        ],
       ],
     );
   }
@@ -403,38 +507,78 @@ class _UnderPricingPageState extends State<UnderPricingPage> {
     );
   }
 
-  Widget _buildExpenseGroupCard(ExpenseGroup group) {
-    return ExpenseGroupCard(
-      group: group,
-      onGroupChanged: (updatedGroup) {
-        final newGroups = List<ExpenseGroup>.from(_pricingData.expenseGroups);
-        final index = newGroups.indexWhere((g) => g.id == group.id);
-        if (index != -1) {
-          newGroups[index] = updatedGroup;
-          _updatePricingData(_pricingData.copyWith(expenseGroups: newGroups));
-        }
-      },
-      onAddItem: () => _addExpenseGroupItem(group.id),
+  void _handleItemExpandedChanged(String itemId, bool isExpanded) {
+    setState(() {
+      _itemExpandedStates[itemId] = isExpanded;
+    });
+  }
+
+  void _handleSubItemExpandedChanged(
+    String itemId,
+    Map<String, bool> subItemStates,
+  ) {
+    setState(() {
+      _subItemExpandedStates[itemId] = Map<String, bool>.from(subItemStates);
+    });
+  }
+
+  Widget _buildItemsList() {
+    if (_pricingVersion == null ||
+        _pricingVersion!.items == null ||
+        _pricingVersion!.items!.isEmpty) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(32),
+          child: Column(
+            children: [
+              Icon(Icons.folder_outlined, size: 64, color: AppColors.textMuted),
+              const SizedBox(height: 16),
+              Text(
+                'لا توجد فئات بعد',
+                style: AppTextStyles.bodyLarge.copyWith(
+                  color: AppColors.textMuted,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'ابدأ بإضافة فئة جديدة',
+                style: AppTextStyles.bodyMedium.copyWith(
+                  color: AppColors.textSecondary,
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    return Column(
+      children: _pricingVersion!.items!.map((item) {
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 16),
+          child: PricingItemCard(
+            key: ValueKey('pricing-item-${item.id}'),
+            projectId: widget.projectId,
+            version: _pricingVersion!.version,
+            item: item,
+            initialIsExpanded: _itemExpandedStates[item.id] ?? true,
+            initialSubItemExpandedStates: _subItemExpandedStates[item.id] ?? {},
+            onExpandedChanged: (isExpanded) =>
+                _handleItemExpandedChanged(item.id, isExpanded),
+            onSubItemExpandedChanged: (subItemStates) =>
+                _handleSubItemExpandedChanged(item.id, subItemStates),
+            onItemChanged: (_) {
+              // Reload data but preserve widget state using keys
+              _loadPricingData();
+            },
+            onAddSubItem: () => _addSubItem(item.id),
+          ),
+        );
+      }).toList(),
     );
   }
 
-  Widget _buildWallCard(WallPricing wall) {
-    return WallPricingCard(
-      wall: wall,
-      onWallChanged: (updatedWall) {
-        final newWalls = List<WallPricing>.from(_pricingData.walls);
-        final index = newWalls.indexWhere((w) => w.id == wall.id);
-        if (index != -1) {
-          newWalls[index] = updatedWall;
-          _updatePricingData(_pricingData.copyWith(walls: newWalls));
-        }
-      },
-      onAddItem: () => _addWallItem(wall.id),
-      onAddImage: () => _addWallImage(wall.id),
-    );
-  }
-
-  Widget _buildAddNewExpensesButton() {
+  Widget _buildAddItemButton() {
     return Container(
       width: double.infinity,
       height: 152,
@@ -445,11 +589,7 @@ class _UnderPricingPageState extends State<UnderPricingPage> {
           strokeWidth: 2,
         ),
         child: InkWell(
-          onTap: () {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('إضافة مصروفات جديدة - قريباً')),
-            );
-          },
+          onTap: _addItem,
           borderRadius: BorderRadius.circular(12),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -469,7 +609,7 @@ class _UnderPricingPageState extends State<UnderPricingPage> {
               ),
               const SizedBox(height: 18),
               Text(
-                'إضافة مصروفات جديدة',
+                'إضافة فئة جديدة',
                 style: AppTextStyles.bodyLarge.copyWith(
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
@@ -489,12 +629,67 @@ class _UnderPricingPageState extends State<UnderPricingPage> {
         maxHeight: MediaQuery.of(context).size.height,
       ),
       child: PricingSummarySidebar(
-        grandTotal: _pricingData.grandTotal,
-        lastSaveTime: _pricingData.lastSaveTime,
-        onSubmit: () {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('تم إرسال التسعير للمراجعة')),
-          );
+        grandTotal: _pricingVersion?.totalPrice ?? 0.0,
+        lastSaveTime:
+            _pricingVersion?.updatedAt.toString() ?? DateTime.now().toString(),
+        onSubmit: () async {
+          if (_pricingVersion == null) return;
+
+          try {
+            // Check if we need to calculate profit first
+            if (_pricingVersion!.status == 'DRAFT' &&
+                _pricingVersion!.items != null &&
+                _pricingVersion!.items!.isNotEmpty) {
+              // Calculate profit for all items
+              final items = _pricingVersion!.items!
+                  .map(
+                    (item) => {
+                      'itemId': item.id,
+                      'profitMargin': item.profitMargin,
+                    },
+                  )
+                  .toList();
+
+              await _apiDataSource.calculateProfit(
+                widget.projectId,
+                _pricingVersion!.version,
+                items: items,
+              );
+
+              // Reload to get updated status
+              await _loadPricingData();
+            }
+
+            // Submit for approval
+            if (_pricingVersion!.status == 'PROFIT_PENDING') {
+              await _apiDataSource.submitForApproval(
+                widget.projectId,
+                _pricingVersion!.version,
+              );
+
+              await _loadPricingData();
+
+              if (mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('تم إرسال التسعير للمراجعة')),
+                );
+              }
+            } else {
+              if (mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('يرجى حساب الربح أولاً قبل الإرسال للمراجعة'),
+                  ),
+                );
+              }
+            }
+          } catch (e) {
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text('فشل إرسال التسعير: ${e.toString()}')),
+              );
+            }
+          }
         },
         onSaveDraft: () {
           ScaffoldMessenger.of(
