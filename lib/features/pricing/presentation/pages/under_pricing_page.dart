@@ -34,6 +34,8 @@ class _UnderPricingPageState extends State<UnderPricingPage> {
   final Map<String, bool> _itemExpandedStates = {};
   // Track expanded states for sub-items (itemId -> {subItemId -> isExpanded})
   final Map<String, Map<String, bool>> _subItemExpandedStates = {};
+  // Track profit margins entered in UI (subItemId -> profitMargin)
+  final Map<String, double> _subItemProfitMargins = {};
 
   @override
   void initState() {
@@ -76,6 +78,16 @@ class _UnderPricingPageState extends State<UnderPricingPage> {
           widget.projectId,
           latestVersion.version,
         );
+        // Initialize profit margins from loaded data
+        if (_pricingVersion?.items != null) {
+          for (final item in _pricingVersion!.items!) {
+            if (item.subItems != null) {
+              for (final subItem in item.subItems!) {
+                _subItemProfitMargins[subItem.id] = subItem.profitMargin;
+              }
+            }
+          }
+        }
       }
 
       // Restore preserved states and initialize new items/sub-items
@@ -97,6 +109,10 @@ class _UnderPricingPageState extends State<UnderPricingPage> {
                 // Restore sub-item expanded state or default to false
                 subItemStates[subItem.id] =
                     preservedSubStates[subItem.id] ?? false;
+                // Initialize profit margin from model if not already set
+                if (!_subItemProfitMargins.containsKey(subItem.id)) {
+                  _subItemProfitMargins[subItem.id] = subItem.profitMargin;
+                }
               }
               _subItemExpandedStates[item.id] = subItemStates;
             }
@@ -278,13 +294,16 @@ class _UnderPricingPageState extends State<UnderPricingPage> {
       }
     }
   }
+
   Future<void> _acceptPricing() async {
     if (_pricingVersion == null) return;
     if (_pricingVersion!.status != 'PENDING_APPROVAL') {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('لا يمكن قبول التسعير. الحالة الحالية: "${_getStatusText()}"'),
+            content: Text(
+              'لا يمكن قبول التسعير. الحالة الحالية: "${_getStatusText()}"',
+            ),
             duration: const Duration(seconds: 4),
           ),
         );
@@ -294,9 +313,9 @@ class _UnderPricingPageState extends State<UnderPricingPage> {
     final authState = context.read<AuthBloc>().state;
     if (authState is! AuthAuthenticated) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('يجب تسجيل الدخول أولاً')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('يجب تسجيل الدخول أولاً')));
       }
       return;
     }
@@ -316,7 +335,9 @@ class _UnderPricingPageState extends State<UnderPricingPage> {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('قبول التسعير'),
-        content: const Text('هل أنت متأكد من قبول هذا التسعير؟ سيتم اعتماد التسعير وستصبح الحالة "موافق عليه".'),
+        content: const Text(
+          'هل أنت متأكد من قبول هذا التسعير؟ سيتم اعتماد التسعير وستصبح الحالة "موافق عليه".',
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
@@ -324,7 +345,9 @@ class _UnderPricingPageState extends State<UnderPricingPage> {
           ),
           ElevatedButton(
             onPressed: () => Navigator.of(context).pop(true),
-            style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF10B981)),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF10B981),
+            ),
             child: const Text('قبول'),
           ),
         ],
@@ -332,11 +355,17 @@ class _UnderPricingPageState extends State<UnderPricingPage> {
     );
     if (confirmed != true) return;
     try {
-      await _apiDataSource.approvePricing(widget.projectId, _pricingVersion!.version);
+      await _apiDataSource.approvePricing(
+        widget.projectId,
+        _pricingVersion!.version,
+      );
       await _loadPricingData();
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('تم قبول التسعير بنجاح'), duration: Duration(seconds: 3)),
+          const SnackBar(
+            content: Text('تم قبول التسعير بنجاح'),
+            duration: Duration(seconds: 3),
+          ),
         );
       }
     } catch (e) {
@@ -350,18 +379,24 @@ class _UnderPricingPageState extends State<UnderPricingPage> {
           errorMessage = 'فشل قبول التسعير: ${e.toString()}';
         }
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(errorMessage), duration: const Duration(seconds: 5)),
+          SnackBar(
+            content: Text(errorMessage),
+            duration: const Duration(seconds: 5),
+          ),
         );
       }
     }
   }
+
   Future<void> _makeProfit() async {
     if (_pricingVersion == null) return;
     if (_pricingVersion!.status != 'APPROVED') {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('لا يمكن حساب الربح. الحالة الحالية: "${_getStatusText()}"'),
+            content: Text(
+              'لا يمكن حساب الربح. الحالة الحالية: "${_getStatusText()}"',
+            ),
             duration: const Duration(seconds: 4),
           ),
         );
@@ -380,18 +415,26 @@ class _UnderPricingPageState extends State<UnderPricingPage> {
       return;
     }
     try {
-      final items = _pricingVersion!.items!
-          .map(
-            (item) => {
-              'itemId': item.id,
-              'profitMargin': item.profitMargin,
-            },
-          )
-          .toList();
-      await _apiDataSource.calculateProfit(
+      // Collect SubItem profit margins from all items
+      // Use updated profit margins from UI if available, otherwise use model values
+      final subItems = <Map<String, dynamic>>[];
+      for (final item in _pricingVersion!.items!) {
+        if (item.subItems != null) {
+          for (final subItem in item.subItems!) {
+            // Use updated profit margin from UI state if available, otherwise use model value
+            final profitMargin =
+                _subItemProfitMargins[subItem.id] ?? subItem.profitMargin;
+            subItems.add({
+              'subItemId': subItem.id,
+              'profitMargin': profitMargin,
+            });
+          }
+        }
+      }
+      await _apiDataSource.calculateProfitForSubItems(
         widget.projectId,
         _pricingVersion!.version,
-        items: items,
+        items: subItems,
       );
       await _loadPricingData();
       if (mounted) {
@@ -413,13 +456,88 @@ class _UnderPricingPageState extends State<UnderPricingPage> {
           errorMessage = 'فشل حساب الربح: ${e.toString()}';
         }
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(errorMessage), duration: const Duration(seconds: 5)),
+          SnackBar(
+            content: Text(errorMessage),
+            duration: const Duration(seconds: 5),
+          ),
         );
       }
     }
   }
 
-
+  Future<void> _confirmPricing() async {
+    if (_pricingVersion == null) return;
+    if (_pricingVersion!.status != 'PROFIT_PENDING') {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'لا يمكن تأكيد التسعير. الحالة الحالية: "${_getStatusText()}"',
+            ),
+            duration: const Duration(seconds: 4),
+          ),
+        );
+      }
+      return;
+    }
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('تأكيد التسعير وإنشاء العقد'),
+        content: const Text(
+          'هل أنت متأكد من تأكيد هذا التسعير؟ سيتم إنشاء العقد ونقل المشروع إلى مرحلة التنفيذ.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('إلغاء'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF10B981),
+            ),
+            child: const Text('تأكيد'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+    try {
+      await _apiDataSource.confirmPricing(
+        widget.projectId,
+        _pricingVersion!.version,
+      );
+      await _loadPricingData();
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'تم تأكيد التسعير وإنشاء العقد بنجاح. تم نقل المشروع إلى مرحلة التنفيذ.',
+            ),
+            duration: Duration(seconds: 4),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        String errorMessage = 'فشل تأكيد التسعير';
+        if (e is ServerException) {
+          errorMessage = 'فشل تأكيد التسعير: ${e.message}';
+        } else if (e is ValidationException) {
+          errorMessage = 'فشل تأكيد التسعير: ${e.message}';
+        } else {
+          errorMessage = 'فشل تأكيد التسعير: ${e.toString()}';
+        }
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(errorMessage),
+            duration: const Duration(seconds: 5),
+          ),
+        );
+      }
+    }
+  }
 
   Future<void> _addSubItem(String itemId) async {
     if (_pricingVersion == null) return;
@@ -894,6 +1012,7 @@ class _UnderPricingPageState extends State<UnderPricingPage> {
             projectId: widget.projectId,
             version: _pricingVersion!.version,
             item: item,
+            pricingStatus: _pricingVersion?.status,
             initialIsExpanded: _itemExpandedStates[item.id] ?? true,
             initialSubItemExpandedStates: _subItemExpandedStates[item.id] ?? {},
             onExpandedChanged: (isExpanded) =>
@@ -905,6 +1024,13 @@ class _UnderPricingPageState extends State<UnderPricingPage> {
             onItemChanged: (_) {
               // Reload data but preserve widget state using keys
               _loadPricingData();
+            },
+            onSubItemChanged: (updatedSubItem) {
+              // Store updated profit margin in parent state
+              setState(() {
+                _subItemProfitMargins[updatedSubItem.id] =
+                    updatedSubItem.profitMargin;
+              });
             },
             onAddSubItem: () => _addSubItem(item.id),
           ),
@@ -992,6 +1118,12 @@ class _UnderPricingPageState extends State<UnderPricingPage> {
       isApproved = currentStatus == 'APPROVED';
     }
 
+    // Check if pricing status is PROFIT_PENDING
+    bool isProfitPending = false;
+    if (_pricingVersion != null) {
+      final currentStatus = _pricingVersion!.status.toUpperCase();
+      isProfitPending = currentStatus == 'PROFIT_PENDING';
+    }
 
     return ConstrainedBox(
       constraints: BoxConstraints(
@@ -999,15 +1131,21 @@ class _UnderPricingPageState extends State<UnderPricingPage> {
       ),
       child: PricingSummarySidebar(
         grandTotal: _pricingVersion?.totalPrice ?? 0.0,
+        totalCost: _pricingVersion?.totalCost,
+        totalProfit: _pricingVersion?.totalProfit,
         totalElements: _getTotalElementsCount(),
         lastSaveTime: _formatLastSaveTime(_pricingVersion?.updatedAt),
         showReturnToPricing: showReturnButton,
         onReturnToPricing: showReturnButton ? _returnToPricing : null,
         isAdminOrManager: isAdminOrManager,
         isPendingApproval: isPendingApproval,
-        onAcceptPricing: isAdminOrManager && isPendingApproval ? _acceptPricing : null,
+        onAcceptPricing: isAdminOrManager && isPendingApproval
+            ? _acceptPricing
+            : null,
         isApproved: isApproved,
+        isProfitPending: isProfitPending,
         onMakeProfit: isAdminOrManager && isApproved ? _makeProfit : null,
+        onConfirmPricing: isProfitPending ? _confirmPricing : null,
         onSubmit: () async {
           if (_pricingVersion == null) return;
 

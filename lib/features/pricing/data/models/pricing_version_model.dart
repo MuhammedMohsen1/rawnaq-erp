@@ -183,8 +183,13 @@ class PricingSubItemModel {
   final String name;
   final String? description;
   final List<String> images;
+  final double profitMargin;
+  final double profitAmount;
+  final double totalCost;
+  final double totalPrice;
   final int order;
   final DateTime createdAt;
+  final DateTime? updatedAt;
   final List<PricingElementModel>? elements;
 
   PricingSubItemModel({
@@ -193,8 +198,13 @@ class PricingSubItemModel {
     required this.name,
     this.description,
     this.images = const [],
+    this.profitMargin = 0.0,
+    this.profitAmount = 0.0,
+    this.totalCost = 0.0,
+    this.totalPrice = 0.0,
     required this.order,
     required this.createdAt,
+    this.updatedAt,
     this.elements,
   });
 
@@ -210,6 +220,16 @@ class PricingSubItemModel {
       return 0;
     }
 
+    // Helper function to safely convert to double
+    double _toDoubleOrZero(dynamic value) {
+      if (value == null) return 0.0;
+      if (value is num) return value.toDouble();
+      if (value is String) {
+        return double.tryParse(value) ?? 0.0;
+      }
+      return 0.0;
+    }
+
     return PricingSubItemModel(
       id: json['id'] as String,
       pricingItemId: json['pricingItemId'] as String,
@@ -218,8 +238,15 @@ class PricingSubItemModel {
       images: json['images'] != null
           ? (json['images'] as List).map((e) => e.toString()).toList()
           : [],
+      profitMargin: _toDoubleOrZero(json['profitMargin']),
+      profitAmount: _toDoubleOrZero(json['profitAmount']),
+      totalCost: _toDoubleOrZero(json['totalCost']),
+      totalPrice: _toDoubleOrZero(json['totalPrice']),
       order: _toIntOrZero(json['order']),
       createdAt: DateTime.parse(json['createdAt'] as String),
+      updatedAt: json['updatedAt'] != null
+          ? DateTime.parse(json['updatedAt'] as String)
+          : null,
       elements: json['elements'] != null
           ? (json['elements'] as List)
                 .map(
@@ -239,8 +266,13 @@ class PricingSubItemModel {
       'name': name,
       'description': description,
       'images': images,
+      'profitMargin': profitMargin,
+      'profitAmount': profitAmount,
+      'totalCost': totalCost,
+      'totalPrice': totalPrice,
       'order': order,
       'createdAt': createdAt.toIso8601String(),
+      'updatedAt': updatedAt?.toIso8601String(),
       'elements': elements?.map((element) => element.toJson()).toList(),
     };
   }

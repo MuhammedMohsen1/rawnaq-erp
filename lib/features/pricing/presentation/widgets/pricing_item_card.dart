@@ -60,7 +60,11 @@ class PricingItemCard extends StatefulWidget {
   final String projectId;
   final int version;
   final PricingItemModel item;
+  final String?
+  pricingStatus; // DRAFT, PENDING_APPROVAL, APPROVED, PROFIT_PENDING, etc.
   final ValueChanged<PricingItemModel>? onItemChanged;
+  final ValueChanged<PricingSubItemModel>?
+  onSubItemChanged; // For profit margin updates
   final VoidCallback? onAddSubItem;
   final bool initialIsExpanded;
   final Map<String, bool> initialSubItemExpandedStates;
@@ -74,7 +78,9 @@ class PricingItemCard extends StatefulWidget {
     required this.projectId,
     required this.version,
     required this.item,
+    this.pricingStatus,
     this.onItemChanged,
+    this.onSubItemChanged,
     this.onAddSubItem,
     this.initialIsExpanded = true,
     this.initialSubItemExpandedStates = const {},
@@ -103,6 +109,10 @@ class _PricingItemCardState extends State<PricingItemCard> {
       {}; // elementId -> latest PricingItem values
   final Map<String, bool> _uploadingImages = {}; // subItemId -> isUploading
   final Map<String, bool> _deletingImages = {}; // imageUrl -> isDeleting
+  final Map<String, double> _profitMargins =
+      {}; // subItemId -> profitMargin (for APPROVED status)
+  final Map<String, TextEditingController> _profitControllers =
+      {}; // subItemId -> TextEditingController for profit margin input
   final Map<String, int> _selectedImageIndex =
       {}; // subItemId -> selected image index
   bool _isRestoringState =
@@ -118,6 +128,13 @@ class _PricingItemCardState extends State<PricingItemCard> {
         _expandedSubItems[subItem.id] =
             widget.initialSubItemExpandedStates[subItem.id] ?? false;
         _localElements[subItem.id] = [];
+        // Initialize profit margin controllers
+        if (widget.pricingStatus?.toUpperCase() == 'APPROVED') {
+          _profitMargins[subItem.id] = subItem.profitMargin;
+          _profitControllers[subItem.id] = TextEditingController(
+            text: subItem.profitMargin.toStringAsFixed(2),
+          );
+        }
       }
     }
   }
@@ -154,6 +171,11 @@ class _PricingItemCardState extends State<PricingItemCard> {
 
   @override
   void dispose() {
+    // Dispose profit margin controllers
+    for (var controller in _profitControllers.values) {
+      controller.dispose();
+    }
+    _profitControllers.clear();
     // Cancel all pending save timers
     for (var timer in _saveTimers.values) {
       timer?.cancel();
@@ -1455,7 +1477,12 @@ class _PricingItemCardState extends State<PricingItemCard> {
                                         ),
                                       ),
                                     ),
-                                    if (allElements.isNotEmpty) ...[
+                                    // Show total cost in header only when NOT APPROVED/PROFIT_PENDING
+                                    if (widget.pricingStatus?.toUpperCase() !=
+                                            'APPROVED' &&
+                                        widget.pricingStatus?.toUpperCase() !=
+                                            'PROFIT_PENDING' &&
+                                        allElements.isNotEmpty) ...[
                                       Builder(
                                         builder: (context) {
                                           final total = allElements
@@ -1620,6 +1647,358 @@ class _PricingItemCardState extends State<PricingItemCard> {
                                   ),
                                 ),
                               ],
+                              // Profit Margin Input (only show when status is APPROVED)
+                              if (widget.pricingStatus?.toUpperCase() ==
+                                  'APPROVED') ...[
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 12,
+                                    vertical: 12,
+                                  ),
+                                  child: Container(
+                                    padding: const EdgeInsets.all(12),
+                                    decoration: BoxDecoration(
+                                      color: const Color(0xFF15181E),
+                                      borderRadius: BorderRadius.circular(8),
+                                      border: Border.all(
+                                        color: const Color(0xFF363C4A),
+                                      ),
+                                    ),
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Row(
+                                          children: [
+                                            Expanded(
+                                              child: Text(
+                                                'نسبة الربح (%)',
+                                                style: AppTextStyles.bodyMedium
+                                                    .copyWith(
+                                                      fontWeight:
+                                                          FontWeight.w600,
+                                                    ),
+                                              ),
+                                            ),
+                                            SizedBox(
+                                              width: 120,
+                                              child: Builder(
+                                                builder: (context) {
+                                                  // Get or create controller for this subItem
+                                                  if (!_profitControllers
+                                                      .containsKey(
+                                                        subItem.id,
+                                                      )) {
+                                                    final initialValue =
+                                                        _profitMargins[subItem
+                                                            .id] ??
+                                                        subItem.profitMargin;
+                                                    _profitControllers[subItem
+                                                            .id] =
+                                                        TextEditingController(
+                                                          text: initialValue
+                                                              .toStringAsFixed(
+                                                                2,
+                                                              ),
+                                                        );
+                                                  }
+                                                  return TextField(
+                                                    controller:
+                                                        _profitControllers[subItem
+                                                            .id]!,
+                                                    keyboardType:
+                                                        const TextInputType.numberWithOptions(
+                                                          decimal: true,
+                                                        ),
+                                                    textAlign: TextAlign.center,
+                                                    style: AppTextStyles
+                                                        .bodyMedium,
+                                                    decoration: InputDecoration(
+                                                      filled: true,
+                                                      fillColor: const Color(
+                                                        0xFF2A313D,
+                                                      ),
+                                                      border: OutlineInputBorder(
+                                                        borderRadius:
+                                                            BorderRadius.circular(
+                                                              8,
+                                                            ),
+                                                        borderSide:
+                                                            const BorderSide(
+                                                              color: Color(
+                                                                0xFF363C4A,
+                                                              ),
+                                                            ),
+                                                      ),
+                                                      enabledBorder:
+                                                          OutlineInputBorder(
+                                                            borderRadius:
+                                                                BorderRadius.circular(
+                                                                  8,
+                                                                ),
+                                                            borderSide:
+                                                                const BorderSide(
+                                                                  color: Color(
+                                                                    0xFF363C4A,
+                                                                  ),
+                                                                ),
+                                                          ),
+                                                      focusedBorder:
+                                                          OutlineInputBorder(
+                                                            borderRadius:
+                                                                BorderRadius.circular(
+                                                                  8,
+                                                                ),
+                                                            borderSide:
+                                                                const BorderSide(
+                                                                  color: AppColors
+                                                                      .primary,
+                                                                ),
+                                                          ),
+                                                      contentPadding:
+                                                          const EdgeInsets.symmetric(
+                                                            horizontal: 12,
+                                                            vertical: 12,
+                                                          ),
+                                                    ),
+                                                    onChanged: (value) {
+                                                      // Parse the input value as a percentage (e.g., 15 for 15%, 15.5 for 15.5%)
+                                                      // The value is stored as-is (15 = 15%), and will be divided by 100 when calculating profit
+                                                      final margin =
+                                                          double.tryParse(
+                                                            value,
+                                                          ) ??
+                                                          0.0;
+                                                      // Ensure margin is non-negative
+                                                      final clampedMargin =
+                                                          margin < 0
+                                                          ? 0.0
+                                                          : margin;
+
+                                                      setState(() {
+                                                        _profitMargins[subItem
+                                                                .id] =
+                                                            clampedMargin;
+                                                      });
+
+                                                      // Calculate profit: cost * (margin / 100)
+                                                      final cost =
+                                                          subItem.totalCost > 0
+                                                          ? subItem.totalCost
+                                                          : allElements.fold<
+                                                              double
+                                                            >(
+                                                              0,
+                                                              (sum, e) =>
+                                                                  sum +
+                                                                  (e.totalCost ??
+                                                                          0)
+                                                                      .toDouble(),
+                                                            );
+                                                      final profit =
+                                                          cost *
+                                                          (clampedMargin / 100);
+                                                      final totalPrice =
+                                                          cost + profit;
+
+                                                      // Update subItem profit margin
+                                                      if (widget
+                                                              .onSubItemChanged !=
+                                                          null) {
+                                                        final updatedSubItem =
+                                                            PricingSubItemModel(
+                                                              id: subItem.id,
+                                                              pricingItemId: subItem
+                                                                  .pricingItemId,
+                                                              name:
+                                                                  subItem.name,
+                                                              description: subItem
+                                                                  .description,
+                                                              images: subItem
+                                                                  .images,
+                                                              profitMargin:
+                                                                  clampedMargin,
+                                                              profitAmount:
+                                                                  profit,
+                                                              totalCost: cost,
+                                                              totalPrice:
+                                                                  totalPrice,
+                                                              order:
+                                                                  subItem.order,
+                                                              createdAt: subItem
+                                                                  .createdAt,
+                                                              updatedAt: subItem
+                                                                  .updatedAt,
+                                                              elements: subItem
+                                                                  .elements,
+                                                            );
+                                                        widget
+                                                            .onSubItemChanged!(
+                                                          updatedSubItem,
+                                                        );
+                                                      }
+                                                    },
+                                                  );
+                                                },
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                        const SizedBox(height: 12),
+                                        // Cost, Profit, Total breakdown summary
+                                        Container(
+                                          padding: const EdgeInsets.all(12),
+                                          decoration: BoxDecoration(
+                                            color: const Color(0xFF15181E),
+                                            borderRadius: BorderRadius.circular(
+                                              8,
+                                            ),
+                                            border: Border.all(
+                                              color: const Color(0xFF363C4A),
+                                            ),
+                                          ),
+                                          child: Builder(
+                                            builder: (context) {
+                                              final cost = subItem.totalCost > 0
+                                                  ? subItem.totalCost
+                                                  : allElements.fold<double>(
+                                                      0,
+                                                      (sum, e) =>
+                                                          sum +
+                                                          (e.totalCost ?? 0)
+                                                              .toDouble(),
+                                                    );
+                                              final margin =
+                                                  _profitMargins[subItem.id] ??
+                                                  subItem.profitMargin;
+                                              final profit =
+                                                  cost * (margin / 100);
+                                              final total = cost + profit;
+                                              return Column(
+                                                crossAxisAlignment:
+                                                    CrossAxisAlignment.start,
+                                                children: [
+                                                  Text(
+                                                    'ملخص التسعير',
+                                                    style: AppTextStyles
+                                                        .bodyMedium
+                                                        .copyWith(
+                                                          fontWeight:
+                                                              FontWeight.w600,
+                                                          fontSize: 14,
+                                                        ),
+                                                  ),
+                                                  const SizedBox(height: 8),
+                                                  Row(
+                                                    mainAxisAlignment:
+                                                        MainAxisAlignment
+                                                            .spaceBetween,
+                                                    children: [
+                                                      Text(
+                                                        'التكلفة',
+                                                        style: AppTextStyles
+                                                            .caption
+                                                            .copyWith(
+                                                              color: AppColors
+                                                                  .textSecondary,
+                                                            ),
+                                                      ),
+                                                      Text(
+                                                        '${cost.toStringAsFixed(3)} KD',
+                                                        style: AppTextStyles
+                                                            .caption
+                                                            .copyWith(
+                                                              color: AppColors
+                                                                  .textSecondary,
+                                                              fontWeight:
+                                                                  FontWeight
+                                                                      .w500,
+                                                            ),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                  const SizedBox(height: 4),
+                                                  Row(
+                                                    mainAxisAlignment:
+                                                        MainAxisAlignment
+                                                            .spaceBetween,
+                                                    children: [
+                                                      Text(
+                                                        'الربح (${margin.toStringAsFixed(2)}%)',
+                                                        style: AppTextStyles
+                                                            .caption
+                                                            .copyWith(
+                                                              color:
+                                                                  const Color(
+                                                                    0xFF10B981,
+                                                                  ),
+                                                            ),
+                                                      ),
+                                                      Text(
+                                                        '${profit.toStringAsFixed(3)} KD',
+                                                        style: AppTextStyles
+                                                            .caption
+                                                            .copyWith(
+                                                              color:
+                                                                  const Color(
+                                                                    0xFF10B981,
+                                                                  ),
+                                                              fontWeight:
+                                                                  FontWeight
+                                                                      .w500,
+                                                            ),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                  const SizedBox(height: 4),
+                                                  const Divider(
+                                                    color: Color(0xFF363C4A),
+                                                    height: 1,
+                                                  ),
+                                                  const SizedBox(height: 4),
+                                                  Row(
+                                                    mainAxisAlignment:
+                                                        MainAxisAlignment
+                                                            .spaceBetween,
+                                                    children: [
+                                                      Text(
+                                                        'الإجمالي',
+                                                        style: AppTextStyles
+                                                            .caption
+                                                            .copyWith(
+                                                              color: AppColors
+                                                                  .textPrimary,
+                                                              fontWeight:
+                                                                  FontWeight
+                                                                      .w600,
+                                                              fontSize: 13,
+                                                            ),
+                                                      ),
+                                                      Text(
+                                                        '${total.toStringAsFixed(3)} KD',
+                                                        style: AppTextStyles
+                                                            .caption
+                                                            .copyWith(
+                                                              color: AppColors
+                                                                  .textPrimary,
+                                                              fontWeight:
+                                                                  FontWeight
+                                                                      .w700,
+                                                              fontSize: 13,
+                                                            ),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                ],
+                                              );
+                                            },
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ],
                               // Two-column layout: Images preview on left (if exists), Elements on right
                               Padding(
                                 padding: const EdgeInsets.symmetric(
@@ -1766,6 +2145,7 @@ class _PricingItemCardState extends State<PricingItemCard> {
                                         crossAxisAlignment:
                                             CrossAxisAlignment.start,
                                         children: [
+                                          // Always show elements table when there are elements
                                           if (allElements.isNotEmpty) ...[
                                             // Table Header
                                             Container(

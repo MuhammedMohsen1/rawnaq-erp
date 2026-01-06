@@ -452,7 +452,7 @@ class PricingApiDataSource {
     );
   }
 
-  /// Return pricing from PENDING_APPROVAL to DRAFT for editing
+  /// Return pricing from PENDING_APPROVAL or PROFIT_PENDING to DRAFT for editing
   Future<PricingVersionModel> returnToPricing(
     String projectId,
     int version, {
@@ -461,6 +461,42 @@ class PricingApiDataSource {
     final response = await _apiClient.patch(
       ApiEndpoints.returnToPricing(projectId, version),
       data: {if (reason != null && reason.isNotEmpty) 'reason': reason},
+    );
+
+    final responseData = response.data as Map<String, dynamic>;
+    return PricingVersionModel.fromJson(
+      responseData['data'] as Map<String, dynamic>,
+    );
+  }
+
+  /// Calculate profit for SubItems (when status is APPROVED)
+  Future<PricingVersionModel> calculateProfitForSubItems(
+    String projectId,
+    int version, {
+    required List<Map<String, dynamic>>
+    items, // [{subItemId: string, profitMargin: number}]
+    String? notes,
+  }) async {
+    final response = await _apiClient.post(
+      ApiEndpoints.calculateSubItemProfit(projectId, version),
+      data: {'items': items, if (notes != null) 'notes': notes},
+    );
+
+    final responseData = response.data as Map<String, dynamic>;
+    return PricingVersionModel.fromJson(
+      responseData['data'] as Map<String, dynamic>,
+    );
+  }
+
+  /// Confirm pricing (creates contract and moves project to EXECUTION)
+  Future<PricingVersionModel> confirmPricing(
+    String projectId,
+    int version, {
+    String? notes,
+  }) async {
+    final response = await _apiClient.post(
+      ApiEndpoints.confirmPricing(projectId, version),
+      data: {if (notes != null) 'notes': notes},
     );
 
     final responseData = response.data as Map<String, dynamic>;

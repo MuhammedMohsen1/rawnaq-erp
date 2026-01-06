@@ -4,6 +4,8 @@ import '../../../../core/constants/app_text_styles.dart';
 
 class PricingSummarySidebar extends StatefulWidget {
   final double grandTotal;
+  final double? totalCost;
+  final double? totalProfit;
   final int totalElements;
   final String? lastSaveTime;
   final VoidCallback? onSubmit;
@@ -11,14 +13,18 @@ class PricingSummarySidebar extends StatefulWidget {
   final VoidCallback? onReturnToPricing;
   final VoidCallback? onAcceptPricing;
   final VoidCallback? onMakeProfit;
+  final VoidCallback? onConfirmPricing;
   final bool showReturnToPricing;
   final bool isAdminOrManager;
   final bool isPendingApproval;
   final bool isApproved;
+  final bool isProfitPending;
 
   const PricingSummarySidebar({
     super.key,
     required this.grandTotal,
+    this.totalCost,
+    this.totalProfit,
     required this.totalElements,
     this.lastSaveTime,
     this.onSubmit,
@@ -26,10 +32,12 @@ class PricingSummarySidebar extends StatefulWidget {
     this.onReturnToPricing,
     this.onAcceptPricing,
     this.onMakeProfit,
+    this.onConfirmPricing,
     this.showReturnToPricing = false,
     this.isAdminOrManager = false,
     this.isPendingApproval = false,
     this.isApproved = false,
+    this.isProfitPending = false,
   });
 
   @override
@@ -297,6 +305,75 @@ class _PricingSummarySidebarState extends State<PricingSummarySidebar> {
                   ],
                 ),
                 const SizedBox(height: 16),
+                // Cost, Profit, Total Breakdown (show when profit is calculated)
+                if (widget.totalCost != null && widget.totalProfit != null) ...[
+                  // Total Cost
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 10,
+                    ),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF15181E),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: const Color(0xFF363C4A)),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'التكلفة الإجمالية',
+                          style: AppTextStyles.caption.copyWith(
+                            fontSize: 12,
+                            color: AppColors.textSecondary,
+                          ),
+                        ),
+                        Text(
+                          '${_formatNumberWithDecimals(widget.totalCost!)} KD',
+                          style: AppTextStyles.caption.copyWith(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.textPrimary,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  // Total Profit
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 10,
+                    ),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF15181E),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: const Color(0xFF363C4A)),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'الربح الإجمالي',
+                          style: AppTextStyles.caption.copyWith(
+                            fontSize: 12,
+                            color: AppColors.textSecondary,
+                          ),
+                        ),
+                        Text(
+                          '${_formatNumberWithDecimals(widget.totalProfit!)} KD',
+                          style: AppTextStyles.caption.copyWith(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w700,
+                            color: const Color(0xFF10B981),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                ],
                 // Total Elements Count
                 Container(
                   padding: const EdgeInsets.symmetric(
@@ -337,7 +414,9 @@ class _PricingSummarySidebarState extends State<PricingSummarySidebar> {
                 const SizedBox(height: 16),
                 // Note
                 Text(
-                  'محسوب بناءً على الإدخالات الحالية. قد يختلف السعر النهائي بعد المراجعة.',
+                  widget.totalCost != null && widget.totalProfit != null
+                      ? 'تم حساب الربح بناءً على النسب المحددة لكل عنصر فرعي.'
+                      : 'محسوب بناءً على الإدخالات الحالية. قد يختلف السعر النهائي بعد المراجعة.',
                   style: AppTextStyles.caption.copyWith(
                     fontSize: 12,
                     color: const Color(0xFF4B5563),
@@ -467,10 +546,77 @@ class _PricingSummarySidebarState extends State<PricingSummarySidebar> {
                     ),
                   const SizedBox(height: 12),
                 ],
-                // Submit Button (only show when NOT pending approval, NOT approved, and NOT Admin/Manager with pending approval)
+                // Confirm and Return to Pricing Buttons (only show for PROFIT_PENDING status)
+                if (widget.isProfitPending) ...[
+                  if (widget.onConfirmPricing != null)
+                    SizedBox(
+                      width: double.infinity,
+                      height: 56,
+                      child: ElevatedButton(
+                        onPressed: widget.onConfirmPricing,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF10B981),
+                          foregroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          elevation: 0,
+                          shadowColor: const Color(0xFF059669).withOpacity(0.2),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Icon(Icons.check_circle, size: 24),
+                            const SizedBox(width: 8),
+                            Text(
+                              'تأكيد وإنشاء العقد',
+                              style: AppTextStyles.buttonLarge.copyWith(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  const SizedBox(height: 12),
+                  if (widget.onReturnToPricing != null)
+                    SizedBox(
+                      width: double.infinity,
+                      height: 50,
+                      child: OutlinedButton(
+                        onPressed: widget.onReturnToPricing,
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: AppColors.error,
+                          side: const BorderSide(color: AppColors.error),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Icon(Icons.arrow_back, size: 24),
+                            const SizedBox(width: 8),
+                            Text(
+                              'إرجاع للتسعير',
+                              style: AppTextStyles.buttonLarge.copyWith(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                                color: AppColors.error,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  const SizedBox(height: 12),
+                ],
+                // Submit Button (only show when NOT pending approval, NOT approved, NOT profit pending, and NOT Admin/Manager with pending approval)
                 if (!widget.showReturnToPricing &&
                     !(widget.isAdminOrManager && widget.isPendingApproval) &&
-                    !(widget.isAdminOrManager && widget.isApproved)) ...[
+                    !(widget.isAdminOrManager && widget.isApproved) &&
+                    !widget.isProfitPending) ...[
                   SizedBox(
                     width: double.infinity,
                     height: 56,
