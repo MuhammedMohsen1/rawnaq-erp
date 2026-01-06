@@ -23,6 +23,21 @@ class PricingSummarySidebar extends StatefulWidget {
 class _PricingSummarySidebarState extends State<PricingSummarySidebar> {
   bool _isCollapsed = false;
 
+  String _formatNumberWithDecimals(double value) {
+    // Format number with 3 decimals and add thousand separators
+    final parts = value.toStringAsFixed(3).split('.');
+    final integerPart = parts[0];
+    final decimalPart = parts[1];
+    
+    // Add thousand separators to integer part
+    final formattedInteger = integerPart.replaceAllMapped(
+      RegExp(r'(\d)(?=(\d{3})+(?!\d))'),
+      (Match m) => '${m[1]},',
+    );
+    
+    return '$formattedInteger.$decimalPart';
+  }
+
   @override
   Widget build(BuildContext context) {
     return LayoutBuilder(
@@ -212,7 +227,7 @@ class _PricingSummarySidebarState extends State<PricingSummarySidebar> {
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
                     Text(
-                      widget.grandTotal.toStringAsFixed(0),
+                      _formatNumberWithDecimals(widget.grandTotal),
                       style: const TextStyle(
                         fontSize: 30,
                         fontWeight: FontWeight.w900,

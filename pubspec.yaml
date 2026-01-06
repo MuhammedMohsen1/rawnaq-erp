@@ -37,6 +37,7 @@ dependencies:
   syncfusion_flutter_charts: ^30.1.37
   gantt_chart: ^0.3.0
   image_picker: ^1.0.7
+  file_picker: ^8.1.4
   web: ^1.1.1
   url_launcher: ^6.2.5
   crop_your_image: ^2.0.0

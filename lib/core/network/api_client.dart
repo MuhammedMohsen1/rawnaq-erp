@@ -83,12 +83,14 @@ class ApiClient {
 
   Future<Response> delete(
     String endpoint, {
+    dynamic data,
     Map<String, dynamic>? queryParameters,
     Options? options,
   }) async {
     try {
       return await DioHelper.deleteData(
         url: endpoint,
+        data: data,
         queryParameters: queryParameters,
         options: options,
       );

@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import '../../../../core/network/api_client.dart';
 import '../../../../core/constants/endpoints.dart';
 import '../models/pricing_version_model.dart';
@@ -7,19 +8,21 @@ class PricingApiDataSource {
   final ApiClient _apiClient;
 
   PricingApiDataSource({ApiClient? apiClient})
-      : _apiClient = apiClient ?? ApiClient();
+    : _apiClient = apiClient ?? ApiClient();
 
   /// Get all pricing versions for a project
   Future<List<PricingVersionModel>> getPricingVersions(String projectId) async {
     final response = await _apiClient.get(
       ApiEndpoints.pricingVersions(projectId),
     );
-    
+
     final responseData = response.data as Map<String, dynamic>;
     final data = responseData['data'] as List;
-    
+
     return data
-        .map((json) => PricingVersionModel.fromJson(json as Map<String, dynamic>))
+        .map(
+          (json) => PricingVersionModel.fromJson(json as Map<String, dynamic>),
+        )
         .toList();
   }
 
@@ -31,9 +34,11 @@ class PricingApiDataSource {
     final response = await _apiClient.get(
       ApiEndpoints.pricingVersion(projectId, version),
     );
-    
+
     final responseData = response.data as Map<String, dynamic>;
-    return PricingVersionModel.fromJson(responseData['data'] as Map<String, dynamic>);
+    return PricingVersionModel.fromJson(
+      responseData['data'] as Map<String, dynamic>,
+    );
   }
 
   /// Create a new pricing version
@@ -43,13 +48,13 @@ class PricingApiDataSource {
   }) async {
     final response = await _apiClient.post(
       ApiEndpoints.pricingVersions(projectId),
-      data: {
-        if (notes != null) 'notes': notes,
-      },
+      data: {if (notes != null) 'notes': notes},
     );
-    
+
     final responseData = response.data as Map<String, dynamic>;
-    return PricingVersionModel.fromJson(responseData['data'] as Map<String, dynamic>);
+    return PricingVersionModel.fromJson(
+      responseData['data'] as Map<String, dynamic>,
+    );
   }
 
   /// Add a pricing item
@@ -68,9 +73,11 @@ class PricingApiDataSource {
         if (order != null) 'order': order,
       },
     );
-    
+
     final responseData = response.data as Map<String, dynamic>;
-    return PricingItemModel.fromJson(responseData['data'] as Map<String, dynamic>);
+    return PricingItemModel.fromJson(
+      responseData['data'] as Map<String, dynamic>,
+    );
   }
 
   /// Add a pricing sub-item
@@ -90,9 +97,107 @@ class PricingApiDataSource {
         if (order != null) 'order': order,
       },
     );
-    
+
     final responseData = response.data as Map<String, dynamic>;
-    return PricingSubItemModel.fromJson(responseData['data'] as Map<String, dynamic>);
+    return PricingSubItemModel.fromJson(
+      responseData['data'] as Map<String, dynamic>,
+    );
+  }
+
+  /// Upload images to a pricing sub-item
+  /// imagePaths: List of file paths (for desktop/mobile)
+  /// imageBytes: Optional list of (bytes, filename) tuples (for web)
+  Future<PricingSubItemModel> uploadSubItemImages(
+    String projectId,
+    int version,
+    String itemId,
+    String subItemId,
+    List<String> imagePaths, {
+    List<MapEntry<String, List<int>>>? imageBytes,
+  }) async {
+    if (imagePaths.isEmpty && (imageBytes == null || imageBytes.isEmpty)) {
+      throw Exception('No image paths or bytes provided');
+    }
+
+    final formData = FormData();
+
+    // Add files from paths (desktop/mobile)
+    for (var imagePath in imagePaths) {
+      print('Adding image to FormData: $imagePath');
+      final fileName = imagePath.split('/').last;
+      try {
+        final multipartFile = await MultipartFile.fromFile(
+          imagePath,
+          filename: fileName,
+        );
+        formData.files.add(MapEntry('images', multipartFile));
+        print('Successfully added image: $fileName');
+      } catch (e) {
+        print('Error adding image $imagePath: $e');
+        throw Exception('Failed to read image file: $imagePath. Error: $e');
+      }
+    }
+
+    // Add files from bytes (web)
+    if (imageBytes != null) {
+      for (var entry in imageBytes) {
+        final fileName = entry.key;
+        final bytes = entry.value;
+        print('Adding image from bytes: $fileName (${bytes.length} bytes)');
+        try {
+          final multipartFile = MultipartFile.fromBytes(
+            bytes,
+            filename: fileName,
+          );
+          formData.files.add(MapEntry('images', multipartFile));
+          print('Successfully added image from bytes: $fileName');
+        } catch (e) {
+          print('Error adding image from bytes $fileName: $e');
+          throw Exception(
+            'Failed to create multipart file from bytes: $fileName. Error: $e',
+          );
+        }
+      }
+    }
+
+    print(
+      'Uploading ${formData.files.length} images to endpoint: ${ApiEndpoints.pricingSubItemImages(projectId, version, itemId, subItemId)}',
+    );
+
+    final response = await _apiClient.uploadFile(
+      ApiEndpoints.pricingSubItemImages(projectId, version, itemId, subItemId),
+      formData: formData,
+    );
+
+    print('Upload response received');
+    final responseData = response.data as Map<String, dynamic>;
+    return PricingSubItemModel.fromJson(
+      responseData['data'] as Map<String, dynamic>,
+    );
+  }
+
+  /// Delete an image from a pricing sub-item
+  Future<PricingSubItemModel> deleteSubItemImage(
+    String projectId,
+    int version,
+    String itemId,
+    String subItemId,
+    String imageUrl,
+  ) async {
+    final response = await _apiClient.delete(
+      ApiEndpoints.deletePricingSubItemImage(
+        projectId,
+        version,
+        itemId,
+        subItemId,
+      ),
+      data: {'imageUrl': imageUrl},
+    );
+
+    final responseData = response.data as Map<String, dynamic>;
+    return PricingSubItemModel.fromJson(
+      responseData['data'] as Map<String, dynamic>,
+    );
   }
 
   /// Add a pricing element
@@ -119,9 +224,11 @@ class PricingApiDataSource {
         if (quantity != null) 'quantity': quantity,
       },
     );
-    
+
     final responseData = response.data as Map<String, dynamic>;
-    return PricingElementModel.fromJson(responseData['data'] as Map<String, dynamic>);
+    return PricingElementModel.fromJson(
+      responseData['data'] as Map<String, dynamic>,
+    );
   }
 
   /// Update a pricing item
@@ -143,9 +250,11 @@ class PricingApiDataSource {
         if (order != null) 'order': order,
       },
     );
-    
+
     final responseData = response.data as Map<String, dynamic>;
-    return PricingItemModel.fromJson(responseData['data'] as Map<String, dynamic>);
+    return PricingItemModel.fromJson(
+      responseData['data'] as Map<String, dynamic>,
+    );
   }
 
   /// Delete a pricing item
@@ -174,7 +283,13 @@ class PricingApiDataSource {
     double? quantity,
   }) async {
     final response = await _apiClient.patch(
-      ApiEndpoints.pricingElement(projectId, version, itemId, subItemId, elementId),
+      ApiEndpoints.pricingElement(
+        projectId,
+        version,
+        itemId,
+        subItemId,
+        elementId,
+      ),
       data: {
         if (name != null) 'name': name,
         if (description != null) 'description': description,
@@ -184,9 +299,11 @@ class PricingApiDataSource {
         if (quantity != null) 'quantity': quantity,
       },
     );
-    
+
     final responseData = response.data as Map<String, dynamic>;
-    return PricingElementModel.fromJson(responseData['data'] as Map<String, dynamic>);
+    return PricingElementModel.fromJson(
+      responseData['data'] as Map<String, dynamic>,
+    );
   }
 
   /// Delete a pricing element
@@ -198,7 +315,13 @@ class PricingApiDataSource {
     String elementId,
   ) async {
     await _apiClient.delete(
-      ApiEndpoints.pricingElement(projectId, version, itemId, subItemId, elementId),
+      ApiEndpoints.pricingElement(
+        projectId,
+        version,
+        itemId,
+        subItemId,
+        elementId,
+      ),
     );
   }
 
@@ -206,19 +329,19 @@ class PricingApiDataSource {
   Future<PricingVersionModel> calculateProfit(
     String projectId,
     int version, {
-    required List<Map<String, dynamic>> items, // [{itemId: string, profitMargin: number}]
+    required List<Map<String, dynamic>>
+    items, // [{itemId: string, profitMargin: number}]
     String? notes,
   }) async {
     final response = await _apiClient.post(
       ApiEndpoints.calculateProfit(projectId, version),
-      data: {
-        'items': items,
-        if (notes != null) 'notes': notes,
-      },
+      data: {'items': items, if (notes != null) 'notes': notes},
     );
-    
+
     final responseData = response.data as Map<String, dynamic>;
-    return PricingVersionModel.fromJson(responseData['data'] as Map<String, dynamic>);
+    return PricingVersionModel.fromJson(
+      responseData['data'] as Map<String, dynamic>,
+    );
   }
 
   /// Submit pricing for approval
@@ -229,13 +352,13 @@ class PricingApiDataSource {
   }) async {
     final response = await _apiClient.post(
       ApiEndpoints.submitForApproval(projectId, version),
-      data: {
-        if (comments != null) 'comments': comments,
-      },
+      data: {if (comments != null) 'comments': comments},
     );
-    
+
     final responseData = response.data as Map<String, dynamic>;
-    return PricingVersionModel.fromJson(responseData['data'] as Map<String, dynamic>);
+    return PricingVersionModel.fromJson(
+      responseData['data'] as Map<String, dynamic>,
+    );
   }
 
   /// Approve pricing
@@ -246,13 +369,13 @@ class PricingApiDataSource {
   }) async {
     final response = await _apiClient.patch(
       ApiEndpoints.approvePricing(projectId, version),
-      data: {
-        if (comments != null) 'comments': comments,
-      },
+      data: {if (comments != null) 'comments': comments},
     );
-    
+
     final responseData = response.data as Map<String, dynamic>;
-    return PricingVersionModel.fromJson(responseData['data'] as Map<String, dynamic>);
+    return PricingVersionModel.fromJson(
+      responseData['data'] as Map<String, dynamic>,
+    );
   }
 
   /// Reject pricing
@@ -263,13 +386,29 @@ class PricingApiDataSource {
   }) async {
     final response = await _apiClient.patch(
       ApiEndpoints.rejectPricing(projectId, version),
-      data: {
-        if (comments != null) 'comments': comments,
-      },
+      data: {if (comments != null) 'comments': comments},
     );
-    
+
     final responseData = response.data as Map<String, dynamic>;
-    return PricingVersionModel.fromJson(responseData['data'] as Map<String, dynamic>);
+    return PricingVersionModel.fromJson(
+      responseData['data'] as Map<String, dynamic>,
+    );
+  }
+
+  Future<void> deleteItem(String projectId, int version, String itemId) async {
+    await _apiClient.delete(
+      ApiEndpoints.deletePricingItem(projectId, version, itemId),
+    );
+  }
+
+  Future<void> deleteSubItem(
+    String projectId,
+    int version,
+    String itemId,
+    String subItemId,
+  ) async {
+    await _apiClient.delete(
+      ApiEndpoints.deletePricingSubItem(projectId, version, itemId, subItemId),
+    );
   }
 }
-

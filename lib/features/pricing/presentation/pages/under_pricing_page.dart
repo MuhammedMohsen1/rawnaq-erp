@@ -567,6 +567,8 @@ class _UnderPricingPageState extends State<UnderPricingPage> {
                 _handleItemExpandedChanged(item.id, isExpanded),
             onSubItemExpandedChanged: (subItemStates) =>
                 _handleSubItemExpandedChanged(item.id, subItemStates),
+            onItemDeleted: () => _loadPricingData(),
+            onSubItemDeleted: (_) => _loadPricingData(),
             onItemChanged: (_) {
               // Reload data but preserve widget state using keys
               _loadPricingData();
