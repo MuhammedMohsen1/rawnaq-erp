@@ -191,8 +191,9 @@ class _UnderPricingPageState extends State<UnderPricingPage> {
   Future<void> _returnToPricing() async {
     if (_pricingVersion == null) return;
 
-    // Check if pricing version is in PENDING_APPROVAL or PROFIT_PENDING status
+    // Check if pricing version is in PENDING_APPROVAL, APPROVED, or PROFIT_PENDING status
     if (_pricingVersion!.status != 'PENDING_APPROVAL' &&
+        _pricingVersion!.status != 'APPROVED' &&
         _pricingVersion!.status != 'PROFIT_PENDING') {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -1229,7 +1230,7 @@ class _UnderPricingPageState extends State<UnderPricingPage> {
 
   Widget _buildSidebar() {
     // Check if we should show return to pricing button
-    // Anyone can return a pricing version that is in PENDING_APPROVAL or PROFIT_PENDING status
+    // Anyone can return a pricing version that is in PENDING_APPROVAL, APPROVED, or PROFIT_PENDING status
     final authState = context.read<AuthBloc>().state;
     final isAuthenticated = authState is AuthAuthenticated;
 
@@ -1238,6 +1239,7 @@ class _UnderPricingPageState extends State<UnderPricingPage> {
       final currentStatus = _pricingVersion!.status.toUpperCase();
       showReturnButton =
           currentStatus == 'PENDING_APPROVAL' ||
+          currentStatus == 'APPROVED' ||
           currentStatus == 'PROFIT_PENDING';
     }
     // Check if user is Admin or Manager
@@ -1268,6 +1270,10 @@ class _UnderPricingPageState extends State<UnderPricingPage> {
       isProfitPending = currentStatus == 'PROFIT_PENDING';
     }
 
+    // Ensure return to pricing button is always available for APPROVED or PROFIT_PENDING status
+    final shouldShowReturnButton =
+        showReturnButton || isApproved || isProfitPending;
+
     return ConstrainedBox(
       constraints: BoxConstraints(
         maxHeight: MediaQuery.of(context).size.height,
@@ -1278,8 +1284,8 @@ class _UnderPricingPageState extends State<UnderPricingPage> {
         totalProfit: _pricingVersion?.totalProfit,
         totalElements: _getTotalElementsCount(),
         lastSaveTime: _formatLastSaveTime(_pricingVersion?.updatedAt),
-        showReturnToPricing: showReturnButton,
-        onReturnToPricing: showReturnButton ? _returnToPricing : null,
+        showReturnToPricing: shouldShowReturnButton,
+        onReturnToPricing: shouldShowReturnButton ? _returnToPricing : null,
         isAdminOrManager: isAdminOrManager,
         isPendingApproval: isPendingApproval,
         onAcceptPricing: isAdminOrManager && isPendingApproval

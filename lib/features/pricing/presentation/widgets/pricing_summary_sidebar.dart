@@ -483,7 +483,7 @@ class _PricingSummarySidebarState extends State<PricingSummarySidebar> {
                   ),
                   const SizedBox(height: 12),
                 ],
-                // Export PDF and Return to Pricing Buttons (only show for Admin/Manager when status is APPROVED)
+                // Export PDF Button (only show for Admin/Manager when status is APPROVED)
                 if (widget.isAdminOrManager &&
                     widget.isApproved &&
                     widget.onExportPdf != null) ...[
@@ -517,37 +517,6 @@ class _PricingSummarySidebarState extends State<PricingSummarySidebar> {
                       ),
                     ),
                   ),
-                  const SizedBox(height: 12),
-                  if (widget.onReturnToPricing != null)
-                    SizedBox(
-                      width: double.infinity,
-                      height: 50,
-                      child: OutlinedButton(
-                        onPressed: widget.onReturnToPricing,
-                        style: OutlinedButton.styleFrom(
-                          foregroundColor: AppColors.error,
-                          side: const BorderSide(color: AppColors.error),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                        ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            const Icon(Icons.arrow_back, size: 24),
-                            const SizedBox(width: 8),
-                            Text(
-                              'إرجاع للتسعير',
-                              style: AppTextStyles.buttonLarge.copyWith(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w600,
-                                color: AppColors.error,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
                   const SizedBox(height: 12),
                 ],
                 // Confirm and Return to Pricing Buttons (only show for PROFIT_PENDING status)
@@ -608,37 +577,6 @@ class _PricingSummarySidebarState extends State<PricingSummarySidebar> {
                                 fontSize: 16,
                                 fontWeight: FontWeight.w600,
                                 color: const Color(0xFF6366F1),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  const SizedBox(height: 12),
-                  if (widget.onReturnToPricing != null)
-                    SizedBox(
-                      width: double.infinity,
-                      height: 50,
-                      child: OutlinedButton(
-                        onPressed: widget.onReturnToPricing,
-                        style: OutlinedButton.styleFrom(
-                          foregroundColor: AppColors.error,
-                          side: const BorderSide(color: AppColors.error),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                        ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            const Icon(Icons.arrow_back, size: 24),
-                            const SizedBox(width: 8),
-                            Text(
-                              'إرجاع للتسعير',
-                              style: AppTextStyles.buttonLarge.copyWith(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w600,
-                                color: AppColors.error,
                               ),
                             ),
                           ],
