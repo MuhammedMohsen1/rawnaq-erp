@@ -249,6 +249,7 @@ abstract class ApiEndpoints {
   static String deletePricingSubItemImage(String projectId, int version, String itemId, String subItemId) => '/projects/$projectId/pricing/$version/items/$itemId/sub-items/$subItemId/images';
   static String pricingElements(String projectId, int version, String itemId, String subItemId) => '/projects/$projectId/pricing/$version/items/$itemId/sub-items/$subItemId/elements';
   static String pricingElement(String projectId, int version, String itemId, String subItemId, String elementId) => '/projects/$projectId/pricing/$version/items/$itemId/sub-items/$subItemId/elements/$elementId';
+  static String updateSubItemProfitMargin(String projectId, int version, String itemId, String subItemId) => '/projects/$projectId/pricing/$version/items/$itemId/sub-items/$subItemId/profit-margin';
   static String calculateProfit(String projectId, int version) => '/projects/$projectId/pricing/$version/calculate-profit';
   static String calculateSubItemProfit(String projectId, int version) => '/projects/$projectId/pricing/$version/calculate-subitem-profit';
   static String submitForApproval(String projectId, int version) => '/projects/$projectId/pricing/$version/submit-approval';
@@ -256,4 +257,5 @@ abstract class ApiEndpoints {
   static String rejectPricing(String projectId, int version) => '/projects/$projectId/pricing/$version/reject';
   static String returnToPricing(String projectId, int version) => '/projects/$projectId/pricing/$version/return-to-pricing';
   static String confirmPricing(String projectId, int version) => '/projects/$projectId/pricing/$version/confirm';
+  static String exportPricingPdf(String projectId, int version) => '/projects/$projectId/pricing/$version/export-pdf';
 }

@@ -1,9 +1,12 @@
+import 'dart:io';
 import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:open_file/open_file.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_text_styles.dart';
 import '../../../../core/error/exceptions.dart';
@@ -431,11 +434,16 @@ class _UnderPricingPageState extends State<UnderPricingPage> {
           }
         }
       }
-      await _apiDataSource.calculateProfitForSubItems(
+      final updatedVersion = await _apiDataSource.calculateProfitForSubItems(
         widget.projectId,
         _pricingVersion!.version,
         items: subItems,
       );
+      // Update local state with the response which includes updated totals
+      setState(() {
+        _pricingVersion = updatedVersion;
+      });
+      // Also reload to get full data with items
       await _loadPricingData();
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -528,6 +536,113 @@ class _UnderPricingPageState extends State<UnderPricingPage> {
           errorMessage = 'فشل تأكيد التسعير: ${e.message}';
         } else {
           errorMessage = 'فشل تأكيد التسعير: ${e.toString()}';
+        }
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(errorMessage),
+            duration: const Duration(seconds: 5),
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _exportPricingPdf() async {
+    if (_pricingVersion == null) return;
+    // Allow export when status is APPROVED or PROFIT_PENDING
+    if (_pricingVersion!.status != 'APPROVED' &&
+        _pricingVersion!.status != 'PROFIT_PENDING') {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'لا يمكن تصدير PDF. الحالة الحالية: "${_getStatusText()}"',
+            ),
+            duration: const Duration(seconds: 4),
+          ),
+        );
+      }
+      return;
+    }
+
+    try {
+      // Show loading indicator
+      if (mounted) {
+        showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (context) =>
+              const Center(child: CircularProgressIndicator()),
+        );
+      }
+
+      // Download PDF
+      final pdfBytes = await _apiDataSource.exportPricingPdf(
+        widget.projectId,
+        _pricingVersion!.version,
+      );
+
+      // Get downloads directory
+      final directory = await getDownloadsDirectory();
+      if (directory == null) {
+        if (mounted) {
+          Navigator.of(context).pop(); // Close loading dialog
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('فشل الحصول على مجلد التحميل'),
+              duration: Duration(seconds: 4),
+            ),
+          );
+        }
+        return;
+      }
+
+      // Create filename
+      final projectName = _projectName ?? 'project';
+      final fileName =
+          'pricing-${projectName}-v${_pricingVersion!.version}-${DateFormat('yyyy-MM-dd').format(DateTime.now())}.pdf';
+      final file = File('${directory.path}/$fileName');
+
+      // Write PDF to file
+      await file.writeAsBytes(pdfBytes);
+
+      // Close loading dialog
+      if (mounted) {
+        Navigator.of(context).pop();
+      }
+
+      // Open the PDF file
+      final result = await OpenFile.open(file.path);
+
+      if (mounted) {
+        if (result.type == ResultType.done) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('تم تصدير PDF بنجاح: $fileName'),
+              duration: const Duration(seconds: 3),
+            ),
+          );
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('تم حفظ PDF في: ${file.path}'),
+              duration: const Duration(seconds: 4),
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        // Close loading dialog if still open
+        Navigator.of(context, rootNavigator: true).pop();
+
+        String errorMessage = 'فشل تصدير PDF';
+        if (e is ServerException) {
+          errorMessage = 'فشل تصدير PDF: ${e.message}';
+        } else if (e is ValidationException) {
+          errorMessage = 'فشل تصدير PDF: ${e.message}';
+        } else {
+          errorMessage = 'فشل تصدير PDF: ${e.toString()}';
         }
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -1146,6 +1261,9 @@ class _UnderPricingPageState extends State<UnderPricingPage> {
         isProfitPending: isProfitPending,
         onMakeProfit: isAdminOrManager && isApproved ? _makeProfit : null,
         onConfirmPricing: isProfitPending ? _confirmPricing : null,
+        onExportPdf: (isAdminOrManager && isApproved) || isProfitPending
+            ? _exportPricingPdf
+            : null,
         onSubmit: () async {
           if (_pricingVersion == null) return;
 

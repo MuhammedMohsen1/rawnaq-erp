@@ -107,6 +107,8 @@ class _PricingItemCardState extends State<PricingItemCard> {
   final Map<String, Timer?> _updateTimers = {}; // elementId -> debounce timer
   final Map<String, PricingItem> _pendingUpdates =
       {}; // elementId -> latest PricingItem values
+  final Map<String, Timer?> _profitMarginTimers =
+      {}; // subItemId -> debounce timer for profit margin updates
   final Map<String, bool> _uploadingImages = {}; // subItemId -> isUploading
   final Map<String, bool> _deletingImages = {}; // imageUrl -> isDeleting
   final Map<String, double> _profitMargins =
@@ -186,6 +188,11 @@ class _PricingItemCardState extends State<PricingItemCard> {
       timer?.cancel();
     }
     _updateTimers.clear();
+    // Cancel all pending profit margin update timers
+    for (var timer in _profitMarginTimers.values) {
+      timer?.cancel();
+    }
+    _profitMarginTimers.clear();
     super.dispose();
   }
 
@@ -1801,7 +1808,7 @@ class _PricingItemCardState extends State<PricingItemCard> {
                                                       final totalPrice =
                                                           cost + profit;
 
-                                                      // Update subItem profit margin
+                                                      // Update subItem profit margin locally
                                                       if (widget
                                                               .onSubItemChanged !=
                                                           null) {
@@ -1835,6 +1842,114 @@ class _PricingItemCardState extends State<PricingItemCard> {
                                                         widget
                                                             .onSubItemChanged!(
                                                           updatedSubItem,
+                                                        );
+                                                      }
+
+                                                      // Only call API if status is APPROVED
+                                                      final status = widget
+                                                          .pricingStatus
+                                                          ?.toUpperCase()
+                                                          .trim();
+                                                      print(
+                                                        'Profit margin changed: $clampedMargin, Status: $status',
+                                                      );
+                                                      if (status ==
+                                                          'APPROVED') {
+                                                        print(
+                                                          'Status is APPROVED, setting up API call timer',
+                                                        );
+                                                        // Cancel previous timer for this sub-item
+                                                        _profitMarginTimers[subItem
+                                                                .id]
+                                                            ?.cancel();
+
+                                                        // Debounce API call (wait 800ms after user stops typing)
+                                                        _profitMarginTimers[subItem
+                                                            .id] = Timer(
+                                                          const Duration(
+                                                            milliseconds: 800,
+                                                          ),
+                                                          () async {
+                                                            try {
+                                                              print(
+                                                                'Calling API to update profit margin for subItem: ${subItem.id}, margin: $clampedMargin',
+                                                              );
+                                                              // Call API to update profit margin
+                                                              await _apiDataSource
+                                                                  .updateSubItemProfitMargin(
+                                                                    widget
+                                                                        .projectId,
+                                                                    widget
+                                                                        .version,
+                                                                    widget
+                                                                        .item
+                                                                        .id,
+                                                                    subItem.id,
+                                                                    clampedMargin,
+                                                                  );
+                                                              print(
+                                                                'API call successful',
+                                                              );
+
+                                                              // Reload pricing data to get updated values
+                                                              final updatedVersion =
+                                                                  await _apiDataSource
+                                                                      .getPricingVersion(
+                                                                        widget
+                                                                            .projectId,
+                                                                        widget
+                                                                            .version,
+                                                                      );
+
+                                                              // Notify parent to reload data
+                                                              if (widget
+                                                                      .onItemChanged !=
+                                                                  null) {
+                                                                // Find the updated item in the response
+                                                                final updatedItem = updatedVersion
+                                                                    .items
+                                                                    ?.firstWhere(
+                                                                      (item) =>
+                                                                          item.id ==
+                                                                          widget
+                                                                              .item
+                                                                              .id,
+                                                                    );
+                                                                if (updatedItem !=
+                                                                    null) {
+                                                                  widget
+                                                                      .onItemChanged!(
+                                                                    updatedItem,
+                                                                  );
+                                                                }
+                                                              }
+                                                            } catch (e) {
+                                                              print(
+                                                                'Error updating profit margin: $e',
+                                                              );
+                                                              // Show error message
+                                                              if (mounted) {
+                                                                ScaffoldMessenger.of(
+                                                                  context,
+                                                                ).showSnackBar(
+                                                                  SnackBar(
+                                                                    content: Text(
+                                                                      'فشل تحديث نسبة الربح: ${e.toString()}',
+                                                                    ),
+                                                                    duration:
+                                                                        const Duration(
+                                                                          seconds:
+                                                                              3,
+                                                                        ),
+                                                                  ),
+                                                                );
+                                                              }
+                                                            }
+                                                          },
+                                                        );
+                                                      } else {
+                                                        print(
+                                                          'Status is not APPROVED, skipping API call. Status: $status',
                                                         );
                                                       }
                                                     },

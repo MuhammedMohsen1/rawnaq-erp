@@ -1,3 +1,4 @@
+import 'dart:typed_data';
 import 'package:dio/dio.dart';
 import '../../../../core/network/api_client.dart';
 import '../../../../core/constants/endpoints.dart';
@@ -503,6 +504,40 @@ class PricingApiDataSource {
     return PricingVersionModel.fromJson(
       responseData['data'] as Map<String, dynamic>,
     );
+  }
+
+  /// Update sub-item profit margin
+  Future<PricingSubItemModel> updateSubItemProfitMargin(
+    String projectId,
+    int version,
+    String itemId,
+    String subItemId,
+    double profitMargin,
+  ) async {
+    final response = await _apiClient.patch(
+      ApiEndpoints.updateSubItemProfitMargin(
+        projectId,
+        version,
+        itemId,
+        subItemId,
+      ),
+      data: {'profitMargin': profitMargin},
+    );
+
+    final responseData = response.data as Map<String, dynamic>;
+    return PricingSubItemModel.fromJson(
+      responseData['data'] as Map<String, dynamic>,
+    );
+  }
+
+  /// Export pricing PDF
+  Future<Uint8List> exportPricingPdf(String projectId, int version) async {
+    final response = await _apiClient.get(
+      ApiEndpoints.exportPricingPdf(projectId, version),
+      options: Options(responseType: ResponseType.bytes),
+    );
+
+    return response.data as Uint8List;
   }
 
   Future<void> deleteItem(String projectId, int version, String itemId) async {

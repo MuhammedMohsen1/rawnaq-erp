@@ -14,6 +14,7 @@ class PricingSummarySidebar extends StatefulWidget {
   final VoidCallback? onAcceptPricing;
   final VoidCallback? onMakeProfit;
   final VoidCallback? onConfirmPricing;
+  final VoidCallback? onExportPdf;
   final bool showReturnToPricing;
   final bool isAdminOrManager;
   final bool isPendingApproval;
@@ -33,6 +34,7 @@ class PricingSummarySidebar extends StatefulWidget {
     this.onAcceptPricing,
     this.onMakeProfit,
     this.onConfirmPricing,
+    this.onExportPdf,
     this.showReturnToPricing = false,
     this.isAdminOrManager = false,
     this.isPendingApproval = false,
@@ -305,8 +307,10 @@ class _PricingSummarySidebarState extends State<PricingSummarySidebar> {
                   ],
                 ),
                 const SizedBox(height: 16),
-                // Cost, Profit, Total Breakdown (show when profit is calculated)
-                if (widget.totalCost != null && widget.totalProfit != null) ...[
+                // Cost, Profit, Total Breakdown (show when profit is calculated or status is APPROVED/PROFIT_PENDING)
+                if ((widget.totalCost != null && widget.totalProfit != null) ||
+                    widget.isApproved ||
+                    widget.isProfitPending) ...[
                   // Total Cost
                   Container(
                     padding: const EdgeInsets.symmetric(
@@ -329,7 +333,7 @@ class _PricingSummarySidebarState extends State<PricingSummarySidebar> {
                           ),
                         ),
                         Text(
-                          '${_formatNumberWithDecimals(widget.totalCost!)} KD',
+                          '${_formatNumberWithDecimals(widget.totalCost ?? 0.0)} KD',
                           style: AppTextStyles.caption.copyWith(
                             fontSize: 12,
                             fontWeight: FontWeight.w700,
@@ -362,7 +366,7 @@ class _PricingSummarySidebarState extends State<PricingSummarySidebar> {
                           ),
                         ),
                         Text(
-                          '${_formatNumberWithDecimals(widget.totalProfit!)} KD',
+                          '${_formatNumberWithDecimals(widget.totalProfit ?? 0.0)} KD',
                           style: AppTextStyles.caption.copyWith(
                             fontSize: 12,
                             fontWeight: FontWeight.w700,
@@ -479,15 +483,15 @@ class _PricingSummarySidebarState extends State<PricingSummarySidebar> {
                   ),
                   const SizedBox(height: 12),
                 ],
-                // Make Profit and Return to Pricing Buttons (only show for Admin/Manager when status is APPROVED)
+                // Export PDF and Return to Pricing Buttons (only show for Admin/Manager when status is APPROVED)
                 if (widget.isAdminOrManager &&
                     widget.isApproved &&
-                    widget.onMakeProfit != null) ...[
+                    widget.onExportPdf != null) ...[
                   SizedBox(
                     width: double.infinity,
                     height: 56,
                     child: ElevatedButton(
-                      onPressed: widget.onMakeProfit,
+                      onPressed: widget.onExportPdf,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: const Color(0xFF6366F1),
                         foregroundColor: Colors.white,
@@ -500,10 +504,10 @@ class _PricingSummarySidebarState extends State<PricingSummarySidebar> {
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          const Icon(Icons.trending_up, size: 24),
+                          const Icon(Icons.picture_as_pdf, size: 24),
                           const SizedBox(width: 8),
                           Text(
-                            'حساب الربح',
+                            'تصدير PDF',
                             style: AppTextStyles.buttonLarge.copyWith(
                               fontSize: 16,
                               fontWeight: FontWeight.w700,
@@ -573,6 +577,37 @@ class _PricingSummarySidebarState extends State<PricingSummarySidebar> {
                               style: AppTextStyles.buttonLarge.copyWith(
                                 fontSize: 16,
                                 fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  const SizedBox(height: 12),
+                  if (widget.onExportPdf != null)
+                    SizedBox(
+                      width: double.infinity,
+                      height: 50,
+                      child: OutlinedButton(
+                        onPressed: widget.onExportPdf,
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: const Color(0xFF6366F1),
+                          side: const BorderSide(color: Color(0xFF6366F1)),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Icon(Icons.picture_as_pdf, size: 24),
+                            const SizedBox(width: 8),
+                            Text(
+                              'تصدير PDF',
+                              style: AppTextStyles.buttonLarge.copyWith(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                                color: const Color(0xFF6366F1),
                               ),
                             ),
                           ],
