@@ -2,6 +2,7 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_text_styles.dart';
 import '../../../../core/routing/app_router.dart';
@@ -253,6 +254,46 @@ class _UnderPricingPageState extends State<UnderPricingPage> {
       default:
         return AppColors.info;
     }
+  }
+
+  String? _formatLastSaveTime(DateTime? dateTime) {
+    if (dateTime == null) return null;
+
+    final now = DateTime.now();
+    final difference = now.difference(dateTime);
+
+    // If less than a minute ago, show "الآن" (Now)
+    if (difference.inSeconds < 60) {
+      return null; // Will show "الآن" in the UI
+    }
+
+    // If less than an hour ago, show minutes
+    if (difference.inHours < 1) {
+      final minutes = difference.inMinutes;
+      return 'منذ $minutes ${minutes == 1 ? 'دقيقة' : 'دقائق'}';
+    }
+
+    // If less than a day ago, show hours
+    if (difference.inDays < 1) {
+      final hours = difference.inHours;
+      return 'منذ $hours ${hours == 1 ? 'ساعة' : 'ساعات'}';
+    }
+
+    // If less than a week ago, show days
+    if (difference.inDays < 7) {
+      final days = difference.inDays;
+      return 'منذ $days ${days == 1 ? 'يوم' : 'أيام'}';
+    }
+
+    // If less than a month ago, show weeks
+    if (difference.inDays < 30) {
+      final weeks = (difference.inDays / 7).floor();
+      return 'منذ $weeks ${weeks == 1 ? 'أسبوع' : 'أسابيع'}';
+    }
+
+    // Otherwise, show formatted date in Arabic format
+    final dateFormat = DateFormat('yyyy/MM/dd HH:mm', 'ar');
+    return dateFormat.format(dateTime);
   }
 
   @override
@@ -632,8 +673,7 @@ class _UnderPricingPageState extends State<UnderPricingPage> {
       ),
       child: PricingSummarySidebar(
         grandTotal: _pricingVersion?.totalPrice ?? 0.0,
-        lastSaveTime:
-            _pricingVersion?.updatedAt.toString() ?? DateTime.now().toString(),
+        lastSaveTime: _formatLastSaveTime(_pricingVersion?.updatedAt),
         onSubmit: () async {
           if (_pricingVersion == null) return;
 

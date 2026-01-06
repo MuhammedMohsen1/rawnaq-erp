@@ -36,16 +36,25 @@ class User extends Equatable {
     final accountStatus = json['accountStatus'] as String?;
     final isActive = accountStatus == 'ACTIVE';
 
+    // Normalize role to lowercase (backend returns uppercase like "SITE_ENGINEER")
+    final rawRole = json['role'] as String;
+    final normalizedRole = rawRole.toLowerCase();
+
+    // Normalize adminSubRoles to lowercase if they exist
+    final List<String>? normalizedAdminSubRoles = json['adminSubRoles'] != null
+        ? (json['adminSubRoles'] as List)
+            .map((subRole) => (subRole as String).toLowerCase())
+            .toList()
+        : null;
+
     return User(
       id: json['id'] as String,
       email: json['email'] as String,
       name: json['name'] as String,
       phone: json['phone'] as String?,
       avatar: json['avatar'] as String?,
-      role: json['role'] as String,
-      adminSubRoles: json['adminSubRoles'] != null
-          ? List<String>.from(json['adminSubRoles'] as List)
-          : null,
+      role: normalizedRole,
+      adminSubRoles: normalizedAdminSubRoles,
       isActive: json['isActive'] as bool? ?? isActive,
       createdAt: DateTime.parse(json['createdAt'] as String),
       lastLoginAt: json['lastLoginAt'] != null

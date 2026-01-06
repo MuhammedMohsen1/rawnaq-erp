@@ -699,7 +699,7 @@ class _PricingItemCardState extends State<PricingItemCard> {
         Expanded(
           child: Container(
             width: double.infinity,
-            margin: const EdgeInsets.all(12),
+            margin: const EdgeInsets.all(4),
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(8),
               border: Border.all(color: const Color(0xFF363C4A)),
@@ -1548,119 +1548,126 @@ class _PricingItemCardState extends State<PricingItemCard> {
                                     if (subItem.images.isNotEmpty ||
                                         _uploadingImages[subItem.id] ==
                                             true) ...[
-                                      SizedBox(
-                                        width: 400,
-                                        height:
-                                            600, // Fixed height to constrain the Column
-                                        child: Container(
-                                          margin: const EdgeInsets.only(
-                                            right: 16,
-                                          ),
-                                          padding: const EdgeInsets.all(12),
-                                          decoration: BoxDecoration(
-                                            border: Border.all(
-                                              color: const Color(0xFF363C4A),
+                                      Container(
+                                        margin: const EdgeInsets.only(
+                                          right: 0,
+                                          top: 12,
+                                          bottom: 12,
+                                        ),
+                                        child: SizedBox(
+                                          width: 400,
+                                          height:
+                                              600, // Fixed height to constrain the Column
+                                          child: Container(
+                                            padding: const EdgeInsets.all(12),
+                                            decoration: BoxDecoration(
+                                              border: Border.all(
+                                                color: const Color(0xFF363C4A),
+                                              ),
+                                              borderRadius:
+                                                  BorderRadius.circular(8),
+                                              color: const Color(0xFF1C212B),
                                             ),
-                                            borderRadius: BorderRadius.circular(
-                                              8,
-                                            ),
-                                            color: const Color(0xFF1C212B),
-                                          ),
-                                          child: Column(
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.start,
-                                            mainAxisSize: MainAxisSize.min,
-                                            children: [
-                                              // Images Header
-                                              Container(
-                                                padding: const EdgeInsets.all(
-                                                  12,
-                                                ),
-                                                decoration: const BoxDecoration(
-                                                  border: Border(
-                                                    bottom: BorderSide(
-                                                      color: Color(0xFF363C4A),
-                                                    ),
+                                            child: Column(
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
+                                              mainAxisSize: MainAxisSize.min,
+                                              children: [
+                                                // Images Header
+                                                Container(
+                                                  padding: const EdgeInsets.all(
+                                                    12,
                                                   ),
-                                                ),
-                                                child: Row(
-                                                  children: [
-                                                    Text(
-                                                      subItem.images.isEmpty
-                                                          ? '0/0 Photos'
-                                                          : '${(_selectedImageIndex[subItem.id] ?? 0) + 1}/${subItem.images.length} Photos',
-                                                      style: AppTextStyles
-                                                          .bodyMedium
-                                                          .copyWith(
-                                                            fontWeight:
-                                                                FontWeight.w600,
-                                                          ),
-                                                    ),
-                                                    const Spacer(),
-                                                    if (_uploadingImages[subItem
-                                                            .id] ==
-                                                        true)
-                                                      const SizedBox(
-                                                        width: 16,
-                                                        height: 16,
-                                                        child:
-                                                            CircularProgressIndicator(
-                                                              strokeWidth: 2,
-                                                              color: AppColors
-                                                                  .primary,
-                                                            ),
-                                                      )
-                                                    else
-                                                      Material(
-                                                        color:
-                                                            Colors.transparent,
-                                                        child: InkWell(
-                                                          onTap: () {
-                                                            print(
-                                                              'Upload button clicked for subItem: ${subItem.id}',
-                                                            );
-                                                            _uploadImages(
-                                                              subItem.id,
-                                                            );
-                                                          },
-                                                          borderRadius:
-                                                              BorderRadius.circular(
-                                                                4,
-                                                              ),
-                                                          child: Container(
-                                                            padding:
-                                                                const EdgeInsets.all(
-                                                                  4,
-                                                                ),
-                                                            child: const Icon(
-                                                              Icons
-                                                                  .add_photo_alternate,
-                                                              size: 18,
-                                                              color: AppColors
-                                                                  .primary,
+                                                  decoration:
+                                                      const BoxDecoration(
+                                                        border: Border(
+                                                          bottom: BorderSide(
+                                                            color: Color(
+                                                              0xFF363C4A,
                                                             ),
                                                           ),
                                                         ),
                                                       ),
-                                                  ],
-                                                ),
-                                              ),
-                                              // Main Image Display
-                                              Expanded(
-                                                child: subItem.images.isEmpty
-                                                    ? const Center(
-                                                        child:
-                                                            CircularProgressIndicator(
-                                                              strokeWidth: 2,
-                                                              color: AppColors
-                                                                  .primary,
+                                                  child: Row(
+                                                    children: [
+                                                      Text(
+                                                        subItem.images.isEmpty
+                                                            ? '0/0 Photos'
+                                                            : '${(_selectedImageIndex[subItem.id] ?? 0) + 1}/${subItem.images.length} Photos',
+                                                        style: AppTextStyles
+                                                            .bodyMedium
+                                                            .copyWith(
+                                                              fontWeight:
+                                                                  FontWeight
+                                                                      .w600,
                                                             ),
-                                                      )
-                                                    : _buildImagePreview(
-                                                        subItem,
                                                       ),
-                                              ),
-                                            ],
+                                                      const Spacer(),
+                                                      if (_uploadingImages[subItem
+                                                              .id] ==
+                                                          true)
+                                                        const SizedBox(
+                                                          width: 16,
+                                                          height: 16,
+                                                          child:
+                                                              CircularProgressIndicator(
+                                                                strokeWidth: 2,
+                                                                color: AppColors
+                                                                    .primary,
+                                                              ),
+                                                        )
+                                                      else
+                                                        Material(
+                                                          color: Colors
+                                                              .transparent,
+                                                          child: InkWell(
+                                                            onTap: () {
+                                                              print(
+                                                                'Upload button clicked for subItem: ${subItem.id}',
+                                                              );
+                                                              _uploadImages(
+                                                                subItem.id,
+                                                              );
+                                                            },
+                                                            borderRadius:
+                                                                BorderRadius.circular(
+                                                                  4,
+                                                                ),
+                                                            child: Container(
+                                                              padding:
+                                                                  const EdgeInsets.all(
+                                                                    4,
+                                                                  ),
+                                                              child: const Icon(
+                                                                Icons
+                                                                    .add_photo_alternate,
+                                                                size: 18,
+                                                                color: AppColors
+                                                                    .primary,
+                                                              ),
+                                                            ),
+                                                          ),
+                                                        ),
+                                                    ],
+                                                  ),
+                                                ),
+                                                // Main Image Display
+                                                Expanded(
+                                                  child: subItem.images.isEmpty
+                                                      ? const Center(
+                                                          child:
+                                                              CircularProgressIndicator(
+                                                                strokeWidth: 2,
+                                                                color: AppColors
+                                                                    .primary,
+                                                              ),
+                                                        )
+                                                      : _buildImagePreview(
+                                                          subItem,
+                                                        ),
+                                                ),
+                                              ],
+                                            ),
                                           ),
                                         ),
                                       ),

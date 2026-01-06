@@ -1,71 +1,130 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_text_styles.dart';
 import '../../../../core/routing/app_router.dart';
 import '../../../../core/utils/responsive_layout.dart';
+import '../../domain/entities/project_entity.dart';
+import '../../domain/enums/project_status.dart';
+import '../bloc/projects_bloc.dart';
+import '../bloc/projects_event.dart';
+import '../bloc/projects_state.dart';
 
-class SiteEngineerDashboardPage extends StatelessWidget {
+class SiteEngineerDashboardPage extends StatefulWidget {
   const SiteEngineerDashboardPage({super.key});
 
   @override
+  State<SiteEngineerDashboardPage> createState() => _SiteEngineerDashboardPageState();
+}
+
+class _SiteEngineerDashboardPageState extends State<SiteEngineerDashboardPage> {
+  @override
   Widget build(BuildContext context) {
-    return ResponsiveLayout(
-      mobile: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // ONGOING PROJECTS Section
-            _buildSectionTitle('المشاريع الجارية'),
-            const SizedBox(height: 16),
-            _buildOngoingProjectsMobile(),
-            const SizedBox(height: 32),
+    return BlocBuilder<ProjectsBloc, ProjectsState>(
+      builder: (context, state) {
+          if (state is ProjectsLoading) {
+            return const Center(
+              child: CircularProgressIndicator(),
+            );
+          }
 
-            // UNDER PRICING PROJECTS Section
-            _buildSectionTitle('المشاريع قيد التسعير'),
-            const SizedBox(height: 16),
-            _buildUnderPricingProjectsMobile(context),
-          ],
-        ),
-      ),
-      tablet: SingleChildScrollView(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // ONGOING PROJECTS Section
-            _buildSectionTitle('المشاريع الجارية'),
-            const SizedBox(height: 16),
-            _buildOngoingProjectsTablet(),
-            const SizedBox(height: 32),
+          if (state is ProjectsError) {
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    'حدث خطأ: ${state.message}',
+                    style: AppTextStyles.bodyLarge.copyWith(
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  ElevatedButton(
+                    onPressed: () {
+                      context.read<ProjectsBloc>().add(const LoadProjects());
+                    },
+                    child: const Text('إعادة المحاولة'),
+                  ),
+                ],
+              ),
+            );
+          }
 
-            // UNDER PRICING PROJECTS Section
-            _buildSectionTitle('المشاريع قيد التسعير'),
-            const SizedBox(height: 16),
-            _buildUnderPricingProjectsTablet(context),
-          ],
-        ),
-      ),
-      desktop: SingleChildScrollView(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // ONGOING PROJECTS Section
-            _buildSectionTitle('المشاريع الجارية'),
-            const SizedBox(height: 16),
-            _buildOngoingProjectsDesktop(),
-            const SizedBox(height: 32),
+          if (state is ProjectsLoaded) {
+            // Filter projects into two categories
+            final underPricingProjects = state.projects
+                .where((p) => p.status == ProjectStatus.underPricing)
+                .toList();
+            
+            final ongoingProjects = state.projects
+                .where((p) => p.status != ProjectStatus.underPricing &&
+                    p.status != ProjectStatus.completed &&
+                    p.status != ProjectStatus.cancelled)
+                .toList();
 
-            // UNDER PRICING PROJECTS Section
-            _buildSectionTitle('المشاريع قيد التسعير'),
-            const SizedBox(height: 16),
-            _buildUnderPricingProjectsDesktop(context),
-          ],
-        ),
-      ),
+            return ResponsiveLayout(
+              mobile: SingleChildScrollView(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // ONGOING PROJECTS Section
+                    _buildSectionTitle('المشاريع الجارية'),
+                    const SizedBox(height: 16),
+                    _buildOngoingProjectsMobile(ongoingProjects),
+                    const SizedBox(height: 32),
+
+                    // UNDER PRICING PROJECTS Section
+                    _buildSectionTitle('المشاريع قيد التسعير'),
+                    const SizedBox(height: 16),
+                    _buildUnderPricingProjectsMobile(context, underPricingProjects),
+                  ],
+                ),
+              ),
+              tablet: SingleChildScrollView(
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // ONGOING PROJECTS Section
+                    _buildSectionTitle('المشاريع الجارية'),
+                    const SizedBox(height: 16),
+                    _buildOngoingProjectsTablet(ongoingProjects),
+                    const SizedBox(height: 32),
+
+                    // UNDER PRICING PROJECTS Section
+                    _buildSectionTitle('المشاريع قيد التسعير'),
+                    const SizedBox(height: 16),
+                    _buildUnderPricingProjectsTablet(context, underPricingProjects),
+                  ],
+                ),
+              ),
+              desktop: SingleChildScrollView(
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // ONGOING PROJECTS Section
+                    _buildSectionTitle('المشاريع الجارية'),
+                    const SizedBox(height: 16),
+                    _buildOngoingProjectsDesktop(ongoingProjects),
+                    const SizedBox(height: 32),
+
+                    // UNDER PRICING PROJECTS Section
+                    _buildSectionTitle('المشاريع قيد التسعير'),
+                    const SizedBox(height: 16),
+                    _buildUnderPricingProjectsDesktop(context, underPricingProjects),
+                  ],
+                ),
+              ),
+            );
+          }
+
+          return const SizedBox.shrink();
+      },
     );
   }
 
@@ -80,159 +139,70 @@ class SiteEngineerDashboardPage extends StatelessWidget {
   }
 
   // Mobile layout: Stack vertically
-  Widget _buildOngoingProjectsMobile() {
-    return Builder(
-      builder: (context) => Column(
-        children: [
-          _buildOngoingProjectCard(
-            'أبو خالد',
-            75,
-            'منذ 5 ساعات',
-            projectId: 'proj-1',
-            context: context,
-          ),
-          const SizedBox(height: 16),
-          _buildOngoingProjectCard(
-            'أبو خالد',
-            75,
-            'منذ 5 ساعات',
-            projectId: 'proj-1',
-            context: context,
-          ),
-          const SizedBox(height: 16),
-          _buildOngoingProjectCard(
-            'أبو خالد',
-            75,
-            'منذ 5 ساعات',
-            projectId: 'proj-1',
-            context: context,
-          ),
-          const SizedBox(height: 16),
-          _buildOngoingProjectCard(
-            'أبو خالد',
-            75,
-            'منذ 5 ساعات',
-            projectId: 'proj-1',
-            context: context,
-          ),
+  Widget _buildOngoingProjectsMobile(List<ProjectEntity> projects) {
+    if (projects.isEmpty) {
+      return _buildEmptyState('لا توجد مشاريع جارية');
+    }
+
+    return Column(
+      children: [
+        for (var i = 0; i < projects.length; i++) ...[
+          _buildOngoingProjectCard(projects[i], context),
+          if (i < projects.length - 1) const SizedBox(height: 16),
         ],
-      ),
+      ],
     );
   }
 
   // Tablet layout: 2 columns
-  Widget _buildOngoingProjectsTablet() {
-    return Builder(
-      builder: (context) => Column(
-        children: [
+  Widget _buildOngoingProjectsTablet(List<ProjectEntity> projects) {
+    if (projects.isEmpty) {
+      return _buildEmptyState('لا توجد مشاريع جارية');
+    }
+
+    return Column(
+      children: [
+        for (var i = 0; i < projects.length; i += 2) ...[
           Row(
             children: [
               Expanded(
-                child: _buildOngoingProjectCard(
-                  'أبو خالد',
-                  75,
-                  'منذ 5 ساعات',
-                  projectId: 'proj-1',
-                  context: context,
-                ),
+                child: _buildOngoingProjectCard(projects[i], context),
               ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: _buildOngoingProjectCard(
-                  'أبو خالد',
-                  75,
-                  'منذ 5 ساعات',
-                  projectId: 'proj-1',
-                  context: context,
+              if (i + 1 < projects.length) ...[
+                const SizedBox(width: 16),
+                Expanded(
+                  child: _buildOngoingProjectCard(projects[i + 1], context),
                 ),
-              ),
+              ],
             ],
           ),
-          const SizedBox(height: 16),
-          Row(
-            children: [
-              Expanded(
-                child: _buildOngoingProjectCard(
-                  'أبو خالد',
-                  75,
-                  'منذ 5 ساعات',
-                  projectId: 'proj-1',
-                  context: context,
-                ),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: _buildOngoingProjectCard(
-                  'أبو خالد',
-                  75,
-                  'منذ 5 ساعات',
-                  projectId: 'proj-1',
-                  context: context,
-                ),
-              ),
-            ],
-          ),
+          if (i + 2 < projects.length) const SizedBox(height: 16),
         ],
-      ),
+      ],
     );
   }
 
   // Desktop layout: 4 columns
-  Widget _buildOngoingProjectsDesktop() {
-    return Builder(
-      builder: (context) => Row(
-        children: [
-          Expanded(
-            child: _buildOngoingProjectCard(
-              'أبو خالد',
-              75,
-              'منذ 5 ساعات',
-              projectId: 'proj-1',
-              context: context,
-            ),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: _buildOngoingProjectCard(
-              'أبو خالد',
-              75,
-              'منذ 5 ساعات',
-              projectId: 'proj-1',
-              context: context,
-            ),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: _buildOngoingProjectCard(
-              'أبو خالد',
-              75,
-              'منذ 5 ساعات',
-              projectId: 'proj-1',
-              context: context,
-            ),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: _buildOngoingProjectCard(
-              'أبو خالد',
-              75,
-              'منذ 5 ساعات',
-              projectId: 'proj-1',
-              context: context,
-            ),
-          ),
-        ],
-      ),
+  Widget _buildOngoingProjectsDesktop(List<ProjectEntity> projects) {
+    if (projects.isEmpty) {
+      return _buildEmptyState('لا توجد مشاريع جارية');
+    }
+
+    return Wrap(
+      spacing: 16,
+      runSpacing: 16,
+      children: projects
+          .map((project) => SizedBox(
+                width: (MediaQuery.of(context).size.width - 96) / 4 - 12,
+                child: _buildOngoingProjectCard(project, context),
+              ))
+          .toList(),
     );
   }
 
-  Widget _buildOngoingProjectCard(
-    String projectName,
-    int progress,
-    String lastUpdate, {
-    String? projectId,
-    BuildContext? context,
-  }) {
+  Widget _buildOngoingProjectCard(ProjectEntity project, BuildContext context) {
+    final lastUpdate = _formatTimeAgo(project.updatedAt ?? project.createdAt ?? DateTime.now());
+
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -246,13 +216,18 @@ class SiteEngineerDashboardPage extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                projectName,
-                style: AppTextStyles.h6.copyWith(
-                  color: AppColors.textPrimary,
-                  fontWeight: FontWeight.bold,
+              Expanded(
+                child: Text(
+                  project.name,
+                  style: AppTextStyles.h6.copyWith(
+                    color: AppColors.textPrimary,
+                    fontWeight: FontWeight.bold,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
               ),
+              const SizedBox(width: 8),
               _buildStatusButton('نشط', AppColors.statusActive),
             ],
           ),
@@ -267,7 +242,7 @@ class SiteEngineerDashboardPage extends StatelessWidget {
               ),
               const Spacer(),
               Text(
-                '$progress%',
+                '${project.progress}%',
                 style: AppTextStyles.bodyMedium.copyWith(
                   color: AppColors.textPrimary,
                   fontWeight: FontWeight.w600,
@@ -279,7 +254,7 @@ class SiteEngineerDashboardPage extends StatelessWidget {
           ClipRRect(
             borderRadius: BorderRadius.circular(4),
             child: LinearProgressIndicator(
-              value: progress / 100,
+              value: project.progress / 100,
               backgroundColor: AppColors.progressBackground,
               valueColor: AlwaysStoppedAnimation<Color>(AppColors.statusActive),
               minHeight: 6,
@@ -308,9 +283,7 @@ class SiteEngineerDashboardPage extends StatelessWidget {
                   height: 44,
                   child: ElevatedButton(
                     onPressed: () {
-                      if (projectId != null && context != null) {
-                        context.go(AppRoutes.projectDetails(projectId));
-                      }
+                      context.go(AppRoutes.projectDetails(project.id));
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppColors.cardBackground,
@@ -382,110 +355,56 @@ class SiteEngineerDashboardPage extends StatelessWidget {
   }
 
   // Mobile layout: Stack vertically
-  Widget _buildUnderPricingProjectsMobile(BuildContext context) {
+  Widget _buildUnderPricingProjectsMobile(
+      BuildContext context, List<ProjectEntity> projects) {
+    if (projects.isEmpty) {
+      return _buildEmptyState('لا توجد مشاريع قيد التسعير');
+    }
+
     return Column(
       children: [
-        _buildPricingProjectCard(
-          context,
-          'تجديد المكتب',
-          estimatedPrice: null,
-          numberOfWalls: 12,
-          actionButton: 'بدء التسعير',
-          prefixIcon: const Icon(Icons.add, size: 15, weight: 700),
-          projectId: 'project-1',
-        ),
-        const SizedBox(height: 16),
-        _buildPricingProjectCard(
-          context,
-          'تجديد المكتب',
-          estimatedPrice: '1,500',
-          numberOfWalls: 12,
-          actionButton: 'متابعة التسعير',
-          projectId: 'project-2',
-        ),
-        const SizedBox(height: 16),
-        _buildPricingProjectCard(
-          context,
-          'تجديد المكتب',
-          estimatedPrice: '1500',
-          numberOfWalls: 12,
-          actionButton: 'تعديل السعر',
-          prefixIcon: const Icon(Icons.edit, size: 16),
-          projectId: 'project-3',
-        ),
+        for (var i = 0; i < projects.length; i++) ...[
+          _buildPricingProjectCard(context, projects[i]),
+          if (i < projects.length - 1) const SizedBox(height: 16),
+        ],
       ],
     );
   }
 
   // Tablet layout: Horizontal (same as desktop)
-  Widget _buildUnderPricingProjectsTablet(BuildContext context) {
-    return _buildUnderPricingProjectsDesktop(context);
+  Widget _buildUnderPricingProjectsTablet(
+      BuildContext context, List<ProjectEntity> projects) {
+    return _buildUnderPricingProjectsDesktop(context, projects);
   }
 
   // Desktop layout: 3 columns horizontal
-  Widget _buildUnderPricingProjectsDesktop(BuildContext context) {
-    return Row(
-      children: [
-        Expanded(
-          child: _buildPricingProjectCard(
-            context,
-            'تجديد المكتب',
-            estimatedPrice: null,
-            numberOfWalls: 12,
-            actionButton: 'بدء التسعير',
-            prefixIcon: const Text(
-              '+',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-            ),
-            projectId: 'project-1',
-          ),
-        ),
-        const SizedBox(width: 16),
-        Expanded(
-          child: _buildPricingProjectCard(
-            context,
-            'تجديد المكتب',
-            estimatedPrice: '1,500',
-            numberOfWalls: 12,
-            actionButton: 'متابعة التسعير',
-            projectId: 'project-2',
-          ),
-        ),
-        const SizedBox(width: 16),
-        Expanded(
-          child: _buildPricingProjectCard(
-            context,
-            'تجديد المكتب',
-            estimatedPrice: '1500',
-            numberOfWalls: 12,
-            actionButton: 'تعديل السعر',
-            prefixIcon: const Text(
-              '✔',
-              style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
-            ),
-            suffixIcon: const Icon(Icons.edit, size: 16),
-            projectId: 'project-3',
-          ),
-        ),
-      ],
+  Widget _buildUnderPricingProjectsDesktop(
+      BuildContext context, List<ProjectEntity> projects) {
+    if (projects.isEmpty) {
+      return _buildEmptyState('لا توجد مشاريع قيد التسعير');
+    }
+
+    return Wrap(
+      spacing: 16,
+      runSpacing: 16,
+      children: projects
+          .map((project) => SizedBox(
+                width: (MediaQuery.of(context).size.width - 96) / 3 - 11,
+                child: _buildPricingProjectCard(context, project),
+              ))
+          .toList(),
     );
   }
 
-  Widget _buildPricingProjectCard(
-    BuildContext context,
-    String projectName, {
-    String? estimatedPrice,
-    required int numberOfWalls,
-    required String actionButton,
-    Widget? prefixIcon,
-    Widget? suffixIcon,
-    String? projectId,
-  }) {
+  Widget _buildPricingProjectCard(BuildContext context, ProjectEntity project) {
+    // Determine action button text and icon based on project state
+    // For now, we'll use a default state - this can be enhanced based on pricing data
+    const String actionButton = 'بدء التسعير';
+    const Widget prefixIcon = Icon(Icons.add, size: 15, weight: 700);
+
     return InkWell(
       onTap: () {
-        if (projectId != null) {
-          context.go(AppRoutes.pricing(projectId));
-        }
+        context.go(AppRoutes.pricing(project.id));
       },
       borderRadius: BorderRadius.circular(12),
       child: Container(
@@ -501,11 +420,15 @@ class SiteEngineerDashboardPage extends StatelessWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(
-                  projectName,
-                  style: AppTextStyles.h6.copyWith(
-                    color: AppColors.textPrimary,
-                    fontWeight: FontWeight.bold,
+                Expanded(
+                  child: Text(
+                    project.name,
+                    style: AppTextStyles.h6.copyWith(
+                      color: AppColors.textPrimary,
+                      fontWeight: FontWeight.bold,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
                 Container(
@@ -549,9 +472,7 @@ class SiteEngineerDashboardPage extends StatelessWidget {
                         ),
                         const SizedBox(height: 8),
                         Text(
-                          estimatedPrice != null
-                              ? '$estimatedPrice \$'
-                              : '- \$',
+                          '- \$',
                           style: AppTextStyles.h5.copyWith(
                             color: AppColors.textPrimary,
                             fontWeight: FontWeight.bold,
@@ -562,7 +483,7 @@ class SiteEngineerDashboardPage extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(width: 12),
-                // Number of Walls Card
+                // Number of Walls Card (placeholder - can be enhanced with actual data)
                 Expanded(
                   child: Container(
                     padding: const EdgeInsets.all(12),
@@ -590,7 +511,7 @@ class SiteEngineerDashboardPage extends StatelessWidget {
                             ),
                             const SizedBox(width: 6),
                             Text(
-                              '$numberOfWalls',
+                              '-',
                               style: AppTextStyles.h5.copyWith(
                                 color: AppColors.textPrimary,
                                 fontWeight: FontWeight.bold,
@@ -613,7 +534,9 @@ class SiteEngineerDashboardPage extends StatelessWidget {
               width: double.infinity,
               height: 44,
               child: ElevatedButton(
-                onPressed: () {},
+                onPressed: () {
+                  context.go(AppRoutes.pricing(project.id));
+                },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.cardBackground,
                   foregroundColor: Colors.white,
@@ -631,10 +554,8 @@ class SiteEngineerDashboardPage extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.center,
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    if (prefixIcon != null) ...[
-                      prefixIcon,
-                      const SizedBox(width: 4),
-                    ],
+                    prefixIcon,
+                    const SizedBox(width: 4),
                     Text(
                       actionButton,
                       style: const TextStyle(
@@ -642,10 +563,6 @@ class SiteEngineerDashboardPage extends StatelessWidget {
                         fontWeight: FontWeight.w600,
                       ),
                     ),
-                    if (suffixIcon != null) ...[
-                      const SizedBox(width: 8),
-                      suffixIcon,
-                    ],
                   ],
                 ),
               ),
@@ -654,5 +571,46 @@ class SiteEngineerDashboardPage extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  Widget _buildEmptyState(String message) {
+    return Container(
+      padding: const EdgeInsets.all(32),
+      decoration: BoxDecoration(
+        color: AppColors.cardBackground,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppColors.border),
+      ),
+      child: Center(
+        child: Text(
+          message,
+          style: AppTextStyles.bodyLarge.copyWith(
+            color: AppColors.textSecondary,
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// Format date to Arabic "time ago" format
+  String _formatTimeAgo(DateTime dateTime) {
+    final now = DateTime.now();
+    final difference = now.difference(dateTime);
+
+    if (difference.inDays > 365) {
+      final years = (difference.inDays / 365).floor();
+      return 'منذ $years ${years == 1 ? 'سنة' : 'سنوات'}';
+    } else if (difference.inDays > 30) {
+      final months = (difference.inDays / 30).floor();
+      return 'منذ $months ${months == 1 ? 'شهر' : 'أشهر'}';
+    } else if (difference.inDays > 0) {
+      return 'منذ ${difference.inDays} ${difference.inDays == 1 ? 'يوم' : 'أيام'}';
+    } else if (difference.inHours > 0) {
+      return 'منذ ${difference.inHours} ${difference.inHours == 1 ? 'ساعة' : 'ساعات'}';
+    } else if (difference.inMinutes > 0) {
+      return 'منذ ${difference.inMinutes} ${difference.inMinutes == 1 ? 'دقيقة' : 'دقائق'}';
+    } else {
+      return 'الآن';
+    }
   }
 }

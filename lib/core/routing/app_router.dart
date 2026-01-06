@@ -114,18 +114,25 @@ class AppRouter {
           // Dashboard
           GoRoute(
             path: AppRoutes.dashboard,
-            pageBuilder: (context, state) => FadePageTransition(
-              key: state.pageKey,
-              child: BlocBuilder<AuthBloc, AuthState>(
-                builder: (context, authState) {
-                  if (authState is AuthAuthenticated &&
-                      authState.user.isSiteEngineer) {
-                    return const SiteEngineerDashboardPage();
-                  }
-                  return const _DashboardPage();
-                },
-              ),
-            ),
+            pageBuilder: (context, state) {
+              return FadePageTransition(
+                key: state.pageKey,
+                child: BlocBuilder<AuthBloc, AuthState>(
+                  builder: (context, authState) {
+                    if (authState is AuthAuthenticated &&
+                        authState.user.isSiteEngineer) {
+                      return BlocProvider(
+                        create: (context) =>
+                            ProjectsBloc(repository: ProjectsRepositoryImpl())
+                              ..add(const LoadProjects()),
+                        child: SiteEngineerDashboardPage(),
+                      );
+                    }
+                    return const _DashboardPage();
+                  },
+                ),
+              );
+            },
           ),
 
           // Project Details (must come before /projects to avoid route conflict)
