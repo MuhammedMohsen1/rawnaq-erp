@@ -20,6 +20,7 @@ class ProjectModel extends ProjectEntity {
     super.clientPhone,
     super.createdAt,
     super.updatedAt,
+    super.itemsCount,
   });
 
   /// Create from JSON (backend format)
@@ -70,6 +71,7 @@ class ProjectModel extends ProjectEntity {
       updatedAt: json['updatedAt'] != null
           ? DateTime.parse(json['updatedAt'] as String)
           : null,
+      itemsCount: json['itemsCount'] as int?,
     );
   }
 
@@ -114,6 +116,7 @@ class ProjectModel extends ProjectEntity {
       clientPhone: entity.clientPhone,
       createdAt: entity.createdAt,
       updatedAt: entity.updatedAt,
+      itemsCount: entity.itemsCount,
     );
   }
 
@@ -135,6 +138,7 @@ class ProjectModel extends ProjectEntity {
       clientPhone: clientPhone,
       createdAt: createdAt,
       updatedAt: updatedAt,
+      itemsCount: itemsCount,
     );
   }
 }

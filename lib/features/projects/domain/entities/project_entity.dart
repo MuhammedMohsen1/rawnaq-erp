@@ -19,6 +19,7 @@ class ProjectEntity extends Equatable {
   final String? clientPhone;
   final DateTime? createdAt;
   final DateTime? updatedAt;
+  final int? itemsCount;
 
   const ProjectEntity({
     required this.id,
@@ -36,6 +37,7 @@ class ProjectEntity extends Equatable {
     this.clientPhone,
     this.createdAt,
     this.updatedAt,
+    this.itemsCount,
   });
 
   @override
@@ -55,6 +57,7 @@ class ProjectEntity extends Equatable {
         clientPhone,
         createdAt,
         updatedAt,
+        itemsCount,
       ];
 
   /// Create a copy with updated fields
@@ -74,6 +77,7 @@ class ProjectEntity extends Equatable {
     String? clientPhone,
     DateTime? createdAt,
     DateTime? updatedAt,
+    int? itemsCount,
   }) {
     return ProjectEntity(
       id: id ?? this.id,
@@ -91,6 +95,7 @@ class ProjectEntity extends Equatable {
       clientPhone: clientPhone ?? this.clientPhone,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
+      itemsCount: itemsCount ?? this.itemsCount,
     );
   }
 

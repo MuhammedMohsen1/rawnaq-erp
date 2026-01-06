@@ -1,12 +1,15 @@
 import 'dart:math';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_text_styles.dart';
+import '../../../../core/error/exceptions.dart';
 import '../../../../core/routing/app_router.dart';
 import '../../../../core/utils/responsive_layout.dart';
+import '../../../../features/auth/presentation/bloc/auth_bloc.dart';
 import '../../data/datasources/pricing_api_datasource.dart';
 import '../../data/models/pricing_version_model.dart';
 import '../widgets/pricing_summary_sidebar.dart';
@@ -165,8 +168,276 @@ class _UnderPricingPageState extends State<UnderPricingPage> {
     }
   }
 
+  Future<void> _returnToPricing() async {
+    if (_pricingVersion == null) return;
+
+    // Check if pricing version is in PENDING_APPROVAL or PROFIT_PENDING status
+    if (_pricingVersion!.status != 'PENDING_APPROVAL' &&
+        _pricingVersion!.status != 'PROFIT_PENDING') {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'لا يمكن إرجاع التسعير. الحالة الحالية: "${_getStatusText()}"',
+            ),
+            duration: const Duration(seconds: 4),
+          ),
+        );
+      }
+      return;
+    }
+
+    // Check if user is authenticated
+    final authState = context.read<AuthBloc>().state;
+    if (authState is! AuthAuthenticated) {
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('يجب تسجيل الدخول أولاً')));
+      }
+      return;
+    }
+
+    // Show confirmation dialog with optional reason
+    final reasonController = TextEditingController();
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('إرجاع التسعير للتعديل'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'هل أنت متأكد من إرجاع التسعير إلى حالة التعديل؟ سيتم إلغاء عملية المراجعة الحالية.',
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: reasonController,
+              decoration: const InputDecoration(
+                labelText: 'السبب (اختياري)',
+                hintText: 'أدخل سبب الإرجاع',
+                border: OutlineInputBorder(),
+              ),
+              maxLines: 3,
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('إلغاء'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: TextButton.styleFrom(foregroundColor: Colors.orange),
+            child: const Text('إرجاع'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true) return;
+
+    try {
+      await _apiDataSource.returnToPricing(
+        widget.projectId,
+        _pricingVersion!.version,
+        reason: reasonController.text.trim().isNotEmpty
+            ? reasonController.text.trim()
+            : null,
+      );
+
+      await _loadPricingData();
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('تم إرجاع التسعير بنجاح. يمكنك الآن التعديل'),
+            duration: Duration(seconds: 3),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        String errorMessage = 'فشل إرجاع التسعير';
+        if (e is ServerException) {
+          errorMessage = 'فشل إرجاع التسعير: ${e.message}';
+        } else if (e is ValidationException) {
+          errorMessage = 'فشل إرجاع التسعير: ${e.message}';
+        } else {
+          errorMessage = 'فشل إرجاع التسعير: ${e.toString()}';
+        }
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(errorMessage),
+            duration: const Duration(seconds: 5),
+          ),
+        );
+      }
+    }
+  }
+  Future<void> _acceptPricing() async {
+    if (_pricingVersion == null) return;
+    if (_pricingVersion!.status != 'PENDING_APPROVAL') {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('لا يمكن قبول التسعير. الحالة الحالية: "${_getStatusText()}"'),
+            duration: const Duration(seconds: 4),
+          ),
+        );
+      }
+      return;
+    }
+    final authState = context.read<AuthBloc>().state;
+    if (authState is! AuthAuthenticated) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('يجب تسجيل الدخول أولاً')),
+        );
+      }
+      return;
+    }
+    final user = (authState as AuthAuthenticated).user;
+    if (!user.isAdmin && !user.isManager) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('ليس لديك صلاحية لقبول التسعير'),
+            duration: Duration(seconds: 4),
+          ),
+        );
+      }
+      return;
+    }
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('قبول التسعير'),
+        content: const Text('هل أنت متأكد من قبول هذا التسعير؟ سيتم اعتماد التسعير وستصبح الحالة "موافق عليه".'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('إلغاء'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF10B981)),
+            child: const Text('قبول'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+    try {
+      await _apiDataSource.approvePricing(widget.projectId, _pricingVersion!.version);
+      await _loadPricingData();
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('تم قبول التسعير بنجاح'), duration: Duration(seconds: 3)),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        String errorMessage = 'فشل قبول التسعير';
+        if (e is ServerException) {
+          errorMessage = 'فشل قبول التسعير: ${e.message}';
+        } else if (e is ValidationException) {
+          errorMessage = 'فشل قبول التسعير: ${e.message}';
+        } else {
+          errorMessage = 'فشل قبول التسعير: ${e.toString()}';
+        }
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(errorMessage), duration: const Duration(seconds: 5)),
+        );
+      }
+    }
+  }
+  Future<void> _makeProfit() async {
+    if (_pricingVersion == null) return;
+    if (_pricingVersion!.status != 'APPROVED') {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('لا يمكن حساب الربح. الحالة الحالية: "${_getStatusText()}"'),
+            duration: const Duration(seconds: 4),
+          ),
+        );
+      }
+      return;
+    }
+    if (_pricingVersion!.items == null || _pricingVersion!.items!.isEmpty) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('لا توجد عناصر لحساب الربح'),
+            duration: Duration(seconds: 4),
+          ),
+        );
+      }
+      return;
+    }
+    try {
+      final items = _pricingVersion!.items!
+          .map(
+            (item) => {
+              'itemId': item.id,
+              'profitMargin': item.profitMargin,
+            },
+          )
+          .toList();
+      await _apiDataSource.calculateProfit(
+        widget.projectId,
+        _pricingVersion!.version,
+        items: items,
+      );
+      await _loadPricingData();
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('تم حساب الربح بنجاح'),
+            duration: Duration(seconds: 3),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        String errorMessage = 'فشل حساب الربح';
+        if (e is ServerException) {
+          errorMessage = 'فشل حساب الربح: ${e.message}';
+        } else if (e is ValidationException) {
+          errorMessage = 'فشل حساب الربح: ${e.message}';
+        } else {
+          errorMessage = 'فشل حساب الربح: ${e.toString()}';
+        }
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(errorMessage), duration: const Duration(seconds: 5)),
+        );
+      }
+    }
+  }
+
+
+
   Future<void> _addSubItem(String itemId) async {
     if (_pricingVersion == null) return;
+
+    // Check if pricing version is in DRAFT status
+    if (_pricingVersion!.status != 'DRAFT') {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'لا يمكن إضافة فئة فرعية. إصدار التسعير في حالة "${_getStatusText()}" وليس "مسودة".',
+            ),
+            duration: const Duration(seconds: 4),
+          ),
+        );
+      }
+      return;
+    }
 
     final nameController = TextEditingController();
     final result = await showDialog<String>(
@@ -211,7 +482,10 @@ class _UnderPricingPageState extends State<UnderPricingPage> {
       } catch (e) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('فشل إضافة الفئة الفرعية: ${e.toString()}')),
+            SnackBar(
+              content: Text('فشل إضافة الفئة الفرعية: ${e.toString()}'),
+              duration: const Duration(seconds: 5),
+            ),
           );
         }
       }
@@ -254,6 +528,24 @@ class _UnderPricingPageState extends State<UnderPricingPage> {
       default:
         return AppColors.info;
     }
+  }
+
+  int _getTotalElementsCount() {
+    if (_pricingVersion == null || _pricingVersion!.items == null) {
+      return 0;
+    }
+
+    int totalCount = 0;
+    for (var item in _pricingVersion!.items!) {
+      if (item.subItems != null) {
+        for (var subItem in item.subItems!) {
+          if (subItem.elements != null) {
+            totalCount += subItem.elements!.length;
+          }
+        }
+      }
+    }
+    return totalCount;
   }
 
   String? _formatLastSaveTime(DateTime? dateTime) {
@@ -667,13 +959,55 @@ class _UnderPricingPageState extends State<UnderPricingPage> {
   }
 
   Widget _buildSidebar() {
+    // Check if we should show return to pricing button
+    // Anyone can return a pricing version that is in PENDING_APPROVAL or PROFIT_PENDING status
+    final authState = context.read<AuthBloc>().state;
+    final isAuthenticated = authState is AuthAuthenticated;
+
+    bool showReturnButton = false;
+    if (isAuthenticated && _pricingVersion != null) {
+      final currentStatus = _pricingVersion!.status.toUpperCase();
+      showReturnButton =
+          currentStatus == 'PENDING_APPROVAL' ||
+          currentStatus == 'PROFIT_PENDING';
+    }
+    // Check if user is Admin or Manager
+    bool isAdminOrManager = false;
+    if (isAuthenticated) {
+      final user = (authState as AuthAuthenticated).user;
+      isAdminOrManager = user.isAdmin || user.isManager;
+    }
+
+    // Check if pricing status is PENDING_APPROVAL
+    bool isPendingApproval = false;
+    if (_pricingVersion != null) {
+      final currentStatus = _pricingVersion!.status.toUpperCase();
+      isPendingApproval = currentStatus == 'PENDING_APPROVAL';
+    }
+
+    // Check if pricing status is APPROVED
+    bool isApproved = false;
+    if (_pricingVersion != null) {
+      final currentStatus = _pricingVersion!.status.toUpperCase();
+      isApproved = currentStatus == 'APPROVED';
+    }
+
+
     return ConstrainedBox(
       constraints: BoxConstraints(
         maxHeight: MediaQuery.of(context).size.height,
       ),
       child: PricingSummarySidebar(
         grandTotal: _pricingVersion?.totalPrice ?? 0.0,
+        totalElements: _getTotalElementsCount(),
         lastSaveTime: _formatLastSaveTime(_pricingVersion?.updatedAt),
+        showReturnToPricing: showReturnButton,
+        onReturnToPricing: showReturnButton ? _returnToPricing : null,
+        isAdminOrManager: isAdminOrManager,
+        isPendingApproval: isPendingApproval,
+        onAcceptPricing: isAdminOrManager && isPendingApproval ? _acceptPricing : null,
+        isApproved: isApproved,
+        onMakeProfit: isAdminOrManager && isApproved ? _makeProfit : null,
         onSubmit: () async {
           if (_pricingVersion == null) return;
 

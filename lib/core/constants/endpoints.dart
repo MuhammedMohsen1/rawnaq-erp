@@ -253,4 +253,5 @@ abstract class ApiEndpoints {
   static String submitForApproval(String projectId, int version) => '/projects/$projectId/pricing/$version/submit-approval';
   static String approvePricing(String projectId, int version) => '/projects/$projectId/pricing/$version/approve';
   static String rejectPricing(String projectId, int version) => '/projects/$projectId/pricing/$version/reject';
+  static String returnToPricing(String projectId, int version) => '/projects/$projectId/pricing/$version/return-to-pricing';
 }

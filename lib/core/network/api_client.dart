@@ -107,6 +107,8 @@ class ApiClient {
     Options? options,
   }) async {
     try {
+      // Don't set Content-Type manually - Dio will set it automatically for multipart/form-data
+      // Setting it manually can cause issues with boundary parameters
       return await DioHelper.uploadFile(
         url: endpoint,
         formData: formData,

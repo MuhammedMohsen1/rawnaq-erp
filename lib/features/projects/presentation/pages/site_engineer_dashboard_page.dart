@@ -11,119 +11,245 @@ import '../../domain/enums/project_status.dart';
 import '../bloc/projects_bloc.dart';
 import '../bloc/projects_event.dart';
 import '../bloc/projects_state.dart';
+import '../../../pricing/data/datasources/pricing_api_datasource.dart';
+import '../../../pricing/data/models/pricing_version_model.dart';
 
 class SiteEngineerDashboardPage extends StatefulWidget {
   const SiteEngineerDashboardPage({super.key});
 
   @override
-  State<SiteEngineerDashboardPage> createState() => _SiteEngineerDashboardPageState();
+  State<SiteEngineerDashboardPage> createState() =>
+      _SiteEngineerDashboardPageState();
 }
 
 class _SiteEngineerDashboardPageState extends State<SiteEngineerDashboardPage> {
+  final _pricingApiDataSource = PricingApiDataSource();
+  final Map<String, PricingVersionModel?> _projectPricingVersions = {};
+  bool _isLoadingPricingVersions = false;
+
+  @override
+  void initState() {
+    super.initState();
+  }
+
+  Future<void> _loadPricingVersions(List<ProjectEntity> projects) async {
+    if (_isLoadingPricingVersions) return;
+
+    setState(() {
+      _isLoadingPricingVersions = true;
+    });
+
+    try {
+      // Fetch pricing versions for all projects in parallel
+      final futures = projects.map((project) async {
+        try {
+          final versions = await _pricingApiDataSource.getPricingVersions(
+            project.id,
+          );
+          if (versions.isNotEmpty) {
+            // Get the latest version (first in the list, assuming sorted by version desc)
+            final latestVersion = versions.first;
+            return MapEntry(project.id, latestVersion);
+          }
+          return MapEntry(project.id, null as PricingVersionModel?);
+        } catch (e) {
+          // If error, assume no pricing version
+          return MapEntry(project.id, null as PricingVersionModel?);
+        }
+      });
+
+      final results = await Future.wait(futures);
+      final pricingVersionsMap = Map<String, PricingVersionModel?>.fromEntries(
+        results,
+      );
+
+      if (mounted) {
+        setState(() {
+          _projectPricingVersions.clear();
+          _projectPricingVersions.addAll(pricingVersionsMap);
+          _isLoadingPricingVersions = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isLoadingPricingVersions = false;
+        });
+      }
+    }
+  }
+
+  bool _hasUnderPricingStatus(ProjectEntity project) {
+    final pricingVersion = _projectPricingVersions[project.id];
+    if (pricingVersion == null) return false;
+
+    final status = pricingVersion.status.toUpperCase();
+    return status == 'DRAFT' ||
+        status == 'PENDING_APPROVAL' ||
+        status == 'PROFIT_PENDING';
+  }
+
+  String _getPricingStatusText(String? status) {
+    if (status == null) return 'بدون تسعير';
+
+    switch (status.toUpperCase()) {
+      case 'DRAFT':
+        return 'مسودة';
+      case 'PROFIT_PENDING':
+        return 'انتظار الربح';
+      case 'PENDING_APPROVAL':
+        return 'في انتظار الموافقة';
+      case 'APPROVED':
+        return 'موافق عليه';
+      case 'REJECTED':
+        return 'مرفوض';
+      default:
+        return 'قيد التسعير';
+    }
+  }
+
+  Color _getPricingStatusColor(String? status) {
+    if (status == null) return AppColors.textMuted;
+
+    switch (status.toUpperCase()) {
+      case 'DRAFT':
+        return AppColors.textMuted;
+      case 'PROFIT_PENDING':
+        return AppColors.warning;
+      case 'PENDING_APPROVAL':
+        return AppColors.warning;
+      case 'APPROVED':
+        return AppColors.statusCompleted;
+      case 'REJECTED':
+        return AppColors.statusDelayed;
+      default:
+        return AppColors.info;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<ProjectsBloc, ProjectsState>(
       builder: (context, state) {
-          if (state is ProjectsLoading) {
-            return const Center(
-              child: CircularProgressIndicator(),
-            );
+        if (state is ProjectsLoading) {
+          return const Center(child: CircularProgressIndicator());
+        }
+
+        if (state is ProjectsError) {
+          return Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  'حدث خطأ: ${state.message}',
+                  style: AppTextStyles.bodyLarge.copyWith(
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                ElevatedButton(
+                  onPressed: () {
+                    context.read<ProjectsBloc>().add(const LoadProjects());
+                  },
+                  child: const Text('إعادة المحاولة'),
+                ),
+              ],
+            ),
+          );
+        }
+
+        if (state is ProjectsLoaded) {
+          // Load pricing versions if not already loaded
+          if (!_isLoadingPricingVersions &&
+              _projectPricingVersions.length != state.projects.length) {
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              _loadPricingVersions(state.projects);
+            });
           }
 
-          if (state is ProjectsError) {
-            return Center(
+          // Filter projects based on pricing version status
+          // Show projects with pricing versions in DRAFT, PENDING_APPROVAL, or PROFIT_PENDING
+          final underPricingProjects = state.projects
+              .where((p) => _hasUnderPricingStatus(p))
+              .toList();
+
+          final ongoingProjects = state.projects
+              .where(
+                (p) =>
+                    !_hasUnderPricingStatus(p) &&
+                    p.status != ProjectStatus.completed &&
+                    p.status != ProjectStatus.cancelled,
+              )
+              .toList();
+
+          return ResponsiveLayout(
+            mobile: SingleChildScrollView(
+              padding: const EdgeInsets.all(16),
               child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    'حدث خطأ: ${state.message}',
-                    style: AppTextStyles.bodyLarge.copyWith(
-                      color: AppColors.textSecondary,
-                    ),
-                  ),
+                  // ONGOING PROJECTS Section
+                  _buildSectionTitle('المشاريع الجارية'),
                   const SizedBox(height: 16),
-                  ElevatedButton(
-                    onPressed: () {
-                      context.read<ProjectsBloc>().add(const LoadProjects());
-                    },
-                    child: const Text('إعادة المحاولة'),
+                  _buildOngoingProjectsMobile(ongoingProjects),
+                  const SizedBox(height: 32),
+
+                  // UNDER PRICING PROJECTS Section
+                  _buildSectionTitle('المشاريع قيد التسعير'),
+                  const SizedBox(height: 16),
+                  _buildUnderPricingProjectsMobile(
+                    context,
+                    underPricingProjects,
                   ),
                 ],
               ),
-            );
-          }
+            ),
+            tablet: SingleChildScrollView(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // ONGOING PROJECTS Section
+                  _buildSectionTitle('المشاريع الجارية'),
+                  const SizedBox(height: 16),
+                  _buildOngoingProjectsTablet(ongoingProjects),
+                  const SizedBox(height: 32),
 
-          if (state is ProjectsLoaded) {
-            // Filter projects into two categories
-            final underPricingProjects = state.projects
-                .where((p) => p.status == ProjectStatus.underPricing)
-                .toList();
-            
-            final ongoingProjects = state.projects
-                .where((p) => p.status != ProjectStatus.underPricing &&
-                    p.status != ProjectStatus.completed &&
-                    p.status != ProjectStatus.cancelled)
-                .toList();
-
-            return ResponsiveLayout(
-              mobile: SingleChildScrollView(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // ONGOING PROJECTS Section
-                    _buildSectionTitle('المشاريع الجارية'),
-                    const SizedBox(height: 16),
-                    _buildOngoingProjectsMobile(ongoingProjects),
-                    const SizedBox(height: 32),
-
-                    // UNDER PRICING PROJECTS Section
-                    _buildSectionTitle('المشاريع قيد التسعير'),
-                    const SizedBox(height: 16),
-                    _buildUnderPricingProjectsMobile(context, underPricingProjects),
-                  ],
-                ),
+                  // UNDER PRICING PROJECTS Section
+                  _buildSectionTitle('المشاريع قيد التسعير'),
+                  const SizedBox(height: 16),
+                  _buildUnderPricingProjectsTablet(
+                    context,
+                    underPricingProjects,
+                  ),
+                ],
               ),
-              tablet: SingleChildScrollView(
-                padding: const EdgeInsets.all(24),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // ONGOING PROJECTS Section
-                    _buildSectionTitle('المشاريع الجارية'),
-                    const SizedBox(height: 16),
-                    _buildOngoingProjectsTablet(ongoingProjects),
-                    const SizedBox(height: 32),
+            ),
+            desktop: SingleChildScrollView(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // ONGOING PROJECTS Section
+                  _buildSectionTitle('المشاريع الجارية'),
+                  const SizedBox(height: 16),
+                  _buildOngoingProjectsDesktop(ongoingProjects),
+                  const SizedBox(height: 32),
 
-                    // UNDER PRICING PROJECTS Section
-                    _buildSectionTitle('المشاريع قيد التسعير'),
-                    const SizedBox(height: 16),
-                    _buildUnderPricingProjectsTablet(context, underPricingProjects),
-                  ],
-                ),
+                  // UNDER PRICING PROJECTS Section
+                  _buildSectionTitle('المشاريع قيد التسعير'),
+                  const SizedBox(height: 16),
+                  _buildUnderPricingProjectsDesktop(
+                    context,
+                    underPricingProjects,
+                  ),
+                ],
               ),
-              desktop: SingleChildScrollView(
-                padding: const EdgeInsets.all(24),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // ONGOING PROJECTS Section
-                    _buildSectionTitle('المشاريع الجارية'),
-                    const SizedBox(height: 16),
-                    _buildOngoingProjectsDesktop(ongoingProjects),
-                    const SizedBox(height: 32),
+            ),
+          );
+        }
 
-                    // UNDER PRICING PROJECTS Section
-                    _buildSectionTitle('المشاريع قيد التسعير'),
-                    const SizedBox(height: 16),
-                    _buildUnderPricingProjectsDesktop(context, underPricingProjects),
-                  ],
-                ),
-              ),
-            );
-          }
-
-          return const SizedBox.shrink();
+        return const SizedBox.shrink();
       },
     );
   }
@@ -165,9 +291,7 @@ class _SiteEngineerDashboardPageState extends State<SiteEngineerDashboardPage> {
         for (var i = 0; i < projects.length; i += 2) ...[
           Row(
             children: [
-              Expanded(
-                child: _buildOngoingProjectCard(projects[i], context),
-              ),
+              Expanded(child: _buildOngoingProjectCard(projects[i], context)),
               if (i + 1 < projects.length) ...[
                 const SizedBox(width: 16),
                 Expanded(
@@ -192,16 +316,20 @@ class _SiteEngineerDashboardPageState extends State<SiteEngineerDashboardPage> {
       spacing: 16,
       runSpacing: 16,
       children: projects
-          .map((project) => SizedBox(
-                width: (MediaQuery.of(context).size.width - 96) / 4 - 12,
-                child: _buildOngoingProjectCard(project, context),
-              ))
+          .map(
+            (project) => SizedBox(
+              width: (MediaQuery.of(context).size.width - 96) / 4 - 12,
+              child: _buildOngoingProjectCard(project, context),
+            ),
+          )
           .toList(),
     );
   }
 
   Widget _buildOngoingProjectCard(ProjectEntity project, BuildContext context) {
-    final lastUpdate = _formatTimeAgo(project.updatedAt ?? project.createdAt ?? DateTime.now());
+    final lastUpdate = _formatTimeAgo(
+      project.updatedAt ?? project.createdAt ?? DateTime.now(),
+    );
 
     return Container(
       padding: const EdgeInsets.all(16),
@@ -356,7 +484,9 @@ class _SiteEngineerDashboardPageState extends State<SiteEngineerDashboardPage> {
 
   // Mobile layout: Stack vertically
   Widget _buildUnderPricingProjectsMobile(
-      BuildContext context, List<ProjectEntity> projects) {
+    BuildContext context,
+    List<ProjectEntity> projects,
+  ) {
     if (projects.isEmpty) {
       return _buildEmptyState('لا توجد مشاريع قيد التسعير');
     }
@@ -373,13 +503,17 @@ class _SiteEngineerDashboardPageState extends State<SiteEngineerDashboardPage> {
 
   // Tablet layout: Horizontal (same as desktop)
   Widget _buildUnderPricingProjectsTablet(
-      BuildContext context, List<ProjectEntity> projects) {
+    BuildContext context,
+    List<ProjectEntity> projects,
+  ) {
     return _buildUnderPricingProjectsDesktop(context, projects);
   }
 
   // Desktop layout: 3 columns horizontal
   Widget _buildUnderPricingProjectsDesktop(
-      BuildContext context, List<ProjectEntity> projects) {
+    BuildContext context,
+    List<ProjectEntity> projects,
+  ) {
     if (projects.isEmpty) {
       return _buildEmptyState('لا توجد مشاريع قيد التسعير');
     }
@@ -388,19 +522,48 @@ class _SiteEngineerDashboardPageState extends State<SiteEngineerDashboardPage> {
       spacing: 16,
       runSpacing: 16,
       children: projects
-          .map((project) => SizedBox(
-                width: (MediaQuery.of(context).size.width - 96) / 3 - 11,
-                child: _buildPricingProjectCard(context, project),
-              ))
+          .map(
+            (project) => SizedBox(
+              width: (MediaQuery.of(context).size.width - 96) / 3 - 11,
+              child: _buildPricingProjectCard(context, project),
+            ),
+          )
           .toList(),
     );
   }
 
   Widget _buildPricingProjectCard(BuildContext context, ProjectEntity project) {
-    // Determine action button text and icon based on project state
-    // For now, we'll use a default state - this can be enhanced based on pricing data
-    const String actionButton = 'بدء التسعير';
-    const Widget prefixIcon = Icon(Icons.add, size: 15, weight: 700);
+    final pricingVersion = _projectPricingVersions[project.id];
+    final pricingStatus = pricingVersion?.status;
+    final statusText = _getPricingStatusText(pricingStatus);
+    final statusColor = _getPricingStatusColor(pricingStatus);
+
+    // Determine action button text and icon based on pricing status
+    String actionButton;
+    Widget prefixIcon;
+
+    if (pricingStatus == null) {
+      actionButton = 'بدء التسعير';
+      prefixIcon = const Icon(Icons.add, size: 15, weight: 700);
+    } else {
+      switch (pricingStatus.toUpperCase()) {
+        case 'DRAFT':
+          actionButton = 'متابعة التسعير';
+          prefixIcon = const Icon(Icons.edit, size: 15, weight: 700);
+          break;
+        case 'PROFIT_PENDING':
+          actionButton = 'عرض التسعير';
+          prefixIcon = const Icon(Icons.visibility, size: 15, weight: 700);
+          break;
+        case 'PENDING_APPROVAL':
+          actionButton = 'عرض التسعير';
+          prefixIcon = const Icon(Icons.visibility, size: 15, weight: 700);
+          break;
+        default:
+          actionButton = 'عرض التسعير';
+          prefixIcon = const Icon(Icons.visibility, size: 15, weight: 700);
+      }
+    }
 
     return InkWell(
       onTap: () {
@@ -448,6 +611,42 @@ class _SiteEngineerDashboardPageState extends State<SiteEngineerDashboardPage> {
                 ),
               ],
             ),
+            if (pricingStatus != null) ...[
+              const SizedBox(height: 12),
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 6,
+                ),
+                decoration: BoxDecoration(
+                  color: statusColor.withOpacity(0.1),
+                  border: Border.all(color: statusColor.withOpacity(0.2)),
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      width: 6,
+                      height: 6,
+                      decoration: BoxDecoration(
+                        color: statusColor,
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                    const SizedBox(width: 6),
+                    Text(
+                      statusText,
+                      style: AppTextStyles.caption.copyWith(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                        color: statusColor,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
             const SizedBox(height: 16),
             // Two dark cards side by side
             Row(
@@ -472,7 +671,9 @@ class _SiteEngineerDashboardPageState extends State<SiteEngineerDashboardPage> {
                         ),
                         const SizedBox(height: 8),
                         Text(
-                          '- \$',
+                          pricingVersion?.totalPrice != null
+                              ? '${pricingVersion!.totalPrice.toStringAsFixed(3)} KD'
+                              : '- KD',
                           style: AppTextStyles.h5.copyWith(
                             color: AppColors.textPrimary,
                             fontWeight: FontWeight.bold,
@@ -483,7 +684,7 @@ class _SiteEngineerDashboardPageState extends State<SiteEngineerDashboardPage> {
                   ),
                 ),
                 const SizedBox(width: 12),
-                // Number of Walls Card (placeholder - can be enhanced with actual data)
+                // Number of Items Card
                 Expanded(
                   child: Container(
                     padding: const EdgeInsets.all(12),
@@ -495,7 +696,7 @@ class _SiteEngineerDashboardPageState extends State<SiteEngineerDashboardPage> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'عدد الجدران',
+                          'عدد الفئات',
                           style: AppTextStyles.bodyMedium.copyWith(
                             color: AppColors.textSecondary,
                             fontSize: 12,
@@ -505,13 +706,15 @@ class _SiteEngineerDashboardPageState extends State<SiteEngineerDashboardPage> {
                         Row(
                           children: [
                             Icon(
-                              Icons.grid_view,
+                              Icons.category_outlined,
                               color: AppColors.textPrimary,
                               size: 18,
                             ),
                             const SizedBox(width: 6),
                             Text(
-                              '-',
+                              project.itemsCount != null
+                                  ? '${project.itemsCount}'
+                                  : '-',
                               style: AppTextStyles.h5.copyWith(
                                 color: AppColors.textPrimary,
                                 fontWeight: FontWeight.bold,

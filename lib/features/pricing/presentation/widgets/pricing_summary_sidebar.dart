@@ -4,16 +4,32 @@ import '../../../../core/constants/app_text_styles.dart';
 
 class PricingSummarySidebar extends StatefulWidget {
   final double grandTotal;
+  final int totalElements;
   final String? lastSaveTime;
   final VoidCallback? onSubmit;
   final VoidCallback? onSaveDraft;
+  final VoidCallback? onReturnToPricing;
+  final VoidCallback? onAcceptPricing;
+  final VoidCallback? onMakeProfit;
+  final bool showReturnToPricing;
+  final bool isAdminOrManager;
+  final bool isPendingApproval;
+  final bool isApproved;
 
   const PricingSummarySidebar({
     super.key,
     required this.grandTotal,
+    required this.totalElements,
     this.lastSaveTime,
     this.onSubmit,
     this.onSaveDraft,
+    this.onReturnToPricing,
+    this.onAcceptPricing,
+    this.onMakeProfit,
+    this.showReturnToPricing = false,
+    this.isAdminOrManager = false,
+    this.isPendingApproval = false,
+    this.isApproved = false,
   });
 
   @override
@@ -28,13 +44,13 @@ class _PricingSummarySidebarState extends State<PricingSummarySidebar> {
     final parts = value.toStringAsFixed(3).split('.');
     final integerPart = parts[0];
     final decimalPart = parts[1];
-    
+
     // Add thousand separators to integer part
     final formattedInteger = integerPart.replaceAllMapped(
       RegExp(r'(\d)(?=(\d{3})+(?!\d))'),
       (Match m) => '${m[1]},',
     );
-    
+
     return '$formattedInteger.$decimalPart';
   }
 
@@ -226,16 +242,6 @@ class _PricingSummarySidebarState extends State<PricingSummarySidebar> {
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
-                    Text(
-                      _formatNumberWithDecimals(widget.grandTotal),
-                      style: const TextStyle(
-                        fontSize: 30,
-                        fontWeight: FontWeight.w900,
-                        color: AppColors.textPrimary,
-                        letterSpacing: -0.75,
-                      ),
-                    ),
-                    const SizedBox(width: 8),
                     Padding(
                       padding: const EdgeInsets.only(bottom: 4),
                       child: Text(
@@ -247,7 +253,86 @@ class _PricingSummarySidebarState extends State<PricingSummarySidebar> {
                         ),
                       ),
                     ),
+                    const SizedBox(width: 8),
+
+                    Builder(
+                      builder: (context) {
+                        final full = _formatNumberWithDecimals(
+                          widget.grandTotal,
+                        );
+                        final dotIndex = full.indexOf('.');
+                        final intPart = dotIndex >= 0
+                            ? full.substring(0, dotIndex)
+                            : full;
+                        final decimalPart = dotIndex >= 0
+                            ? full.substring(dotIndex)
+                            : '';
+                        return RichText(
+                          text: TextSpan(
+                            text: intPart,
+                            style: const TextStyle(
+                              fontSize: 30,
+                              fontWeight: FontWeight.w900,
+                              color: AppColors.textPrimary,
+                              letterSpacing: -0.75,
+                            ),
+                            children: decimalPart.isNotEmpty
+                                ? [
+                                    TextSpan(
+                                      text: decimalPart,
+                                      style: const TextStyle(
+                                        fontSize:
+                                            18, // smaller font for decimals
+                                        fontWeight: FontWeight.w900,
+                                        color: AppColors.textPrimary,
+                                        letterSpacing: -0.4,
+                                      ),
+                                    ),
+                                  ]
+                                : [],
+                          ),
+                        );
+                      },
+                    ),
                   ],
+                ),
+                const SizedBox(height: 16),
+                // Total Elements Count
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 8,
+                  ),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF15181E),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: const Color(0xFF363C4A)),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.layers_outlined,
+                        size: 16,
+                        color: AppColors.textSecondary,
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        'إجمالي العناصر: ',
+                        style: AppTextStyles.caption.copyWith(
+                          fontSize: 12,
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
+                      Text(
+                        '${widget.totalElements}',
+                        style: AppTextStyles.caption.copyWith(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.textPrimary,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
                 const SizedBox(height: 16),
                 // Note
@@ -279,68 +364,211 @@ class _PricingSummarySidebarState extends State<PricingSummarySidebar> {
                   ),
                 ),
                 const SizedBox(height: 20),
-                // Submit Button
-                SizedBox(
-                  width: double.infinity,
-                  height: 56,
-                  child: ElevatedButton(
-                    onPressed: widget.onSubmit,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF135BEC),
-                      foregroundColor: Colors.white,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      elevation: 0,
-                      shadowColor: const Color(0xFF1E3A8A).withOpacity(0.2),
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const Icon(Icons.send, size: 24),
-                        const SizedBox(width: 8),
-                        Text(
-                          'إرسال التسعير للمراجعة',
-                          style: AppTextStyles.buttonLarge.copyWith(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w700,
-                          ),
+                // Accept Pricing Button (only show for Admin/Manager when status is PENDING_APPROVAL)
+                if (widget.isAdminOrManager &&
+                    widget.isPendingApproval &&
+                    widget.onAcceptPricing != null) ...[
+                  SizedBox(
+                    width: double.infinity,
+                    height: 56,
+                    child: ElevatedButton(
+                      onPressed: widget.onAcceptPricing,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF10B981),
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
                         ),
-                      ],
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 12),
-                // Save Draft Button
-                SizedBox(
-                  width: double.infinity,
-                  height: 50,
-                  child: OutlinedButton(
-                    onPressed: widget.onSaveDraft,
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: const Color(0xFFD1D5DB),
-                      side: const BorderSide(color: Color(0xFF363C4A)),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
+                        elevation: 0,
+                        shadowColor: const Color(0xFF059669).withOpacity(0.2),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Icon(Icons.check_circle, size: 24),
+                          const SizedBox(width: 8),
+                          Text(
+                            'قبول التسعير',
+                            style: AppTextStyles.buttonLarge.copyWith(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const Icon(Icons.save_outlined, size: 24),
-                        const SizedBox(width: 8),
-                        Text(
-                          'حفظ كمسودة',
-                          style: AppTextStyles.buttonLarge.copyWith(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                            color: const Color(0xFFD1D5DB),
-                          ),
+                  ),
+                  const SizedBox(height: 12),
+                ],
+                // Make Profit and Return to Pricing Buttons (only show for Admin/Manager when status is APPROVED)
+                if (widget.isAdminOrManager &&
+                    widget.isApproved &&
+                    widget.onMakeProfit != null) ...[
+                  SizedBox(
+                    width: double.infinity,
+                    height: 56,
+                    child: ElevatedButton(
+                      onPressed: widget.onMakeProfit,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF6366F1),
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
                         ),
-                      ],
+                        elevation: 0,
+                        shadowColor: const Color(0xFF4F46E5).withOpacity(0.2),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Icon(Icons.trending_up, size: 24),
+                          const SizedBox(width: 8),
+                          Text(
+                            'حساب الربح',
+                            style: AppTextStyles.buttonLarge.copyWith(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
-                ),
+                  const SizedBox(height: 12),
+                  if (widget.onReturnToPricing != null)
+                    SizedBox(
+                      width: double.infinity,
+                      height: 50,
+                      child: OutlinedButton(
+                        onPressed: widget.onReturnToPricing,
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: AppColors.error,
+                          side: const BorderSide(color: AppColors.error),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Icon(Icons.arrow_back, size: 24),
+                            const SizedBox(width: 8),
+                            Text(
+                              'إرجاع للتسعير',
+                              style: AppTextStyles.buttonLarge.copyWith(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                                color: AppColors.error,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  const SizedBox(height: 12),
+                ],
+                // Submit Button (only show when NOT pending approval, NOT approved, and NOT Admin/Manager with pending approval)
+                if (!widget.showReturnToPricing &&
+                    !(widget.isAdminOrManager && widget.isPendingApproval) &&
+                    !(widget.isAdminOrManager && widget.isApproved)) ...[
+                  SizedBox(
+                    width: double.infinity,
+                    height: 56,
+                    child: ElevatedButton(
+                      onPressed: widget.onSubmit,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF135BEC),
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        elevation: 0,
+                        shadowColor: const Color(0xFF1E3A8A).withOpacity(0.2),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Icon(Icons.send, size: 24),
+                          const SizedBox(width: 8),
+                          Text(
+                            'إرسال التسعير للمراجعة',
+                            style: AppTextStyles.buttonLarge.copyWith(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                ],
+                // Return to Pricing Button (only show when status is PENDING_APPROVAL and NOT Admin/Manager)
+                if (widget.showReturnToPricing &&
+                    widget.onReturnToPricing != null &&
+                    !(widget.isAdminOrManager && widget.isPendingApproval)) ...[
+                  SizedBox(
+                    width: double.infinity,
+                    height: 50,
+                    child: OutlinedButton(
+                      onPressed: widget.onReturnToPricing,
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: AppColors.error,
+                        side: const BorderSide(color: AppColors.error),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Icon(Icons.arrow_back, size: 24),
+                          const SizedBox(width: 8),
+                          Text(
+                            'إرجاع للتسعير',
+                            style: AppTextStyles.buttonLarge.copyWith(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.error,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                ],
+                // Save Draft Button (show for all statuses including PENDING_APPROVAL and PROFIT_PENDING)
+                if (widget.onSaveDraft != null)
+                  SizedBox(
+                    width: double.infinity,
+                    height: 50,
+                    child: OutlinedButton(
+                      onPressed: widget.onSaveDraft,
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: const Color(0xFFD1D5DB),
+                        side: const BorderSide(color: Color(0xFF363C4A)),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Icon(Icons.save_outlined, size: 24),
+                          const SizedBox(width: 8),
+                          Text(
+                            'حفظ كمسودة',
+                            style: AppTextStyles.buttonLarge.copyWith(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                              color: const Color(0xFFD1D5DB),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
                 const SizedBox(height: 20),
                 // Tip Section
                 Container(

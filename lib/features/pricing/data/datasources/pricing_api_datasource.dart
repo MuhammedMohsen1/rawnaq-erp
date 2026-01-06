@@ -89,19 +89,47 @@ class PricingApiDataSource {
     String? description,
     int? order,
   }) async {
-    final response = await _apiClient.post(
-      ApiEndpoints.pricingSubItems(projectId, version, itemId),
-      data: {
-        'name': name,
-        if (description != null) 'description': description,
-        if (order != null) 'order': order,
-      },
+    final endpoint = ApiEndpoints.pricingSubItems(projectId, version, itemId);
+    print('Adding sub-item to endpoint: $endpoint');
+    print(
+      'Parameters: projectId=$projectId, version=$version, itemId=$itemId, name=$name',
     );
 
-    final responseData = response.data as Map<String, dynamic>;
-    return PricingSubItemModel.fromJson(
-      responseData['data'] as Map<String, dynamic>,
-    );
+    try {
+      final response = await _apiClient.post(
+        endpoint,
+        data: {
+          'name': name,
+          if (description != null) 'description': description,
+          if (order != null) 'order': order,
+        },
+      );
+
+      final responseData = response.data as Map<String, dynamic>;
+
+      if (responseData['data'] == null) {
+        throw Exception('Invalid response format: missing data field');
+      }
+
+      return PricingSubItemModel.fromJson(
+        responseData['data'] as Map<String, dynamic>,
+      );
+    } catch (e) {
+      print('Error in addPricingSubItem: $e');
+      print('Endpoint used: $endpoint');
+
+      // Provide more user-friendly error messages
+      if (e.toString().contains('NotFoundException') ||
+          e.toString().contains('NOT_FOUND')) {
+        throw Exception(
+          'لا يمكن إضافة فئة فرعية. يرجى التحقق من أن:\n'
+          '1. المشروع موجود\n'
+          '2. إصدار التسعير في حالة "مسودة" (DRAFT)\n'
+          '3. الفئة موجودة في هذا الإصدار',
+        );
+      }
+      rethrow;
+    }
   }
 
   /// Upload images to a pricing sub-item
@@ -160,20 +188,49 @@ class PricingApiDataSource {
       }
     }
 
+    final endpoint = ApiEndpoints.pricingSubItemImages(
+      projectId,
+      version,
+      itemId,
+      subItemId,
+    );
+    print('Uploading ${formData.files.length} images to endpoint: $endpoint');
     print(
-      'Uploading ${formData.files.length} images to endpoint: ${ApiEndpoints.pricingSubItemImages(projectId, version, itemId, subItemId)}',
+      'Parameters: projectId=$projectId, version=$version, itemId=$itemId, subItemId=$subItemId',
     );
 
-    final response = await _apiClient.uploadFile(
-      ApiEndpoints.pricingSubItemImages(projectId, version, itemId, subItemId),
-      formData: formData,
-    );
+    try {
+      final response = await _apiClient.uploadFile(
+        endpoint,
+        formData: formData,
+      );
 
-    print('Upload response received');
-    final responseData = response.data as Map<String, dynamic>;
-    return PricingSubItemModel.fromJson(
-      responseData['data'] as Map<String, dynamic>,
-    );
+      print('Upload response received with status: ${response.statusCode}');
+      final responseData = response.data as Map<String, dynamic>;
+
+      if (responseData['data'] == null) {
+        throw Exception('Invalid response format: missing data field');
+      }
+
+      return PricingSubItemModel.fromJson(
+        responseData['data'] as Map<String, dynamic>,
+      );
+    } catch (e) {
+      print('Error in uploadSubItemImages: $e');
+      print('Endpoint used: $endpoint');
+
+      // Provide more user-friendly error messages
+      if (e.toString().contains('NotFoundException') ||
+          e.toString().contains('NOT_FOUND')) {
+        throw Exception(
+          'لا يمكن رفع الصور. يرجى التحقق من أن:\n'
+          '1. المشروع موجود\n'
+          '2. إصدار التسعير في حالة "مسودة" (DRAFT)\n'
+          '3. الفئة والفئة الفرعية موجودة في هذا الإصدار',
+        );
+      }
+      rethrow;
+    }
   }
 
   /// Delete an image from a pricing sub-item
@@ -387,6 +444,23 @@ class PricingApiDataSource {
     final response = await _apiClient.patch(
       ApiEndpoints.rejectPricing(projectId, version),
       data: {if (comments != null) 'comments': comments},
+    );
+
+    final responseData = response.data as Map<String, dynamic>;
+    return PricingVersionModel.fromJson(
+      responseData['data'] as Map<String, dynamic>,
+    );
+  }
+
+  /// Return pricing from PENDING_APPROVAL to DRAFT for editing
+  Future<PricingVersionModel> returnToPricing(
+    String projectId,
+    int version, {
+    String? reason,
+  }) async {
+    final response = await _apiClient.patch(
+      ApiEndpoints.returnToPricing(projectId, version),
+      data: {if (reason != null && reason.isNotEmpty) 'reason': reason},
     );
 
     final responseData = response.data as Map<String, dynamic>;

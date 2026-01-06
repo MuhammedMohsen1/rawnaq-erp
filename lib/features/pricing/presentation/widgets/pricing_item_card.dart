@@ -207,9 +207,6 @@ class _PricingItemCardState extends State<PricingItemCard> {
           color: AppColors.textPrimary,
         ),
         children: [
-          const TextSpan(
-            text: 'د.ك ',
-          ), // KD at the beginning (opposite direction)
           TextSpan(text: formattedInteger),
           TextSpan(
             text: '.$decimalPart',
@@ -432,10 +429,22 @@ class _PricingItemCardState extends State<PricingItemCard> {
       }
     } catch (e, stackTrace) {
       if (mounted) {
+        String errorMessage = 'فشل رفع الصور: ${e.toString()}';
+
+        // Provide more user-friendly error messages
+        if (e.toString().contains('NotFoundException') ||
+            e.toString().contains('NOT_FOUND')) {
+          errorMessage =
+              'لا يمكن رفع الصور. يرجى التحقق من أن:\n'
+              '1. المشروع موجود\n'
+              '2. إصدار التسعير في حالة "مسودة" (DRAFT)\n'
+              '3. الفئة والفئة الفرعية موجودة في هذا الإصدار';
+        }
+
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('فشل رفع الصور: ${e.toString()}'),
-            duration: const Duration(seconds: 4),
+            content: Text(errorMessage),
+            duration: const Duration(seconds: 5),
           ),
         );
       }
@@ -1330,13 +1339,30 @@ class _PricingItemCardState extends State<PricingItemCard> {
                 const SizedBox(width: 16),
                 // Total Price
                 Column(
-                  crossAxisAlignment: CrossAxisAlignment.end,
+                  crossAxisAlignment: CrossAxisAlignment.center,
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    _buildFormattedNumber(
-                      widget.item.totalPrice,
-                      fontSize: 20,
-                      fontWeight: FontWeight.w700,
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 2.0),
+                          child: Text(
+                            'KD',
+                            style: AppTextStyles.caption.copyWith(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w500,
+                              color: AppColors.textSecondary,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 6),
+                        _buildFormattedNumber(
+                          widget.item.totalPrice,
+                          fontSize: 20,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ],
                     ),
                   ],
                 ),
@@ -1430,11 +1456,69 @@ class _PricingItemCardState extends State<PricingItemCard> {
                                       ),
                                     ),
                                     if (allElements.isNotEmpty) ...[
-                                      Text(
-                                        '${allElements.length} عنصر',
-                                        style: AppTextStyles.caption.copyWith(
-                                          color: AppColors.textSecondary,
-                                        ),
+                                      Builder(
+                                        builder: (context) {
+                                          final total = allElements
+                                              .fold<double>(
+                                                0,
+                                                (sum, element) =>
+                                                    sum +
+                                                    (element.totalCost ?? 0)
+                                                        .toDouble(),
+                                              );
+                                          final totalStr = total
+                                              .toStringAsFixed(3);
+                                          final dotIndex = totalStr.indexOf(
+                                            '.',
+                                          );
+                                          final intPart = dotIndex >= 0
+                                              ? totalStr.substring(0, dotIndex)
+                                              : totalStr;
+                                          final decimalPart = dotIndex >= 0
+                                              ? totalStr.substring(dotIndex)
+                                              : '';
+                                          return RichText(
+                                            textDirection: TextDirection.ltr,
+                                            text: TextSpan(
+                                              children: [
+                                                TextSpan(
+                                                  text: intPart,
+                                                  style: AppTextStyles.caption
+                                                      .copyWith(
+                                                        color: AppColors
+                                                            .textSecondary,
+                                                      ),
+                                                ),
+                                                if (decimalPart.isNotEmpty)
+                                                  TextSpan(
+                                                    text: decimalPart,
+                                                    style: AppTextStyles.caption
+                                                        .copyWith(
+                                                          color: AppColors
+                                                              .textSecondary,
+                                                          fontSize:
+                                                              AppTextStyles
+                                                                  .caption
+                                                                  .fontSize! *
+                                                              0.75, // smaller
+                                                        ),
+                                                  ),
+                                                TextSpan(
+                                                  text: ' KD',
+                                                  style: TextStyle(
+                                                    color:
+                                                        AppColors.textSecondary,
+                                                    fontSize:
+                                                        AppTextStyles
+                                                            .caption
+                                                            .fontSize! *
+                                                        0.75, // smaller
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          );
+                                        },
                                       ),
                                       const SizedBox(width: 8),
                                     ],
@@ -1548,16 +1632,19 @@ class _PricingItemCardState extends State<PricingItemCard> {
                                     if (subItem.images.isNotEmpty ||
                                         _uploadingImages[subItem.id] ==
                                             true) ...[
-                                      Container(
-                                        margin: const EdgeInsets.only(
-                                          right: 0,
-                                          top: 12,
-                                          bottom: 12,
-                                        ),
-                                        child: SizedBox(
-                                          width: 400,
-                                          height:
-                                              600, // Fixed height to constrain the Column
+                                      Flexible(
+                                        flex: 1,
+                                        child: Container(
+                                          margin: const EdgeInsets.only(
+                                            right: 12,
+                                            top: 12,
+                                            bottom: 12,
+                                          ),
+                                          constraints: const BoxConstraints(
+                                            maxWidth: 400,
+                                            minWidth: 200,
+                                            maxHeight: 600,
+                                          ),
                                           child: Container(
                                             padding: const EdgeInsets.all(12),
                                             decoration: BoxDecoration(
