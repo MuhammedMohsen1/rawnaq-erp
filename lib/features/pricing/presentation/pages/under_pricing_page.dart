@@ -5,8 +5,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:open_file/open_file.dart';
+import 'package:file_picker/file_picker.dart';
+import 'package:path_provider/path_provider.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_text_styles.dart';
 import '../../../../core/error/exceptions.dart';
@@ -565,14 +566,17 @@ class _UnderPricingPageState extends State<UnderPricingPage> {
       return;
     }
 
+    BuildContext? dialogContext;
     try {
       // Show loading indicator
       if (mounted) {
         showDialog(
           context: context,
           barrierDismissible: false,
-          builder: (context) =>
-              const Center(child: CircularProgressIndicator()),
+          builder: (context) {
+            dialogContext = context;
+            return const Center(child: CircularProgressIndicator());
+          },
         );
       }
 
@@ -582,60 +586,84 @@ class _UnderPricingPageState extends State<UnderPricingPage> {
         _pricingVersion!.version,
       );
 
-      // Get downloads directory
-      final directory = await getDownloadsDirectory();
-      if (directory == null) {
-        if (mounted) {
-          Navigator.of(context).pop(); // Close loading dialog
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('فشل الحصول على مجلد التحميل'),
-              duration: Duration(seconds: 4),
-            ),
-          );
-        }
-        return;
+      // Close loading dialog safely
+      if (mounted && dialogContext != null) {
+        Navigator.of(dialogContext!, rootNavigator: true).pop();
       }
 
       // Create filename
       final projectName = _projectName ?? 'project';
       final fileName =
           'pricing-${projectName}-v${_pricingVersion!.version}-${DateFormat('yyyy-MM-dd').format(DateTime.now())}.pdf';
-      final file = File('${directory.path}/$fileName');
 
-      // Write PDF to file
-      await file.writeAsBytes(pdfBytes);
+      File savedFile;
 
-      // Close loading dialog
-      if (mounted) {
-        Navigator.of(context).pop();
+      // Use file picker to let user choose save location (works on desktop)
+      // For mobile, we'll use a different approach
+      if (Platform.isWindows || Platform.isMacOS || Platform.isLinux) {
+        // Desktop platforms - use saveFile dialog
+        final String? outputFile = await FilePicker.platform.saveFile(
+          dialogTitle: 'حفظ ملف PDF',
+          fileName: fileName,
+          type: FileType.custom,
+          allowedExtensions: ['pdf'],
+        );
+
+        if (outputFile == null) {
+          // User cancelled the save dialog
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('تم إلغاء حفظ الملف'),
+                duration: Duration(seconds: 2),
+              ),
+            );
+          }
+          return;
+        }
+
+        // Write PDF to the selected location
+        savedFile = File(outputFile);
+        await savedFile.writeAsBytes(pdfBytes);
+      } else {
+        // Mobile platforms (iOS, Android) - save to app documents directory
+        // and share/open it
+        final directory = await getApplicationDocumentsDirectory();
+        savedFile = File('${directory.path}/$fileName');
+        await savedFile.writeAsBytes(pdfBytes);
+
+        // Open the file (will trigger share sheet on mobile)
+        await OpenFile.open(savedFile.path);
       }
 
-      // Open the PDF file
-      final result = await OpenFile.open(file.path);
-
+      // Show success message
       if (mounted) {
-        if (result.type == ResultType.done) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('تم تصدير PDF بنجاح: $fileName'),
-              duration: const Duration(seconds: 3),
-            ),
-          );
-        } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('تم حفظ PDF في: ${file.path}'),
-              duration: const Duration(seconds: 4),
-            ),
-          );
-        }
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('تم حفظ PDF بنجاح: ${savedFile.path}'),
+            duration: const Duration(seconds: 3),
+            action: Platform.isWindows || Platform.isMacOS || Platform.isLinux
+                ? SnackBarAction(
+                    label: 'فتح',
+                    onPressed: () async {
+                      await OpenFile.open(savedFile.path);
+                    },
+                  )
+                : null,
+          ),
+        );
       }
     } catch (e) {
-      if (mounted) {
-        // Close loading dialog if still open
-        Navigator.of(context, rootNavigator: true).pop();
+      // Close loading dialog if still open (safely)
+      if (mounted && dialogContext != null) {
+        try {
+          Navigator.of(dialogContext!, rootNavigator: true).pop();
+        } catch (_) {
+          // Dialog already closed or context invalid - ignore
+        }
+      }
 
+      if (mounted) {
         String errorMessage = 'فشل تصدير PDF';
         if (e is ServerException) {
           errorMessage = 'فشل تصدير PDF: ${e.message}';
