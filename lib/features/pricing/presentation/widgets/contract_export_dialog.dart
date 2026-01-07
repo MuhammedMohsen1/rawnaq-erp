@@ -667,39 +667,63 @@ class _ContractExportDialogState extends State<ContractExportDialog> {
                         decoration: InputDecoration(
                           labelText: 'العنوان',
                           hintText: 'مثال: أولا: التمهيد',
+                          prefixIcon: const Icon(Icons.title, size: 20),
                           border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8),
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(10),
+                            borderSide: BorderSide(color: Colors.grey[300]!),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(10),
+                            borderSide: BorderSide(
+                              color: AppColors.primary,
+                              width: 2,
+                            ),
                           ),
                           filled: true,
-                          fillColor: Colors.white,
+                          fillColor: Colors.grey[50],
                           contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 12,
+                            horizontal: 16,
                             vertical: 16,
                           ),
                         ),
                         style: const TextStyle(
-                          fontSize: 14,
+                          fontSize: 15,
                           fontWeight: FontWeight.bold,
                         ),
                         textDirection: TextDirection.rtl,
                         textAlign: TextAlign.right,
                       ),
-                      const SizedBox(height: 12),
+                      const SizedBox(height: 16),
                       TextField(
                         controller: term['description'],
-                        maxLines: 5,
-                        minLines: 3,
+                        maxLines: 6,
+                        minLines: 4,
                         decoration: InputDecoration(
                           labelText: 'الوصف',
                           hintText: 'أدخل نص البند هنا...',
+                          prefixIcon: const Icon(Icons.description, size: 20),
                           border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8),
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(10),
+                            borderSide: BorderSide(color: Colors.grey[300]!),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(10),
+                            borderSide: BorderSide(
+                              color: AppColors.primary,
+                              width: 2,
+                            ),
                           ),
                           filled: true,
-                          fillColor: Colors.white,
-                          contentPadding: const EdgeInsets.all(12),
+                          fillColor: Colors.grey[50],
+                          contentPadding: const EdgeInsets.all(16),
                         ),
-                        style: const TextStyle(fontSize: 13),
+                        style: const TextStyle(fontSize: 14),
                         textDirection: TextDirection.rtl,
                         textAlign: TextAlign.right,
                       ),
@@ -864,22 +888,37 @@ class _ContractExportDialogState extends State<ContractExportDialog> {
                             decoration: InputDecoration(
                               labelText: 'اسم الدفعة',
                               hintText: 'مثال: دفعة أولى',
+                              prefixIcon: const Icon(Icons.payment, size: 20),
                               border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(8),
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              enabledBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(10),
+                                borderSide: BorderSide(color: Colors.grey[300]!),
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(10),
+                                borderSide: BorderSide(
+                                  color: AppColors.primary,
+                                  width: 2,
+                                ),
                               ),
                               filled: true,
                               fillColor: Colors.grey[50],
                               contentPadding: const EdgeInsets.symmetric(
-                                horizontal: 12,
+                                horizontal: 16,
                                 vertical: 16,
                               ),
                             ),
-                            style: const TextStyle(fontSize: 14),
+                            style: const TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w500,
+                            ),
                             textDirection: TextDirection.rtl,
                             textAlign: TextAlign.right,
                           ),
                         ),
-                        const SizedBox(width: 12),
+                        const SizedBox(width: 16),
                         Expanded(
                           flex: 1,
                           child: TextField(
@@ -895,15 +934,27 @@ class _ContractExportDialogState extends State<ContractExportDialog> {
                               _onPercentageChanged(index, newValue);
                             },
                             decoration: InputDecoration(
-                              labelText: 'النسبة %',
+                              labelText: 'النسبة',
                               suffixText: '%',
+                              prefixIcon: const Icon(Icons.percent, size: 20),
                               border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(8),
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              enabledBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(10),
+                                borderSide: BorderSide(color: Colors.grey[300]!),
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(10),
+                                borderSide: BorderSide(
+                                  color: AppColors.primary,
+                                  width: 2,
+                                ),
                               ),
                               filled: true,
                               fillColor: Colors.grey[50],
                               contentPadding: const EdgeInsets.symmetric(
-                                horizontal: 12,
+                                horizontal: 16,
                                 vertical: 16,
                               ),
                             ),
@@ -912,7 +963,7 @@ class _ContractExportDialogState extends State<ContractExportDialog> {
                             textDirection: TextDirection.ltr,
                             textAlign: TextAlign.center,
                             style: const TextStyle(
-                              fontSize: 14,
+                              fontSize: 16,
                               fontWeight: FontWeight.bold,
                             ),
                           ),
