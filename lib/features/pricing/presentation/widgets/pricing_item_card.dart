@@ -1528,7 +1528,8 @@ class _PricingItemCardState extends State<PricingItemCard> {
                                                 0,
                                                 (sum, element) =>
                                                     sum +
-                                                    (element.totalCost ?? 0)
+                                                    (element.calculatedCost ??
+                                                            0)
                                                         .toDouble(),
                                               );
                                           final totalStr = total
@@ -1982,7 +1983,7 @@ class _PricingItemCardState extends State<PricingItemCard> {
                                                               0,
                                                               (sum, e) =>
                                                                   sum +
-                                                                  (e.totalCost ??
+                                                                  (e.calculatedCost ??
                                                                           0)
                                                                       .toDouble(),
                                                             );
@@ -2164,7 +2165,8 @@ class _PricingItemCardState extends State<PricingItemCard> {
                                                       0,
                                                       (sum, e) =>
                                                           sum +
-                                                          (e.totalCost ?? 0)
+                                                          (e.calculatedCost ??
+                                                                  0)
                                                               .toDouble(),
                                                     );
                                               final margin =
