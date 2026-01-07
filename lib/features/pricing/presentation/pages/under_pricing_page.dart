@@ -1387,32 +1387,45 @@ class _UnderPricingPageState extends State<UnderPricingPage> {
       children: _pricingVersion!.items!.map((item) {
         return Padding(
           padding: const EdgeInsets.only(bottom: 16),
-          child: PricingItemCard(
-            key: ValueKey('pricing-item-${item.id}'),
-            projectId: widget.projectId,
-            version: _pricingVersion!.version,
-            item: item,
-            pricingStatus: _pricingVersion?.status,
-            initialIsExpanded: _itemExpandedStates[item.id] ?? true,
-            initialSubItemExpandedStates: _subItemExpandedStates[item.id] ?? {},
-            onExpandedChanged: (isExpanded) =>
-                _handleItemExpandedChanged(item.id, isExpanded),
-            onSubItemExpandedChanged: (subItemStates) =>
-                _handleSubItemExpandedChanged(item.id, subItemStates),
-            onItemDeleted: () => _loadPricingData(),
-            onSubItemDeleted: (_) => _loadPricingData(),
-            onItemChanged: (_) {
-              // Reload data but preserve widget state using keys
-              _loadPricingData();
+          child: Builder(
+            builder: (context) {
+              // Get user role information
+              final authState = context.read<AuthBloc>().state;
+              bool isAdminOrManager = false;
+              if (authState is AuthAuthenticated) {
+                final user = authState.user;
+                isAdminOrManager = user.isAdmin || user.isManager;
+              }
+              
+              return PricingItemCard(
+                key: ValueKey('pricing-item-${item.id}'),
+                projectId: widget.projectId,
+                version: _pricingVersion!.version,
+                item: item,
+                pricingStatus: _pricingVersion?.status,
+                isAdminOrManager: isAdminOrManager,
+                initialIsExpanded: _itemExpandedStates[item.id] ?? true,
+                initialSubItemExpandedStates: _subItemExpandedStates[item.id] ?? {},
+                onExpandedChanged: (isExpanded) =>
+                    _handleItemExpandedChanged(item.id, isExpanded),
+                onSubItemExpandedChanged: (subItemStates) =>
+                    _handleSubItemExpandedChanged(item.id, subItemStates),
+                onItemDeleted: () => _loadPricingData(),
+                onSubItemDeleted: (_) => _loadPricingData(),
+                onItemChanged: (_) {
+                  // Reload data but preserve widget state using keys
+                  _loadPricingData();
+                },
+                onSubItemChanged: (updatedSubItem) {
+                  // Store updated profit margin in parent state
+                  setState(() {
+                    _subItemProfitMargins[updatedSubItem.id] =
+                        updatedSubItem.profitMargin;
+                  });
+                },
+                onAddSubItem: () => _addSubItem(item.id),
+              );
             },
-            onSubItemChanged: (updatedSubItem) {
-              // Store updated profit margin in parent state
-              setState(() {
-                _subItemProfitMargins[updatedSubItem.id] =
-                    updatedSubItem.profitMargin;
-              });
-            },
-            onAddSubItem: () => _addSubItem(item.id),
           ),
         );
       }).toList(),

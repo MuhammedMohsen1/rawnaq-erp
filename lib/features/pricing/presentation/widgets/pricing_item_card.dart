@@ -72,6 +72,7 @@ class PricingItemCard extends StatefulWidget {
   final ValueChanged<Map<String, bool>>? onSubItemExpandedChanged;
   final VoidCallback? onItemDeleted;
   final ValueChanged<String>? onSubItemDeleted; // subItemId
+  final bool isAdminOrManager; // Whether user is Admin or Manager of Department
 
   const PricingItemCard({
     super.key,
@@ -88,6 +89,7 @@ class PricingItemCard extends StatefulWidget {
     this.onSubItemExpandedChanged,
     this.onItemDeleted,
     this.onSubItemDeleted,
+    this.isAdminOrManager = false,
   });
 
   @override
@@ -1697,7 +1699,9 @@ class _PricingItemCardState extends State<PricingItemCard> {
                                           'PENDING_SIGNATURE')) ...[
                                 // keep notes editor also for DRAFT/PENDING_SIGNATURE when not APPROVED
                               ],
-                              if (widget.pricingStatus != null &&
+                              // Notes editor - only visible to Admin and Manager
+                              if (widget.isAdminOrManager &&
+                                  widget.pricingStatus != null &&
                                   (widget.pricingStatus!.toUpperCase() ==
                                           'APPROVED' ||
                                       widget.pricingStatus!.toUpperCase() ==
@@ -1842,6 +1846,14 @@ class _PricingItemCardState extends State<PricingItemCard> {
                                     ),
                                   ),
                                 ),
+                              ],
+                              // Profit Margin Input - only visible to Admin and Manager when status is APPROVED or PENDING_SIGNATURE
+                              if (widget.isAdminOrManager &&
+                                  widget.pricingStatus != null &&
+                                  (widget.pricingStatus!.toUpperCase() ==
+                                          'APPROVED' ||
+                                      widget.pricingStatus!.toUpperCase() ==
+                                          'PENDING_SIGNATURE')) ...[
                                 Padding(
                                   padding: const EdgeInsets.symmetric(
                                     horizontal: 12,
@@ -2144,162 +2156,141 @@ class _PricingItemCardState extends State<PricingItemCard> {
                                             ),
                                           ],
                                         ),
-                                        const SizedBox(height: 12),
-                                        // Cost, Profit, Total breakdown summary
-                                        Container(
-                                          padding: const EdgeInsets.all(12),
-                                          decoration: BoxDecoration(
-                                            color: const Color(0xFF15181E),
-                                            borderRadius: BorderRadius.circular(
-                                              8,
-                                            ),
-                                            border: Border.all(
-                                              color: const Color(0xFF363C4A),
-                                            ),
-                                          ),
-                                          child: Builder(
-                                            builder: (context) {
-                                              final cost = subItem.totalCost > 0
-                                                  ? subItem.totalCost
-                                                  : allElements.fold<double>(
-                                                      0,
-                                                      (sum, e) =>
-                                                          sum +
-                                                          (e.calculatedCost ??
-                                                                  0)
-                                                              .toDouble(),
-                                                    );
-                                              final margin =
-                                                  _profitMargins[subItem.id] ??
-                                                  subItem.profitMargin;
-                                              final profit =
-                                                  cost * (margin / 100);
-                                              final total = cost + profit;
-                                              return Column(
-                                                crossAxisAlignment:
-                                                    CrossAxisAlignment.start,
-                                                children: [
-                                                  Text(
-                                                    'ملخص التسعير',
-                                                    style: AppTextStyles
-                                                        .bodyMedium
-                                                        .copyWith(
-                                                          fontWeight:
-                                                              FontWeight.w600,
-                                                          fontSize: 14,
-                                                        ),
-                                                  ),
-                                                  const SizedBox(height: 8),
-                                                  Row(
-                                                    mainAxisAlignment:
-                                                        MainAxisAlignment
-                                                            .spaceBetween,
-                                                    children: [
-                                                      Text(
-                                                        'التكلفة',
-                                                        style: AppTextStyles
-                                                            .caption
-                                                            .copyWith(
-                                                              color: AppColors
-                                                                  .textSecondary,
-                                                            ),
-                                                      ),
-                                                      Text(
-                                                        '${cost.toStringAsFixed(3)} KD',
-                                                        style: AppTextStyles
-                                                            .caption
-                                                            .copyWith(
-                                                              color: AppColors
-                                                                  .textSecondary,
-                                                              fontWeight:
-                                                                  FontWeight
-                                                                      .w500,
-                                                            ),
-                                                      ),
-                                                    ],
-                                                  ),
-                                                  const SizedBox(height: 4),
-                                                  Row(
-                                                    mainAxisAlignment:
-                                                        MainAxisAlignment
-                                                            .spaceBetween,
-                                                    children: [
-                                                      Text(
-                                                        'الربح (${margin.toStringAsFixed(2)}%)',
-                                                        style: AppTextStyles
-                                                            .caption
-                                                            .copyWith(
-                                                              color:
-                                                                  const Color(
-                                                                    0xFF10B981,
-                                                                  ),
-                                                            ),
-                                                      ),
-                                                      Text(
-                                                        '${profit.toStringAsFixed(3)} KD',
-                                                        style: AppTextStyles
-                                                            .caption
-                                                            .copyWith(
-                                                              color:
-                                                                  const Color(
-                                                                    0xFF10B981,
-                                                                  ),
-                                                              fontWeight:
-                                                                  FontWeight
-                                                                      .w500,
-                                                            ),
-                                                      ),
-                                                    ],
-                                                  ),
-                                                  const SizedBox(height: 4),
-                                                  const Divider(
-                                                    color: Color(0xFF363C4A),
-                                                    height: 1,
-                                                  ),
-                                                  const SizedBox(height: 4),
-                                                  Row(
-                                                    mainAxisAlignment:
-                                                        MainAxisAlignment
-                                                            .spaceBetween,
-                                                    children: [
-                                                      Text(
-                                                        'الإجمالي',
-                                                        style: AppTextStyles
-                                                            .caption
-                                                            .copyWith(
-                                                              color: AppColors
-                                                                  .textPrimary,
-                                                              fontWeight:
-                                                                  FontWeight
-                                                                      .w600,
-                                                              fontSize: 13,
-                                                            ),
-                                                      ),
-                                                      Text(
-                                                        '${total.toStringAsFixed(3)} KD',
-                                                        style: AppTextStyles
-                                                            .caption
-                                                            .copyWith(
-                                                              color: AppColors
-                                                                  .textPrimary,
-                                                              fontWeight:
-                                                                  FontWeight
-                                                                      .w700,
-                                                              fontSize: 13,
-                                                            ),
-                                                      ),
-                                                    ],
-                                                  ),
-                                                ],
-                                              );
-                                            },
-                                          ),
-                                        ),
                                       ],
                                     ),
                                   ),
                                 ),
                               ],
+                              // Cost, Profit, Total breakdown summary - Profit only visible to Admin and Manager
+                              const SizedBox(height: 12),
+                              Container(
+                                padding: const EdgeInsets.all(12),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFF15181E),
+                                  borderRadius: BorderRadius.circular(8),
+                                  border: Border.all(
+                                    color: const Color(0xFF363C4A),
+                                  ),
+                                ),
+                                child: Builder(
+                                  builder: (context) {
+                                    final cost = subItem.totalCost > 0
+                                        ? subItem.totalCost
+                                        : allElements.fold<double>(
+                                            0,
+                                            (sum, e) =>
+                                                sum +
+                                                (e.calculatedCost ?? 0)
+                                                    .toDouble(),
+                                          );
+                                    final margin =
+                                        _profitMargins[subItem.id] ??
+                                        subItem.profitMargin;
+                                    final profit = cost * (margin / 100);
+                                    final total = cost + profit;
+                                    return Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          'ملخص التسعير',
+                                          style: AppTextStyles.bodyMedium
+                                              .copyWith(
+                                                fontWeight: FontWeight.w600,
+                                                fontSize: 14,
+                                              ),
+                                        ),
+                                        const SizedBox(height: 8),
+                                        Row(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.spaceBetween,
+                                          children: [
+                                            Text(
+                                              'التكلفة',
+                                              style: AppTextStyles.caption
+                                                  .copyWith(
+                                                    color:
+                                                        AppColors.textSecondary,
+                                                  ),
+                                            ),
+                                            Text(
+                                              '${cost.toStringAsFixed(3)} KD',
+                                              style: AppTextStyles.caption
+                                                  .copyWith(
+                                                    color:
+                                                        AppColors.textSecondary,
+                                                    fontWeight: FontWeight.w500,
+                                                  ),
+                                            ),
+                                          ],
+                                        ),
+                                        // Profit row - only visible to Admin and Manager
+                                        if (widget.isAdminOrManager) ...[
+                                          const SizedBox(height: 4),
+                                          Row(
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.spaceBetween,
+                                            children: [
+                                              Text(
+                                                'الربح (${margin.toStringAsFixed(2)}%)',
+                                                style: AppTextStyles.caption
+                                                    .copyWith(
+                                                      color: const Color(
+                                                        0xFF10B981,
+                                                      ),
+                                                    ),
+                                              ),
+                                              Text(
+                                                '${profit.toStringAsFixed(3)} KD',
+                                                style: AppTextStyles.caption
+                                                    .copyWith(
+                                                      color: const Color(
+                                                        0xFF10B981,
+                                                      ),
+                                                      fontWeight:
+                                                          FontWeight.w500,
+                                                    ),
+                                              ),
+                                            ],
+                                          ),
+                                        ],
+                                        const SizedBox(height: 4),
+                                        const Divider(
+                                          color: Color(0xFF363C4A),
+                                          height: 1,
+                                        ),
+                                        const SizedBox(height: 4),
+                                        Row(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.spaceBetween,
+                                          children: [
+                                            Text(
+                                              'الإجمالي',
+                                              style: AppTextStyles.caption
+                                                  .copyWith(
+                                                    color:
+                                                        AppColors.textPrimary,
+                                                    fontWeight: FontWeight.w600,
+                                                    fontSize: 13,
+                                                  ),
+                                            ),
+                                            Text(
+                                              '${total.toStringAsFixed(3)} KD',
+                                              style: AppTextStyles.caption
+                                                  .copyWith(
+                                                    color:
+                                                        AppColors.textPrimary,
+                                                    fontWeight: FontWeight.w700,
+                                                    fontSize: 13,
+                                                  ),
+                                            ),
+                                          ],
+                                        ),
+                                      ],
+                                    );
+                                  },
+                                ),
+                              ),
                               // Two-column layout: Images preview on left (if exists), Elements on right
                               Padding(
                                 padding: const EdgeInsets.symmetric(
