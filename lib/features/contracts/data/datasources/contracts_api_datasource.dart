@@ -13,16 +13,23 @@ class ContractsApiDataSource {
   /// Export contract PDF
   Future<Uint8List> exportContractPdf(
     String projectId, {
-    String? contractTerms,
+    String? civilId,
+    String? projectAddress,
+    List<Map<String, String>>? contractTerms,
+    required List<Map<String, dynamic>> paymentSchedule,
   }) async {
     final endpoint = ApiEndpoints.exportContractPdf(projectId);
-    final queryParams = contractTerms != null
-        ? {'contractTerms': contractTerms}
-        : null;
 
-    final response = await _apiClient.get(
+    final response = await _apiClient.post(
       endpoint,
-      queryParameters: queryParams,
+      data: {
+        if (civilId != null && civilId.isNotEmpty) 'civilId': civilId,
+        if (projectAddress != null && projectAddress.isNotEmpty)
+          'projectAddress': projectAddress,
+        if (contractTerms != null && contractTerms.isNotEmpty)
+          'contractTerms': contractTerms,
+        'paymentSchedule': paymentSchedule,
+      },
       options: Options(responseType: ResponseType.bytes),
     );
 

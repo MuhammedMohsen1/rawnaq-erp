@@ -436,7 +436,7 @@ class _ContractTermsEditor extends StatefulWidget {
 
 class _ContractTermsEditorState extends State<_ContractTermsEditor> {
   final SettingsApiDataSource _settingsApi = SettingsApiDataSource();
-  final TextEditingController _termsController = TextEditingController();
+  List<Map<String, TextEditingController>> _terms = [];
   bool _isLoading = true;
   bool _isSaving = false;
   String? _errorMessage;
@@ -458,7 +458,23 @@ class _ContractTermsEditorState extends State<_ContractTermsEditor> {
       final terms = await _settingsApi.getDefaultContractTerms();
       if (mounted) {
         setState(() {
-          _termsController.text = terms;
+          _terms = terms.map((term) {
+            return {
+              'title': TextEditingController(text: term['title'] ?? ''),
+              'description': TextEditingController(
+                text: term['description'] ?? '',
+              ),
+            };
+          }).toList();
+
+          // If no terms, add one empty term
+          if (_terms.isEmpty) {
+            _terms.add({
+              'title': TextEditingController(),
+              'description': TextEditingController(),
+            });
+          }
+
           _isLoading = false;
         });
       }
@@ -472,7 +488,46 @@ class _ContractTermsEditorState extends State<_ContractTermsEditor> {
     }
   }
 
+  void _addTerm() {
+    setState(() {
+      _terms.add({
+        'title': TextEditingController(),
+        'description': TextEditingController(),
+      });
+    });
+  }
+
+  void _removeTerm(int index) {
+    if (_terms.length > 1) {
+      setState(() {
+        _terms[index]['title']?.dispose();
+        _terms[index]['description']?.dispose();
+        _terms.removeAt(index);
+      });
+    }
+  }
+
   Future<void> _saveTerms() async {
+    // Validate all terms have title and description
+    for (var i = 0; i < _terms.length; i++) {
+      final title = _terms[i]['title']?.text.trim() ?? '';
+      final description = _terms[i]['description']?.text.trim() ?? '';
+
+      if (title.isEmpty) {
+        setState(() {
+          _errorMessage = 'جميع البنود يجب أن تحتوي على عنوان';
+        });
+        return;
+      }
+
+      if (description.isEmpty) {
+        setState(() {
+          _errorMessage = 'جميع البنود يجب أن تحتوي على وصف';
+        });
+        return;
+      }
+    }
+
     setState(() {
       _isSaving = true;
       _errorMessage = null;
@@ -480,11 +535,19 @@ class _ContractTermsEditorState extends State<_ContractTermsEditor> {
     });
 
     try {
-      await _settingsApi.updateDefaultContractTerms(
-        _termsController.text.trim(),
-      );
+      final termsToSave = _terms.map((term) {
+        return {
+          'title': term['title']?.text.trim() ?? '',
+          'description': term['description']?.text.trim() ?? '',
+        };
+      }).toList();
+
+      await _settingsApi.updateDefaultContractTerms(termsToSave);
 
       if (mounted) {
+        // Reload terms to ensure we have the latest data
+        await _loadTerms();
+
         setState(() {
           _isSaving = false;
           _successMessage = 'تم حفظ بنود العقد بنجاح';
@@ -527,7 +590,10 @@ class _ContractTermsEditorState extends State<_ContractTermsEditor> {
 
   @override
   void dispose() {
-    _termsController.dispose();
+    for (var term in _terms) {
+      term['title']?.dispose();
+      term['description']?.dispose();
+    }
     super.dispose();
   }
 
@@ -554,33 +620,195 @@ class _ContractTermsEditorState extends State<_ContractTermsEditor> {
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                TextField(
-                  controller: _termsController,
-                  maxLines: 10,
-                  minLines: 10,
-                  decoration: InputDecoration(
-                    hintText: 'أدخل بنود العقد الافتراضية هنا...',
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
+                // Add term button
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'عدد البنود: ${_terms.length}',
+                      style: AppTextStyles.caption,
                     ),
-                    filled: true,
-                    fillColor: AppColors.surfaceColor,
-                  ),
-                  textDirection: TextDirection.rtl,
-                  textAlign: TextAlign.right,
+                    TextButton.icon(
+                      onPressed: _addTerm,
+                      icon: const Icon(Icons.add, size: 18),
+                      label: const Text('إضافة بند'),
+                    ),
+                  ],
                 ),
+                const SizedBox(height: 12),
+                // Terms list
+                ...List.generate(_terms.length, (index) {
+                  return Container(
+                    margin: const EdgeInsets.only(bottom: 20),
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: AppColors.border, width: 1),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.05),
+                          blurRadius: 4,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 6,
+                              ),
+                              decoration: BoxDecoration(
+                                color: AppColors.primary.withOpacity(0.1),
+                                borderRadius: BorderRadius.circular(6),
+                              ),
+                              child: Text(
+                                'بند ${index + 1}',
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.bold,
+                                  color: AppColors.primary,
+                                ),
+                              ),
+                            ),
+                            if (_terms.length > 1)
+                              IconButton(
+                                icon: const Icon(
+                                  Icons.delete,
+                                  color: Colors.red,
+                                  size: 22,
+                                ),
+                                onPressed: () => _removeTerm(index),
+                                tooltip: 'حذف البند',
+                              ),
+                          ],
+                        ),
+                        const SizedBox(height: 16),
+                        TextField(
+                          controller: _terms[index]['title'],
+                          decoration: InputDecoration(
+                            labelText: 'العنوان',
+                            hintText: 'مثال: أولا: التمهيد',
+                            prefixIcon: const Icon(Icons.title),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(10),
+                              borderSide: BorderSide(color: Colors.grey[300]!),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(10),
+                              borderSide: BorderSide(
+                                color: AppColors.primary,
+                                width: 2,
+                              ),
+                            ),
+                            filled: true,
+                            fillColor: Colors.grey[50],
+                            contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 16,
+                            ),
+                          ),
+                          style: const TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.bold,
+                          ),
+                          textDirection: TextDirection.rtl,
+                          textAlign: TextAlign.right,
+                        ),
+                        const SizedBox(height: 16),
+                        TextField(
+                          controller: _terms[index]['description'],
+                          maxLines: 6,
+                          minLines: 4,
+                          decoration: InputDecoration(
+                            labelText: 'الوصف',
+                            hintText: 'أدخل نص البند هنا...',
+                            prefixIcon: const Icon(Icons.description),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(10),
+                              borderSide: BorderSide(color: Colors.grey[300]!),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(10),
+                              borderSide: BorderSide(
+                                color: AppColors.primary,
+                                width: 2,
+                              ),
+                            ),
+                            filled: true,
+                            fillColor: Colors.grey[50],
+                            contentPadding: const EdgeInsets.all(16),
+                          ),
+                          style: const TextStyle(fontSize: 13),
+                          textDirection: TextDirection.rtl,
+                          textAlign: TextAlign.right,
+                        ),
+                      ],
+                    ),
+                  );
+                }),
                 if (_errorMessage != null) ...[
                   const SizedBox(height: 8),
-                  Text(
-                    _errorMessage!,
-                    style: TextStyle(color: Colors.red[700], fontSize: 12),
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.red[50],
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: Colors.red[300]!),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(Icons.error_outline, color: Colors.red[700]),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            _errorMessage!,
+                            style: TextStyle(
+                              color: Colors.red[700],
+                              fontSize: 12,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ],
                 if (_successMessage != null) ...[
                   const SizedBox(height: 8),
-                  Text(
-                    _successMessage!,
-                    style: TextStyle(color: Colors.green[700], fontSize: 12),
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.green[50],
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: Colors.green[300]!),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(Icons.check_circle, color: Colors.green[700]),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            _successMessage!,
+                            style: TextStyle(
+                              color: Colors.green[700],
+                              fontSize: 12,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ],
                 const SizedBox(height: 16),
@@ -607,7 +835,7 @@ class _ContractTermsEditorState extends State<_ContractTermsEditor> {
                               ),
                             ),
                           )
-                        : const Text('حفظ'),
+                        : const Text('حفظ جميع البنود'),
                   ),
                 ),
               ],

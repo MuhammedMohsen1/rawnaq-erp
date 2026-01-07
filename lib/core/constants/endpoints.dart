@@ -238,35 +238,100 @@ abstract class ApiEndpoints {
   static String updateProjectStatus(String id) => '/projects/$id/status';
 
   // Pricing Endpoints
-  static String pricingVersions(String projectId) => '/projects/$projectId/pricing';
-  static String pricingVersion(String projectId, int version) => '/projects/$projectId/pricing/$version';
-  static String updatePricingVersion(String projectId, int version) => '/projects/$projectId/pricing/$version';
-  static String pricingItems(String projectId, int version) => '/projects/$projectId/pricing/$version/items';
-  static String pricingItem(String projectId, int version, String itemId) => '/projects/$projectId/pricing/$version/items/$itemId';
-  static String deletePricingItem(String projectId, int version, String itemId) => '/projects/$projectId/pricing/$version/items/$itemId';
-  static String pricingSubItems(String projectId, int version, String itemId) => '/projects/$projectId/pricing/$version/items/$itemId/sub-items';
-  static String pricingSubItem(String projectId, int version, String itemId, String subItemId) => '/projects/$projectId/pricing/$version/items/$itemId/sub-items/$subItemId';
-  static String deletePricingSubItem(String projectId, int version, String itemId, String subItemId) => '/projects/$projectId/pricing/$version/items/$itemId/sub-items/$subItemId';
-  static String pricingSubItemImages(String projectId, int version, String itemId, String subItemId) => '/projects/$projectId/pricing/$version/items/$itemId/sub-items/$subItemId/images';
-  static String deletePricingSubItemImage(String projectId, int version, String itemId, String subItemId) => '/projects/$projectId/pricing/$version/items/$itemId/sub-items/$subItemId/images';
-  static String pricingElements(String projectId, int version, String itemId, String subItemId) => '/projects/$projectId/pricing/$version/items/$itemId/sub-items/$subItemId/elements';
-  static String pricingElement(String projectId, int version, String itemId, String subItemId, String elementId) => '/projects/$projectId/pricing/$version/items/$itemId/sub-items/$subItemId/elements/$elementId';
-  static String updateSubItemProfitMargin(String projectId, int version, String itemId, String subItemId) => '/projects/$projectId/pricing/$version/items/$itemId/sub-items/$subItemId/profit-margin';
-  static String calculateProfit(String projectId, int version) => '/projects/$projectId/pricing/$version/calculate-profit';
-  static String calculateSubItemProfit(String projectId, int version) => '/projects/$projectId/pricing/$version/calculate-subitem-profit';
-  static String submitForApproval(String projectId, int version) => '/projects/$projectId/pricing/$version/submit-approval';
-  static String approvePricing(String projectId, int version) => '/projects/$projectId/pricing/$version/approve';
-  static String rejectPricing(String projectId, int version) => '/projects/$projectId/pricing/$version/reject';
-  static String returnToPricing(String projectId, int version) => '/projects/$projectId/pricing/$version/return-to-pricing';
-  static String confirmPricing(String projectId, int version) => '/projects/$projectId/pricing/$version/confirm';
-  static String exportPricingPdf(String projectId, int version) => '/projects/$projectId/pricing/$version/export-pdf';
-  static String exportPricingImages(String projectId, int version) => '/projects/$projectId/pricing/$version/export-images';
+  static String pricingVersions(String projectId) =>
+      '/projects/$projectId/pricing';
+  static String pricingVersion(String projectId, int version) =>
+      '/projects/$projectId/pricing/$version';
+  static String updatePricingVersion(String projectId, int version) =>
+      '/projects/$projectId/pricing/$version';
+  static String pricingItems(String projectId, int version) =>
+      '/projects/$projectId/pricing/$version/items';
+  static String pricingItem(String projectId, int version, String itemId) =>
+      '/projects/$projectId/pricing/$version/items/$itemId';
+  static String deletePricingItem(
+    String projectId,
+    int version,
+    String itemId,
+  ) => '/projects/$projectId/pricing/$version/items/$itemId';
+  static String pricingSubItems(String projectId, int version, String itemId) =>
+      '/projects/$projectId/pricing/$version/items/$itemId/sub-items';
+  static String pricingSubItem(
+    String projectId,
+    int version,
+    String itemId,
+    String subItemId,
+  ) =>
+      '/projects/$projectId/pricing/$version/items/$itemId/sub-items/$subItemId';
+  static String deletePricingSubItem(
+    String projectId,
+    int version,
+    String itemId,
+    String subItemId,
+  ) =>
+      '/projects/$projectId/pricing/$version/items/$itemId/sub-items/$subItemId';
+  static String pricingSubItemImages(
+    String projectId,
+    int version,
+    String itemId,
+    String subItemId,
+  ) =>
+      '/projects/$projectId/pricing/$version/items/$itemId/sub-items/$subItemId/images';
+  static String deletePricingSubItemImage(
+    String projectId,
+    int version,
+    String itemId,
+    String subItemId,
+  ) =>
+      '/projects/$projectId/pricing/$version/items/$itemId/sub-items/$subItemId/images';
+  static String pricingElements(
+    String projectId,
+    int version,
+    String itemId,
+    String subItemId,
+  ) =>
+      '/projects/$projectId/pricing/$version/items/$itemId/sub-items/$subItemId/elements';
+  static String pricingElement(
+    String projectId,
+    int version,
+    String itemId,
+    String subItemId,
+    String elementId,
+  ) =>
+      '/projects/$projectId/pricing/$version/items/$itemId/sub-items/$subItemId/elements/$elementId';
+  static String updateSubItemProfitMargin(
+    String projectId,
+    int version,
+    String itemId,
+    String subItemId,
+  ) =>
+      '/projects/$projectId/pricing/$version/items/$itemId/sub-items/$subItemId/profit-margin';
+  static String calculateProfit(String projectId, int version) =>
+      '/projects/$projectId/pricing/$version/calculate-profit';
+  static String calculateSubItemProfit(String projectId, int version) =>
+      '/projects/$projectId/pricing/$version/calculate-subitem-profit';
+  static String submitForApproval(String projectId, int version) =>
+      '/projects/$projectId/pricing/$version/submit-approval';
+  static String approvePricing(String projectId, int version) =>
+      '/projects/$projectId/pricing/$version/approve';
+  static String rejectPricing(String projectId, int version) =>
+      '/projects/$projectId/pricing/$version/reject';
+  static String returnToPricing(String projectId, int version) =>
+      '/projects/$projectId/pricing/$version/return-to-pricing';
+  static String confirmPricing(String projectId, int version) =>
+      '/projects/$projectId/pricing/$version/confirm';
+  static String exportPricingPdf(String projectId, int version) =>
+      '/projects/$projectId/pricing/$version/export-pdf';
+  static String exportPricingImages(String projectId, int version) =>
+      '/projects/$projectId/pricing/$version/export-images';
 
   // Contract Endpoints
   static String contract(String projectId) => '/projects/$projectId/contract';
-  static String exportContractPdf(String projectId) => '/projects/$projectId/contract/export-pdf';
-  static String confirmContract(String projectId) => '/projects/$projectId/contract/confirm';
-  static String returnContractToPricing(String projectId) => '/projects/$projectId/contract/return-to-pricing';
+  static String exportContractPdf(String projectId) =>
+      '/projects/$projectId/contract/export-pdf';
+  static String confirmContract(String projectId) =>
+      '/projects/$projectId/contract/confirm';
+  static String returnContractToPricing(String projectId) =>
+      '/projects/$projectId/contract/return-to-pricing';
 
   // Settings Endpoints
   static const String contractTerms = '/settings/contract-terms';

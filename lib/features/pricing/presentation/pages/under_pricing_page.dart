@@ -578,6 +578,7 @@ class _UnderPricingPageState extends State<UnderPricingPage> {
       builder: (context) => ContractExportDialog(
         projectId: widget.projectId,
         projectName: _projectName ?? 'project',
+        totalAmount: _pricingVersion?.totalPrice ?? 0.0,
       ),
     );
 
