@@ -7,6 +7,8 @@ import '../../../../core/constants/app_text_styles.dart';
 import '../../../../core/providers/locale_provider.dart';
 import '../../../../core/routing/app_router.dart';
 import '../../../auth/presentation/bloc/auth_bloc.dart';
+import '../../data/datasources/settings_api_datasource.dart';
+import '../../../../core/error/exceptions.dart';
 
 /// Settings page with language and app configuration
 class SettingsPage extends StatelessWidget {
@@ -50,95 +52,122 @@ class SettingsPage extends StatelessWidget {
               ),
               const SizedBox(height: 32),
 
-            // Language Section
-            _buildSection(
-              title: 'اللغة',
-              icon: Icons.language,
-              child: const _LanguageSelector(),
-            ),
+              // Language Section
+              _buildSection(
+                title: 'اللغة',
+                icon: Icons.language,
+                child: const _LanguageSelector(),
+              ),
 
-            const SizedBox(height: 24),
+              const SizedBox(height: 24),
 
-            // Theme Section (placeholder)
-            _buildSection(
-              title: 'المظهر',
-              icon: Icons.palette_outlined,
-              child: _buildSettingTile(
-                title: 'الوضع الداكن',
-                subtitle: 'مفعّل',
-                trailing: Switch(
-                  value: true,
-                  onChanged: null, // Disabled for now
-                  activeThumbColor: AppColors.primary,
+              // Theme Section (placeholder)
+              _buildSection(
+                title: 'المظهر',
+                icon: Icons.palette_outlined,
+                child: _buildSettingTile(
+                  title: 'الوضع الداكن',
+                  subtitle: 'مفعّل',
+                  trailing: Switch(
+                    value: true,
+                    onChanged: null, // Disabled for now
+                    activeThumbColor: AppColors.primary,
+                  ),
                 ),
               ),
-            ),
 
-            const SizedBox(height: 24),
+              const SizedBox(height: 24),
 
-            // Notifications Section (placeholder)
-            _buildSection(
-              title: 'الإشعارات',
-              icon: Icons.notifications_outlined,
-              child: Column(
-                children: [
-                  _buildSettingTile(
-                    title: 'إشعارات المهام',
-                    subtitle: 'تلقي إشعارات عند تحديث المهام',
-                    trailing: Switch(
-                      value: true,
-                      onChanged: (value) {},
-                      activeThumbColor: AppColors.primary,
+              // Notifications Section (placeholder)
+              _buildSection(
+                title: 'الإشعارات',
+                icon: Icons.notifications_outlined,
+                child: Column(
+                  children: [
+                    _buildSettingTile(
+                      title: 'إشعارات المهام',
+                      subtitle: 'تلقي إشعارات عند تحديث المهام',
+                      trailing: Switch(
+                        value: true,
+                        onChanged: (value) {},
+                        activeThumbColor: AppColors.primary,
+                      ),
                     ),
-                  ),
-                  const Divider(color: AppColors.divider, height: 1),
-                  _buildSettingTile(
-                    title: 'إشعارات المواعيد',
-                    subtitle: 'تذكير قبل المواعيد',
-                    trailing: Switch(
-                      value: true,
-                      onChanged: (value) {},
-                      activeThumbColor: AppColors.primary,
+                    const Divider(color: AppColors.divider, height: 1),
+                    _buildSettingTile(
+                      title: 'إشعارات المواعيد',
+                      subtitle: 'تذكير قبل المواعيد',
+                      trailing: Switch(
+                        value: true,
+                        onChanged: (value) {},
+                        activeThumbColor: AppColors.primary,
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
 
-            const SizedBox(height: 24),
+              const SizedBox(height: 24),
 
-            // About Section
-            _buildSection(
-              title: 'حول التطبيق',
-              icon: Icons.info_outline,
-              child: Column(
-                children: [
-                  _buildSettingTile(
-                    title: 'الإصدار',
-                    subtitle: '1.0.0',
-                    onTap: null,
-                  ),
-                  const Divider(color: AppColors.divider, height: 1),
-                  _buildSettingTile(
-                    title: 'رونق',
-                    subtitle: 'نظام إدارة المشاريع للتصميم الداخلي',
-                    onTap: null,
-                  ),
-                ],
+              // Contract Terms Section (Admin/Manager only)
+              BlocBuilder<AuthBloc, AuthState>(
+                builder: (context, state) {
+                  if (state is! AuthAuthenticated) {
+                    return const SizedBox.shrink();
+                  }
+
+                  final user = state.user;
+                  final isAdminOrManager = user.isAdmin || user.isManager;
+
+                  if (!isAdminOrManager) {
+                    return const SizedBox.shrink();
+                  }
+
+                  return Column(
+                    children: [
+                      _buildSection(
+                        title: 'بنود العقد الافتراضية',
+                        icon: Icons.description,
+                        child: const _ContractTermsEditor(),
+                      ),
+                      const SizedBox(height: 24),
+                    ],
+                  );
+                },
               ),
-            ),
 
-            const SizedBox(height: 24),
+              // About Section
+              _buildSection(
+                title: 'حول التطبيق',
+                icon: Icons.info_outline,
+                child: Column(
+                  children: [
+                    _buildSettingTile(
+                      title: 'الإصدار',
+                      subtitle: '1.0.0',
+                      onTap: null,
+                    ),
+                    const Divider(color: AppColors.divider, height: 1),
+                    _buildSettingTile(
+                      title: 'رونق',
+                      subtitle: 'نظام إدارة المشاريع للتصميم الداخلي',
+                      onTap: null,
+                    ),
+                  ],
+                ),
+              ),
 
-            // Account Section with Sign Out
-            _buildSection(
-              title: 'الحساب',
-              icon: Icons.account_circle_outlined,
-              child: const _SignOutButton(),
-            ),
-          ],
+              const SizedBox(height: 24),
+
+              // Account Section with Sign Out
+              _buildSection(
+                title: 'الحساب',
+                icon: Icons.account_circle_outlined,
+                child: const _SignOutButton(),
+              ),
+            ],
+          ),
         ),
-      ),
       ),
     );
   }
@@ -318,7 +347,7 @@ class _SignOutButton extends StatelessWidget {
     return BlocBuilder<AuthBloc, AuthState>(
       builder: (context, state) {
         final isLoading = state is AuthLoading;
-        
+
         return InkWell(
           onTap: isLoading
               ? null
@@ -388,16 +417,203 @@ class _SignOutButton extends StatelessWidget {
                     child: CircularProgressIndicator(strokeWidth: 2),
                   )
                 else
-                  Icon(
-                    Icons.logout,
-                    color: Colors.red,
-                    size: 20,
-                  ),
+                  Icon(Icons.logout, color: Colors.red, size: 20),
               ],
             ),
           ),
         );
       },
+    );
+  }
+}
+
+class _ContractTermsEditor extends StatefulWidget {
+  const _ContractTermsEditor();
+
+  @override
+  State<_ContractTermsEditor> createState() => _ContractTermsEditorState();
+}
+
+class _ContractTermsEditorState extends State<_ContractTermsEditor> {
+  final SettingsApiDataSource _settingsApi = SettingsApiDataSource();
+  final TextEditingController _termsController = TextEditingController();
+  bool _isLoading = true;
+  bool _isSaving = false;
+  String? _errorMessage;
+  String? _successMessage;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadTerms();
+  }
+
+  Future<void> _loadTerms() async {
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+
+    try {
+      final terms = await _settingsApi.getDefaultContractTerms();
+      if (mounted) {
+        setState(() {
+          _termsController.text = terms;
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+          _errorMessage = 'فشل تحميل بنود العقد';
+        });
+      }
+    }
+  }
+
+  Future<void> _saveTerms() async {
+    setState(() {
+      _isSaving = true;
+      _errorMessage = null;
+      _successMessage = null;
+    });
+
+    try {
+      await _settingsApi.updateDefaultContractTerms(
+        _termsController.text.trim(),
+      );
+
+      if (mounted) {
+        setState(() {
+          _isSaving = false;
+          _successMessage = 'تم حفظ بنود العقد بنجاح';
+        });
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('تم حفظ بنود العقد بنجاح'),
+            backgroundColor: Colors.green,
+            duration: Duration(seconds: 3),
+          ),
+        );
+
+        // Clear success message after 3 seconds
+        Future.delayed(const Duration(seconds: 3), () {
+          if (mounted) {
+            setState(() {
+              _successMessage = null;
+            });
+          }
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        String errorMessage = 'فشل حفظ بنود العقد';
+        if (e is ServerException) {
+          errorMessage = 'فشل حفظ بنود العقد: ${e.message}';
+        } else if (e is ValidationException) {
+          errorMessage = 'فشل حفظ بنود العقد: ${e.message}';
+        } else {
+          errorMessage = 'فشل حفظ بنود العقد: ${e.toString()}';
+        }
+        setState(() {
+          _isSaving = false;
+          _errorMessage = errorMessage;
+        });
+      }
+    }
+  }
+
+  @override
+  void dispose() {
+    _termsController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'يمكنك تعديل بنود العقد الافتراضية التي ستظهر عند تصدير عقود PDF',
+            style: AppTextStyles.caption,
+          ),
+          const SizedBox(height: 16),
+          if (_isLoading)
+            const Center(
+              child: Padding(
+                padding: EdgeInsets.all(32.0),
+                child: CircularProgressIndicator(),
+              ),
+            )
+          else
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                TextField(
+                  controller: _termsController,
+                  maxLines: 10,
+                  minLines: 10,
+                  decoration: InputDecoration(
+                    hintText: 'أدخل بنود العقد الافتراضية هنا...',
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    filled: true,
+                    fillColor: AppColors.surfaceColor,
+                  ),
+                  textDirection: TextDirection.rtl,
+                  textAlign: TextAlign.right,
+                ),
+                if (_errorMessage != null) ...[
+                  const SizedBox(height: 8),
+                  Text(
+                    _errorMessage!,
+                    style: TextStyle(color: Colors.red[700], fontSize: 12),
+                  ),
+                ],
+                if (_successMessage != null) ...[
+                  const SizedBox(height: 8),
+                  Text(
+                    _successMessage!,
+                    style: TextStyle(color: Colors.green[700], fontSize: 12),
+                  ),
+                ],
+                const SizedBox(height: 16),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: _isSaving ? null : _saveTerms,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.primary,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                    child: _isSaving
+                        ? const SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              valueColor: AlwaysStoppedAnimation<Color>(
+                                Colors.white,
+                              ),
+                            ),
+                          )
+                        : const Text('حفظ'),
+                  ),
+                ),
+              ],
+            ),
+        ],
+      ),
     );
   }
 }

@@ -17,6 +17,9 @@ class PricingSummarySidebar extends StatefulWidget {
   final VoidCallback? onConfirmPricing;
   final VoidCallback? onExportPdf;
   final VoidCallback? onExportImages;
+  final VoidCallback? onExportContractPdf;
+  final VoidCallback? onConfirmContract;
+  final VoidCallback? onReturnContractToPricing;
   final bool showReturnToPricing;
   final bool isAdminOrManager;
   final bool isPendingApproval;
@@ -42,6 +45,9 @@ class PricingSummarySidebar extends StatefulWidget {
     this.onConfirmPricing,
     this.onExportPdf,
     this.onExportImages,
+    this.onExportContractPdf,
+    this.onConfirmContract,
+    this.onReturnContractToPricing,
     this.showReturnToPricing = false,
     this.isAdminOrManager = false,
     this.isPendingApproval = false,
@@ -814,6 +820,110 @@ class _PricingSummarySidebarState extends State<PricingSummarySidebar> {
                     ),
                   ),
                   const SizedBox(height: 12),
+                ],
+                // Contract-specific buttons (only show for PENDING_SIGNATURE status)
+                if (widget.isProfitPending) ...[
+                  // Export Contract PDF Button
+                  if (widget.onExportContractPdf != null) ...[
+                    SizedBox(
+                      width: double.infinity,
+                      height: 56,
+                      child: ElevatedButton(
+                        onPressed: widget.onExportContractPdf,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF6366F1),
+                          foregroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          elevation: 0,
+                          shadowColor: const Color(0xFF4F46E5).withOpacity(0.2),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Icon(Icons.picture_as_pdf, size: 24),
+                            const SizedBox(width: 8),
+                            Text(
+                              'تصدير عقد PDF',
+                              style: AppTextStyles.buttonLarge.copyWith(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                  ],
+                  // Confirm Contract Button
+                  if (widget.onConfirmContract != null) ...[
+                    SizedBox(
+                      width: double.infinity,
+                      height: 56,
+                      child: ElevatedButton(
+                        onPressed: widget.onConfirmContract,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF10B981),
+                          foregroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          elevation: 0,
+                          shadowColor: const Color(0xFF059669).withOpacity(0.2),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Icon(Icons.check_circle, size: 24),
+                            const SizedBox(width: 8),
+                            Text(
+                              'تأكيد العقد',
+                              style: AppTextStyles.buttonLarge.copyWith(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                  ],
+                  // Return Contract to Pricing Button
+                  if (widget.onReturnContractToPricing != null) ...[
+                    SizedBox(
+                      width: double.infinity,
+                      height: 56,
+                      child: ElevatedButton(
+                        onPressed: widget.onReturnContractToPricing,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.orange,
+                          foregroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          elevation: 0,
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Icon(Icons.arrow_back, size: 24),
+                            const SizedBox(width: 8),
+                            Text(
+                              'إرجاع للتسعير',
+                              style: AppTextStyles.buttonLarge.copyWith(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                  ],
                 ],
                 // Confirm and Return to Pricing Buttons (only show for PENDING_SIGNATURE status)
                 if (widget.isProfitPending) ...[

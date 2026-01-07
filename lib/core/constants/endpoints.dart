@@ -261,4 +261,13 @@ abstract class ApiEndpoints {
   static String confirmPricing(String projectId, int version) => '/projects/$projectId/pricing/$version/confirm';
   static String exportPricingPdf(String projectId, int version) => '/projects/$projectId/pricing/$version/export-pdf';
   static String exportPricingImages(String projectId, int version) => '/projects/$projectId/pricing/$version/export-images';
+
+  // Contract Endpoints
+  static String contract(String projectId) => '/projects/$projectId/contract';
+  static String exportContractPdf(String projectId) => '/projects/$projectId/contract/export-pdf';
+  static String confirmContract(String projectId) => '/projects/$projectId/contract/confirm';
+  static String returnContractToPricing(String projectId) => '/projects/$projectId/contract/return-to-pricing';
+
+  // Settings Endpoints
+  static const String contractTerms = '/settings/contract-terms';
 }

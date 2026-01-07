@@ -20,6 +20,8 @@ import '../../data/datasources/pricing_api_datasource.dart';
 import '../../data/models/pricing_version_model.dart';
 import '../widgets/pricing_summary_sidebar.dart';
 import '../widgets/pricing_item_card.dart';
+import '../widgets/contract_export_dialog.dart';
+import '../../../../features/contracts/data/datasources/contracts_api_datasource.dart';
 
 class UnderPricingPage extends StatefulWidget {
   final String projectId;
@@ -32,6 +34,7 @@ class UnderPricingPage extends StatefulWidget {
 
 class _UnderPricingPageState extends State<UnderPricingPage> {
   final _apiDataSource = PricingApiDataSource();
+  final _contractsApiDataSource = ContractsApiDataSource();
   PricingVersionModel? _pricingVersion;
   bool _isLoading = true;
   String? _errorMessage;
@@ -540,6 +543,214 @@ class _UnderPricingPageState extends State<UnderPricingPage> {
           errorMessage = 'فشل تأكيد التسعير: ${e.message}';
         } else {
           errorMessage = 'فشل تأكيد التسعير: ${e.toString()}';
+        }
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(errorMessage),
+            duration: const Duration(seconds: 5),
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _exportContractPdf() async {
+    if (_pricingVersion == null) return;
+    
+    // Check if status is PENDING_SIGNATURE
+    if (_pricingVersion!.status != 'PENDING_SIGNATURE') {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'لا يمكن تصدير عقد PDF. الحالة الحالية: "${_getStatusText()}"',
+            ),
+            duration: const Duration(seconds: 4),
+          ),
+        );
+      }
+      return;
+    }
+
+    // Show contract export dialog
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (context) => ContractExportDialog(
+        projectId: widget.projectId,
+        projectName: _projectName ?? 'project',
+      ),
+    );
+
+    if (result == true && mounted) {
+      // Dialog handles the export and shows success message
+      // No need to do anything here
+    }
+  }
+
+  Future<void> _confirmContract() async {
+    if (_pricingVersion == null) return;
+    
+    // Check if status is PENDING_SIGNATURE
+    if (_pricingVersion!.status != 'PENDING_SIGNATURE') {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'لا يمكن تأكيد العقد. الحالة الحالية: "${_getStatusText()}"',
+            ),
+            duration: const Duration(seconds: 4),
+          ),
+        );
+      }
+      return;
+    }
+
+    // Show confirmation dialog
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('تأكيد العقد ونقل المشروع للتنفيذ'),
+        content: const Text(
+          'هل أنت متأكد من تأكيد العقد؟ سيتم نقل المشروع إلى مرحلة التنفيذ.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('إلغاء'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF10B981),
+            ),
+            child: const Text('تأكيد'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true) return;
+
+    try {
+      await _contractsApiDataSource.confirmContract(widget.projectId);
+      await _loadPricingData();
+      
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'تم تأكيد العقد بنجاح. تم نقل المشروع إلى مرحلة التنفيذ.',
+            ),
+            duration: Duration(seconds: 4),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        String errorMessage = 'فشل تأكيد العقد';
+        if (e is ServerException) {
+          errorMessage = 'فشل تأكيد العقد: ${e.message}';
+        } else if (e is ValidationException) {
+          errorMessage = 'فشل تأكيد العقد: ${e.message}';
+        } else {
+          errorMessage = 'فشل تأكيد العقد: ${e.toString()}';
+        }
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(errorMessage),
+            duration: const Duration(seconds: 5),
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _returnContractToPricing() async {
+    if (_pricingVersion == null) return;
+    
+    // Check if status is PENDING_SIGNATURE
+    if (_pricingVersion!.status != 'PENDING_SIGNATURE') {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'لا يمكن إرجاع العقد. الحالة الحالية: "${_getStatusText()}"',
+            ),
+            duration: const Duration(seconds: 4),
+          ),
+        );
+      }
+      return;
+    }
+
+    // Show confirmation dialog with optional reason
+    final reasonController = TextEditingController();
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('إرجاع العقد للتسعير'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'هل أنت متأكد من إرجاع العقد إلى مرحلة التسعير؟',
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: reasonController,
+              decoration: const InputDecoration(
+                labelText: 'السبب (اختياري)',
+                hintText: 'أدخل سبب الإرجاع',
+                border: OutlineInputBorder(),
+              ),
+              maxLines: 3,
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('إلغاء'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: TextButton.styleFrom(foregroundColor: Colors.orange),
+            child: const Text('إرجاع'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true) return;
+
+    try {
+      await _contractsApiDataSource.returnContractToPricing(
+        widget.projectId,
+        reason: reasonController.text.trim().isNotEmpty
+            ? reasonController.text.trim()
+            : null,
+      );
+
+      await _loadPricingData();
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('تم إرجاع العقد بنجاح. تم نقل المشروع إلى مرحلة التسعير.'),
+            duration: Duration(seconds: 3),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        String errorMessage = 'فشل إرجاع العقد';
+        if (e is ServerException) {
+          errorMessage = 'فشل إرجاع العقد: ${e.message}';
+        } else if (e is ValidationException) {
+          errorMessage = 'فشل إرجاع العقد: ${e.message}';
+        } else {
+          errorMessage = 'فشل إرجاع العقد: ${e.toString()}';
         }
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -1547,6 +1758,9 @@ class _UnderPricingPageState extends State<UnderPricingPage> {
         onExportPdf: (isAdminOrManager && isApproved) || isProfitPending
             ? _exportPricingPdf
             : null,
+        onExportContractPdf: isProfitPending ? _exportContractPdf : null,
+        onConfirmContract: isProfitPending ? _confirmContract : null,
+        onReturnContractToPricing: isProfitPending ? _returnContractToPricing : null,
         onExportImages: (isAdminOrManager && isApproved) || isProfitPending
             ? _exportPricingImages
             : null,
