@@ -80,13 +80,11 @@ class _SiteEngineerDashboardPageState extends State<SiteEngineerDashboardPage> {
   }
 
   bool _hasUnderPricingStatus(ProjectEntity project) {
-    final pricingVersion = _projectPricingVersions[project.id];
-    if (pricingVersion == null) return false;
-
-    final status = pricingVersion.status.toUpperCase();
-    return status == 'DRAFT' ||
-        status == 'PENDING_APPROVAL' ||
-        status == 'PENDING_SIGNATURE';
+    // Show projects with status: Draft, Under Pricing, Pending Approval (Approved), or Pending Signature
+    return project.status == ProjectStatus.draft ||
+        project.status == ProjectStatus.underPricing ||
+        project.status == ProjectStatus.pendingApproval ||
+        project.status == ProjectStatus.profitPending;
   }
 
   String _getPricingStatusText(String? status) {
@@ -167,18 +165,18 @@ class _SiteEngineerDashboardPageState extends State<SiteEngineerDashboardPage> {
             });
           }
 
-          // Filter projects based on pricing version status
-          // Show projects with pricing versions in DRAFT, PENDING_APPROVAL, or PENDING_SIGNATURE
+          // Filter projects based on project status
+          // Under pricing projects: Draft, Under Pricing, Pending Approval (Approved), or Pending Signature
           final underPricingProjects = state.projects
               .where((p) => _hasUnderPricingStatus(p))
               .toList();
 
+          // Ongoing projects: Only EXECUTION or Completed status
           final ongoingProjects = state.projects
               .where(
                 (p) =>
-                    !_hasUnderPricingStatus(p) &&
-                    p.status != ProjectStatus.completed &&
-                    p.status != ProjectStatus.cancelled,
+                    p.status == ProjectStatus.execution ||
+                    p.status == ProjectStatus.completed,
               )
               .toList();
 
