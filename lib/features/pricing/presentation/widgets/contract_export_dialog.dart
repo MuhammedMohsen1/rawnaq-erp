@@ -15,11 +15,11 @@ class ContractExportDialog extends StatefulWidget {
   final double totalAmount;
 
   const ContractExportDialog({
-    Key? key,
+    super.key,
     required this.projectId,
     required this.projectName,
     required this.totalAmount,
-  }) : super(key: key);
+  });
 
   @override
   State<ContractExportDialog> createState() => _ContractExportDialogState();
@@ -32,7 +32,8 @@ class _ContractExportDialogState extends State<ContractExportDialog> {
 
   // Step 1: Civil ID
   final TextEditingController _civilIdController = TextEditingController();
-  final TextEditingController _projectAddressController = TextEditingController();
+  final TextEditingController _projectAddressController =
+      TextEditingController();
   String? _existingCivilId;
   String? _existingProjectAddress;
   bool _isLoadingProject = true;
@@ -44,6 +45,7 @@ class _ContractExportDialogState extends State<ContractExportDialog> {
 
   // Step 3: Payment Schedule
   late List<Map<String, dynamic>> _paymentPhases;
+  List<Map<String, TextEditingController>> _paymentControllers = [];
 
   @override
   void initState() {
@@ -61,15 +63,47 @@ class _ContractExportDialogState extends State<ContractExportDialog> {
         'amount': widget.totalAmount * 0.5,
       },
     ];
+    _initializePaymentControllers();
     _loadProjectData();
     _loadDefaultTerms();
+  }
+
+  void _initializePaymentControllers() {
+    _paymentControllers = _paymentPhases.map((phase) {
+      return {
+        'phase': TextEditingController(text: phase['phase'] as String),
+        'percentage': TextEditingController(
+          text: (phase['percentage'] as num).toStringAsFixed(2),
+        ),
+        'amount': TextEditingController(
+          text: ((phase['amount'] as num?)?.toDouble() ?? 0.0).toStringAsFixed(
+            3,
+          ),
+        ),
+      };
+    }).toList();
+  }
+
+  @override
+  void dispose() {
+    _civilIdController.dispose();
+    _projectAddressController.dispose();
+    for (var term in _contractTerms) {
+      term['title']?.dispose();
+      term['description']?.dispose();
+    }
+    for (var payment in _paymentControllers) {
+      payment['phase']?.dispose();
+      payment['percentage']?.dispose();
+      payment['amount']?.dispose();
+    }
+    super.dispose();
   }
 
   // General
   int _currentStep = 0;
   bool _isExporting = false;
   String? _errorMessage;
-
 
   Future<void> _loadProjectData() async {
     try {
@@ -100,7 +134,9 @@ class _ContractExportDialogState extends State<ContractExportDialog> {
           _contractTerms = terms.map((term) {
             return {
               'title': TextEditingController(text: term['title'] ?? ''),
-              'description': TextEditingController(text: term['description'] ?? ''),
+              'description': TextEditingController(
+                text: term['description'] ?? '',
+              ),
             };
           }).toList();
           _termsApproved = List.filled(terms.length, false);
@@ -174,35 +210,79 @@ class _ContractExportDialogState extends State<ContractExportDialog> {
 
   void _addPaymentPhase() {
     setState(() {
-      _paymentPhases.add({'phase': 'دفعة جديدة', 'percentage': 0.0});
-      _updatePaymentAmounts();
+      _paymentPhases.add({
+        'phase': 'دفعة جديدة',
+        'percentage': 0.0,
+        'amount': 0.0,
+      });
+      _paymentControllers.add({
+        'phase': TextEditingController(text: 'دفعة جديدة'),
+        'percentage': TextEditingController(text: '0.00'),
+        'amount': TextEditingController(text: '0.000'),
+      });
     });
   }
 
   void _removePaymentPhase(int index) {
     if (_paymentPhases.length > 1) {
       setState(() {
+        _paymentControllers[index]['phase']?.dispose();
+        _paymentControllers[index]['percentage']?.dispose();
+        _paymentControllers[index]['amount']?.dispose();
         _paymentPhases.removeAt(index);
-        _updatePaymentAmounts();
+        _paymentControllers.removeAt(index);
       });
     }
   }
 
-  void _updatePaymentAmounts() {
-    setState(() {
-      for (var phase in _paymentPhases) {
-        final percentage = (phase['percentage'] as num).toDouble();
-        final amount = widget.totalAmount * (percentage / 100);
-        phase['amount'] = amount;
-      }
-    });
-  }
-
   void _onPercentageChanged(int index, double value) {
     setState(() {
-      _paymentPhases[index]['percentage'] = value.clamp(0.0, 100.0);
-      _updatePaymentAmounts();
+      final percentage = value.clamp(0.0, 100.0);
+      final amount = widget.totalAmount * (percentage / 100);
+
+      _paymentPhases[index]['percentage'] = percentage;
+      _paymentPhases[index]['amount'] = amount;
     });
+
+    // Update the amount controller outside setState to avoid cursor reset
+    final amountController = _paymentControllers[index]['amount'];
+    if (amountController != null) {
+      final newAmountText = (_paymentPhases[index]['amount'] as num)
+          .toDouble()
+          .toStringAsFixed(3);
+      // Only update if different to avoid unnecessary updates
+      if (amountController.text != newAmountText) {
+        amountController.value = TextEditingValue(
+          text: newAmountText,
+          selection: TextSelection.collapsed(offset: newAmountText.length),
+        );
+      }
+    }
+  }
+
+  void _onAmountChanged(int index, double value) {
+    setState(() {
+      final amount = value.clamp(0.0, widget.totalAmount);
+      final percentage = (amount / widget.totalAmount) * 100;
+
+      _paymentPhases[index]['amount'] = amount;
+      _paymentPhases[index]['percentage'] = percentage;
+    });
+
+    // Update the percentage controller outside setState to avoid cursor reset
+    final percentageController = _paymentControllers[index]['percentage'];
+    if (percentageController != null) {
+      final newPercentageText = (_paymentPhases[index]['percentage'] as num)
+          .toDouble()
+          .toStringAsFixed(2);
+      // Only update if different to avoid unnecessary updates
+      if (percentageController.text != newPercentageText) {
+        percentageController.value = TextEditingValue(
+          text: newPercentageText,
+          selection: TextSelection.collapsed(offset: newPercentageText.length),
+        );
+      }
+    }
   }
 
   Future<void> _exportPdf() async {
@@ -299,17 +379,6 @@ class _ContractExportDialogState extends State<ContractExportDialog> {
     }
   }
 
-  @override
-  void dispose() {
-    _civilIdController.dispose();
-    _projectAddressController.dispose();
-    for (var term in _contractTerms) {
-      term['title']?.dispose();
-      term['description']?.dispose();
-    }
-    super.dispose();
-  }
-
   void _goToNextStep() {
     bool isValid = false;
     switch (_currentStep) {
@@ -355,10 +424,7 @@ class _ContractExportDialogState extends State<ContractExportDialog> {
               children: [
                 const Text(
                   'تصدير عقد PDF',
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                  ),
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                 ),
                 IconButton(
                   icon: const Icon(Icons.close),
@@ -498,10 +564,7 @@ class _ContractExportDialogState extends State<ContractExportDialog> {
               Expanded(
                 child: Text(
                   'أدخل الرقم المدني للعميل وعنوان المشروع',
-                  style: TextStyle(
-                    fontSize: 13,
-                    color: Colors.blue[900],
-                  ),
+                  style: TextStyle(fontSize: 13, color: Colors.blue[900]),
                 ),
               ),
             ],
@@ -514,9 +577,7 @@ class _ContractExportDialogState extends State<ContractExportDialog> {
             labelText: 'الرقم المدني للعميل (12 رقم)',
             hintText: '298040400214',
             prefixIcon: const Icon(Icons.badge, color: AppColors.textSecondary),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(10),
-            ),
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(10),
               borderSide: const BorderSide(color: AppColors.inputBorder),
@@ -548,17 +609,21 @@ class _ContractExportDialogState extends State<ContractExportDialog> {
           decoration: InputDecoration(
             labelText: 'عنوان المشروع',
             hintText: 'مثال: قطعة 4 اليرموك - شارع 2 - جادة 2 - منزل 14',
-            prefixIcon: const Icon(Icons.location_on, color: AppColors.textSecondary),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(10),
+            prefixIcon: const Icon(
+              Icons.location_on,
+              color: AppColors.textSecondary,
             ),
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(10),
               borderSide: const BorderSide(color: AppColors.inputBorder),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(10),
-              borderSide: const BorderSide(color: AppColors.inputFocusBorder, width: 2),
+              borderSide: const BorderSide(
+                color: AppColors.inputFocusBorder,
+                width: 2,
+              ),
             ),
             filled: true,
             fillColor: AppColors.inputBackground,
@@ -580,9 +645,7 @@ class _ContractExportDialogState extends State<ContractExportDialog> {
     }
 
     if (_contractTerms.isEmpty) {
-      return const Center(
-        child: Text('لا توجد بنود عقد متاحة'),
-      );
+      return const Center(child: Text('لا توجد بنود عقد متاحة'));
     }
 
     return SizedBox(
@@ -668,13 +731,19 @@ class _ContractExportDialogState extends State<ContractExportDialog> {
                         decoration: InputDecoration(
                           labelText: 'العنوان',
                           hintText: 'مثال: أولا: التمهيد',
-                          prefixIcon: const Icon(Icons.title, size: 20, color: AppColors.textSecondary),
+                          prefixIcon: const Icon(
+                            Icons.title,
+                            size: 20,
+                            color: AppColors.textSecondary,
+                          ),
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(10),
                           ),
                           enabledBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(10),
-                            borderSide: const BorderSide(color: AppColors.inputBorder),
+                            borderSide: const BorderSide(
+                              color: AppColors.inputBorder,
+                            ),
                           ),
                           focusedBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(10),
@@ -706,13 +775,19 @@ class _ContractExportDialogState extends State<ContractExportDialog> {
                         decoration: InputDecoration(
                           labelText: 'الوصف',
                           hintText: 'أدخل نص البند هنا...',
-                          prefixIcon: const Icon(Icons.description, size: 20, color: AppColors.textSecondary),
+                          prefixIcon: const Icon(
+                            Icons.description,
+                            size: 20,
+                            color: AppColors.textSecondary,
+                          ),
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(10),
                           ),
                           enabledBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(10),
-                            borderSide: const BorderSide(color: AppColors.inputBorder),
+                            borderSide: const BorderSide(
+                              color: AppColors.inputBorder,
+                            ),
                           ),
                           focusedBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(10),
@@ -748,267 +823,327 @@ class _ContractExportDialogState extends State<ContractExportDialog> {
       0.0,
       (sum, phase) => sum + (phase['percentage'] as num).toDouble(),
     );
+    final totalAllocated = _paymentPhases.fold<double>(
+      0.0,
+      (sum, phase) => sum + ((phase['amount'] as num?)?.toDouble() ?? 0.0),
+    );
+    final remainingAmount = widget.totalAmount - totalAllocated;
+    final remainingPercentage = 100.0 - totalPercentage;
 
     return SizedBox(
       height: 400,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(
-              'إجمالي المبلغ: ${widget.totalAmount.toStringAsFixed(3)} د.ك',
-              style: const TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            TextButton.icon(
-              onPressed: _addPaymentPhase,
-              icon: const Icon(Icons.add, size: 18),
-              label: const Text('إضافة دفعة'),
-            ),
-          ],
-        ),
-        const SizedBox(height: 8),
-        Container(
-          padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            color: (totalPercentage - 100.0).abs() < 0.01
-                ? Colors.green[50]
-                : Colors.orange[50],
-            borderRadius: BorderRadius.circular(8),
-            border: Border.all(
-              color: (totalPercentage - 100.0).abs() < 0.01
-                  ? Colors.green[300]!
-                  : Colors.orange[300]!,
-            ),
-          ),
-          child: Row(
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Icon(
-                (totalPercentage - 100.0).abs() < 0.01
-                    ? Icons.check_circle
-                    : Icons.warning,
-                color: (totalPercentage - 100.0).abs() < 0.01
-                    ? Colors.green[700]
-                    : Colors.orange[700],
+              Text(
+                'إجمالي المبلغ: ${widget.totalAmount.toStringAsFixed(3)} د.ك',
+                style: const TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.textPrimary,
+                ),
               ),
-              const SizedBox(width: 8),
-              Expanded(
-                  child: Text(
-                    (totalPercentage - 100.0).abs() < 0.01
-                        ? 'المجموع: 100% ✓'
-                        : 'المجموع: ${totalPercentage.toStringAsFixed(2)}% - المتبقي: ${(100.0 - totalPercentage).toStringAsFixed(2)}%',
-                  style: TextStyle(
-                    color: (totalPercentage - 100.0).abs() < 0.01
-                        ? Colors.green[700]
-                        : Colors.orange[700],
-                    fontWeight: FontWeight.bold,
+              TextButton.icon(
+                onPressed: _addPaymentPhase,
+                icon: const Icon(Icons.add, size: 16),
+                label: const Text('إضافة دفعة', style: TextStyle(fontSize: 12)),
+                style: TextButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 8,
                   ),
                 ),
               ),
             ],
           ),
-        ),
-        const SizedBox(height: 16),
-        Expanded(
-          child: ListView.builder(
-            itemCount: _paymentPhases.length,
-            itemBuilder: (context, index) {
-              final phase = _paymentPhases[index];
-              final percentage = (phase['percentage'] as num).toDouble();
-              final amount = phase['amount'] as double? ??
-                  (widget.totalAmount * (percentage / 100));
-
-              return Container(
-                margin: const EdgeInsets.only(bottom: 16),
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: AppColors.surfaceColor,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                    color: AppColors.border,
-                    width: 1,
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.2),
-                      blurRadius: 4,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
+          const SizedBox(height: 8),
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color:
+                  (totalPercentage - 100.0).abs() < 0.01 &&
+                      remainingAmount.abs() < 0.01
+                  ? Colors.green[900]?.withOpacity(0.2)
+                  : Colors.orange[900]?.withOpacity(0.2),
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(
+                color:
+                    (totalPercentage - 100.0).abs() < 0.01 &&
+                        remainingAmount.abs() < 0.01
+                    ? Colors.green[300]!
+                    : Colors.orange[300]!,
+              ),
+            ),
+            child: Row(
+              children: [
+                Icon(
+                  (totalPercentage - 100.0).abs() < 0.01 &&
+                          remainingAmount.abs() < 0.01
+                      ? Icons.check_circle
+                      : Icons.warning,
+                  color:
+                      (totalPercentage - 100.0).abs() < 0.01 &&
+                          remainingAmount.abs() < 0.01
+                      ? Colors.green[400]
+                      : Colors.orange[400],
+                  size: 18,
                 ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 6,
-                          ),
-                          decoration: BoxDecoration(
-                            color: AppColors.primary.withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(6),
-                          ),
-                          child: Text(
-                            'دفعة ${index + 1}',
-                            style: TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.bold,
-                              color: AppColors.primary,
-                            ),
-                          ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        (totalPercentage - 100.0).abs() < 0.01 &&
+                                remainingAmount.abs() < 0.01
+                            ? 'المجموع: 100% ✓'
+                            : 'المجموع: ${totalPercentage.toStringAsFixed(2)}%',
+                        style: TextStyle(
+                          color:
+                              (totalPercentage - 100.0).abs() < 0.01 &&
+                                  remainingAmount.abs() < 0.01
+                              ? Colors.green[400]
+                              : Colors.orange[400],
+                          fontWeight: FontWeight.bold,
+                          fontSize: 12,
                         ),
-                        const Spacer(),
-                        if (_paymentPhases.length > 1)
-                          IconButton(
-                            icon: const Icon(Icons.delete, color: Colors.red, size: 20),
-                            onPressed: () => _removePaymentPhase(index),
-                            tooltip: 'حذف الدفعة',
-                          ),
-                      ],
-                    ),
-                    const SizedBox(height: 16),
-                    Row(
-                      children: [
-                        Expanded(
-                          flex: 2,
-                          child: TextField(
-                            controller: TextEditingController(
-                              text: phase['phase'] as String,
-                            )..selection = TextSelection.fromPosition(
-                                TextPosition(
-                                  offset: (phase['phase'] as String).length,
-                                ),
-                              ),
-                            onChanged: (value) {
-                              setState(() {
-                                _paymentPhases[index]['phase'] = value;
-                              });
-                            },
-                            decoration: InputDecoration(
-                              labelText: 'اسم الدفعة',
-                              hintText: 'مثال: دفعة أولى',
-                              prefixIcon: const Icon(Icons.payment, size: 20, color: AppColors.textSecondary),
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(10),
-                              ),
-                              enabledBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(10),
-                                borderSide: const BorderSide(color: AppColors.inputBorder),
-                              ),
-                              focusedBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(10),
-                                borderSide: const BorderSide(
-                                  color: AppColors.inputFocusBorder,
-                                  width: 2,
-                                ),
-                              ),
-                              filled: true,
-                              fillColor: AppColors.inputBackground,
-                              contentPadding: const EdgeInsets.symmetric(
-                                horizontal: 16,
-                                vertical: 16,
-                              ),
-                            ),
-                            style: const TextStyle(
-                              fontSize: 15,
-                              fontWeight: FontWeight.w500,
-                            ),
-                            textDirection: TextDirection.rtl,
-                            textAlign: TextAlign.right,
-                          ),
-                        ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          flex: 1,
-                          child: TextField(
-                            controller: TextEditingController(
-                              text: percentage.toStringAsFixed(2),
-                            )..selection = TextSelection.fromPosition(
-                                TextPosition(
-                                  offset: percentage.toStringAsFixed(2).length,
-                                ),
-                              ),
-                            onChanged: (value) {
-                              final newValue = double.tryParse(value) ?? 0.0;
-                              _onPercentageChanged(index, newValue);
-                            },
-                            decoration: InputDecoration(
-                              labelText: 'النسبة',
-                              suffixText: '%',
-                              prefixIcon: const Icon(Icons.percent, size: 20, color: AppColors.textSecondary),
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(10),
-                              ),
-                              enabledBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(10),
-                                borderSide: const BorderSide(color: AppColors.inputBorder),
-                              ),
-                              focusedBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(10),
-                                borderSide: const BorderSide(
-                                  color: AppColors.inputFocusBorder,
-                                  width: 2,
-                                ),
-                              ),
-                              filled: true,
-                              fillColor: AppColors.inputBackground,
-                              contentPadding: const EdgeInsets.symmetric(
-                                horizontal: 16,
-                                vertical: 16,
-                              ),
-                            ),
-                            keyboardType:
-                                const TextInputType.numberWithOptions(decimal: true),
-                            textDirection: TextDirection.ltr,
-                            textAlign: TextAlign.center,
-                            style: const TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                              color: AppColors.textPrimary,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 12),
-                    Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: AppColors.primary.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(8),
                       ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      if (remainingAmount.abs() > 0.01 ||
+                          remainingPercentage.abs() > 0.01) ...[
+                        const SizedBox(height: 4),
+                        Text(
+                          'المتبقي: ${remainingAmount.toStringAsFixed(3)} د.ك (${remainingPercentage.toStringAsFixed(2)}%)',
+                          style: TextStyle(
+                            color: Colors.orange[400],
+                            fontSize: 11,
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 12),
+          Expanded(
+            child: ListView.builder(
+              itemCount: _paymentPhases.length,
+              itemBuilder: (context, index) {
+                return Container(
+                  margin: const EdgeInsets.only(bottom: 10),
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: AppColors.surfaceColor,
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(color: AppColors.border, width: 1),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
                         children: [
-                          Text(
-                            'المبلغ المحسوب:',
-                            style: TextStyle(
-                              fontSize: 13,
-                              color: Colors.grey[700],
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 4,
+                            ),
+                            decoration: BoxDecoration(
+                              color: AppColors.primary.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                            child: Text(
+                              'دفعة ${index + 1}',
+                              style: TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.bold,
+                                color: AppColors.primary,
+                              ),
                             ),
                           ),
-                          Text(
-                            '${amount.toStringAsFixed(3)} د.ك',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                              color: AppColors.primary,
+                          const Spacer(),
+                          if (_paymentPhases.length > 1)
+                            IconButton(
+                              icon: const Icon(
+                                Icons.delete,
+                                color: Colors.red,
+                                size: 18,
+                              ),
+                              onPressed: () => _removePaymentPhase(index),
+                              tooltip: 'حذف الدفعة',
+                              padding: EdgeInsets.zero,
+                              constraints: const BoxConstraints(),
+                            ),
+                        ],
+                      ),
+                      const SizedBox(height: 10),
+                      // Phase name
+                      TextField(
+                        controller: _paymentControllers[index]['phase'],
+                        onChanged: (value) {
+                          setState(() {
+                            _paymentPhases[index]['phase'] = value;
+                          });
+                        },
+                        decoration: InputDecoration(
+                          labelText: 'اسم الدفعة',
+                          hintText: 'مثال: دفعة أولى',
+                          prefixIcon: const Icon(
+                            Icons.payment,
+                            size: 18,
+                            color: AppColors.textSecondary,
+                          ),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8),
+                            borderSide: const BorderSide(
+                              color: AppColors.inputBorder,
+                            ),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8),
+                            borderSide: const BorderSide(
+                              color: AppColors.inputFocusBorder,
+                              width: 2,
+                            ),
+                          ),
+                          filled: true,
+                          fillColor: AppColors.inputBackground,
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 12,
+                          ),
+                          isDense: true,
+                        ),
+                        style: const TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w500,
+                          color: AppColors.textPrimary,
+                        ),
+                        textDirection: TextDirection.rtl,
+                        textAlign: TextAlign.right,
+                      ),
+                      const SizedBox(height: 8),
+                      // Percentage and Amount in a row
+                      Row(
+                        children: [
+                          Expanded(
+                            child: TextField(
+                              controller:
+                                  _paymentControllers[index]['percentage'],
+                              onChanged: (value) {
+                                final newValue = double.tryParse(value) ?? 0.0;
+                                _onPercentageChanged(index, newValue);
+                              },
+                              decoration: InputDecoration(
+                                labelText: 'النسبة %',
+                                prefixIcon: const Icon(
+                                  Icons.percent,
+                                  size: 18,
+                                  color: AppColors.textSecondary,
+                                ),
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                enabledBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                  borderSide: const BorderSide(
+                                    color: AppColors.inputBorder,
+                                  ),
+                                ),
+                                focusedBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                  borderSide: const BorderSide(
+                                    color: AppColors.inputFocusBorder,
+                                    width: 2,
+                                  ),
+                                ),
+                                filled: true,
+                                fillColor: AppColors.inputBackground,
+                                contentPadding: const EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                  vertical: 12,
+                                ),
+                                isDense: true,
+                              ),
+                              keyboardType:
+                                  const TextInputType.numberWithOptions(
+                                    decimal: true,
+                                  ),
+                              textDirection: TextDirection.ltr,
+                              textAlign: TextAlign.center,
+                              style: const TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.bold,
+                                color: AppColors.textPrimary,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: TextField(
+                              controller: _paymentControllers[index]['amount'],
+                              onChanged: (value) {
+                                final newValue = double.tryParse(value) ?? 0.0;
+                                _onAmountChanged(index, newValue);
+                              },
+                              decoration: InputDecoration(
+                                labelText: 'المبلغ',
+                                suffixText: 'د.ك',
+                                prefixIcon: const Icon(
+                                  Icons.attach_money,
+                                  size: 18,
+                                  color: AppColors.textSecondary,
+                                ),
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                enabledBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                  borderSide: const BorderSide(
+                                    color: AppColors.inputBorder,
+                                  ),
+                                ),
+                                focusedBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                  borderSide: const BorderSide(
+                                    color: AppColors.inputFocusBorder,
+                                    width: 2,
+                                  ),
+                                ),
+                                filled: true,
+                                fillColor: AppColors.inputBackground,
+                                contentPadding: const EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                  vertical: 12,
+                                ),
+                                isDense: true,
+                              ),
+                              keyboardType:
+                                  const TextInputType.numberWithOptions(
+                                    decimal: true,
+                                  ),
+                              textDirection: TextDirection.ltr,
+                              textAlign: TextAlign.center,
+                              style: const TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.bold,
+                                color: AppColors.textPrimary,
+                              ),
                             ),
                           ),
                         ],
                       ),
-                    ),
-                  ],
-                ),
-              );
-            },
-          ),
+                    ],
+                  ),
+                );
+              },
+            ),
           ),
         ],
       ),
@@ -1040,10 +1175,7 @@ class _ContractExportDialogState extends State<ContractExportDialog> {
         _buildReviewItem('الرقم المدني', _civilIdController.text),
         _buildReviewItem('عنوان المشروع', _projectAddressController.text),
         _buildReviewItem('عدد البنود', '${_contractTerms.length} بند'),
-        _buildReviewItem(
-          'عدد الدفعات',
-          '${_paymentPhases.length} دفعة',
-        ),
+        _buildReviewItem('عدد الدفعات', '${_paymentPhases.length} دفعة'),
         const SizedBox(height: 24),
         SizedBox(
           width: double.infinity,
