@@ -515,13 +515,22 @@ class _PricingSummarySidebarState extends State<PricingSummarySidebar> {
                             fontSize: 14,
                           ),
                         ),
+                        const SizedBox(height: 4),
+                        Text(
+                          'كل سطر سيظهر كنقطة في PDF',
+                          style: AppTextStyles.bodySmall.copyWith(
+                            color: AppColors.textMuted,
+                            fontSize: 11,
+                          ),
+                        ),
                         const SizedBox(height: 8),
                         TextField(
                           controller: _notesController,
-                          maxLines: 3,
+                          maxLines: 10,
+                          minLines: 3,
                           onChanged: _onNotesChanged,
                           decoration: InputDecoration(
-                            hintText: 'اكتب الملاحظات هنا',
+                            hintText: 'اكتب الملاحظات هنا (كل سطر = نقطة)',
                             hintStyle: AppTextStyles.bodySmall.copyWith(
                               color: AppColors.textMuted,
                             ),
