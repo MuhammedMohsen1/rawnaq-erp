@@ -59,42 +59,100 @@ class PricingSummarySidebar extends StatefulWidget {
 
 class _PricingSummarySidebarState extends State<PricingSummarySidebar> {
   bool _isCollapsed = false;
-  late TextEditingController _notesController;
+  List<TextEditingController> _noteControllers = [];
   Timer? _notesSaveTimer;
 
   @override
   void initState() {
     super.initState();
-    _notesController = TextEditingController(
-      text: widget.pricingVersionNotes ?? '',
-    );
+    _initializeNoteControllers();
+  }
+
+  void _initializeNoteControllers() {
+    // Dispose existing controllers
+    for (var controller in _noteControllers) {
+      controller.dispose();
+    }
+
+    // Parse notes into list of items
+    final notes = widget.pricingVersionNotes ?? '';
+    final noteItems = notes
+        .split('\n')
+        .map((line) => line.trim())
+        .where((line) => line.isNotEmpty)
+        .toList();
+
+    // If no items, start with one empty item
+    if (noteItems.isEmpty) {
+      noteItems.add('');
+    }
+
+    // Create controllers for each item
+    _noteControllers = noteItems
+        .map((item) => TextEditingController(text: item))
+        .toList();
+
+    // Add listeners to all controllers
+    for (var controller in _noteControllers) {
+      controller.addListener(_onNoteItemChanged);
+    }
   }
 
   @override
   void didUpdateWidget(PricingSummarySidebar oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (widget.pricingVersionNotes != oldWidget.pricingVersionNotes) {
-      _notesController.text = widget.pricingVersionNotes ?? '';
+      _initializeNoteControllers();
     }
   }
 
   @override
   void dispose() {
     _notesSaveTimer?.cancel();
-    _notesController.dispose();
+    for (var controller in _noteControllers) {
+      controller.removeListener(_onNoteItemChanged);
+      controller.dispose();
+    }
     super.dispose();
   }
 
-  void _onNotesChanged(String value) {
+  void _onNoteItemChanged() {
     // Cancel previous timer
     _notesSaveTimer?.cancel();
 
     // Set up new debounced save timer
     _notesSaveTimer = Timer(const Duration(milliseconds: 800), () {
-      if (widget.onUpdateNotes != null) {
-        widget.onUpdateNotes!(value.trim().isEmpty ? '' : value.trim());
-      }
+      _saveNotes();
     });
+  }
+
+  void _saveNotes() {
+    if (widget.onUpdateNotes != null) {
+      final notes = _noteControllers
+          .map((controller) => controller.text.trim())
+          .where((text) => text.isNotEmpty)
+          .join('\n');
+      widget.onUpdateNotes!(notes);
+    }
+  }
+
+  void _addNoteItem() {
+    setState(() {
+      final newController = TextEditingController();
+      newController.addListener(_onNoteItemChanged);
+      _noteControllers.add(newController);
+    });
+  }
+
+  void _removeNoteItem(int index) {
+    if (_noteControllers.length > 1) {
+      setState(() {
+        _noteControllers[index].removeListener(_onNoteItemChanged);
+        _noteControllers[index].dispose();
+        _noteControllers.removeAt(index);
+        _saveNotes();
+      });
+    }
   }
 
   String _formatNumberWithDecimals(double value) {
@@ -508,54 +566,105 @@ class _PricingSummarySidebarState extends State<PricingSummarySidebar> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          'ملاحظات إصدار التسعير',
-                          style: AppTextStyles.bodyMedium.copyWith(
-                            fontWeight: FontWeight.w600,
-                            fontSize: 14,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          'كل سطر سيظهر كنقطة في PDF',
-                          style: AppTextStyles.bodySmall.copyWith(
-                            color: AppColors.textMuted,
-                            fontSize: 11,
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        TextField(
-                          controller: _notesController,
-                          maxLines: 10,
-                          minLines: 3,
-                          onChanged: _onNotesChanged,
-                          decoration: InputDecoration(
-                            hintText: 'اكتب الملاحظات هنا (كل سطر = نقطة)',
-                            hintStyle: AppTextStyles.bodySmall.copyWith(
-                              color: AppColors.textMuted,
-                            ),
-                            filled: true,
-                            fillColor: const Color(0xFF0F1217),
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(8),
-                              borderSide: const BorderSide(
-                                color: Color(0xFF363C4A),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              'ملاحظات إصدار التسعير',
+                              style: AppTextStyles.bodyMedium.copyWith(
+                                fontWeight: FontWeight.w600,
+                                fontSize: 14,
                               ),
                             ),
-                            enabledBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(8),
-                              borderSide: const BorderSide(
-                                color: Color(0xFF363C4A),
-                              ),
-                            ),
-                            focusedBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(8),
-                              borderSide: const BorderSide(
+                            IconButton(
+                              icon: const Icon(
+                                Icons.add_circle_outline,
+                                size: 20,
                                 color: AppColors.primary,
                               ),
+                              onPressed: _addNoteItem,
+                              tooltip: 'إضافة نقطة',
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+                        ...List.generate(
+                          _noteControllers.length,
+                          (index) => Padding(
+                            padding: const EdgeInsets.only(bottom: 8),
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                // Bullet point
+                                Padding(
+                                  padding: const EdgeInsets.only(
+                                    top: 12,
+                                    right: 8,
+                                    left: 4,
+                                  ),
+                                  child: Text(
+                                    '•',
+                                    style: AppTextStyles.bodyMedium.copyWith(
+                                      fontSize: 16,
+                                      color: AppColors.textSecondary,
+                                    ),
+                                  ),
+                                ),
+                                // Text field
+                                Expanded(
+                                  child: TextField(
+                                    controller: _noteControllers[index],
+                                    decoration: InputDecoration(
+                                      hintText: 'اكتب الملاحظة هنا',
+                                      hintStyle: AppTextStyles.bodySmall
+                                          .copyWith(color: AppColors.textMuted),
+                                      filled: true,
+                                      fillColor: const Color(0xFF0F1217),
+                                      border: OutlineInputBorder(
+                                        borderRadius: BorderRadius.circular(8),
+                                        borderSide: const BorderSide(
+                                          color: Color(0xFF363C4A),
+                                        ),
+                                      ),
+                                      enabledBorder: OutlineInputBorder(
+                                        borderRadius: BorderRadius.circular(8),
+                                        borderSide: const BorderSide(
+                                          color: Color(0xFF363C4A),
+                                        ),
+                                      ),
+                                      focusedBorder: OutlineInputBorder(
+                                        borderRadius: BorderRadius.circular(8),
+                                        borderSide: const BorderSide(
+                                          color: AppColors.primary,
+                                        ),
+                                      ),
+                                      contentPadding:
+                                          const EdgeInsets.symmetric(
+                                            horizontal: 12,
+                                            vertical: 10,
+                                          ),
+                                    ),
+                                    textInputAction: TextInputAction.done,
+                                  ),
+                                ),
+                                // Remove button
+                                if (_noteControllers.length > 1)
+                                  IconButton(
+                                    icon: const Icon(
+                                      Icons.remove_circle_outline,
+                                      size: 20,
+                                      color: AppColors.error,
+                                    ),
+                                    onPressed: () => _removeNoteItem(index),
+                                    tooltip: 'حذف نقطة',
+                                    padding: const EdgeInsets.only(
+                                      top: 4,
+                                      right: 4,
+                                    ),
+                                  ),
+                              ],
                             ),
                           ),
-                          textInputAction: TextInputAction.done,
                         ),
                       ],
                     ),
