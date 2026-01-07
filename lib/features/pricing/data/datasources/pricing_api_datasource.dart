@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:typed_data';
 import 'package:dio/dio.dart';
 import '../../../../core/network/api_client.dart';
@@ -88,6 +89,7 @@ class PricingApiDataSource {
     String itemId, {
     required String name,
     String? description,
+    String? notes,
     int? order,
   }) async {
     final endpoint = ApiEndpoints.pricingSubItems(projectId, version, itemId);
@@ -102,6 +104,7 @@ class PricingApiDataSource {
         data: {
           'name': name,
           if (description != null) 'description': description,
+          if (notes != null) 'notes': notes,
           if (order != null) 'order': order,
         },
       );
@@ -131,6 +134,33 @@ class PricingApiDataSource {
       }
       rethrow;
     }
+  }
+
+  /// Update a pricing sub-item (name, description, notes, order)
+  Future<PricingSubItemModel> updatePricingSubItem(
+    String projectId,
+    int version,
+    String itemId,
+    String subItemId, {
+    String? name,
+    String? description,
+    String? notes,
+    int? order,
+  }) async {
+    final response = await _apiClient.patch(
+      ApiEndpoints.pricingSubItem(projectId, version, itemId, subItemId),
+      data: {
+        if (name != null) 'name': name,
+        if (description != null) 'description': description,
+        if (notes != null) 'notes': notes,
+        if (order != null) 'order': order,
+      },
+    );
+
+    final responseData = response.data as Map<String, dynamic>;
+    return PricingSubItemModel.fromJson(
+      responseData['data'] as Map<String, dynamic>,
+    );
   }
 
   /// Upload images to a pricing sub-item
@@ -453,7 +483,7 @@ class PricingApiDataSource {
     );
   }
 
-  /// Return pricing from PENDING_APPROVAL or PROFIT_PENDING to DRAFT for editing
+  /// Return pricing from PENDING_APPROVAL or PENDING_SIGNATURE to DRAFT for editing
   Future<PricingVersionModel> returnToPricing(
     String projectId,
     int version, {
@@ -506,6 +536,23 @@ class PricingApiDataSource {
     );
   }
 
+  /// Update pricing version notes
+  Future<PricingVersionModel> updatePricingVersionNotes(
+    String projectId,
+    int version, {
+    String? notes,
+  }) async {
+    final response = await _apiClient.patch(
+      ApiEndpoints.updatePricingVersion(projectId, version),
+      data: {if (notes != null) 'notes': notes},
+    );
+
+    final responseData = response.data as Map<String, dynamic>;
+    return PricingVersionModel.fromJson(
+      responseData['data'] as Map<String, dynamic>,
+    );
+  }
+
   /// Update sub-item profit margin
   Future<PricingSubItemModel> updateSubItemProfitMargin(
     String projectId,
@@ -538,6 +585,30 @@ class PricingApiDataSource {
     );
 
     return response.data as Uint8List;
+  }
+
+  /// Export pricing images
+  /// Returns either a single image (Uint8List) or multiple images (Map with pageCount and images array)
+  Future<dynamic> exportPricingImages(String projectId, int version) async {
+    final response = await _apiClient.get(
+      ApiEndpoints.exportPricingImages(projectId, version),
+      options: Options(
+        responseType: ResponseType.bytes,
+      ),
+    );
+
+    // Check content type to determine response format
+    final contentType = response.headers.value('content-type') ?? '';
+    
+    if (contentType.startsWith('image/')) {
+      // Single page - return binary image data
+      return response.data as Uint8List;
+    } else {
+      // Multiple pages - decode bytes as JSON string, then parse
+      final bytes = response.data as List<int>;
+      final jsonString = utf8.decode(bytes);
+      return jsonDecode(jsonString) as Map<String, dynamic>;
+    }
   }
 
   Future<void> deleteItem(String projectId, int version, String itemId) async {

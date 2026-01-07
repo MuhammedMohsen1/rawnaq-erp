@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_text_styles.dart';
@@ -15,11 +16,16 @@ class PricingSummarySidebar extends StatefulWidget {
   final VoidCallback? onMakeProfit;
   final VoidCallback? onConfirmPricing;
   final VoidCallback? onExportPdf;
+  final VoidCallback? onExportImages;
   final bool showReturnToPricing;
   final bool isAdminOrManager;
   final bool isPendingApproval;
   final bool isApproved;
   final bool isProfitPending;
+  final bool isDraft;
+  final bool isUnderPricing;
+  final String? pricingVersionNotes;
+  final Function(String)? onUpdateNotes;
 
   const PricingSummarySidebar({
     super.key,
@@ -35,11 +41,16 @@ class PricingSummarySidebar extends StatefulWidget {
     this.onMakeProfit,
     this.onConfirmPricing,
     this.onExportPdf,
+    this.onExportImages,
     this.showReturnToPricing = false,
     this.isAdminOrManager = false,
     this.isPendingApproval = false,
     this.isApproved = false,
     this.isProfitPending = false,
+    this.pricingVersionNotes,
+    this.onUpdateNotes,
+    required this.isDraft,
+    required this.isUnderPricing,
   });
 
   @override
@@ -48,6 +59,43 @@ class PricingSummarySidebar extends StatefulWidget {
 
 class _PricingSummarySidebarState extends State<PricingSummarySidebar> {
   bool _isCollapsed = false;
+  late TextEditingController _notesController;
+  Timer? _notesSaveTimer;
+
+  @override
+  void initState() {
+    super.initState();
+    _notesController = TextEditingController(
+      text: widget.pricingVersionNotes ?? '',
+    );
+  }
+
+  @override
+  void didUpdateWidget(PricingSummarySidebar oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.pricingVersionNotes != oldWidget.pricingVersionNotes) {
+      _notesController.text = widget.pricingVersionNotes ?? '';
+    }
+  }
+
+  @override
+  void dispose() {
+    _notesSaveTimer?.cancel();
+    _notesController.dispose();
+    super.dispose();
+  }
+
+  void _onNotesChanged(String value) {
+    // Cancel previous timer
+    _notesSaveTimer?.cancel();
+
+    // Set up new debounced save timer
+    _notesSaveTimer = Timer(const Duration(milliseconds: 800), () {
+      if (widget.onUpdateNotes != null) {
+        widget.onUpdateNotes!(value.trim().isEmpty ? '' : value.trim());
+      }
+    });
+  }
 
   String _formatNumberWithDecimals(double value) {
     // Format number with 3 decimals and add thousand separators
@@ -307,7 +355,7 @@ class _PricingSummarySidebarState extends State<PricingSummarySidebar> {
                   ],
                 ),
                 const SizedBox(height: 16),
-                // Cost, Profit, Total Breakdown (show when profit is calculated or status is APPROVED/PROFIT_PENDING)
+                // Cost, Profit, Total Breakdown (show when profit is calculated or status is APPROVED/PENDING_SIGNATURE)
                 if ((widget.totalCost != null && widget.totalProfit != null) ||
                     widget.isApproved ||
                     widget.isProfitPending) ...[
@@ -447,6 +495,64 @@ class _PricingSummarySidebarState extends State<PricingSummarySidebar> {
                   ),
                 ),
                 const SizedBox(height: 20),
+                // Pricing Version Notes (only for admins/managers)
+                if (widget.isAdminOrManager &&
+                    widget.onUpdateNotes != null) ...[
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF15181E),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: const Color(0xFF363C4A)),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'ملاحظات إصدار التسعير',
+                          style: AppTextStyles.bodyMedium.copyWith(
+                            fontWeight: FontWeight.w600,
+                            fontSize: 14,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        TextField(
+                          controller: _notesController,
+                          maxLines: 3,
+                          onChanged: _onNotesChanged,
+                          decoration: InputDecoration(
+                            hintText: 'اكتب الملاحظات هنا',
+                            hintStyle: AppTextStyles.bodySmall.copyWith(
+                              color: AppColors.textMuted,
+                            ),
+                            filled: true,
+                            fillColor: const Color(0xFF0F1217),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(8),
+                              borderSide: const BorderSide(
+                                color: Color(0xFF363C4A),
+                              ),
+                            ),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(8),
+                              borderSide: const BorderSide(
+                                color: Color(0xFF363C4A),
+                              ),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(8),
+                              borderSide: const BorderSide(
+                                color: AppColors.primary,
+                              ),
+                            ),
+                          ),
+                          textInputAction: TextInputAction.done,
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                ],
                 // Accept Pricing Button (only show for Admin/Manager when status is PENDING_APPROVAL)
                 if (widget.isAdminOrManager &&
                     widget.isPendingApproval &&
@@ -518,8 +624,80 @@ class _PricingSummarySidebarState extends State<PricingSummarySidebar> {
                     ),
                   ),
                   const SizedBox(height: 12),
+                  // Export Images Button (only show for Admin/Manager when status is APPROVED)
+                  if (widget.isAdminOrManager &&
+                      widget.isApproved &&
+                      widget.onExportImages != null) ...[
+                    SizedBox(
+                      width: double.infinity,
+                      height: 56,
+                      child: ElevatedButton(
+                        onPressed: widget.onExportImages,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF10B981),
+                          foregroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          elevation: 0,
+                          shadowColor: const Color(0xFF059669).withOpacity(0.2),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Icon(Icons.image, size: 24),
+                            const SizedBox(width: 8),
+                            Text(
+                              'تصدير كصورة',
+                              style: AppTextStyles.buttonLarge.copyWith(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                  ],
                 ],
-                // Confirm and Return to Pricing Buttons (only show for PROFIT_PENDING status)
+                // Move to Pending Signature Button (only show for Admin/Manager when status is APPROVED)
+                if (widget.isAdminOrManager &&
+                    widget.isApproved &&
+                    widget.onMakeProfit != null) ...[
+                  SizedBox(
+                    width: double.infinity,
+                    height: 56,
+                    child: ElevatedButton(
+                      onPressed: widget.onMakeProfit,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF6366F1),
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        elevation: 0,
+                        shadowColor: const Color(0xFF4F46E5).withOpacity(0.2),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Icon(Icons.description, size: 24),
+                          const SizedBox(width: 8),
+                          Text(
+                            'إعداد العقد والتوقيع',
+                            style: AppTextStyles.buttonLarge.copyWith(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                ],
+                // Confirm and Return to Pricing Buttons (only show for PENDING_SIGNATURE status)
                 if (widget.isProfitPending) ...[
                   if (widget.onConfirmPricing != null)
                     SizedBox(
@@ -584,8 +762,39 @@ class _PricingSummarySidebarState extends State<PricingSummarySidebar> {
                       ),
                     ),
                   const SizedBox(height: 12),
+                  if (widget.onExportImages != null)
+                    SizedBox(
+                      width: double.infinity,
+                      height: 50,
+                      child: OutlinedButton(
+                        onPressed: widget.onExportImages,
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: const Color(0xFF10B981),
+                          side: const BorderSide(color: Color(0xFF10B981)),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Icon(Icons.image, size: 24),
+                            const SizedBox(width: 8),
+                            Text(
+                              'تصدير كصورة',
+                              style: AppTextStyles.buttonLarge.copyWith(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                                color: const Color(0xFF10B981),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  const SizedBox(height: 12),
                 ],
-                // Submit Button (only show when NOT pending approval, NOT approved, NOT profit pending, and NOT Admin/Manager with pending approval)
+                // Submit Button (only show when NOT pending approval, NOT approved, NOT pending signature, and NOT Admin/Manager with pending approval)
                 if (!widget.showReturnToPricing &&
                     !(widget.isAdminOrManager && widget.isPendingApproval) &&
                     !(widget.isAdminOrManager && widget.isApproved) &&
@@ -657,8 +866,11 @@ class _PricingSummarySidebarState extends State<PricingSummarySidebar> {
                   ),
                   const SizedBox(height: 12),
                 ],
-                // Save Draft Button (show for all statuses including PENDING_APPROVAL and PROFIT_PENDING)
-                if (widget.onSaveDraft != null)
+                // Save Draft Button (show for all statuses including PENDING_APPROVAL and PENDING_SIGNATURE)
+                if (widget.onSaveDraft != null &&
+                    !(widget.isApproved ||
+                        widget.isProfitPending ||
+                        widget.isDraft))
                   SizedBox(
                     width: double.infinity,
                     height: 50,

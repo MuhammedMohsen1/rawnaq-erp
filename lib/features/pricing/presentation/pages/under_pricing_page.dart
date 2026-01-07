@@ -1,5 +1,7 @@
+import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
+import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -191,10 +193,10 @@ class _UnderPricingPageState extends State<UnderPricingPage> {
   Future<void> _returnToPricing() async {
     if (_pricingVersion == null) return;
 
-    // Check if pricing version is in PENDING_APPROVAL, APPROVED, or PROFIT_PENDING status
+    // Check if pricing version is in PENDING_APPROVAL, APPROVED, or PENDING_SIGNATURE status
     if (_pricingVersion!.status != 'PENDING_APPROVAL' &&
         _pricingVersion!.status != 'APPROVED' &&
-        _pricingVersion!.status != 'PROFIT_PENDING') {
+        _pricingVersion!.status != 'PENDING_SIGNATURE') {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -477,7 +479,7 @@ class _UnderPricingPageState extends State<UnderPricingPage> {
 
   Future<void> _confirmPricing() async {
     if (_pricingVersion == null) return;
-    if (_pricingVersion!.status != 'PROFIT_PENDING') {
+    if (_pricingVersion!.status != 'PENDING_SIGNATURE') {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -551,9 +553,9 @@ class _UnderPricingPageState extends State<UnderPricingPage> {
 
   Future<void> _exportPricingPdf() async {
     if (_pricingVersion == null) return;
-    // Allow export when status is APPROVED or PROFIT_PENDING
+    // Allow export when status is APPROVED or PENDING_SIGNATURE
     if (_pricingVersion!.status != 'APPROVED' &&
-        _pricingVersion!.status != 'PROFIT_PENDING') {
+        _pricingVersion!.status != 'PENDING_SIGNATURE') {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -683,6 +685,240 @@ class _UnderPricingPageState extends State<UnderPricingPage> {
     }
   }
 
+  Future<void> _updatePricingVersionNotes(String notes) async {
+    if (_pricingVersion == null) return;
+
+    try {
+      await _apiDataSource.updatePricingVersionNotes(
+        widget.projectId,
+        _pricingVersion!.version,
+        notes: notes.isEmpty ? null : notes,
+      );
+      // Reload pricing data to get updated notes
+      await _loadPricingData();
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('فشل حفظ الملاحظات: ${e.toString()}'),
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _exportPricingImages() async {
+    if (_pricingVersion == null) return;
+    // Allow export when status is APPROVED or PENDING_SIGNATURE
+    if (_pricingVersion!.status != 'APPROVED' &&
+        _pricingVersion!.status != 'PENDING_SIGNATURE') {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'لا يمكن تصدير الصور. الحالة الحالية: "${_getStatusText()}"',
+            ),
+            duration: const Duration(seconds: 4),
+          ),
+        );
+      }
+      return;
+    }
+
+    BuildContext? dialogContext;
+    try {
+      // Show loading indicator
+      if (mounted) {
+        showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (context) {
+            dialogContext = context;
+            return const Center(child: CircularProgressIndicator());
+          },
+        );
+      }
+
+      // Download images
+      final result = await _apiDataSource.exportPricingImages(
+        widget.projectId,
+        _pricingVersion!.version,
+      );
+
+      // Close loading dialog safely
+      if (mounted && dialogContext != null) {
+        Navigator.of(dialogContext!, rootNavigator: true).pop();
+      }
+
+      final projectName = _projectName ?? 'project';
+      final dateStr = DateFormat('yyyy-MM-dd').format(DateTime.now());
+
+      // Check if result is binary (single page) or JSON (multiple pages)
+      if (result is Uint8List) {
+        // Single page - save as PNG image
+        final fileName =
+            'pricing-${projectName}-v${_pricingVersion!.version}-$dateStr.png';
+
+        File savedFile;
+
+        if (Platform.isWindows || Platform.isMacOS || Platform.isLinux) {
+          // Desktop platforms - use saveFile dialog
+          final String? outputFile = await FilePicker.platform.saveFile(
+            dialogTitle: 'حفظ الصورة',
+            fileName: fileName,
+            type: FileType.custom,
+            allowedExtensions: ['png'],
+          );
+
+          if (outputFile == null) {
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('تم إلغاء حفظ الملف'),
+                  duration: Duration(seconds: 2),
+                ),
+              );
+            }
+            return;
+          }
+
+          savedFile = File(outputFile);
+          await savedFile.writeAsBytes(result);
+        } else {
+          // Mobile platforms
+          final directory = await getApplicationDocumentsDirectory();
+          savedFile = File('${directory.path}/$fileName');
+          await savedFile.writeAsBytes(result);
+          await OpenFile.open(savedFile.path);
+        }
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('تم حفظ الصورة بنجاح: ${savedFile.path}'),
+              duration: const Duration(seconds: 3),
+              action: Platform.isWindows || Platform.isMacOS || Platform.isLinux
+                  ? SnackBarAction(
+                      label: 'فتح',
+                      onPressed: () async {
+                        await OpenFile.open(savedFile.path);
+                      },
+                    )
+                  : null,
+            ),
+          );
+        }
+      } else if (result is Map<String, dynamic>) {
+        // Multiple pages - result contains pageCount and images array
+        final images = result['images'] as List<dynamic>? ?? [];
+
+        if (images.isEmpty) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('لم يتم العثور على صور'),
+                duration: Duration(seconds: 3),
+              ),
+            );
+          }
+          return;
+        }
+
+        // Save each image as a separate file
+        final savedFiles = <File>[];
+
+        if (Platform.isWindows || Platform.isMacOS || Platform.isLinux) {
+          // Desktop - ask user to choose a directory
+          final String? outputDir = await FilePicker.platform.getDirectoryPath(
+            dialogTitle: 'اختر مجلد لحفظ الصور',
+          );
+
+          if (outputDir == null) {
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('تم إلغاء حفظ الملفات'),
+                  duration: Duration(seconds: 2),
+                ),
+              );
+            }
+            return;
+          }
+
+          // Save all images
+          for (var i = 0; i < images.length; i++) {
+            final imageData = images[i] as Map<String, dynamic>;
+            final pageNumber = imageData['page'] as int? ?? (i + 1);
+            final base64Data = imageData['data'] as String? ?? '';
+
+            if (base64Data.isNotEmpty) {
+              final imageBytes = base64Decode(base64Data);
+              final fileName =
+                  'pricing-${projectName}-v${_pricingVersion!.version}-$dateStr-page$pageNumber.png';
+              final file = File('$outputDir/$fileName');
+              await file.writeAsBytes(imageBytes);
+              savedFiles.add(file);
+            }
+          }
+        } else {
+          // Mobile - save to app documents directory
+          final directory = await getApplicationDocumentsDirectory();
+
+          for (var i = 0; i < images.length; i++) {
+            final imageData = images[i] as Map<String, dynamic>;
+            final pageNumber = imageData['page'] as int? ?? (i + 1);
+            final base64Data = imageData['data'] as String? ?? '';
+
+            if (base64Data.isNotEmpty) {
+              final imageBytes = base64Decode(base64Data);
+              final fileName =
+                  'pricing-${projectName}-v${_pricingVersion!.version}-$dateStr-page$pageNumber.png';
+              final file = File('${directory.path}/$fileName');
+              await file.writeAsBytes(imageBytes);
+              savedFiles.add(file);
+            }
+          }
+        }
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('تم حفظ ${savedFiles.length} صورة بنجاح'),
+              duration: const Duration(seconds: 3),
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      // Close loading dialog if still open (safely)
+      if (mounted && dialogContext != null) {
+        try {
+          Navigator.of(dialogContext!, rootNavigator: true).pop();
+        } catch (_) {
+          // Dialog already closed or context invalid - ignore
+        }
+      }
+
+      if (mounted) {
+        String errorMessage = 'فشل تصدير الصور';
+        if (e is ServerException) {
+          errorMessage = 'فشل تصدير الصور: ${e.message}';
+        } else if (e is ValidationException) {
+          errorMessage = 'فشل تصدير الصور: ${e.message}';
+        } else {
+          errorMessage = 'فشل تصدير الصور: ${e.toString()}';
+        }
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(errorMessage),
+            duration: const Duration(seconds: 5),
+          ),
+        );
+      }
+    }
+  }
+
   Future<void> _addSubItem(String itemId) async {
     if (_pricingVersion == null) return;
 
@@ -760,8 +996,8 @@ class _UnderPricingPageState extends State<UnderPricingPage> {
     switch (_pricingVersion!.status) {
       case 'DRAFT':
         return 'مسودة';
-      case 'PROFIT_PENDING':
-        return 'انتظار الربح';
+      case 'PENDING_SIGNATURE':
+        return 'في انتظار التوقيع';
       case 'PENDING_APPROVAL':
         return 'في انتظار الموافقة';
       case 'APPROVED':
@@ -779,7 +1015,7 @@ class _UnderPricingPageState extends State<UnderPricingPage> {
     switch (_pricingVersion!.status) {
       case 'DRAFT':
         return AppColors.textMuted;
-      case 'PROFIT_PENDING':
+      case 'PENDING_SIGNATURE':
         return AppColors.warning;
       case 'PENDING_APPROVAL':
         return AppColors.warning;
@@ -1230,7 +1466,7 @@ class _UnderPricingPageState extends State<UnderPricingPage> {
 
   Widget _buildSidebar() {
     // Check if we should show return to pricing button
-    // Anyone can return a pricing version that is in PENDING_APPROVAL, APPROVED, or PROFIT_PENDING status
+    // Anyone can return a pricing version that is in PENDING_APPROVAL, APPROVED, or PENDING_SIGNATURE status
     final authState = context.read<AuthBloc>().state;
     final isAuthenticated = authState is AuthAuthenticated;
 
@@ -1240,7 +1476,7 @@ class _UnderPricingPageState extends State<UnderPricingPage> {
       showReturnButton =
           currentStatus == 'PENDING_APPROVAL' ||
           currentStatus == 'APPROVED' ||
-          currentStatus == 'PROFIT_PENDING';
+          currentStatus == 'PENDING_SIGNATURE';
     }
     // Check if user is Admin or Manager
     bool isAdminOrManager = false;
@@ -1263,14 +1499,14 @@ class _UnderPricingPageState extends State<UnderPricingPage> {
       isApproved = currentStatus == 'APPROVED';
     }
 
-    // Check if pricing status is PROFIT_PENDING
+    // Check if pricing status is PENDING_SIGNATURE
     bool isProfitPending = false;
     if (_pricingVersion != null) {
       final currentStatus = _pricingVersion!.status.toUpperCase();
-      isProfitPending = currentStatus == 'PROFIT_PENDING';
+      isProfitPending = currentStatus == 'PENDING_SIGNATURE';
     }
 
-    // Ensure return to pricing button is always available for APPROVED or PROFIT_PENDING status
+    // Ensure return to pricing button is always available for APPROVED or PENDING_SIGNATURE status
     final shouldShowReturnButton =
         showReturnButton || isApproved || isProfitPending;
 
@@ -1298,6 +1534,11 @@ class _UnderPricingPageState extends State<UnderPricingPage> {
         onExportPdf: (isAdminOrManager && isApproved) || isProfitPending
             ? _exportPricingPdf
             : null,
+        onExportImages: (isAdminOrManager && isApproved) || isProfitPending
+            ? _exportPricingImages
+            : null,
+        pricingVersionNotes: _pricingVersion?.notes,
+        onUpdateNotes: isAdminOrManager ? _updatePricingVersionNotes : null,
         onSubmit: () async {
           if (_pricingVersion == null) return;
 
@@ -1327,7 +1568,7 @@ class _UnderPricingPageState extends State<UnderPricingPage> {
             }
 
             // Submit for approval
-            if (_pricingVersion!.status == 'PROFIT_PENDING') {
+            if (_pricingVersion!.status == 'PENDING_SIGNATURE') {
               await _apiDataSource.submitForApproval(
                 widget.projectId,
                 _pricingVersion!.version,
@@ -1362,6 +1603,8 @@ class _UnderPricingPageState extends State<UnderPricingPage> {
             context,
           ).showSnackBar(const SnackBar(content: Text('تم حفظ المسودة')));
         },
+        isDraft: _pricingVersion?.status == 'DRAFT',
+        isUnderPricing: _pricingVersion?.status == 'UNDER_PRICING',
       ),
     );
   }

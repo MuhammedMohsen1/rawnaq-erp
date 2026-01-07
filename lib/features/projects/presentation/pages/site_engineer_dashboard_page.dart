@@ -86,7 +86,7 @@ class _SiteEngineerDashboardPageState extends State<SiteEngineerDashboardPage> {
     final status = pricingVersion.status.toUpperCase();
     return status == 'DRAFT' ||
         status == 'PENDING_APPROVAL' ||
-        status == 'PROFIT_PENDING';
+        status == 'PENDING_SIGNATURE';
   }
 
   String _getPricingStatusText(String? status) {
@@ -95,8 +95,8 @@ class _SiteEngineerDashboardPageState extends State<SiteEngineerDashboardPage> {
     switch (status.toUpperCase()) {
       case 'DRAFT':
         return 'مسودة';
-      case 'PROFIT_PENDING':
-        return 'انتظار الربح';
+      case 'PENDING_SIGNATURE':
+        return 'في انتظار التوقيع';
       case 'PENDING_APPROVAL':
         return 'في انتظار الموافقة';
       case 'APPROVED':
@@ -114,7 +114,7 @@ class _SiteEngineerDashboardPageState extends State<SiteEngineerDashboardPage> {
     switch (status.toUpperCase()) {
       case 'DRAFT':
         return AppColors.textMuted;
-      case 'PROFIT_PENDING':
+      case 'PENDING_SIGNATURE':
         return AppColors.warning;
       case 'PENDING_APPROVAL':
         return AppColors.warning;
@@ -168,7 +168,7 @@ class _SiteEngineerDashboardPageState extends State<SiteEngineerDashboardPage> {
           }
 
           // Filter projects based on pricing version status
-          // Show projects with pricing versions in DRAFT, PENDING_APPROVAL, or PROFIT_PENDING
+          // Show projects with pricing versions in DRAFT, PENDING_APPROVAL, or PENDING_SIGNATURE
           final underPricingProjects = state.projects
               .where((p) => _hasUnderPricingStatus(p))
               .toList();
@@ -551,7 +551,7 @@ class _SiteEngineerDashboardPageState extends State<SiteEngineerDashboardPage> {
           actionButton = 'متابعة التسعير';
           prefixIcon = const Icon(Icons.edit, size: 15, weight: 700);
           break;
-        case 'PROFIT_PENDING':
+        case 'PENDING_SIGNATURE':
           actionButton = 'عرض التسعير';
           prefixIcon = const Icon(Icons.visibility, size: 15, weight: 700);
           break;

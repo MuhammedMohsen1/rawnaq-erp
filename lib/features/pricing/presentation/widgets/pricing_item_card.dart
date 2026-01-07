@@ -61,7 +61,7 @@ class PricingItemCard extends StatefulWidget {
   final int version;
   final PricingItemModel item;
   final String?
-  pricingStatus; // DRAFT, PENDING_APPROVAL, APPROVED, PROFIT_PENDING, etc.
+  pricingStatus; // DRAFT, PENDING_APPROVAL, APPROVED, PENDING_SIGNATURE, etc.
   final ValueChanged<PricingItemModel>? onItemChanged;
   final ValueChanged<PricingSubItemModel>?
   onSubItemChanged; // For profit margin updates
@@ -115,6 +115,10 @@ class _PricingItemCardState extends State<PricingItemCard> {
       {}; // subItemId -> profitMargin (for APPROVED status)
   final Map<String, TextEditingController> _profitControllers =
       {}; // subItemId -> TextEditingController for profit margin input
+  final Map<String, TextEditingController> _notesControllers =
+      {}; // subItemId -> TextEditingController for notes input
+  final Map<String, Timer?> _notesTimers =
+      {}; // subItemId -> debounce timer for notes saving
   final Map<String, int> _selectedImageIndex =
       {}; // subItemId -> selected image index
   bool _isRestoringState =
@@ -137,6 +141,10 @@ class _PricingItemCardState extends State<PricingItemCard> {
             text: subItem.profitMargin.toStringAsFixed(2),
           );
         }
+        // Initialize notes controller
+        _notesControllers[subItem.id] = TextEditingController(
+          text: subItem.notes ?? '',
+        );
       }
     }
   }
@@ -167,6 +175,19 @@ class _PricingItemCardState extends State<PricingItemCard> {
         if (!_localElements.containsKey(subItem.id)) {
           _localElements[subItem.id] = [];
         }
+        // Sync notes controller with latest data
+        final newNotes = subItem.notes ?? '';
+        final existingController = _notesControllers[subItem.id];
+        if (existingController == null) {
+          _notesControllers[subItem.id] = TextEditingController(text: newNotes);
+        } else if (existingController.text != newNotes) {
+          final selection = existingController.selection;
+          existingController.text = newNotes;
+          final clampedOffset = selection.baseOffset.clamp(0, newNotes.length);
+          existingController.selection = TextSelection.collapsed(
+            offset: clampedOffset,
+          );
+        }
       }
     }
   }
@@ -193,6 +214,16 @@ class _PricingItemCardState extends State<PricingItemCard> {
       timer?.cancel();
     }
     _profitMarginTimers.clear();
+    // Dispose notes controllers
+    for (var controller in _notesControllers.values) {
+      controller.dispose();
+    }
+    _notesControllers.clear();
+    // Cancel notes timers
+    for (var timer in _notesTimers.values) {
+      timer?.cancel();
+    }
+    _notesTimers.clear();
     super.dispose();
   }
 
@@ -1484,11 +1515,11 @@ class _PricingItemCardState extends State<PricingItemCard> {
                                         ),
                                       ),
                                     ),
-                                    // Show total cost in header only when NOT APPROVED/PROFIT_PENDING
+                                    // Show total cost in header only when NOT APPROVED/PENDING_SIGNATURE
                                     if (widget.pricingStatus?.toUpperCase() !=
                                             'APPROVED' &&
                                         widget.pricingStatus?.toUpperCase() !=
-                                            'PROFIT_PENDING' &&
+                                            'PENDING_SIGNATURE' &&
                                         allElements.isNotEmpty) ...[
                                       Builder(
                                         builder: (context) {
@@ -1657,6 +1688,159 @@ class _PricingItemCardState extends State<PricingItemCard> {
                               // Profit Margin Input (only show when status is APPROVED)
                               if (widget.pricingStatus?.toUpperCase() ==
                                   'APPROVED') ...[
+                                // Sub-item notes editor (allowed in DRAFT, APPROVED, PENDING_SIGNATURE)
+                              ] else if (widget.pricingStatus != null &&
+                                  (widget.pricingStatus!.toUpperCase() ==
+                                          'DRAFT' ||
+                                      widget.pricingStatus!.toUpperCase() ==
+                                          'PENDING_SIGNATURE')) ...[
+                                // keep notes editor also for DRAFT/PENDING_SIGNATURE when not APPROVED
+                              ],
+                              if (widget.pricingStatus != null &&
+                                  (widget.pricingStatus!.toUpperCase() ==
+                                          'APPROVED' ||
+                                      widget.pricingStatus!.toUpperCase() ==
+                                          'PENDING_SIGNATURE')) ...[
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 12,
+                                    vertical: 8,
+                                  ),
+                                  child: Container(
+                                    padding: const EdgeInsets.all(12),
+                                    decoration: BoxDecoration(
+                                      color: const Color(0xFF15181E),
+                                      borderRadius: BorderRadius.circular(8),
+                                      border: Border.all(
+                                        color: const Color(0xFF363C4A),
+                                      ),
+                                    ),
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          'ملاحظات الفئة الفرعية',
+                                          style: AppTextStyles.bodyMedium
+                                              .copyWith(
+                                                fontWeight: FontWeight.w600,
+                                              ),
+                                        ),
+                                        const SizedBox(height: 8),
+                                        TextField(
+                                          controller:
+                                              _notesControllers[subItem.id],
+                                          maxLines: 3,
+                                          decoration: InputDecoration(
+                                            hintText: 'اكتب الملاحظات هنا',
+                                            hintStyle: AppTextStyles.bodySmall
+                                                .copyWith(
+                                                  color: AppColors.textMuted,
+                                                ),
+                                            filled: true,
+                                            fillColor: const Color(0xFF0F1217),
+                                            border: OutlineInputBorder(
+                                              borderRadius:
+                                                  BorderRadius.circular(8),
+                                              borderSide: const BorderSide(
+                                                color: Color(0xFF363C4A),
+                                              ),
+                                            ),
+                                            enabledBorder: OutlineInputBorder(
+                                              borderRadius:
+                                                  BorderRadius.circular(8),
+                                              borderSide: const BorderSide(
+                                                color: Color(0xFF363C4A),
+                                              ),
+                                            ),
+                                            focusedBorder: OutlineInputBorder(
+                                              borderRadius:
+                                                  BorderRadius.circular(8),
+                                              borderSide: const BorderSide(
+                                                color: AppColors.primary,
+                                              ),
+                                            ),
+                                          ),
+                                          textInputAction: TextInputAction.done,
+                                          onChanged: (value) {
+                                            // Debounce notes save
+                                            _notesTimers[subItem.id]?.cancel();
+                                            _notesTimers[subItem.id] = Timer(
+                                              const Duration(milliseconds: 700),
+                                              () async {
+                                                try {
+                                                  await _apiDataSource
+                                                      .updatePricingSubItem(
+                                                        widget.projectId,
+                                                        widget.version,
+                                                        widget.item.id,
+                                                        subItem.id,
+                                                        notes:
+                                                            value.trim().isEmpty
+                                                            ? null
+                                                            : value.trim(),
+                                                      );
+                                                } catch (_) {
+                                                  // ignore transient save errors in debounce
+                                                }
+                                              },
+                                            );
+                                          },
+                                          onSubmitted: (value) async {
+                                            try {
+                                              await _apiDataSource
+                                                  .updatePricingSubItem(
+                                                    widget.projectId,
+                                                    widget.version,
+                                                    widget.item.id,
+                                                    subItem.id,
+                                                    notes: value.trim().isEmpty
+                                                        ? null
+                                                        : value.trim(),
+                                                  );
+                                              final updatedVersion =
+                                                  await _apiDataSource
+                                                      .getPricingVersion(
+                                                        widget.projectId,
+                                                        widget.version,
+                                                      );
+                                              if (widget.onItemChanged !=
+                                                  null) {
+                                                final updatedItem =
+                                                    updatedVersion.items
+                                                        ?.firstWhere(
+                                                          (it) =>
+                                                              it.id ==
+                                                              widget.item.id,
+                                                        );
+                                                if (updatedItem != null) {
+                                                  widget.onItemChanged!(
+                                                    updatedItem,
+                                                  );
+                                                }
+                                              }
+                                            } catch (e) {
+                                              if (mounted) {
+                                                ScaffoldMessenger.of(
+                                                  context,
+                                                ).showSnackBar(
+                                                  SnackBar(
+                                                    content: Text(
+                                                      'فشل حفظ الملاحظات: ${e.toString()}',
+                                                    ),
+                                                    duration: const Duration(
+                                                      seconds: 3,
+                                                    ),
+                                                  ),
+                                                );
+                                              }
+                                            }
+                                          },
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
                                 Padding(
                                   padding: const EdgeInsets.symmetric(
                                     horizontal: 12,

@@ -1,5 +1,5 @@
 /// Status of a project in the system
-/// Matches the Prisma schema: DRAFT, UNDER_PRICING, PROFIT_PENDING, PENDING_APPROVAL, EXECUTION, COMPLETED, CANCELLED
+/// Matches the Prisma schema: DRAFT, UNDER_PRICING, PENDING_SIGNATURE, PENDING_APPROVAL, EXECUTION, COMPLETED, CANCELLED
 enum ProjectStatus {
   /// Project is in draft stage
   draft,
@@ -7,7 +7,7 @@ enum ProjectStatus {
   /// Project is under pricing review
   underPricing,
   
-  /// Project profit is pending calculation
+  /// Project is pending client signature (contract preparation)
   profitPending,
   
   /// Project is pending approval
@@ -33,7 +33,7 @@ extension ProjectStatusExtension on ProjectStatus {
       case ProjectStatus.underPricing:
         return 'قيد التسعير';
       case ProjectStatus.profitPending:
-        return 'انتظار الربح';
+        return 'في انتظار التوقيع';
       case ProjectStatus.pendingApproval:
         return 'في انتظار الموافقة';
       case ProjectStatus.execution:
@@ -53,7 +53,7 @@ extension ProjectStatusExtension on ProjectStatus {
       case ProjectStatus.underPricing:
         return 'Under Pricing';
       case ProjectStatus.profitPending:
-        return 'Profit Pending';
+        return 'Pending Signature';
       case ProjectStatus.pendingApproval:
         return 'Pending Approval';
       case ProjectStatus.execution:
@@ -78,7 +78,7 @@ extension ProjectStatusExtension on ProjectStatus {
       case ProjectStatus.underPricing:
         return 'UNDER_PRICING';
       case ProjectStatus.profitPending:
-        return 'PROFIT_PENDING';
+        return 'PENDING_SIGNATURE';
       case ProjectStatus.pendingApproval:
         return 'PENDING_APPROVAL';
       case ProjectStatus.execution:
@@ -98,7 +98,7 @@ extension ProjectStatusExtension on ProjectStatus {
         return ProjectStatus.draft;
       case 'UNDER_PRICING':
         return ProjectStatus.underPricing;
-      case 'PROFIT_PENDING':
+      case 'PENDING_SIGNATURE':
         return ProjectStatus.profitPending;
       case 'PENDING_APPROVAL':
         return ProjectStatus.pendingApproval;

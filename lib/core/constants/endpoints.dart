@@ -240,10 +240,12 @@ abstract class ApiEndpoints {
   // Pricing Endpoints
   static String pricingVersions(String projectId) => '/projects/$projectId/pricing';
   static String pricingVersion(String projectId, int version) => '/projects/$projectId/pricing/$version';
+  static String updatePricingVersion(String projectId, int version) => '/projects/$projectId/pricing/$version';
   static String pricingItems(String projectId, int version) => '/projects/$projectId/pricing/$version/items';
   static String pricingItem(String projectId, int version, String itemId) => '/projects/$projectId/pricing/$version/items/$itemId';
   static String deletePricingItem(String projectId, int version, String itemId) => '/projects/$projectId/pricing/$version/items/$itemId';
   static String pricingSubItems(String projectId, int version, String itemId) => '/projects/$projectId/pricing/$version/items/$itemId/sub-items';
+  static String pricingSubItem(String projectId, int version, String itemId, String subItemId) => '/projects/$projectId/pricing/$version/items/$itemId/sub-items/$subItemId';
   static String deletePricingSubItem(String projectId, int version, String itemId, String subItemId) => '/projects/$projectId/pricing/$version/items/$itemId/sub-items/$subItemId';
   static String pricingSubItemImages(String projectId, int version, String itemId, String subItemId) => '/projects/$projectId/pricing/$version/items/$itemId/sub-items/$subItemId/images';
   static String deletePricingSubItemImage(String projectId, int version, String itemId, String subItemId) => '/projects/$projectId/pricing/$version/items/$itemId/sub-items/$subItemId/images';
@@ -258,4 +260,5 @@ abstract class ApiEndpoints {
   static String returnToPricing(String projectId, int version) => '/projects/$projectId/pricing/$version/return-to-pricing';
   static String confirmPricing(String projectId, int version) => '/projects/$projectId/pricing/$version/confirm';
   static String exportPricingPdf(String projectId, int version) => '/projects/$projectId/pricing/$version/export-pdf';
+  static String exportPricingImages(String projectId, int version) => '/projects/$projectId/pricing/$version/export-images';
 }

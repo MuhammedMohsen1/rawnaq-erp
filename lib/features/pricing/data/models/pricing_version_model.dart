@@ -4,7 +4,7 @@ class PricingVersionModel {
   final String projectId;
   final int version;
   final String
-  status; // DRAFT, PROFIT_PENDING, PENDING_APPROVAL, APPROVED, REJECTED
+  status; // DRAFT, PENDING_SIGNATURE, PENDING_APPROVAL, APPROVED, REJECTED
   final double totalCost;
   final double totalProfit;
   final double totalPrice;
@@ -182,6 +182,7 @@ class PricingSubItemModel {
   final String pricingItemId;
   final String name;
   final String? description;
+  final String? notes;
   final List<String> images;
   final double profitMargin;
   final double profitAmount;
@@ -197,6 +198,7 @@ class PricingSubItemModel {
     required this.pricingItemId,
     required this.name,
     this.description,
+    this.notes,
     this.images = const [],
     this.profitMargin = 0.0,
     this.profitAmount = 0.0,
@@ -235,6 +237,7 @@ class PricingSubItemModel {
       pricingItemId: json['pricingItemId'] as String,
       name: json['name'] as String,
       description: json['description'] as String?,
+      notes: json['notes'] as String?,
       images: json['images'] != null
           ? (json['images'] as List).map((e) => e.toString()).toList()
           : [],
@@ -265,6 +268,7 @@ class PricingSubItemModel {
       'pricingItemId': pricingItemId,
       'name': name,
       'description': description,
+      'notes': notes,
       'images': images,
       'profitMargin': profitMargin,
       'profitAmount': profitAmount,
