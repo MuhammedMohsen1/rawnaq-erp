@@ -513,20 +513,20 @@ class _ContractExportDialogState extends State<ContractExportDialog> {
           decoration: InputDecoration(
             labelText: 'الرقم المدني للعميل (12 رقم)',
             hintText: '298040400214',
-            prefixIcon: const Icon(Icons.badge),
+            prefixIcon: const Icon(Icons.badge, color: AppColors.textSecondary),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(10),
             ),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(10),
-              borderSide: BorderSide(color: Colors.grey[300]!),
+              borderSide: const BorderSide(color: AppColors.inputBorder),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(10),
               borderSide: BorderSide(color: AppColors.primary, width: 2),
             ),
             filled: true,
-            fillColor: Colors.grey[50],
+            fillColor: AppColors.inputBackground,
             contentPadding: const EdgeInsets.symmetric(
               horizontal: 16,
               vertical: 16,
@@ -539,6 +539,7 @@ class _ContractExportDialogState extends State<ContractExportDialog> {
           style: const TextStyle(
             fontSize: 15,
             fontWeight: FontWeight.w500,
+            color: AppColors.textPrimary,
           ),
         ),
         const SizedBox(height: 20),
@@ -547,20 +548,20 @@ class _ContractExportDialogState extends State<ContractExportDialog> {
           decoration: InputDecoration(
             labelText: 'عنوان المشروع',
             hintText: 'مثال: قطعة 4 اليرموك - شارع 2 - جادة 2 - منزل 14',
-            prefixIcon: const Icon(Icons.location_on),
+            prefixIcon: const Icon(Icons.location_on, color: AppColors.textSecondary),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(10),
             ),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(10),
-              borderSide: BorderSide(color: Colors.grey[300]!),
+              borderSide: const BorderSide(color: AppColors.inputBorder),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(10),
-              borderSide: BorderSide(color: AppColors.primary, width: 2),
+              borderSide: const BorderSide(color: AppColors.inputFocusBorder, width: 2),
             ),
             filled: true,
-            fillColor: Colors.grey[50],
+            fillColor: AppColors.inputBackground,
             contentPadding: const EdgeInsets.all(16),
           ),
           maxLines: 3,
@@ -618,18 +619,18 @@ class _ContractExportDialogState extends State<ContractExportDialog> {
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
                     color: _termsApproved[index]
-                        ? Colors.green[50]
-                        : Colors.white,
+                        ? Colors.green[900]?.withOpacity(0.2)
+                        : AppColors.surfaceColor,
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(
                       color: _termsApproved[index]
                           ? Colors.green[300]!
-                          : Colors.grey[300]!,
+                          : AppColors.border,
                       width: _termsApproved[index] ? 2 : 1,
                     ),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.05),
+                        color: Colors.black.withOpacity(0.2),
                         blurRadius: 4,
                         offset: const Offset(0, 2),
                       ),
@@ -667,13 +668,13 @@ class _ContractExportDialogState extends State<ContractExportDialog> {
                         decoration: InputDecoration(
                           labelText: 'العنوان',
                           hintText: 'مثال: أولا: التمهيد',
-                          prefixIcon: const Icon(Icons.title, size: 20),
+                          prefixIcon: const Icon(Icons.title, size: 20, color: AppColors.textSecondary),
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(10),
                           ),
                           enabledBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(10),
-                            borderSide: BorderSide(color: Colors.grey[300]!),
+                            borderSide: const BorderSide(color: AppColors.inputBorder),
                           ),
                           focusedBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(10),
@@ -683,7 +684,7 @@ class _ContractExportDialogState extends State<ContractExportDialog> {
                             ),
                           ),
                           filled: true,
-                          fillColor: Colors.grey[50],
+                          fillColor: AppColors.inputBackground,
                           contentPadding: const EdgeInsets.symmetric(
                             horizontal: 16,
                             vertical: 16,
@@ -692,6 +693,7 @@ class _ContractExportDialogState extends State<ContractExportDialog> {
                         style: const TextStyle(
                           fontSize: 15,
                           fontWeight: FontWeight.bold,
+                          color: AppColors.textPrimary,
                         ),
                         textDirection: TextDirection.rtl,
                         textAlign: TextAlign.right,
@@ -704,26 +706,29 @@ class _ContractExportDialogState extends State<ContractExportDialog> {
                         decoration: InputDecoration(
                           labelText: 'الوصف',
                           hintText: 'أدخل نص البند هنا...',
-                          prefixIcon: const Icon(Icons.description, size: 20),
+                          prefixIcon: const Icon(Icons.description, size: 20, color: AppColors.textSecondary),
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(10),
                           ),
                           enabledBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(10),
-                            borderSide: BorderSide(color: Colors.grey[300]!),
+                            borderSide: const BorderSide(color: AppColors.inputBorder),
                           ),
                           focusedBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(10),
-                            borderSide: BorderSide(
-                              color: AppColors.primary,
+                            borderSide: const BorderSide(
+                              color: AppColors.inputFocusBorder,
                               width: 2,
                             ),
                           ),
                           filled: true,
-                          fillColor: Colors.grey[50],
+                          fillColor: AppColors.inputBackground,
                           contentPadding: const EdgeInsets.all(16),
                         ),
-                        style: const TextStyle(fontSize: 14),
+                        style: const TextStyle(
+                          fontSize: 14,
+                          color: AppColors.textPrimary,
+                        ),
                         textDirection: TextDirection.rtl,
                         textAlign: TextAlign.right,
                       ),
@@ -821,15 +826,15 @@ class _ContractExportDialogState extends State<ContractExportDialog> {
                 margin: const EdgeInsets.only(bottom: 16),
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: AppColors.surfaceColor,
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(
-                    color: Colors.grey[300]!,
+                    color: AppColors.border,
                     width: 1,
                   ),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.05),
+                      color: Colors.black.withOpacity(0.2),
                       blurRadius: 4,
                       offset: const Offset(0, 2),
                     ),
@@ -888,23 +893,23 @@ class _ContractExportDialogState extends State<ContractExportDialog> {
                             decoration: InputDecoration(
                               labelText: 'اسم الدفعة',
                               hintText: 'مثال: دفعة أولى',
-                              prefixIcon: const Icon(Icons.payment, size: 20),
+                              prefixIcon: const Icon(Icons.payment, size: 20, color: AppColors.textSecondary),
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(10),
                               ),
                               enabledBorder: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(10),
-                                borderSide: BorderSide(color: Colors.grey[300]!),
+                                borderSide: const BorderSide(color: AppColors.inputBorder),
                               ),
                               focusedBorder: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(10),
-                                borderSide: BorderSide(
-                                  color: AppColors.primary,
+                                borderSide: const BorderSide(
+                                  color: AppColors.inputFocusBorder,
                                   width: 2,
                                 ),
                               ),
                               filled: true,
-                              fillColor: Colors.grey[50],
+                              fillColor: AppColors.inputBackground,
                               contentPadding: const EdgeInsets.symmetric(
                                 horizontal: 16,
                                 vertical: 16,
@@ -936,23 +941,23 @@ class _ContractExportDialogState extends State<ContractExportDialog> {
                             decoration: InputDecoration(
                               labelText: 'النسبة',
                               suffixText: '%',
-                              prefixIcon: const Icon(Icons.percent, size: 20),
+                              prefixIcon: const Icon(Icons.percent, size: 20, color: AppColors.textSecondary),
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(10),
                               ),
                               enabledBorder: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(10),
-                                borderSide: BorderSide(color: Colors.grey[300]!),
+                                borderSide: const BorderSide(color: AppColors.inputBorder),
                               ),
                               focusedBorder: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(10),
-                                borderSide: BorderSide(
-                                  color: AppColors.primary,
+                                borderSide: const BorderSide(
+                                  color: AppColors.inputFocusBorder,
                                   width: 2,
                                 ),
                               ),
                               filled: true,
-                              fillColor: Colors.grey[50],
+                              fillColor: AppColors.inputBackground,
                               contentPadding: const EdgeInsets.symmetric(
                                 horizontal: 16,
                                 vertical: 16,
@@ -965,6 +970,7 @@ class _ContractExportDialogState extends State<ContractExportDialog> {
                             style: const TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.bold,
+                              color: AppColors.textPrimary,
                             ),
                           ),
                         ),
