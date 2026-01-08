@@ -556,7 +556,7 @@ class _UnderPricingPageState extends State<UnderPricingPage> {
 
   Future<void> _exportContractPdf() async {
     if (_pricingVersion == null) return;
-    
+
     // Check if status is PENDING_SIGNATURE
     if (_pricingVersion!.status != 'PENDING_SIGNATURE') {
       if (mounted) {
@@ -590,7 +590,7 @@ class _UnderPricingPageState extends State<UnderPricingPage> {
 
   Future<void> _confirmContract() async {
     if (_pricingVersion == null) return;
-    
+
     // Check if status is PENDING_SIGNATURE
     if (_pricingVersion!.status != 'PENDING_SIGNATURE') {
       if (mounted) {
@@ -635,7 +635,7 @@ class _UnderPricingPageState extends State<UnderPricingPage> {
     try {
       await _contractsApiDataSource.confirmContract(widget.projectId);
       await _loadPricingData();
-      
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -668,7 +668,7 @@ class _UnderPricingPageState extends State<UnderPricingPage> {
 
   Future<void> _returnContractToPricing() async {
     if (_pricingVersion == null) return;
-    
+
     // Check if status is PENDING_SIGNATURE
     if (_pricingVersion!.status != 'PENDING_SIGNATURE') {
       if (mounted) {
@@ -694,9 +694,7 @@ class _UnderPricingPageState extends State<UnderPricingPage> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              'هل أنت متأكد من إرجاع العقد إلى مرحلة التسعير؟',
-            ),
+            const Text('هل أنت متأكد من إرجاع العقد إلى مرحلة التسعير؟'),
             const SizedBox(height: 16),
             TextField(
               controller: reasonController,
@@ -738,7 +736,9 @@ class _UnderPricingPageState extends State<UnderPricingPage> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('تم إرجاع العقد بنجاح. تم نقل المشروع إلى مرحلة التسعير.'),
+            content: Text(
+              'تم إرجاع العقد بنجاح. تم نقل المشروع إلى مرحلة التسعير.',
+            ),
             duration: Duration(seconds: 3),
           ),
         );
@@ -1346,8 +1346,6 @@ class _UnderPricingPageState extends State<UnderPricingPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _buildBreadcrumb(),
-          const SizedBox(height: 16),
           _buildHeader(),
           const SizedBox(height: 24),
           _buildSectionTitle(),
@@ -1368,8 +1366,6 @@ class _UnderPricingPageState extends State<UnderPricingPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _buildBreadcrumb(),
-          const SizedBox(height: 16),
           _buildHeader(),
           const SizedBox(height: 24),
           Row(
@@ -1403,8 +1399,6 @@ class _UnderPricingPageState extends State<UnderPricingPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _buildBreadcrumb(),
-          const SizedBox(height: 16),
           _buildHeader(),
           const SizedBox(height: 24),
           Row(
@@ -1483,17 +1477,7 @@ class _UnderPricingPageState extends State<UnderPricingPage> {
       children: [
         Row(
           children: [
-            Expanded(
-              child: Text(
-                _projectName ?? 'المشروع',
-                style: const TextStyle(
-                  fontSize: 30,
-                  fontWeight: FontWeight.w900,
-                  color: AppColors.textPrimary,
-                  letterSpacing: -0.75,
-                ),
-              ),
-            ),
+            Spacer(),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 5),
               decoration: BoxDecoration(
@@ -1526,16 +1510,6 @@ class _UnderPricingPageState extends State<UnderPricingPage> {
             ),
           ],
         ),
-        if (_pricingVersion != null) ...[
-          const SizedBox(height: 8),
-          Text(
-            'الإصدار: ${_pricingVersion!.version}',
-            style: AppTextStyles.bodyMedium.copyWith(
-              fontSize: 14,
-              color: AppColors.textSecondary,
-            ),
-          ),
-        ],
       ],
     );
   }
@@ -1608,7 +1582,7 @@ class _UnderPricingPageState extends State<UnderPricingPage> {
                 final user = authState.user;
                 isAdminOrManager = user.isAdmin || user.isManager;
               }
-              
+
               return PricingItemCard(
                 key: ValueKey('pricing-item-${item.id}'),
                 projectId: widget.projectId,
@@ -1617,7 +1591,8 @@ class _UnderPricingPageState extends State<UnderPricingPage> {
                 pricingStatus: _pricingVersion?.status,
                 isAdminOrManager: isAdminOrManager,
                 initialIsExpanded: _itemExpandedStates[item.id] ?? true,
-                initialSubItemExpandedStates: _subItemExpandedStates[item.id] ?? {},
+                initialSubItemExpandedStates:
+                    _subItemExpandedStates[item.id] ?? {},
                 onExpandedChanged: (isExpanded) =>
                     _handleItemExpandedChanged(item.id, isExpanded),
                 onSubItemExpandedChanged: (subItemStates) =>
@@ -1761,7 +1736,9 @@ class _UnderPricingPageState extends State<UnderPricingPage> {
             : null,
         onExportContractPdf: isProfitPending ? _exportContractPdf : null,
         onConfirmContract: isProfitPending ? _confirmContract : null,
-        onReturnContractToPricing: isProfitPending ? _returnContractToPricing : null,
+        onReturnContractToPricing: isProfitPending
+            ? _returnContractToPricing
+            : null,
         onExportImages: (isAdminOrManager && isApproved) || isProfitPending
             ? _exportPricingImages
             : null,

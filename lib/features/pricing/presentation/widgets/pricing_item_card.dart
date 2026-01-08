@@ -721,6 +721,335 @@ class _PricingItemCardState extends State<PricingItemCard> {
     }
   }
 
+  Future<void> _showItemContextMenu() async {
+    final result = await showModalBottomSheet<String>(
+      context: context,
+      backgroundColor: const Color(0xFF1C212B),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (context) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.edit, color: AppColors.primary),
+              title: const Text(
+                'تعديل الاسم',
+                style: TextStyle(color: AppColors.textPrimary),
+              ),
+              onTap: () => Navigator.pop(context, 'edit'),
+            ),
+            ListTile(
+              leading: const Icon(Icons.delete_outline, color: Colors.red),
+              title: const Text('حذف', style: TextStyle(color: Colors.red)),
+              onTap: () => Navigator.pop(context, 'delete'),
+            ),
+            const SizedBox(height: 8),
+          ],
+        ),
+      ),
+    );
+
+    if (result == 'edit') {
+      await _showEditItemDialog();
+    } else if (result == 'delete') {
+      await _showDeleteItemConfirmation();
+    }
+  }
+
+  Future<void> _showSubItemContextMenu(PricingSubItemModel subItem) async {
+    final result = await showModalBottomSheet<String>(
+      context: context,
+      backgroundColor: const Color(0xFF1C212B),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (context) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.edit, color: AppColors.primary),
+              title: const Text(
+                'تعديل الاسم',
+                style: TextStyle(color: AppColors.textPrimary),
+              ),
+              onTap: () => Navigator.pop(context, 'edit'),
+            ),
+            ListTile(
+              leading: const Icon(Icons.delete_outline, color: Colors.red),
+              title: const Text('حذف', style: TextStyle(color: Colors.red)),
+              onTap: () => Navigator.pop(context, 'delete'),
+            ),
+            const SizedBox(height: 8),
+          ],
+        ),
+      ),
+    );
+
+    if (result == 'edit') {
+      await _showEditSubItemDialog(subItem);
+    } else if (result == 'delete') {
+      await _showDeleteSubItemConfirmation(subItem.id, subItem.name);
+    }
+  }
+
+  Future<void> _showEditItemDialog() async {
+    final nameController = TextEditingController(text: widget.item.name);
+    final descriptionController = TextEditingController(
+      text: widget.item.description ?? '',
+    );
+
+    final result = await showDialog<Map<String, String>>(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: const Color(0xFF1C212B),
+        title: Text(
+          'تعديل العنصر',
+          style: AppTextStyles.h4.copyWith(color: AppColors.textPrimary),
+        ),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: nameController,
+                autofocus: true,
+                style: const TextStyle(color: AppColors.textPrimary),
+                decoration: InputDecoration(
+                  labelText: 'اسم العنصر',
+                  labelStyle: const TextStyle(color: AppColors.textSecondary),
+                  enabledBorder: OutlineInputBorder(
+                    borderSide: const BorderSide(color: Color(0xFF363C4A)),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderSide: const BorderSide(color: AppColors.primary),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: descriptionController,
+                maxLines: 3,
+                style: const TextStyle(color: AppColors.textPrimary),
+                decoration: InputDecoration(
+                  labelText: 'الوصف (اختياري)',
+                  labelStyle: const TextStyle(color: AppColors.textSecondary),
+                  enabledBorder: OutlineInputBorder(
+                    borderSide: const BorderSide(color: Color(0xFF363C4A)),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderSide: const BorderSide(color: AppColors.primary),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(
+              'إلغاء',
+              style: AppTextStyles.bodyMedium.copyWith(
+                color: AppColors.textSecondary,
+              ),
+            ),
+          ),
+          TextButton(
+            onPressed: () {
+              if (nameController.text.trim().isNotEmpty) {
+                Navigator.pop(context, {
+                  'name': nameController.text.trim(),
+                  'description': descriptionController.text.trim(),
+                });
+              }
+            },
+            child: Text(
+              'حفظ',
+              style: AppTextStyles.bodyMedium.copyWith(
+                color: AppColors.primary,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+
+    if (result != null && result['name'] != null) {
+      try {
+        await _apiDataSource.updatePricingItem(
+          widget.projectId,
+          widget.version,
+          widget.item.id,
+          name: result['name'],
+          description: result['description']?.isEmpty == true
+              ? null
+              : result['description'],
+        );
+
+        // Refresh data
+        final updatedVersion = await _apiDataSource.getPricingVersion(
+          widget.projectId,
+          widget.version,
+        );
+        final updatedItem = updatedVersion.items?.firstWhere(
+          (i) => i.id == widget.item.id,
+        );
+
+        if (updatedItem != null && mounted) {
+          widget.onItemChanged?.call(updatedItem);
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('تم تحديث العنصر بنجاح'),
+              duration: Duration(seconds: 2),
+            ),
+          );
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('فشل تحديث العنصر: ${e.toString()}')),
+          );
+        }
+      }
+    }
+  }
+
+  Future<void> _showEditSubItemDialog(PricingSubItemModel subItem) async {
+    final nameController = TextEditingController(text: subItem.name);
+    final descriptionController = TextEditingController(
+      text: subItem.description ?? '',
+    );
+
+    final result = await showDialog<Map<String, String>>(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: const Color(0xFF1C212B),
+        title: Text(
+          'تعديل الفئة الفرعية',
+          style: AppTextStyles.h4.copyWith(color: AppColors.textPrimary),
+        ),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: nameController,
+                autofocus: true,
+                style: const TextStyle(color: AppColors.textPrimary),
+                decoration: InputDecoration(
+                  labelText: 'اسم الفئة الفرعية',
+                  labelStyle: const TextStyle(color: AppColors.textSecondary),
+                  enabledBorder: OutlineInputBorder(
+                    borderSide: const BorderSide(color: Color(0xFF363C4A)),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderSide: const BorderSide(color: AppColors.primary),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: descriptionController,
+                maxLines: 3,
+                style: const TextStyle(color: AppColors.textPrimary),
+                decoration: InputDecoration(
+                  labelText: 'الوصف (اختياري)',
+                  labelStyle: const TextStyle(color: AppColors.textSecondary),
+                  enabledBorder: OutlineInputBorder(
+                    borderSide: const BorderSide(color: Color(0xFF363C4A)),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderSide: const BorderSide(color: AppColors.primary),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(
+              'إلغاء',
+              style: AppTextStyles.bodyMedium.copyWith(
+                color: AppColors.textSecondary,
+              ),
+            ),
+          ),
+          TextButton(
+            onPressed: () {
+              if (nameController.text.trim().isNotEmpty) {
+                Navigator.pop(context, {
+                  'name': nameController.text.trim(),
+                  'description': descriptionController.text.trim(),
+                });
+              }
+            },
+            child: Text(
+              'حفظ',
+              style: AppTextStyles.bodyMedium.copyWith(
+                color: AppColors.primary,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+
+    if (result != null && result['name'] != null) {
+      try {
+        await _apiDataSource.updatePricingSubItem(
+          widget.projectId,
+          widget.version,
+          widget.item.id,
+          subItem.id,
+          name: result['name'],
+          description: result['description']?.isEmpty == true
+              ? null
+              : result['description'],
+        );
+
+        // Refresh data
+        final updatedVersion = await _apiDataSource.getPricingVersion(
+          widget.projectId,
+          widget.version,
+        );
+        final updatedItem = updatedVersion.items?.firstWhere(
+          (i) => i.id == widget.item.id,
+        );
+
+        if (updatedItem != null && mounted) {
+          widget.onItemChanged?.call(updatedItem);
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('تم تحديث الفئة الفرعية بنجاح'),
+              duration: Duration(seconds: 2),
+            ),
+          );
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('فشل تحديث الفئة الفرعية: ${e.toString()}')),
+          );
+        }
+      }
+    }
+  }
+
   Future<void> _deleteSubItem(String subItemId) async {
     try {
       await _apiDataSource.deleteSubItem(
@@ -1355,107 +1684,99 @@ class _PricingItemCardState extends State<PricingItemCard> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Header
-          Container(
-            height: 71,
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 21),
-            decoration: const BoxDecoration(
-              color: Color(0xFF232936),
-              borderRadius: BorderRadius.only(
-                topLeft: Radius.circular(12),
-                topRight: Radius.circular(12),
-              ),
-            ),
-            child: Row(
-              children: [
-                const Icon(
-                  Icons.architecture,
-                  color: Color(0xFF135BEC),
-                  size: 24,
+          GestureDetector(
+            onLongPress: () => _showItemContextMenu(),
+            child: Container(
+              height: 71,
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 21),
+              decoration: const BoxDecoration(
+                color: Color(0xFF232936),
+                borderRadius: BorderRadius.only(
+                  topLeft: Radius.circular(12),
+                  topRight: Radius.circular(12),
                 ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        widget.item.name,
-                        style: AppTextStyles.h4.copyWith(
-                          fontSize: 18,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                      if (widget.item.description != null) ...[
-                        const SizedBox(height: 4),
+              ),
+              child: Row(
+                children: [
+                  const Icon(
+                    Icons.architecture,
+                    color: Color(0xFF135BEC),
+                    size: 24,
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
                         Text(
-                          widget.item.description!,
-                          style: AppTextStyles.caption.copyWith(
-                            fontSize: 12,
-                            color: AppColors.textSecondary,
+                          widget.item.name,
+                          style: AppTextStyles.h4.copyWith(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w700,
                           ),
                         ),
-                      ],
-                    ],
-                  ),
-                ),
-                const SizedBox(width: 16),
-                // Total Price
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.end,
-                      children: [
-                        Padding(
-                          padding: const EdgeInsets.only(bottom: 2.0),
-                          child: Text(
-                            'KD',
+                        if (widget.item.description != null) ...[
+                          const SizedBox(height: 4),
+                          Text(
+                            widget.item.description!,
                             style: AppTextStyles.caption.copyWith(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w500,
+                              fontSize: 12,
                               color: AppColors.textSecondary,
                             ),
                           ),
-                        ),
-                        const SizedBox(width: 6),
-                        _buildFormattedNumber(
-                          widget.item.totalPrice,
-                          fontSize: 20,
-                          fontWeight: FontWeight.w700,
-                        ),
+                        ],
                       ],
                     ),
-                  ],
-                ),
-                const SizedBox(width: 16),
-                IconButton(
-                  onPressed: () => _showDeleteItemConfirmation(),
-                  icon: const Icon(
-                    Icons.delete_outline,
-                    color: Colors.red,
-                    size: 20,
                   ),
-                  tooltip: 'حذف العنصر',
-                  padding: EdgeInsets.zero,
-                ),
-                const SizedBox(width: 8),
-                IconButton(
-                  onPressed: () {
-                    setState(() {
-                      _isExpanded = !_isExpanded;
-                    });
-                    // Notify parent of state change
-                    widget.onExpandedChanged?.call(_isExpanded);
-                  },
-                  icon: Icon(
-                    _isExpanded ? Icons.expand_less : Icons.expand_more,
-                    color: AppColors.textSecondary,
-                    size: 24,
+                  const SizedBox(width: 16),
+                  // Total Price
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.only(bottom: 2.0),
+                            child: Text(
+                              'KD',
+                              style: AppTextStyles.caption.copyWith(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w500,
+                                color: AppColors.textSecondary,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 6),
+                          _buildFormattedNumber(
+                            widget.item.totalPrice,
+                            fontSize: 20,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ],
+                      ),
+                    ],
                   ),
-                  padding: EdgeInsets.zero,
-                ),
-              ],
+                  const SizedBox(width: 16),
+                  IconButton(
+                    onPressed: () {
+                      setState(() {
+                        _isExpanded = !_isExpanded;
+                      });
+                      // Notify parent of state change
+                      widget.onExpandedChanged?.call(_isExpanded);
+                    },
+                    icon: Icon(
+                      _isExpanded ? Icons.expand_less : Icons.expand_more,
+                      color: AppColors.textSecondary,
+                      size: 24,
+                    ),
+                    padding: EdgeInsets.zero,
+                  ),
+                ],
+              ),
             ),
           ),
           // Content (Collapsible)
@@ -1485,137 +1806,130 @@ class _PricingItemCardState extends State<PricingItemCard> {
                         child: Column(
                           children: [
                             // Sub-Item Header (Foldable)
-                            InkWell(
-                              onTap: () => _toggleSubItem(subItem.id),
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 12,
-                                  vertical: 12,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: const Color(0xFF2A313D),
-                                  borderRadius: BorderRadius.only(
-                                    topLeft: Radius.circular(8),
-                                    topRight: Radius.circular(8),
+                            GestureDetector(
+                              onLongPress: () =>
+                                  _showSubItemContextMenu(subItem),
+                              child: InkWell(
+                                onTap: () => _toggleSubItem(subItem.id),
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 12,
+                                    vertical: 12,
                                   ),
-                                ),
-                                child: Row(
-                                  children: [
-                                    Icon(
-                                      isSubItemExpanded
-                                          ? Icons.expand_less
-                                          : Icons.expand_more,
-                                      color: AppColors.textSecondary,
-                                      size: 20,
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFF2A313D),
+                                    borderRadius: BorderRadius.only(
+                                      topLeft: Radius.circular(8),
+                                      topRight: Radius.circular(8),
                                     ),
-                                    const SizedBox(width: 8),
-                                    Expanded(
-                                      child: Text(
-                                        subItem.name,
-                                        style: AppTextStyles.bodyLarge.copyWith(
-                                          fontWeight: FontWeight.w600,
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      Icon(
+                                        isSubItemExpanded
+                                            ? Icons.expand_less
+                                            : Icons.expand_more,
+                                        color: AppColors.textSecondary,
+                                        size: 20,
+                                      ),
+                                      const SizedBox(width: 8),
+                                      Expanded(
+                                        child: Text(
+                                          subItem.name,
+                                          style: AppTextStyles.bodyLarge
+                                              .copyWith(
+                                                fontWeight: FontWeight.w600,
+                                              ),
                                         ),
                                       ),
-                                    ),
-                                    // Show total cost in header only when NOT APPROVED/PENDING_SIGNATURE
-                                    if (widget.pricingStatus?.toUpperCase() !=
-                                            'APPROVED' &&
-                                        widget.pricingStatus?.toUpperCase() !=
-                                            'PENDING_SIGNATURE' &&
-                                        allElements.isNotEmpty) ...[
-                                      Builder(
-                                        builder: (context) {
-                                          final total = allElements
-                                              .fold<double>(
-                                                0,
-                                                (sum, element) =>
-                                                    sum +
-                                                    (element.calculatedCost ??
-                                                            0)
-                                                        .toDouble(),
-                                              );
-                                          final totalStr = total
-                                              .toStringAsFixed(3);
-                                          final dotIndex = totalStr.indexOf(
-                                            '.',
-                                          );
-                                          final intPart = dotIndex >= 0
-                                              ? totalStr.substring(0, dotIndex)
-                                              : totalStr;
-                                          final decimalPart = dotIndex >= 0
-                                              ? totalStr.substring(dotIndex)
-                                              : '';
-                                          return RichText(
-                                            textDirection: TextDirection.ltr,
-                                            text: TextSpan(
-                                              children: [
-                                                TextSpan(
-                                                  text: intPart,
-                                                  style: AppTextStyles.caption
-                                                      .copyWith(
-                                                        color: AppColors
-                                                            .textSecondary,
-                                                      ),
-                                                ),
-                                                if (decimalPart.isNotEmpty)
+                                      // Show total cost in header only when NOT APPROVED/PENDING_SIGNATURE
+                                      if (widget.pricingStatus?.toUpperCase() !=
+                                              'APPROVED' &&
+                                          widget.pricingStatus?.toUpperCase() !=
+                                              'PENDING_SIGNATURE' &&
+                                          allElements.isNotEmpty) ...[
+                                        Builder(
+                                          builder: (context) {
+                                            final total = allElements
+                                                .fold<double>(
+                                                  0,
+                                                  (sum, element) =>
+                                                      sum +
+                                                      (element.calculatedCost ??
+                                                              0)
+                                                          .toDouble(),
+                                                );
+                                            final totalStr = total
+                                                .toStringAsFixed(3);
+                                            final dotIndex = totalStr.indexOf(
+                                              '.',
+                                            );
+                                            final intPart = dotIndex >= 0
+                                                ? totalStr.substring(
+                                                    0,
+                                                    dotIndex,
+                                                  )
+                                                : totalStr;
+                                            final decimalPart = dotIndex >= 0
+                                                ? totalStr.substring(dotIndex)
+                                                : '';
+                                            return RichText(
+                                              textDirection: TextDirection.ltr,
+                                              text: TextSpan(
+                                                children: [
                                                   TextSpan(
-                                                    text: decimalPart,
+                                                    text: intPart,
                                                     style: AppTextStyles.caption
                                                         .copyWith(
                                                           color: AppColors
                                                               .textSecondary,
-                                                          fontSize:
-                                                              AppTextStyles
-                                                                  .caption
-                                                                  .fontSize! *
-                                                              0.75, // smaller
                                                         ),
                                                   ),
-                                                TextSpan(
-                                                  text: ' KD',
-                                                  style: TextStyle(
-                                                    color:
-                                                        AppColors.textSecondary,
-                                                    fontSize:
-                                                        AppTextStyles
-                                                            .caption
-                                                            .fontSize! *
-                                                        0.75, // smaller
+                                                  if (decimalPart.isNotEmpty)
+                                                    TextSpan(
+                                                      text: decimalPart,
+                                                      style: AppTextStyles
+                                                          .caption
+                                                          .copyWith(
+                                                            color: AppColors
+                                                                .textSecondary,
+                                                            fontSize:
+                                                                AppTextStyles
+                                                                    .caption
+                                                                    .fontSize! *
+                                                                0.75, // smaller
+                                                          ),
+                                                    ),
+                                                  TextSpan(
+                                                    text: ' KD',
+                                                    style: TextStyle(
+                                                      color: AppColors
+                                                          .textSecondary,
+                                                      fontSize:
+                                                          AppTextStyles
+                                                              .caption
+                                                              .fontSize! *
+                                                          0.75, // smaller
+                                                    ),
                                                   ),
-                                                ),
-                                              ],
-                                            ),
-                                          );
-                                        },
+                                                ],
+                                              ),
+                                            );
+                                          },
+                                        ),
+                                        const SizedBox(width: 8),
+                                      ],
+                                      IconButton(
+                                        icon: const Icon(Icons.add, size: 18),
+                                        onPressed: () =>
+                                            _addLocalElement(subItem.id),
+                                        tooltip: 'إضافة عنصر',
+                                        color: AppColors.primary,
+                                        padding: EdgeInsets.zero,
+                                        constraints: const BoxConstraints(),
                                       ),
-                                      const SizedBox(width: 8),
                                     ],
-                                    IconButton(
-                                      icon: const Icon(
-                                        Icons.delete_outline,
-                                        size: 18,
-                                      ),
-                                      onPressed: () =>
-                                          _showDeleteSubItemConfirmation(
-                                            subItem.id,
-                                            subItem.name,
-                                          ),
-                                      tooltip: 'حذف الفئة الفرعية',
-                                      color: Colors.red,
-                                      padding: EdgeInsets.zero,
-                                      constraints: const BoxConstraints(),
-                                    ),
-                                    const SizedBox(width: 8),
-                                    IconButton(
-                                      icon: const Icon(Icons.add, size: 18),
-                                      onPressed: () =>
-                                          _addLocalElement(subItem.id),
-                                      tooltip: 'إضافة عنصر',
-                                      color: AppColors.primary,
-                                      padding: EdgeInsets.zero,
-                                      constraints: const BoxConstraints(),
-                                    ),
-                                  ],
+                                  ),
                                 ),
                               ),
                             ),
