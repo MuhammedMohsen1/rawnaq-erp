@@ -1348,13 +1348,12 @@ class _UnderPricingPageState extends State<UnderPricingPage> {
         children: [
           _buildHeader(),
           const SizedBox(height: 24),
-          _buildSectionTitle(),
-          const SizedBox(height: 16),
+          _buildSidebar(),
+          const SizedBox(height: 24),
+
           _buildItemsList(),
           const SizedBox(height: 24),
           _buildAddItemButton(),
-          const SizedBox(height: 24),
-          _buildSidebar(),
         ],
       ),
     );
@@ -1368,26 +1367,12 @@ class _UnderPricingPageState extends State<UnderPricingPage> {
         children: [
           _buildHeader(),
           const SizedBox(height: 24),
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(
-                flex: 2,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _buildSectionTitle(),
-                    const SizedBox(height: 16),
-                    _buildItemsList(),
-                    const SizedBox(height: 24),
-                    _buildAddItemButton(),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 24),
-              _buildSidebar(),
-            ],
-          ),
+          _buildSidebar(),
+          const SizedBox(height: 24),
+
+          _buildItemsList(),
+          const SizedBox(height: 24),
+          _buildAddItemButton(),
         ],
       ),
     );
@@ -1401,73 +1386,14 @@ class _UnderPricingPageState extends State<UnderPricingPage> {
         children: [
           _buildHeader(),
           const SizedBox(height: 24),
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _buildSectionTitle(),
-                    const SizedBox(height: 16),
-                    _buildItemsList(),
-                    const SizedBox(height: 24),
-                    _buildAddItemButton(),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 24),
-              _buildSidebar(),
-            ],
-          ),
+          _buildSidebar(),
+          const SizedBox(height: 24),
+
+          _buildItemsList(),
+          const SizedBox(height: 24),
+          _buildAddItemButton(),
         ],
       ),
-    );
-  }
-
-  Widget _buildBreadcrumb() {
-    return Row(
-      children: [
-        GestureDetector(
-          onTap: () => context.go(AppRoutes.projects),
-          child: Text(
-            'المشاريع',
-            style: AppTextStyles.bodyMedium.copyWith(
-              color: AppColors.textSecondary,
-              fontSize: 14,
-            ),
-          ),
-        ),
-        const SizedBox(width: 8),
-        const Icon(
-          Icons.chevron_left,
-          color: AppColors.textSecondary,
-          size: 16,
-        ),
-        const SizedBox(width: 8),
-        Text(
-          _projectName ?? 'المشروع',
-          style: AppTextStyles.bodyMedium.copyWith(
-            color: AppColors.textSecondary,
-            fontSize: 14,
-          ),
-        ),
-        const SizedBox(width: 8),
-        const Icon(
-          Icons.chevron_left,
-          color: AppColors.textSecondary,
-          size: 16,
-        ),
-        const SizedBox(width: 8),
-        Text(
-          'التسعير',
-          style: AppTextStyles.bodyMedium.copyWith(
-            color: AppColors.textPrimary,
-            fontSize: 14,
-            fontWeight: FontWeight.w500,
-          ),
-        ),
-      ],
     );
   }
 
@@ -1511,16 +1437,6 @@ class _UnderPricingPageState extends State<UnderPricingPage> {
           ],
         ),
       ],
-    );
-  }
-
-  Widget _buildSectionTitle() {
-    return Text(
-      'تسعير الجدران',
-      style: AppTextStyles.h3.copyWith(
-        fontSize: 20,
-        fontWeight: FontWeight.w700,
-      ),
     );
   }
 

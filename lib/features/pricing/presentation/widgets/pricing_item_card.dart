@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart'
     show kIsWeb, defaultTargetPlatform, TargetPlatform;
@@ -1177,7 +1178,7 @@ class _PricingItemCardState extends State<PricingItemCard> {
         ),
         // Thumbnails Row
         Container(
-          height: 100,
+          height: 50,
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
           child: Row(
             children: [
@@ -1196,8 +1197,8 @@ class _PricingItemCardState extends State<PricingItemCard> {
                         });
                       },
                       child: Container(
-                        width: 80,
-                        height: 80,
+                        width: 40,
+                        height: 40,
                         margin: const EdgeInsets.only(right: 8),
                         decoration: BoxDecoration(
                           borderRadius: BorderRadius.circular(8),
@@ -1231,8 +1232,8 @@ class _PricingItemCardState extends State<PricingItemCard> {
               ),
               // Add Image Button
               Container(
-                width: 80,
-                height: 80,
+                width: 40,
+                height: 40,
                 decoration: BoxDecoration(
                   border: Border.all(
                     color: const Color(0xFF4B5563),
@@ -1919,15 +1920,6 @@ class _PricingItemCardState extends State<PricingItemCard> {
                                         ),
                                         const SizedBox(width: 8),
                                       ],
-                                      IconButton(
-                                        icon: const Icon(Icons.add, size: 18),
-                                        onPressed: () =>
-                                            _addLocalElement(subItem.id),
-                                        tooltip: 'إضافة عنصر',
-                                        color: AppColors.primary,
-                                        padding: EdgeInsets.zero,
-                                        constraints: const BoxConstraints(),
-                                      ),
                                     ],
                                   ),
                                 ),
@@ -2626,9 +2618,9 @@ class _PricingItemCardState extends State<PricingItemCard> {
                                             bottom: 12,
                                           ),
                                           constraints: const BoxConstraints(
-                                            maxWidth: 400,
-                                            minWidth: 200,
-                                            maxHeight: 600,
+                                            maxWidth: 200,
+                                            minWidth: 100,
+                                            maxHeight: 300,
                                           ),
                                           child: Container(
                                             padding: const EdgeInsets.all(12),
@@ -3006,19 +2998,140 @@ class _PricingItemCardState extends State<PricingItemCard> {
                                                 ],
                                               );
                                             }),
+                                            // Add Element Button
+                                            const SizedBox(height: 12),
+                                            Container(
+                                              height: 46,
+                                              decoration: BoxDecoration(
+                                                borderRadius:
+                                                    BorderRadius.circular(8),
+                                              ),
+                                              child: CustomPaint(
+                                                painter: DashedBorderPainter(
+                                                  color: const Color(
+                                                    0xFF4B5563,
+                                                  ),
+                                                  strokeWidth: 1.5,
+                                                  dashWidth: 6,
+                                                  dashSpace: 4,
+                                                  radius: 8,
+                                                ),
+                                                child: InkWell(
+                                                  onTap: () => _addLocalElement(
+                                                    subItem.id,
+                                                  ),
+                                                  borderRadius:
+                                                      BorderRadius.circular(8),
+                                                  child: Row(
+                                                    mainAxisAlignment:
+                                                        MainAxisAlignment
+                                                            .center,
+                                                    children: [
+                                                      const Icon(
+                                                        Icons.add,
+                                                        color:
+                                                            AppColors.primary,
+                                                        size: 20,
+                                                      ),
+                                                      const SizedBox(width: 8),
+                                                      Text(
+                                                        'إضافة عنصر',
+                                                        style: AppTextStyles
+                                                            .bodyMedium
+                                                            .copyWith(
+                                                              fontSize: 14,
+                                                              fontWeight:
+                                                                  FontWeight
+                                                                      .w500,
+                                                              color: AppColors
+                                                                  .primary,
+                                                            ),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                ),
+                                              ),
+                                            ),
                                           ] else ...[
                                             Padding(
                                               padding: const EdgeInsets.all(24),
-                                              child: Center(
-                                                child: Text(
-                                                  'لا توجد عناصر بعد',
-                                                  style: AppTextStyles
-                                                      .bodyMedium
-                                                      .copyWith(
-                                                        color:
-                                                            AppColors.textMuted,
+                                              child: Column(
+                                                children: [
+                                                  Center(
+                                                    child: Text(
+                                                      'لا توجد عناصر بعد',
+                                                      style: AppTextStyles
+                                                          .bodyMedium
+                                                          .copyWith(
+                                                            color: AppColors
+                                                                .textMuted,
+                                                          ),
+                                                    ),
+                                                  ),
+                                                  const SizedBox(height: 16),
+                                                  // Add Element Button when no elements
+                                                  Container(
+                                                    height: 46,
+                                                    decoration: BoxDecoration(
+                                                      borderRadius:
+                                                          BorderRadius.circular(
+                                                            8,
+                                                          ),
+                                                    ),
+                                                    child: CustomPaint(
+                                                      painter:
+                                                          DashedBorderPainter(
+                                                            color: const Color(
+                                                              0xFF4B5563,
+                                                            ),
+                                                            strokeWidth: 1.5,
+                                                            dashWidth: 6,
+                                                            dashSpace: 4,
+                                                            radius: 8,
+                                                          ),
+                                                      child: InkWell(
+                                                        onTap: () =>
+                                                            _addLocalElement(
+                                                              subItem.id,
+                                                            ),
+                                                        borderRadius:
+                                                            BorderRadius.circular(
+                                                              8,
+                                                            ),
+                                                        child: Row(
+                                                          mainAxisAlignment:
+                                                              MainAxisAlignment
+                                                                  .center,
+                                                          children: [
+                                                            const Icon(
+                                                              Icons.add,
+                                                              color: AppColors
+                                                                  .primary,
+                                                              size: 20,
+                                                            ),
+                                                            const SizedBox(
+                                                              width: 8,
+                                                            ),
+                                                            Text(
+                                                              'إضافة عنصر',
+                                                              style: AppTextStyles
+                                                                  .bodyMedium
+                                                                  .copyWith(
+                                                                    fontSize:
+                                                                        14,
+                                                                    fontWeight:
+                                                                        FontWeight
+                                                                            .w500,
+                                                                    color: AppColors
+                                                                        .primary,
+                                                                  ),
+                                                            ),
+                                                          ],
+                                                        ),
                                                       ),
-                                                ),
+                                                    ),
+                                                  ),
+                                                ],
                                               ),
                                             ),
                                           ],
@@ -3130,4 +3243,53 @@ class _PricingItemCardState extends State<PricingItemCard> {
       ),
     );
   }
+}
+
+class DashedBorderPainter extends CustomPainter {
+  final Color color;
+  final double strokeWidth;
+  final double dashWidth;
+  final double dashSpace;
+  final double radius;
+
+  DashedBorderPainter({
+    required this.color,
+    this.strokeWidth = 1,
+    this.dashWidth = 6,
+    this.dashSpace = 4,
+    this.radius = 8,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = color
+      ..strokeWidth = strokeWidth
+      ..style = PaintingStyle.stroke;
+
+    final rrect = RRect.fromRectAndRadius(
+      Offset.zero & size,
+      Radius.circular(radius),
+    );
+
+    final path = Path()..addRRect(rrect);
+    _drawDashedPath(canvas, paint, path);
+  }
+
+  void _drawDashedPath(Canvas canvas, Paint paint, Path path) {
+    final pathMetrics = path.computeMetrics();
+
+    for (final metric in pathMetrics) {
+      double distance = 0;
+      while (distance < metric.length) {
+        final segmentLength = math.min(dashWidth, metric.length - distance);
+        final segment = metric.extractPath(distance, distance + segmentLength);
+        canvas.drawPath(segment, paint);
+        distance += dashWidth + dashSpace;
+      }
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
