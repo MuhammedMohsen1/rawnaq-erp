@@ -71,7 +71,6 @@ class SettingsPage extends StatelessWidget {
                   trailing: Switch(
                     value: true,
                     onChanged: null, // Disabled for now
-                    activeThumbColor: AppColors.primary,
                   ),
                 ),
               ),
@@ -87,21 +86,13 @@ class SettingsPage extends StatelessWidget {
                     _buildSettingTile(
                       title: 'إشعارات المهام',
                       subtitle: 'تلقي إشعارات عند تحديث المهام',
-                      trailing: Switch(
-                        value: true,
-                        onChanged: (value) {},
-                        activeThumbColor: AppColors.primary,
-                      ),
+                      trailing: Switch(value: true, onChanged: (value) {}),
                     ),
                     const Divider(color: AppColors.divider, height: 1),
                     _buildSettingTile(
                       title: 'إشعارات المواعيد',
                       subtitle: 'تذكير قبل المواعيد',
-                      trailing: Switch(
-                        value: true,
-                        onChanged: (value) {},
-                        activeThumbColor: AppColors.primary,
-                      ),
+                      trailing: Switch(value: true, onChanged: (value) {}),
                     ),
                   ],
                 ),

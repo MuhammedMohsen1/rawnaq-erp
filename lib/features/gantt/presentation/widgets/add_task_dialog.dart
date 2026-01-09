@@ -294,7 +294,7 @@ class _AddTaskDialogState extends State<AddTaskDialog>
         const SizedBox(height: 8),
         _buildDropdownContainer(
           child: DropdownButtonFormField<String>(
-            initialValue: _selectedMemberId,
+            value: _selectedMemberId,
             decoration: const InputDecoration(
               contentPadding: EdgeInsets.symmetric(horizontal: 12),
               border: InputBorder.none,
@@ -357,7 +357,7 @@ class _AddTaskDialogState extends State<AddTaskDialog>
         const SizedBox(height: 8),
         _buildDropdownContainer(
           child: DropdownButtonFormField<String>(
-            initialValue: _selectedProjectId,
+            value: _selectedProjectId,
             decoration: const InputDecoration(
               contentPadding: EdgeInsets.symmetric(horizontal: 12),
               border: InputBorder.none,
@@ -599,7 +599,7 @@ class _AddTaskDialogState extends State<AddTaskDialog>
         const SizedBox(height: 8),
         _buildDropdownContainer(
           child: DropdownButtonFormField<TaskStatus>(
-            initialValue: _status,
+            value: _status,
             decoration: const InputDecoration(
               contentPadding: EdgeInsets.symmetric(horizontal: 12),
               border: InputBorder.none,

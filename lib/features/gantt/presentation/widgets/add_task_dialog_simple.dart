@@ -269,7 +269,7 @@ class _AddTaskDialogSimpleState extends State<AddTaskDialogSimple>
             border: Border.all(color: AppColors.inputBorder),
           ),
           child: DropdownButtonFormField<String>(
-            initialValue: _selectedProjectId,
+            value: _selectedProjectId,
             decoration: const InputDecoration(
               contentPadding: EdgeInsets.symmetric(horizontal: 12),
               border: InputBorder.none,
