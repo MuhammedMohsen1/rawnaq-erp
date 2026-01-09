@@ -64,7 +64,6 @@ class PricingSummarySidebar extends StatefulWidget {
 }
 
 class _PricingSummarySidebarState extends State<PricingSummarySidebar> {
-  bool _isCollapsed = false;
   List<TextEditingController> _noteControllers = [];
   Timer? _notesSaveTimer;
 
@@ -180,15 +179,12 @@ class _PricingSummarySidebarState extends State<PricingSummarySidebar> {
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        final maxHeight = constraints.maxHeight != double.infinity
-            ? constraints.maxHeight
-            : MediaQuery.of(context).size.height;
+        final isMobile = constraints.maxWidth < 600;
+        final isTablet =
+            constraints.maxWidth >= 600 && constraints.maxWidth < 1024;
 
-        return AnimatedContainer(
-          duration: const Duration(milliseconds: 300),
-          curve: Curves.easeInOut,
-          width: _isCollapsed ? 60 : 320,
-          constraints: BoxConstraints(minHeight: 0, maxHeight: maxHeight),
+        return Container(
+          width: double.infinity,
           decoration: BoxDecoration(
             color: const Color(0xFF1C212B),
             border: Border.all(color: const Color(0xFF363C4A)),
@@ -201,119 +197,217 @@ class _PricingSummarySidebarState extends State<PricingSummarySidebar> {
               ),
             ],
           ),
-          child: AnimatedSwitcher(
-            duration: const Duration(milliseconds: 300),
-            switchInCurve: Curves.easeInOut,
-            switchOutCurve: Curves.easeInOut,
-            transitionBuilder: (child, animation) {
-              return FadeTransition(opacity: animation, child: child);
-            },
-            child: _isCollapsed
-                ? SizedBox(
-                    key: const ValueKey('collapsed'),
-                    width: 60,
-                    height: maxHeight,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: _buildCollapsedContent(),
-                    ),
-                  )
-                : SizedBox(
-                    key: const ValueKey('expanded'),
-                    width: 320,
-                    height: maxHeight,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: _buildExpandedContent(),
-                    ),
-                  ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: _buildExpandedContent(
+              isMobile: isMobile,
+              isTablet: isTablet,
+            ),
           ),
         );
       },
     );
   }
 
-  List<Widget> _buildCollapsedContent() {
-    return [
-      // Header
-      Container(
-        height: 69,
-        padding: const EdgeInsets.all(20),
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            colors: [Color(0xFF1C212B), Color(0xFF232936)],
-            begin: Alignment.centerRight,
-            end: Alignment.centerLeft,
-          ),
-          borderRadius: BorderRadius.only(
-            topLeft: Radius.circular(12),
-            topRight: Radius.circular(12),
-          ),
-        ),
-        child: const Icon(Icons.calculate, color: Color(0xFF135BEC), size: 24),
+  Widget _buildGrandTotalCard({
+    required bool isMobile,
+    required bool isTablet,
+  }) {
+    return Container(
+      padding: EdgeInsets.all(
+        isMobile
+            ? 6
+            : isTablet
+            ? 8
+            : 10,
       ),
-      // Toggle button at bottom
-      Expanded(
-        child: Container(
-          padding: const EdgeInsets.all(16),
-          child: Center(
-            child: Material(
-              color: Colors.transparent,
-              child: InkWell(
-                onTap: () {
-                  setState(() {
-                    _isCollapsed = !_isCollapsed;
-                  });
-                },
-                borderRadius: BorderRadius.circular(12),
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 200),
-                  width: 44,
-                  height: 44,
-                  decoration: BoxDecoration(
-                    color: AppColors.cardBackground.withOpacity(0.8),
-                    border: Border.all(
-                      color: AppColors.border.withOpacity(0.5),
-                      width: 1,
-                    ),
-                    borderRadius: BorderRadius.circular(12),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.1),
-                        blurRadius: 4,
-                        offset: const Offset(0, 2),
-                      ),
-                    ],
-                  ),
-                  child: Center(
-                    child: AnimatedSwitcher(
-                      duration: const Duration(milliseconds: 200),
-                      transitionBuilder: (child, animation) {
-                        return ScaleTransition(scale: animation, child: child);
-                      },
-                      child: Icon(
-                        _isCollapsed ? Icons.chevron_right : Icons.chevron_left,
-                        key: ValueKey<bool>(_isCollapsed),
-                        color: AppColors.textSecondary,
-                        size: 24,
-                      ),
-                    ),
+      decoration: BoxDecoration(
+        color: const Color(0xFF15181E),
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(color: const Color(0xFF363C4A)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'التقدير الإجمالي',
+            style: AppTextStyles.caption.copyWith(
+              fontSize: isMobile ? 8 : 9,
+              fontWeight: FontWeight.w500,
+              color: AppColors.textSecondary,
+            ),
+          ),
+          SizedBox(height: isMobile ? 1 : 2),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Padding(
+                padding: EdgeInsets.only(bottom: isMobile ? 1 : 2),
+                child: Text(
+                  'KD',
+                  style: AppTextStyles.h4.copyWith(
+                    fontSize: isMobile ? 11 : 13,
+                    fontWeight: FontWeight.w500,
+                    color: const Color(0xFF6B7280),
                   ),
                 ),
               ),
-            ),
+              SizedBox(width: isMobile ? 4 : 6),
+              Builder(
+                builder: (context) {
+                  final full = _formatNumberWithDecimals(widget.grandTotal);
+                  final dotIndex = full.indexOf('.');
+                  final intPart = dotIndex >= 0
+                      ? full.substring(0, dotIndex)
+                      : full;
+                  final decimalPart = dotIndex >= 0
+                      ? full.substring(dotIndex)
+                      : '';
+                  return RichText(
+                    text: TextSpan(
+                      text: intPart,
+                      style: TextStyle(
+                        fontSize: isMobile
+                            ? 16
+                            : isTablet
+                            ? 20
+                            : 24,
+                        fontWeight: FontWeight.w900,
+                        color: AppColors.textPrimary,
+                        letterSpacing: -0.75,
+                      ),
+                      children: decimalPart.isNotEmpty
+                          ? [
+                              TextSpan(
+                                text: decimalPart,
+                                style: TextStyle(
+                                  fontSize: isMobile
+                                      ? 10
+                                      : isTablet
+                                      ? 12
+                                      : 14,
+                                  fontWeight: FontWeight.w900,
+                                  color: AppColors.textPrimary,
+                                  letterSpacing: -0.4,
+                                ),
+                              ),
+                            ]
+                          : [],
+                    ),
+                  );
+                },
+              ),
+            ],
           ),
-        ),
+        ],
       ),
-    ];
+    );
   }
 
-  List<Widget> _buildExpandedContent() {
+  Widget _buildMobileStatsLayout() {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Grand Total
+        Expanded(
+          flex: 3,
+          child: _buildGrandTotalCard(isMobile: true, isTablet: false),
+        ),
+        // Cost and Profit (if available) - stacked vertically
+        if ((widget.totalCost != null && widget.totalProfit != null) ||
+            widget.isApproved ||
+            widget.isProfitPending) ...[
+          const SizedBox(width: 8),
+          Expanded(
+            flex: 2,
+            child: Column(
+              children: [
+                // Cost
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(6),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF15181E),
+                    borderRadius: BorderRadius.circular(6),
+                    border: Border.all(color: const Color(0xFF363C4A)),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'التكلفة',
+                        style: AppTextStyles.caption.copyWith(
+                          fontSize: 8,
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        '${_formatNumberWithDecimals(widget.totalCost ?? 0.0)} KD',
+                        style: AppTextStyles.bodyLarge.copyWith(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.textPrimary,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 4),
+                // Profit
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(6),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF15181E),
+                    borderRadius: BorderRadius.circular(6),
+                    border: Border.all(color: const Color(0xFF363C4A)),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'الربح',
+                        style: AppTextStyles.caption.copyWith(
+                          fontSize: 8,
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        '${_formatNumberWithDecimals(widget.totalProfit ?? 0.0)} KD',
+                        style: AppTextStyles.bodyLarge.copyWith(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w700,
+                          color: const Color(0xFF10B981),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+
+  List<Widget> _buildExpandedContent({
+    required bool isMobile,
+    required bool isTablet,
+  }) {
     return [
       // Header
       Container(
-        height: 69,
-        padding: const EdgeInsets.all(20),
+        padding: EdgeInsets.symmetric(
+          horizontal: isMobile
+              ? 10
+              : isTablet
+              ? 12
+              : 14,
+          vertical: isMobile ? 4 : 6,
+        ),
         decoration: const BoxDecoration(
           gradient: LinearGradient(
             colors: [Color(0xFF1C212B), Color(0xFF232936)],
@@ -327,884 +421,809 @@ class _PricingSummarySidebarState extends State<PricingSummarySidebar> {
         ),
         child: Row(
           children: [
-            const Icon(Icons.calculate, color: Color(0xFF135BEC), size: 24),
-            const SizedBox(width: 8),
-            Expanded(
-              child: Text(
-                'ملخص التسعير',
-                style: AppTextStyles.h4.copyWith(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w700,
-                ),
+            Icon(
+              Icons.calculate,
+              color: const Color(0xFF135BEC),
+              size: isMobile ? 14 : 16,
+            ),
+            SizedBox(width: isMobile ? 4 : 6),
+            Text(
+              'ملخص التسعير',
+              style: AppTextStyles.h4.copyWith(
+                fontSize: isMobile ? 12 : 14,
+                fontWeight: FontWeight.w700,
               ),
             ),
           ],
         ),
       ),
-      // Content
-      Expanded(
-        child: SingleChildScrollView(
-          child: Padding(
-            padding: const EdgeInsets.all(25),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Grand Total Estimate Label
-                Text(
-                  'التقدير الإجمالي',
-                  style: AppTextStyles.caption.copyWith(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w500,
-                    color: AppColors.textSecondary,
-                    letterSpacing: 0.35,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                // Grand Total Amount
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 4),
-                      child: Text(
-                        'KD',
-                        style: AppTextStyles.h4.copyWith(
-                          fontSize: 18,
-                          fontWeight: FontWeight.w500,
-                          color: const Color(0xFF6B7280),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
+      // Main Summary Stats - Responsive Layout
+      Container(
+        padding: EdgeInsets.all(
+          isMobile
+              ? 6
+              : isTablet
+              ? 8
+              : 10,
+        ),
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final screenWidth = constraints.maxWidth;
+            final isSmallTablet = screenWidth >= 600 && screenWidth < 900;
+            final isLargeTablet = screenWidth >= 900 && screenWidth < 1200;
 
-                    Builder(
-                      builder: (context) {
-                        final full = _formatNumberWithDecimals(
-                          widget.grandTotal,
-                        );
-                        final dotIndex = full.indexOf('.');
-                        final intPart = dotIndex >= 0
-                            ? full.substring(0, dotIndex)
-                            : full;
-                        final decimalPart = dotIndex >= 0
-                            ? full.substring(dotIndex)
-                            : '';
-                        return RichText(
-                          text: TextSpan(
-                            text: intPart,
-                            style: const TextStyle(
-                              fontSize: 30,
-                              fontWeight: FontWeight.w900,
-                              color: AppColors.textPrimary,
-                              letterSpacing: -0.75,
-                            ),
-                            children: decimalPart.isNotEmpty
-                                ? [
-                                    TextSpan(
-                                      text: decimalPart,
-                                      style: const TextStyle(
-                                        fontSize:
-                                            18, // smaller font for decimals
-                                        fontWeight: FontWeight.w900,
-                                        color: AppColors.textPrimary,
-                                        letterSpacing: -0.4,
-                                      ),
-                                    ),
-                                  ]
-                                : [],
-                          ),
-                        );
-                      },
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 16),
-                // Cost, Profit, Total Breakdown (show when profit is calculated or status is APPROVED/PENDING_SIGNATURE)
-                if ((widget.totalCost != null && widget.totalProfit != null) ||
-                    widget.isApproved ||
-                    widget.isProfitPending) ...[
-                  // Total Cost
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 10,
-                    ),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF15181E),
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: const Color(0xFF363C4A)),
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          'التكلفة الإجمالية',
-                          style: AppTextStyles.caption.copyWith(
-                            fontSize: 12,
-                            color: AppColors.textSecondary,
-                          ),
-                        ),
-                        Text(
-                          '${_formatNumberWithDecimals(widget.totalCost ?? 0.0)} KD',
-                          style: AppTextStyles.caption.copyWith(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w700,
-                            color: AppColors.textPrimary,
-                          ),
-                        ),
-                      ],
+            if (isMobile) {
+              return _buildMobileStatsLayout();
+            }
+
+            // For tablets and desktops, use adaptive layout
+            if (isSmallTablet) {
+              // Use same layout as larger screens but more compact
+              return Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Left side: Grand Total
+                  Expanded(
+                    flex: 3,
+                    child: _buildGrandTotalCard(
+                      isMobile: false,
+                      isTablet: true,
                     ),
                   ),
-                  const SizedBox(height: 8),
-                  // Total Profit
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 10,
-                    ),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF15181E),
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: const Color(0xFF363C4A)),
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          'الربح الإجمالي',
-                          style: AppTextStyles.caption.copyWith(
-                            fontSize: 12,
-                            color: AppColors.textSecondary,
-                          ),
-                        ),
-                        Text(
-                          '${_formatNumberWithDecimals(widget.totalProfit ?? 0.0)} KD',
-                          style: AppTextStyles.caption.copyWith(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w700,
-                            color: const Color(0xFF10B981),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                ],
-                // Total Elements Count
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 8,
-                  ),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF15181E),
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: const Color(0xFF363C4A)),
-                  ),
-                  child: Row(
-                    children: [
-                      Icon(
-                        Icons.layers_outlined,
-                        size: 16,
-                        color: AppColors.textSecondary,
-                      ),
-                      const SizedBox(width: 8),
-                      Text(
-                        'إجمالي العناصر: ',
-                        style: AppTextStyles.caption.copyWith(
-                          fontSize: 12,
-                          color: AppColors.textSecondary,
-                        ),
-                      ),
-                      Text(
-                        '${widget.totalElements}',
-                        style: AppTextStyles.caption.copyWith(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w700,
-                          color: AppColors.textPrimary,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 16),
-                // Note
-                Text(
-                  widget.totalCost != null && widget.totalProfit != null
-                      ? 'تم حساب الربح بناءً على النسب المحددة لكل عنصر فرعي.'
-                      : 'محسوب بناءً على الإدخالات الحالية. قد يختلف السعر النهائي بعد المراجعة.',
-                  style: AppTextStyles.caption.copyWith(
-                    fontSize: 12,
-                    color: const Color(0xFF4B5563),
-                  ),
-                ),
-                const SizedBox(height: 16),
-                // Last Save Time
-                Container(
-                  padding: const EdgeInsets.symmetric(vertical: 17),
-                  decoration: const BoxDecoration(
-                    color: Color(0xFF15181E),
-                    border: Border(top: BorderSide(color: Color(0xFF363C4A))),
-                  ),
-                  child: Center(
-                    child: Text(
-                      widget.lastSaveTime != null
-                          ? 'آخر حفظ: ${widget.lastSaveTime}'
-                          : 'آخر حفظ: الآن',
-                      style: AppTextStyles.caption.copyWith(
-                        fontSize: 12,
-                        color: const Color(0xFF6B7280),
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 20),
-                // Pricing Version Notes (only for admins/managers)
-                if (widget.isAdminOrManager &&
-                    widget.onUpdateNotes != null) ...[
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF15181E),
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: const Color(0xFF363C4A)),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(
-                              'ملاحظات إصدار التسعير',
-                              style: AppTextStyles.bodyMedium.copyWith(
-                                fontWeight: FontWeight.w600,
-                                fontSize: 14,
+                  // Cost and Profit (if available) - stacked vertically
+                  if ((widget.totalCost != null &&
+                          widget.totalProfit != null) ||
+                      widget.isApproved ||
+                      widget.isProfitPending) ...[
+                    SizedBox(width: 8),
+                    Expanded(
+                      flex: 2,
+                      child: Column(
+                        children: [
+                          // Cost
+                          Container(
+                            width: double.infinity,
+                            padding: EdgeInsets.all(isTablet ? 6 : 8),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF15181E),
+                              borderRadius: BorderRadius.circular(6),
+                              border: Border.all(
+                                color: const Color(0xFF363C4A),
                               ),
                             ),
-                            IconButton(
-                              icon: const Icon(
-                                Icons.add_circle_outline,
-                                size: 20,
-                                color: AppColors.primary,
-                              ),
-                              onPressed: _addNoteItem,
-                              tooltip: 'إضافة نقطة',
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 8),
-                        ...List.generate(
-                          _noteControllers.length,
-                          (index) => Padding(
-                            padding: const EdgeInsets.only(bottom: 8),
-                            child: Row(
+                            child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                // Bullet point
-                                Padding(
-                                  padding: const EdgeInsets.only(
-                                    top: 12,
-                                    right: 8,
-                                    left: 4,
-                                  ),
-                                  child: Text(
-                                    '•',
-                                    style: AppTextStyles.bodyMedium.copyWith(
-                                      fontSize: 16,
-                                      color: AppColors.textSecondary,
-                                    ),
+                                Text(
+                                  'التكلفة',
+                                  style: AppTextStyles.caption.copyWith(
+                                    fontSize: isTablet ? 8 : 9,
+                                    color: AppColors.textSecondary,
                                   ),
                                 ),
-                                // Text field
-                                Expanded(
-                                  child: TextField(
-                                    controller: _noteControllers[index],
-                                    decoration: InputDecoration(
-                                      hintText: 'اكتب الملاحظة هنا',
-                                      hintStyle: AppTextStyles.bodySmall
-                                          .copyWith(color: AppColors.textMuted),
-                                      filled: true,
-                                      fillColor: const Color(0xFF0F1217),
-                                      border: OutlineInputBorder(
-                                        borderRadius: BorderRadius.circular(8),
-                                        borderSide: const BorderSide(
-                                          color: Color(0xFF363C4A),
-                                        ),
-                                      ),
-                                      enabledBorder: OutlineInputBorder(
-                                        borderRadius: BorderRadius.circular(8),
-                                        borderSide: const BorderSide(
-                                          color: Color(0xFF363C4A),
-                                        ),
-                                      ),
-                                      focusedBorder: OutlineInputBorder(
-                                        borderRadius: BorderRadius.circular(8),
-                                        borderSide: const BorderSide(
-                                          color: AppColors.primary,
-                                        ),
-                                      ),
-                                      contentPadding:
-                                          const EdgeInsets.symmetric(
-                                            horizontal: 12,
-                                            vertical: 10,
-                                          ),
-                                    ),
-                                    textInputAction: TextInputAction.done,
+                                SizedBox(height: isTablet ? 2 : 3),
+                                Text(
+                                  '${_formatNumberWithDecimals(widget.totalCost ?? 0.0)} KD',
+                                  style: AppTextStyles.bodyLarge.copyWith(
+                                    fontSize: isTablet ? 12 : 13,
+                                    fontWeight: FontWeight.w700,
+                                    color: AppColors.textPrimary,
                                   ),
                                 ),
-                                // Remove button
-                                if (_noteControllers.length > 1)
-                                  IconButton(
-                                    icon: const Icon(
-                                      Icons.remove_circle_outline,
-                                      size: 20,
-                                      color: AppColors.error,
-                                    ),
-                                    onPressed: () => _removeNoteItem(index),
-                                    tooltip: 'حذف نقطة',
-                                    padding: const EdgeInsets.only(
-                                      top: 4,
-                                      right: 4,
-                                    ),
-                                  ),
                               ],
                             ),
                           ),
+                          SizedBox(height: isTablet ? 4 : 6),
+                          // Profit
+                          Container(
+                            width: double.infinity,
+                            padding: EdgeInsets.all(isTablet ? 6 : 8),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF15181E),
+                              borderRadius: BorderRadius.circular(6),
+                              border: Border.all(
+                                color: const Color(0xFF363C4A),
+                              ),
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'الربح',
+                                  style: AppTextStyles.caption.copyWith(
+                                    fontSize: isTablet ? 8 : 9,
+                                    color: AppColors.textSecondary,
+                                  ),
+                                ),
+                                SizedBox(height: isTablet ? 2 : 3),
+                                Text(
+                                  '${_formatNumberWithDecimals(widget.totalProfit ?? 0.0)} KD',
+                                  style: AppTextStyles.bodyLarge.copyWith(
+                                    fontSize: isTablet ? 12 : 13,
+                                    fontWeight: FontWeight.w700,
+                                    color: const Color(0xFF10B981),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ],
+              );
+            }
+
+            // For larger screens: Grand Total on left, Cost and Profit stacked on right
+            return Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Left side: Grand Total
+                Expanded(
+                  flex: isLargeTablet ? 2 : 3,
+                  child: _buildGrandTotalCard(
+                    isMobile: false,
+                    isTablet: isTablet,
+                  ),
+                ),
+                // Cost and Profit (if available) - stacked vertically
+                if ((widget.totalCost != null && widget.totalProfit != null) ||
+                    widget.isApproved ||
+                    widget.isProfitPending) ...[
+                  SizedBox(width: isTablet ? 8 : 10),
+                  Expanded(
+                    flex: isLargeTablet ? 1 : 2,
+                    child: Column(
+                      children: [
+                        // Cost
+                        Container(
+                          width: double.infinity,
+                          padding: EdgeInsets.all(isTablet ? 6 : 8),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF15181E),
+                            borderRadius: BorderRadius.circular(6),
+                            border: Border.all(color: const Color(0xFF363C4A)),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'التكلفة',
+                                style: AppTextStyles.caption.copyWith(
+                                  fontSize: isTablet ? 8 : 9,
+                                  color: AppColors.textSecondary,
+                                ),
+                              ),
+                              SizedBox(height: isTablet ? 2 : 3),
+                              Text(
+                                '${_formatNumberWithDecimals(widget.totalCost ?? 0.0)} KD',
+                                style: AppTextStyles.bodyLarge.copyWith(
+                                  fontSize: isTablet ? 12 : 13,
+                                  fontWeight: FontWeight.w700,
+                                  color: AppColors.textPrimary,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        SizedBox(height: isTablet ? 4 : 6),
+                        // Profit
+                        Container(
+                          width: double.infinity,
+                          padding: EdgeInsets.all(isTablet ? 6 : 8),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF15181E),
+                            borderRadius: BorderRadius.circular(6),
+                            border: Border.all(color: const Color(0xFF363C4A)),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'الربح',
+                                style: AppTextStyles.caption.copyWith(
+                                  fontSize: isTablet ? 8 : 9,
+                                  color: AppColors.textSecondary,
+                                ),
+                              ),
+                              SizedBox(height: isTablet ? 2 : 3),
+                              Text(
+                                '${_formatNumberWithDecimals(widget.totalProfit ?? 0.0)} KD',
+                                style: AppTextStyles.bodyLarge.copyWith(
+                                  fontSize: isTablet ? 12 : 13,
+                                  fontWeight: FontWeight.w700,
+                                  color: const Color(0xFF10B981),
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                       ],
                     ),
                   ),
-                  const SizedBox(height: 20),
                 ],
-                // Accept Pricing Button (only show for Admin/Manager when status is PENDING_APPROVAL)
-                if (widget.isAdminOrManager &&
-                    widget.isPendingApproval &&
-                    widget.onAcceptPricing != null) ...[
-                  SizedBox(
-                    width: double.infinity,
-                    height: 56,
-                    child: ElevatedButton(
-                      onPressed: widget.onAcceptPricing,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF10B981),
-                        foregroundColor: Colors.white,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        elevation: 0,
-                        shadowColor: const Color(0xFF059669).withOpacity(0.2),
-                      ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          const Icon(Icons.check_circle, size: 24),
-                          const SizedBox(width: 8),
-                          Text(
-                            'قبول التسعير',
-                            style: AppTextStyles.buttonLarge.copyWith(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                ],
-                // Export PDF Button (only show for Admin/Manager when status is APPROVED)
-                if (widget.isAdminOrManager &&
-                    widget.isApproved &&
-                    widget.onExportPdf != null) ...[
-                  SizedBox(
-                    width: double.infinity,
-                    height: 56,
-                    child: ElevatedButton(
-                      onPressed: widget.onExportPdf,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF6366F1),
-                        foregroundColor: Colors.white,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        elevation: 0,
-                        shadowColor: const Color(0xFF4F46E5).withOpacity(0.2),
-                      ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          const Icon(Icons.picture_as_pdf, size: 24),
-                          const SizedBox(width: 8),
-                          Text(
-                            'تصدير PDF',
-                            style: AppTextStyles.buttonLarge.copyWith(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
-                        ],
+              ],
+            );
+          },
+        ),
+      ),
+      // Pricing Version Notes (only for admins/managers)
+      if (widget.isAdminOrManager && widget.onUpdateNotes != null)
+        Container(
+          padding: EdgeInsets.symmetric(
+            horizontal: isMobile
+                ? 6
+                : isTablet
+                ? 8
+                : 10,
+            vertical: isMobile ? 6 : 8,
+          ),
+          child: Container(
+            padding: EdgeInsets.all(isMobile ? 6 : 8),
+            decoration: BoxDecoration(
+              color: const Color(0xFF15181E),
+              borderRadius: BorderRadius.circular(6),
+              border: Border.all(color: const Color(0xFF363C4A)),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'ملاحظات إصدار التسعير',
+                      style: AppTextStyles.bodyMedium.copyWith(
+                        fontWeight: FontWeight.w600,
+                        fontSize: isMobile ? 12 : 13,
                       ),
                     ),
-                  ),
-                  const SizedBox(height: 12),
-                  // Export Images Button (only show for Admin/Manager when status is APPROVED)
-                  if (widget.isAdminOrManager &&
-                      widget.isApproved &&
-                      widget.onExportImages != null) ...[
-                    SizedBox(
-                      width: double.infinity,
-                      height: 56,
-                      child: ElevatedButton(
-                        onPressed: widget.onExportImages,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF10B981),
-                          foregroundColor: Colors.white,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          elevation: 0,
-                          shadowColor: const Color(0xFF059669).withOpacity(0.2),
-                        ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            const Icon(Icons.image, size: 24),
-                            const SizedBox(width: 8),
-                            Text(
-                              'تصدير كصورة',
-                              style: AppTextStyles.buttonLarge.copyWith(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w700,
-                              ),
-                            ),
-                          ],
-                        ),
+                    IconButton(
+                      icon: Icon(
+                        Icons.add_circle_outline,
+                        size: isMobile ? 18 : 20,
+                        color: AppColors.primary,
                       ),
+                      onPressed: _addNoteItem,
+                      tooltip: 'إضافة نقطة',
+                      padding: EdgeInsets.zero,
+                      constraints: BoxConstraints(),
                     ),
-                    const SizedBox(height: 12),
                   ],
-                ],
-                // Move to Pending Signature Button (only show for Admin/Manager when status is APPROVED)
-                if (widget.isAdminOrManager &&
-                    widget.isApproved &&
-                    widget.onMakeProfit != null) ...[
-                  SizedBox(
-                    width: double.infinity,
-                    height: 56,
-                    child: ElevatedButton(
-                      onPressed: widget.onMakeProfit,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF6366F1),
-                        foregroundColor: Colors.white,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        elevation: 0,
-                        shadowColor: const Color(0xFF4F46E5).withOpacity(0.2),
-                      ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          const Icon(Icons.description, size: 24),
-                          const SizedBox(width: 8),
-                          Text(
-                            'إعداد العقد والتوقيع',
-                            style: AppTextStyles.buttonLarge.copyWith(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w700,
+                ),
+                SizedBox(height: isMobile ? 6 : 8),
+                ...List.generate(
+                  _noteControllers.length,
+                  (index) => Padding(
+                    padding: EdgeInsets.only(bottom: isMobile ? 6 : 8),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Bullet point
+                        Padding(
+                          padding: EdgeInsets.only(
+                            top: isMobile ? 8 : 10,
+                            right: isMobile ? 6 : 8,
+                            left: 2,
+                          ),
+                          child: Text(
+                            '•',
+                            style: AppTextStyles.bodyMedium.copyWith(
+                              fontSize: isMobile ? 14 : 16,
+                              color: AppColors.textSecondary,
                             ),
                           ),
-                        ],
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                ],
-                // Contract-specific buttons (only show for PENDING_SIGNATURE status)
-                if (widget.isProfitPending) ...[
-                  // Export Contract PDF Button
-                  if (widget.onExportContractPdf != null) ...[
-                    SizedBox(
-                      width: double.infinity,
-                      height: 56,
-                      child: ElevatedButton(
-                        onPressed: widget.onExportContractPdf,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF6366F1),
-                          foregroundColor: Colors.white,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          elevation: 0,
-                          shadowColor: const Color(0xFF4F46E5).withOpacity(0.2),
                         ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            const Icon(Icons.picture_as_pdf, size: 24),
-                            const SizedBox(width: 8),
-                            Text(
-                              'تصدير عقد PDF',
-                              style: AppTextStyles.buttonLarge.copyWith(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w700,
+                        // Text field
+                        Expanded(
+                          child: TextField(
+                            controller: _noteControllers[index],
+                            decoration: InputDecoration(
+                              hintText: 'اكتب الملاحظة هنا',
+                              hintStyle: AppTextStyles.bodySmall.copyWith(
+                                color: AppColors.textMuted,
+                                fontSize: isMobile ? 11 : 12,
+                              ),
+                              filled: true,
+                              fillColor: const Color(0xFF0F1217),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(6),
+                                borderSide: const BorderSide(
+                                  color: Color(0xFF363C4A),
+                                ),
+                              ),
+                              enabledBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(6),
+                                borderSide: const BorderSide(
+                                  color: Color(0xFF363C4A),
+                                ),
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(6),
+                                borderSide: const BorderSide(
+                                  color: AppColors.primary,
+                                ),
+                              ),
+                              contentPadding: EdgeInsets.symmetric(
+                                horizontal: isMobile ? 10 : 12,
+                                vertical: isMobile ? 8 : 10,
                               ),
                             ),
-                          ],
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                  ],
-                  // Confirm Contract Button
-                  if (widget.onConfirmContract != null) ...[
-                    SizedBox(
-                      width: double.infinity,
-                      height: 56,
-                      child: ElevatedButton(
-                        onPressed: widget.onConfirmContract,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF10B981),
-                          foregroundColor: Colors.white,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          elevation: 0,
-                          shadowColor: const Color(0xFF059669).withOpacity(0.2),
-                        ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            const Icon(Icons.check_circle, size: 24),
-                            const SizedBox(width: 8),
-                            Text(
-                              'تأكيد العقد',
-                              style: AppTextStyles.buttonLarge.copyWith(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w700,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                  ],
-                  // Return Contract to Pricing Button
-                  if (widget.onReturnContractToPricing != null) ...[
-                    SizedBox(
-                      width: double.infinity,
-                      height: 56,
-                      child: ElevatedButton(
-                        onPressed: widget.onReturnContractToPricing,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.orange,
-                          foregroundColor: Colors.white,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          elevation: 0,
-                        ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            const Icon(Icons.arrow_back, size: 24),
-                            const SizedBox(width: 8),
-                            Text(
-                              'إرجاع للتسعير',
-                              style: AppTextStyles.buttonLarge.copyWith(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w700,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                  ],
-                ],
-                // Confirm and Return to Pricing Buttons (only show for PENDING_SIGNATURE status)
-                if (widget.isProfitPending) ...[
-                  if (widget.onConfirmPricing != null)
-                    SizedBox(
-                      width: double.infinity,
-                      height: 56,
-                      child: ElevatedButton(
-                        onPressed: widget.onConfirmPricing,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF10B981),
-                          foregroundColor: Colors.white,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          elevation: 0,
-                          shadowColor: const Color(0xFF059669).withOpacity(0.2),
-                        ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            const Icon(Icons.check_circle, size: 24),
-                            const SizedBox(width: 8),
-                            Text(
-                              'تأكيد وإنشاء العقد',
-                              style: AppTextStyles.buttonLarge.copyWith(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w700,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  const SizedBox(height: 12),
-                  if (widget.onExportPdf != null)
-                    SizedBox(
-                      width: double.infinity,
-                      height: 50,
-                      child: OutlinedButton(
-                        onPressed: widget.onExportPdf,
-                        style: OutlinedButton.styleFrom(
-                          foregroundColor: const Color(0xFF6366F1),
-                          side: const BorderSide(color: Color(0xFF6366F1)),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
+                            textInputAction: TextInputAction.done,
+                            style: TextStyle(fontSize: isMobile ? 12 : 13),
                           ),
                         ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            const Icon(Icons.picture_as_pdf, size: 24),
-                            const SizedBox(width: 8),
-                            Text(
-                              'تصدير PDF',
-                              style: AppTextStyles.buttonLarge.copyWith(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w600,
-                                color: const Color(0xFF6366F1),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  const SizedBox(height: 12),
-                  if (widget.onExportImages != null)
-                    SizedBox(
-                      width: double.infinity,
-                      height: 50,
-                      child: OutlinedButton(
-                        onPressed: widget.onExportImages,
-                        style: OutlinedButton.styleFrom(
-                          foregroundColor: const Color(0xFF10B981),
-                          side: const BorderSide(color: Color(0xFF10B981)),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                        ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            const Icon(Icons.image, size: 24),
-                            const SizedBox(width: 8),
-                            Text(
-                              'تصدير كصورة',
-                              style: AppTextStyles.buttonLarge.copyWith(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w600,
-                                color: const Color(0xFF10B981),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  const SizedBox(height: 12),
-                ],
-                // Submit Button (only show when NOT pending approval, NOT approved, NOT pending signature, and NOT Admin/Manager with pending approval)
-                if (!widget.showReturnToPricing &&
-                    !(widget.isAdminOrManager && widget.isPendingApproval) &&
-                    !(widget.isAdminOrManager && widget.isApproved) &&
-                    !widget.isProfitPending) ...[
-                  SizedBox(
-                    width: double.infinity,
-                    height: 56,
-                    child: ElevatedButton(
-                      onPressed: widget.onSubmit,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF135BEC),
-                        foregroundColor: Colors.white,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        elevation: 0,
-                        shadowColor: const Color(0xFF1E3A8A).withOpacity(0.2),
-                      ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          const Icon(Icons.send, size: 24),
-                          const SizedBox(width: 8),
-                          Text(
-                            'إرسال التسعير للمراجعة',
-                            style: AppTextStyles.buttonLarge.copyWith(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                ],
-                // Return to Pricing Button (only show when status is PENDING_APPROVAL and NOT Admin/Manager)
-                if (widget.showReturnToPricing &&
-                    widget.onReturnToPricing != null &&
-                    !(widget.isAdminOrManager && widget.isPendingApproval)) ...[
-                  SizedBox(
-                    width: double.infinity,
-                    height: 50,
-                    child: OutlinedButton(
-                      onPressed: widget.onReturnToPricing,
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: AppColors.error,
-                        side: const BorderSide(color: AppColors.error),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                      ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          const Icon(Icons.arrow_back, size: 24),
-                          const SizedBox(width: 8),
-                          Text(
-                            'إرجاع للتسعير',
-                            style: AppTextStyles.buttonLarge.copyWith(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
+                        // Remove button
+                        if (_noteControllers.length > 1)
+                          IconButton(
+                            icon: Icon(
+                              Icons.remove_circle_outline,
+                              size: isMobile ? 18 : 20,
                               color: AppColors.error,
                             ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                ],
-                // Save Draft Button (show for all statuses including PENDING_APPROVAL and PENDING_SIGNATURE)
-                if (widget.onSaveDraft != null &&
-                    !(widget.isApproved ||
-                        widget.isProfitPending ||
-                        widget.isDraft))
-                  SizedBox(
-                    width: double.infinity,
-                    height: 50,
-                    child: OutlinedButton(
-                      onPressed: widget.onSaveDraft,
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: const Color(0xFFD1D5DB),
-                        side: const BorderSide(color: Color(0xFF363C4A)),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                      ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          const Icon(Icons.save_outlined, size: 24),
-                          const SizedBox(width: 8),
-                          Text(
-                            'حفظ كمسودة',
-                            style: AppTextStyles.buttonLarge.copyWith(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
-                              color: const Color(0xFFD1D5DB),
+                            onPressed: () => _removeNoteItem(index),
+                            tooltip: 'حذف نقطة',
+                            padding: EdgeInsets.only(
+                              top: isMobile ? 2 : 4,
+                              right: isMobile ? 2 : 4,
                             ),
+                            constraints: BoxConstraints(),
                           ),
-                        ],
-                      ),
+                      ],
                     ),
-                  ),
-                const SizedBox(height: 20),
-                // Tip Section
-                Container(
-                  padding: const EdgeInsets.all(17),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF1E3A8A).withOpacity(0.2),
-                    border: Border.all(
-                      color: const Color(0xFF3B82F6).withOpacity(0.2),
-                    ),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Icon(
-                        Icons.lightbulb_outline,
-                        color: Color(0xFF60A5FA),
-                        size: 20,
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          'نصيحة: راجع جميع الإدخالات قبل الإرسال. يمكنك الحفظ كمسودة والمتابعة لاحقاً.',
-                          style: AppTextStyles.caption.copyWith(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w700,
-                            color: const Color(0xFFBFDBFE).withOpacity(0.8),
-                          ),
-                        ),
-                      ),
-                    ],
                   ),
                 ),
               ],
             ),
           ),
         ),
-      ),
-      // Toggle button at bottom
+      // Action Buttons Section
       Container(
-        padding: const EdgeInsets.all(16),
-        child: Material(
-          color: Colors.transparent,
-          child: InkWell(
-            onTap: () {
-              setState(() {
-                _isCollapsed = !_isCollapsed;
-              });
-            },
-            borderRadius: BorderRadius.circular(8),
-            child: Container(
-              width: double.infinity,
-              padding: const EdgeInsets.symmetric(vertical: 12),
-              decoration: BoxDecoration(
-                color: AppColors.cardBackground,
-                border: Border.all(color: AppColors.border, width: 1),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
+        padding: EdgeInsets.symmetric(
+          horizontal: isMobile
+              ? 8
+              : isTablet
+              ? 12
+              : 16,
+          vertical: isMobile ? 8 : 12,
+        ),
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final screenWidth = constraints.maxWidth;
+            final isLargeScreen = screenWidth >= 1200;
+
+            final buttonHeight = isMobile ? 42.0 : 40.0;
+            final buttonFontSize = isMobile ? 13.0 : 12.0;
+            final iconSize = isMobile ? 18.0 : 16.0;
+            final buttonSpacing = isMobile ? 6.0 : 8.0;
+
+            Widget buildButton({
+              required Widget child,
+              required VoidCallback? onPressed,
+              required Color backgroundColor,
+              Color? foregroundColor,
+              double? height,
+              bool isOutlined = false,
+              Color? borderColor,
+            }) {
+              final btnHeight = height ?? buttonHeight;
+              return isOutlined
+                  ? OutlinedButton(
+                      onPressed: onPressed,
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: foregroundColor ?? backgroundColor,
+                        side: BorderSide(color: borderColor ?? backgroundColor),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        minimumSize: Size(double.infinity, btnHeight),
+                      ),
+                      child: child,
+                    )
+                  : ElevatedButton(
+                      onPressed: onPressed,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: backgroundColor,
+                        foregroundColor: foregroundColor ?? Colors.white,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        elevation: 0,
+                        minimumSize: Size(double.infinity, btnHeight),
+                      ),
+                      child: child,
+                    );
+            }
+
+            // Collect all buttons
+            final buttons = <Widget>[];
+
+            // Accept Pricing Button
+            if (widget.isAdminOrManager &&
+                widget.isPendingApproval &&
+                widget.onAcceptPricing != null) {
+              buttons.add(
+                buildButton(
+                  onPressed: widget.onAcceptPricing,
+                  backgroundColor: const Color(0xFF10B981),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.check_circle, size: iconSize),
+                      SizedBox(width: isMobile ? 6 : 8),
+                      Text(
+                        'قبول التسعير',
+                        style: AppTextStyles.buttonLarge.copyWith(
+                          fontSize: buttonFontSize,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            }
+
+            // Collect all buttons
+            // Export PDF Button
+            if (widget.isAdminOrManager &&
+                widget.isApproved &&
+                widget.onExportPdf != null) {
+              buttons.add(
+                buildButton(
+                  onPressed: widget.onExportPdf,
+                  backgroundColor: const Color(0xFF6366F1),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.picture_as_pdf, size: iconSize),
+                      SizedBox(width: isMobile ? 6 : 8),
+                      Text(
+                        'تصدير PDF',
+                        style: AppTextStyles.buttonLarge.copyWith(
+                          fontSize: buttonFontSize,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            }
+
+            // Export Images Button
+            if (widget.isAdminOrManager &&
+                widget.isApproved &&
+                widget.onExportImages != null) {
+              buttons.add(
+                buildButton(
+                  onPressed: widget.onExportImages,
+                  backgroundColor: const Color(0xFF10B981),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.image, size: iconSize),
+                      SizedBox(width: isMobile ? 6 : 8),
+                      Text(
+                        'تصدير كصورة',
+                        style: AppTextStyles.buttonLarge.copyWith(
+                          fontSize: buttonFontSize,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            }
+
+            // Move to Pending Signature Button
+            if (widget.isAdminOrManager &&
+                widget.isApproved &&
+                widget.onMakeProfit != null) {
+              buttons.add(
+                buildButton(
+                  onPressed: widget.onMakeProfit,
+                  backgroundColor: const Color(0xFF6366F1),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.description, size: iconSize),
+                      SizedBox(width: isMobile ? 6 : 8),
+                      Text(
+                        'إعداد العقد والتوقيع',
+                        style: AppTextStyles.buttonLarge.copyWith(
+                          fontSize: buttonFontSize,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            }
+
+            // Contract-specific buttons
+            if (widget.isProfitPending) {
+              if (widget.onExportContractPdf != null) {
+                buttons.add(
+                  buildButton(
+                    onPressed: widget.onExportContractPdf,
+                    backgroundColor: const Color(0xFF6366F1),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.picture_as_pdf, size: iconSize),
+                        SizedBox(width: isMobile ? 6 : 8),
+                        Text(
+                          'تصدير عقد PDF',
+                          style: AppTextStyles.buttonLarge.copyWith(
+                            fontSize: buttonFontSize,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              }
+
+              if (widget.onConfirmContract != null) {
+                buttons.add(
+                  buildButton(
+                    onPressed: widget.onConfirmContract,
+                    backgroundColor: const Color(0xFF10B981),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.check_circle, size: iconSize),
+                        SizedBox(width: isMobile ? 6 : 8),
+                        Text(
+                          'تأكيد العقد',
+                          style: AppTextStyles.buttonLarge.copyWith(
+                            fontSize: buttonFontSize,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              }
+
+              if (widget.onReturnContractToPricing != null) {
+                buttons.add(
+                  buildButton(
+                    onPressed: widget.onReturnContractToPricing,
+                    backgroundColor: Colors.orange,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.arrow_back, size: iconSize),
+                        SizedBox(width: isMobile ? 6 : 8),
+                        Text(
+                          'إرجاع للتسعير',
+                          style: AppTextStyles.buttonLarge.copyWith(
+                            fontSize: buttonFontSize,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              }
+
+              if (widget.onConfirmPricing != null) {
+                buttons.add(
+                  buildButton(
+                    onPressed: widget.onConfirmPricing,
+                    backgroundColor: const Color(0xFF10B981),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.check_circle, size: iconSize),
+                        SizedBox(width: isMobile ? 6 : 8),
+                        Text(
+                          'تأكيد وإنشاء العقد',
+                          style: AppTextStyles.buttonLarge.copyWith(
+                            fontSize: buttonFontSize,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              }
+
+              if (widget.onExportPdf != null) {
+                buttons.add(
+                  buildButton(
+                    onPressed: widget.onExportPdf,
+                    backgroundColor: const Color(0xFF6366F1),
+                    isOutlined: true,
+                    borderColor: const Color(0xFF6366F1),
+                    height: buttonHeight - 6,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.picture_as_pdf, size: iconSize),
+                        SizedBox(width: isMobile ? 6 : 8),
+                        Text(
+                          'تصدير PDF',
+                          style: AppTextStyles.buttonLarge.copyWith(
+                            fontSize: buttonFontSize,
+                            fontWeight: FontWeight.w600,
+                            color: const Color(0xFF6366F1),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              }
+
+              if (widget.onExportImages != null) {
+                buttons.add(
+                  buildButton(
+                    onPressed: widget.onExportImages,
+                    backgroundColor: const Color(0xFF10B981),
+                    isOutlined: true,
+                    borderColor: const Color(0xFF10B981),
+                    height: buttonHeight - 6,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.image, size: iconSize),
+                        SizedBox(width: isMobile ? 6 : 8),
+                        Text(
+                          'تصدير كصورة',
+                          style: AppTextStyles.buttonLarge.copyWith(
+                            fontSize: buttonFontSize,
+                            fontWeight: FontWeight.w600,
+                            color: const Color(0xFF10B981),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              }
+            }
+
+            // Submit Button
+            if (!widget.showReturnToPricing &&
+                !(widget.isAdminOrManager && widget.isPendingApproval) &&
+                !(widget.isAdminOrManager && widget.isApproved) &&
+                !widget.isProfitPending) {
+              buttons.add(
+                buildButton(
+                  onPressed: widget.onSubmit,
+                  backgroundColor: const Color(0xFF135BEC),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.send, size: iconSize),
+                      SizedBox(width: isMobile ? 6 : 8),
+                      Text(
+                        'إرسال التسعير للمراجعة',
+                        style: AppTextStyles.buttonLarge.copyWith(
+                          fontSize: buttonFontSize,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            }
+
+            // Return to Pricing Button
+            if (widget.showReturnToPricing &&
+                widget.onReturnToPricing != null &&
+                !(widget.isAdminOrManager && widget.isPendingApproval)) {
+              buttons.add(
+                buildButton(
+                  onPressed: widget.onReturnToPricing,
+                  backgroundColor: AppColors.error,
+                  isOutlined: true,
+                  borderColor: AppColors.error,
+                  height: buttonHeight - 6,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.arrow_back, size: iconSize),
+                      SizedBox(width: isMobile ? 6 : 8),
+                      Text(
+                        'إرجاع للتسعير',
+                        style: AppTextStyles.buttonLarge.copyWith(
+                          fontSize: buttonFontSize,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.error,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            }
+
+            // Save Draft Button
+            if (widget.onSaveDraft != null &&
+                !(widget.isApproved ||
+                    widget.isProfitPending ||
+                    widget.isDraft)) {
+              buttons.add(
+                buildButton(
+                  onPressed: widget.onSaveDraft,
+                  backgroundColor: const Color(0xFFD1D5DB),
+                  isOutlined: true,
+                  borderColor: const Color(0xFF363C4A),
+                  height: buttonHeight - 6,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.save_outlined, size: iconSize),
+                      SizedBox(width: isMobile ? 6 : 8),
+                      Text(
+                        'حفظ كمسودة',
+                        style: AppTextStyles.buttonLarge.copyWith(
+                          fontSize: buttonFontSize,
+                          fontWeight: FontWeight.w600,
+                          color: const Color(0xFFD1D5DB),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            }
+
+            // Arrange buttons responsively
+            if (isMobile) {
+              // Stack vertically on mobile
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  AnimatedSwitcher(
-                    duration: const Duration(milliseconds: 200),
-                    transitionBuilder: (child, animation) {
-                      return FadeTransition(opacity: animation, child: child);
-                    },
-                    child: Icon(
-                      _isCollapsed ? Icons.chevron_right : Icons.chevron_left,
-                      key: ValueKey<bool>(_isCollapsed),
-                      color: AppColors.textSecondary,
-                      size: 20,
+                  ...buttons.map(
+                    (btn) => Padding(
+                      padding: EdgeInsets.only(bottom: buttonSpacing),
+                      child: btn,
                     ),
                   ),
                 ],
-              ),
-            ),
-          ),
+              );
+            }
+
+            // For larger screens, arrange buttons in a grid
+            // Use Wrap for better responsiveness
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                LayoutBuilder(
+                  builder: (context, btnConstraints) {
+                    final availableWidth = btnConstraints.maxWidth;
+                    final buttonsPerRow = isLargeScreen ? 3 : 2;
+                    final buttonWidth =
+                        (availableWidth -
+                            (buttonSpacing * (buttonsPerRow - 1))) /
+                        buttonsPerRow;
+
+                    return Wrap(
+                      spacing: buttonSpacing,
+                      runSpacing: buttonSpacing,
+                      alignment: WrapAlignment.start,
+                      children: buttons.map((btn) {
+                        return SizedBox(width: buttonWidth, child: btn);
+                      }).toList(),
+                    );
+                  },
+                ),
+              ],
+            );
+          },
         ),
       ),
     ];

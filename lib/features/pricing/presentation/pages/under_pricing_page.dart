@@ -1348,12 +1348,11 @@ class _UnderPricingPageState extends State<UnderPricingPage> {
         children: [
           _buildHeader(),
           const SizedBox(height: 24),
-          _buildSidebar(),
-          const SizedBox(height: 24),
-
           _buildItemsList(),
           const SizedBox(height: 24),
           _buildAddItemButton(),
+          const SizedBox(height: 24),
+          _buildSidebar(),
         ],
       ),
     );
@@ -1367,12 +1366,11 @@ class _UnderPricingPageState extends State<UnderPricingPage> {
         children: [
           _buildHeader(),
           const SizedBox(height: 24),
-          _buildSidebar(),
-          const SizedBox(height: 24),
-
           _buildItemsList(),
           const SizedBox(height: 24),
           _buildAddItemButton(),
+          const SizedBox(height: 24),
+          _buildSidebar(),
         ],
       ),
     );
@@ -1386,12 +1384,11 @@ class _UnderPricingPageState extends State<UnderPricingPage> {
         children: [
           _buildHeader(),
           const SizedBox(height: 24),
-          _buildSidebar(),
-          const SizedBox(height: 24),
-
           _buildItemsList(),
           const SizedBox(height: 24),
           _buildAddItemButton(),
+          const SizedBox(height: 24),
+          _buildSidebar(),
         ],
       ),
     );
