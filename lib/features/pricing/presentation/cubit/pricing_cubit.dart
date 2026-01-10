@@ -135,6 +135,29 @@ class PricingCubit extends Cubit<PricingState> {
     emit(currentState.copyWith(subItemProfitMargins: newProfitMargins));
   }
 
+  /// Update profit margin for ALL sub-items at once
+  /// This allows applying a bulk profit margin across all sub-items
+  void updateAllSubItemProfitMargins(double profitMargin) {
+    final currentState = state;
+    if (currentState is! PricingLoaded) return;
+
+    final newProfitMargins =
+        Map<String, double>.from(currentState.subItemProfitMargins);
+
+    // Update all sub-items with the new profit margin
+    if (currentState.pricingVersion.items != null) {
+      for (var item in currentState.pricingVersion.items!) {
+        if (item.subItems != null) {
+          for (var subItem in item.subItems!) {
+            newProfitMargins[subItem.id] = profitMargin;
+          }
+        }
+      }
+    }
+
+    emit(currentState.copyWith(subItemProfitMargins: newProfitMargins));
+  }
+
   /// Add a new pricing item
   Future<void> addItem(String projectId, String name) async {
     final currentState = state;

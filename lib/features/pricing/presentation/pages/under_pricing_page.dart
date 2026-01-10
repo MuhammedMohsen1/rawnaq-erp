@@ -257,6 +257,11 @@ class _PricingLayout extends StatelessWidget {
         },
         isDraft: currentStatus == 'DRAFT',
         isUnderPricing: currentStatus == 'UNDER_PRICING',
+        onBulkProfitMarginUpdate: isAdminOrManager && (isApproved || isProfitPending)
+            ? (profitMargin) {
+                context.read<PricingCubit>().updateAllSubItemProfitMargins(profitMargin);
+              }
+            : null,
       ),
     );
   }

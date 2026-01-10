@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_text_styles.dart';
+import '../../../../core/utils/arabic_number_input_formatter.dart';
 import '../../domain/entities/pricing_item.dart';
 
 class PricingTableRow extends StatefulWidget {
@@ -186,6 +187,7 @@ class _PricingTableRowState extends State<PricingTableRow> {
                               decimal: true,
                             ),
                             inputFormatters: [
+                              ArabicNumberInputFormatter(),
                               FilteringTextInputFormatter.allow(
                                 RegExp(r'^\d*\.?\d*'),
                               ),
@@ -237,6 +239,7 @@ class _PricingTableRowState extends State<PricingTableRow> {
                               decimal: true,
                             ),
                             inputFormatters: [
+                              ArabicNumberInputFormatter(),
                               FilteringTextInputFormatter.allow(
                                 RegExp(r'^\d*\.?\d*'),
                               ),
@@ -328,6 +331,7 @@ class _PricingTableRowState extends State<PricingTableRow> {
                                     decimal: true,
                                   ),
                               inputFormatters: [
+                                ArabicNumberInputFormatter(),
                                 FilteringTextInputFormatter.allow(
                                   RegExp(r'^\d*\.?\d*'),
                                 ),

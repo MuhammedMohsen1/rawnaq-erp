@@ -1,15 +1,19 @@
 import 'dart:async';
+import 'dart:io';
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter/foundation.dart'
     show kIsWeb, defaultTargetPlatform, TargetPlatform;
 import 'package:image_picker/image_picker.dart';
 import 'package:file_picker/file_picker.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_text_styles.dart';
+import '../../../../core/utils/arabic_number_input_formatter.dart';
 import '../../data/datasources/pricing_api_datasource.dart';
 import '../../data/models/pricing_version_model.dart';
 import '../../domain/entities/pricing_item.dart';
+import 'image_crop_dialog.dart';
 import 'pricing_table_row.dart';
 
 /// Local element that hasn't been saved to backend yet
@@ -268,6 +272,49 @@ class _PricingItemCardState extends State<PricingItemCard> {
     );
   }
 
+  /// Build a compact stat chip for displaying cost, profit, or percentage
+  Widget _buildStatChip(
+    String label,
+    double value,
+    Color color, {
+    String suffix = 'KD',
+  }) {
+    final formattedValue = suffix == '%'
+        ? value.toStringAsFixed(1)
+        : value.toStringAsFixed(2);
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(color: color.withOpacity(0.3)),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            label,
+            style: AppTextStyles.caption.copyWith(
+              fontSize: 9,
+              color: color,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            '$formattedValue $suffix',
+            style: AppTextStyles.bodySmall.copyWith(
+              fontSize: 11,
+              color: color,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   void _toggleSubItem(String subItemId) {
     setState(() {
       _expandedSubItems[subItemId] = !(_expandedSubItems[subItemId] ?? false);
@@ -285,8 +332,7 @@ class _PricingItemCardState extends State<PricingItemCard> {
         _uploadingImages[subItemId] = true;
       });
 
-      List<String> imagePaths = [];
-      List<MapEntry<String, List<int>>>? imageBytesList;
+      List<MapEntry<String, Uint8List>> croppedImages = [];
 
       // Use file_picker for desktop/web, image_picker for mobile
       if (kIsWeb ||
@@ -305,15 +351,13 @@ class _PricingItemCardState extends State<PricingItemCard> {
           final result = await FilePicker.platform.pickFiles(
             type: FileType.image,
             allowMultiple: true,
-            withData: kIsWeb, // Only load data for web
+            withData: true, // Always load data for cropping
             dialogTitle: 'اختر الصور',
           );
 
           print(
             'FilePicker returned, result is ${result != null ? "not null" : "null"}',
           );
-
-          print('FilePicker result: ${result != null ? "not null" : "null"}');
 
           if (result == null) {
             print('User canceled file picker or no files selected');
@@ -326,32 +370,37 @@ class _PricingItemCardState extends State<PricingItemCard> {
           print('Number of files: ${result.files.length}');
 
           if (result.files.isNotEmpty) {
-            imageBytesList = [];
             for (var file in result.files) {
               print(
                 'Processing file: ${file.name}, path: ${file.path}, has bytes: ${file.bytes != null}',
               );
-              if (file.path != null && !kIsWeb) {
-                // Desktop: use file path
-                imagePaths.add(file.path!);
-                print('Added file path: ${file.path}');
-              } else if (file.bytes != null && kIsWeb) {
-                // Web: use bytes
-                final fileName = file.name;
-                imageBytesList.add(MapEntry(fileName, file.bytes!));
-                print(
-                  'Added file from web: $fileName (${file.bytes!.length} bytes)',
+
+              Uint8List? imageBytes;
+
+              if (file.bytes != null) {
+                imageBytes = file.bytes!;
+              } else if (file.path != null && !kIsWeb) {
+                // Desktop: read file to bytes
+                imageBytes = await File(file.path!).readAsBytes();
+              }
+
+              if (imageBytes != null && mounted) {
+                // Show crop dialog for each image
+                final croppedBytes = await ImageCropDialog.show(
+                  context,
+                  imageBytes,
+                  fileName: file.name,
                 );
-              } else if (file.path != null && kIsWeb) {
-                // Web with path (shouldn't happen but handle it)
-                print(
-                  'Warning: Web file has path instead of bytes: ${file.path}',
-                );
+
+                if (croppedBytes != null) {
+                  croppedImages.add(MapEntry(file.name, croppedBytes));
+                  print('Cropped image: ${file.name} (${croppedBytes.length} bytes)');
+                } else {
+                  print('User cancelled cropping for: ${file.name}');
+                }
               }
             }
-            print(
-              'Picked ${imagePaths.length + imageBytesList.length} images using file_picker',
-            );
+            print('Cropped ${croppedImages.length} images');
           } else {
             print('No files in result');
           }
@@ -395,18 +444,38 @@ class _PricingItemCardState extends State<PricingItemCard> {
           }
         }
 
-        // Convert XFile to file paths
-        imagePaths = pickedFiles.map((file) => file.path).toList();
+        // Crop each picked image
+        for (var file in pickedFiles) {
+          final imageBytes = await file.readAsBytes();
+          if (mounted) {
+            final croppedBytes = await ImageCropDialog.show(
+              context,
+              imageBytes,
+              fileName: file.name,
+            );
+
+            if (croppedBytes != null) {
+              croppedImages.add(MapEntry(file.name, croppedBytes));
+              print('Cropped image: ${file.name} (${croppedBytes.length} bytes)');
+            } else {
+              print('User cancelled cropping for: ${file.name}');
+            }
+          }
+        }
       }
 
-      if (imagePaths.isEmpty &&
-          (imageBytesList == null || imageBytesList.isEmpty)) {
-        print('No images selected');
+      if (croppedImages.isEmpty) {
+        print('No images to upload after cropping');
         setState(() {
           _uploadingImages[subItemId] = false;
         });
         return;
       }
+
+      // Convert to the format expected by the API
+      final imageBytesList = croppedImages
+          .map((e) => MapEntry(e.key, e.value.toList()))
+          .toList();
 
       // Upload images
       await _apiDataSource.uploadSubItemImages(
@@ -414,7 +483,7 @@ class _PricingItemCardState extends State<PricingItemCard> {
         widget.version,
         widget.item.id,
         subItemId,
-        imagePaths,
+        [], // No file paths, using bytes only
         imageBytes: imageBytesList,
       );
 
@@ -1848,6 +1917,32 @@ class _PricingItemCardState extends State<PricingItemCard> {
                     ),
                   ),
                   const SizedBox(width: 16),
+                  // Cost/Profit/Percentage chips - only in APPROVED/PENDING_SIGNATURE
+                  if (widget.pricingStatus != null &&
+                      (widget.pricingStatus!.toUpperCase() == 'APPROVED' ||
+                          widget.pricingStatus!.toUpperCase() == 'PENDING_SIGNATURE')) ...[
+                    _buildStatChip(
+                      'التكلفة',
+                      widget.item.totalCost,
+                      const Color(0xFF3B82F6),
+                    ),
+                    const SizedBox(width: 6),
+                    _buildStatChip(
+                      'الربح',
+                      widget.item.profitAmount,
+                      const Color(0xFF10B981),
+                    ),
+                    const SizedBox(width: 6),
+                    _buildStatChip(
+                      'النسبة',
+                      widget.item.totalCost > 0
+                          ? (widget.item.profitAmount / widget.item.totalCost * 100)
+                          : 0.0,
+                      const Color(0xFFF59E0B),
+                      suffix: '%',
+                    ),
+                    const SizedBox(width: 16),
+                  ],
                   // Total Price
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.center,
@@ -1968,6 +2063,30 @@ class _PricingItemCardState extends State<PricingItemCard> {
                                               ),
                                         ),
                                       ),
+                                      // Show cost/profit/percentage chips in APPROVED/PENDING_SIGNATURE
+                                      if (widget.pricingStatus != null &&
+                                          (widget.pricingStatus!.toUpperCase() == 'APPROVED' ||
+                                              widget.pricingStatus!.toUpperCase() == 'PENDING_SIGNATURE')) ...[
+                                        _buildStatChip(
+                                          'التكلفة',
+                                          subItem.totalCost,
+                                          const Color(0xFF3B82F6),
+                                        ),
+                                        const SizedBox(width: 4),
+                                        _buildStatChip(
+                                          'الربح',
+                                          subItem.profitAmount,
+                                          const Color(0xFF10B981),
+                                        ),
+                                        const SizedBox(width: 4),
+                                        _buildStatChip(
+                                          'النسبة',
+                                          subItem.profitMargin,
+                                          const Color(0xFFF59E0B),
+                                          suffix: '%',
+                                        ),
+                                        const SizedBox(width: 8),
+                                      ],
                                       // Show total cost in header only when NOT APPROVED/PENDING_SIGNATURE
                                       if (widget.pricingStatus?.toUpperCase() !=
                                               'APPROVED' &&
@@ -2344,6 +2463,12 @@ class _PricingItemCardState extends State<PricingItemCard> {
                                                         const TextInputType.numberWithOptions(
                                                           decimal: true,
                                                         ),
+                                                    inputFormatters: [
+                                                      ArabicNumberInputFormatter(),
+                                                      FilteringTextInputFormatter.allow(
+                                                        RegExp(r'^\d*\.?\d{0,2}'),
+                                                      ),
+                                                    ],
                                                     textAlign: TextAlign.center,
                                                     style: AppTextStyles
                                                         .bodyMedium,
