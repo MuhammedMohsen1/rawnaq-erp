@@ -1,3 +1,5 @@
+import 'package:rawnaq/features/pricing/domain/entities/pricing_item.dart';
+
 /// Model for Pricing Version
 class PricingVersionModel {
   final String id;
@@ -88,6 +90,8 @@ class PricingItemModel {
   final String id;
   final String pricingVersionId;
   final String name;
+  final bool isHidden;
+
   final String? description;
   final double profitMargin;
   final double profitAmount;
@@ -103,6 +107,7 @@ class PricingItemModel {
     required this.pricingVersionId,
     required this.name,
     this.description,
+    required this.isHidden,
     required this.profitMargin,
     required this.profitAmount,
     required this.totalCost,
@@ -138,6 +143,7 @@ class PricingItemModel {
       id: json['id'] as String,
       pricingVersionId: json['pricingVersionId'] as String,
       name: json['name'] as String,
+      isHidden: json['isHidden'] as bool,
       description: json['description'] as String?,
       profitMargin: _toDoubleOrZero(json['profitMargin']),
       profitAmount: _toDoubleOrZero(json['profitAmount']),
@@ -164,6 +170,7 @@ class PricingItemModel {
       'pricingVersionId': pricingVersionId,
       'name': name,
       'description': description,
+      'isHidden': isHidden,
       'profitMargin': profitMargin,
       'profitAmount': profitAmount,
       'totalCost': totalCost,
@@ -188,6 +195,7 @@ class PricingSubItemModel {
   final double profitAmount;
   final double totalCost;
   final double totalPrice;
+  final bool isHidden;
   final int order;
   final DateTime createdAt;
   final DateTime? updatedAt;
@@ -198,6 +206,7 @@ class PricingSubItemModel {
     required this.pricingItemId,
     required this.name,
     this.description,
+    required this.isHidden,
     this.notes,
     this.images = const [],
     this.profitMargin = 0.0,
@@ -259,6 +268,7 @@ class PricingSubItemModel {
                 )
                 .toList()
           : null,
+      isHidden: json['isHidden'] as bool,
     );
   }
 
@@ -269,6 +279,7 @@ class PricingSubItemModel {
       'name': name,
       'description': description,
       'notes': notes,
+      'isHidden': isHidden,
       'images': images,
       'profitMargin': profitMargin,
       'profitAmount': profitAmount,

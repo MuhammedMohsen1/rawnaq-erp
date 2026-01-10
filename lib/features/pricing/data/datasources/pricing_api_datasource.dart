@@ -592,14 +592,12 @@ class PricingApiDataSource {
   Future<dynamic> exportPricingImages(String projectId, int version) async {
     final response = await _apiClient.get(
       ApiEndpoints.exportPricingImages(projectId, version),
-      options: Options(
-        responseType: ResponseType.bytes,
-      ),
+      options: Options(responseType: ResponseType.bytes),
     );
 
     // Check content type to determine response format
     final contentType = response.headers.value('content-type') ?? '';
-    
+
     if (contentType.startsWith('image/')) {
       // Single page - return binary image data
       return response.data as Uint8List;
@@ -625,6 +623,48 @@ class PricingApiDataSource {
   ) async {
     await _apiClient.delete(
       ApiEndpoints.deletePricingSubItem(projectId, version, itemId, subItemId),
+    );
+  }
+
+  /// Toggle pricing item visibility
+  Future<PricingItemModel> toggleItemVisibility(
+    String projectId,
+    int version,
+    String itemId,
+    bool isHidden,
+  ) async {
+    final response = await _apiClient.patch(
+      ApiEndpoints.toggleItemVisibility(projectId, version, itemId),
+      data: {'isHidden': isHidden},
+    );
+
+    final responseData = response.data as Map<String, dynamic>;
+    return PricingItemModel.fromJson(
+      responseData['data']['item'] as Map<String, dynamic>,
+    );
+  }
+
+  /// Toggle pricing sub-item visibility
+  Future<PricingSubItemModel> toggleSubItemVisibility(
+    String projectId,
+    int version,
+    String itemId,
+    String subItemId,
+    bool isHidden,
+  ) async {
+    final response = await _apiClient.patch(
+      ApiEndpoints.toggleSubItemVisibility(
+        projectId,
+        version,
+        itemId,
+        subItemId,
+      ),
+      data: {'isHidden': isHidden},
+    );
+
+    final responseData = response.data as Map<String, dynamic>;
+    return PricingSubItemModel.fromJson(
+      responseData['data']['subItem'] as Map<String, dynamic>,
     );
   }
 }

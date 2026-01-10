@@ -323,6 +323,17 @@ abstract class ApiEndpoints {
       '/projects/$projectId/pricing/$version/export-pdf';
   static String exportPricingImages(String projectId, int version) =>
       '/projects/$projectId/pricing/$version/export-images';
+  static String toggleItemVisibility(
+    String projectId,
+    int version,
+    String itemId,
+  ) => '/projects/$projectId/pricing/$version/items/$itemId/visibility';
+  static String toggleSubItemVisibility(
+    String projectId,
+    int version,
+    String itemId,
+    String subItemId,
+  ) => '/projects/$projectId/pricing/$version/items/$itemId/sub-items/$subItemId/visibility';
 
   // Contract Endpoints
   static String contract(String projectId) => '/projects/$projectId/contract';

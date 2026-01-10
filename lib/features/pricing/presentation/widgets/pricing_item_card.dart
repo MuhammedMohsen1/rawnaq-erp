@@ -230,21 +230,6 @@ class _PricingItemCardState extends State<PricingItemCard> {
     super.dispose();
   }
 
-  String _formatNumberWithDecimals(double value) {
-    // Format number with 3 decimals and add thousand separators
-    final parts = value.toStringAsFixed(3).split('.');
-    final integerPart = parts[0];
-    final decimalPart = parts[1];
-
-    // Add thousand separators to integer part
-    final formattedInteger = integerPart.replaceAllMapped(
-      RegExp(r'(\d)(?=(\d{3})+(?!\d))'),
-      (Match m) => '${m[1]},',
-    );
-
-    return '$formattedInteger.$decimalPart';
-  }
-
   Widget _buildFormattedNumber(
     double value, {
     double fontSize = 20,
@@ -281,28 +266,6 @@ class _PricingItemCardState extends State<PricingItemCard> {
         ],
       ),
     );
-  }
-
-  List<TextSpan> _buildCostTextSpans(double value, {double fontSize = 12}) {
-    // Format number with 3 decimals and add thousand separators
-    final parts = value.toStringAsFixed(3).split('.');
-    final integerPart = parts[0];
-    final decimalPart = parts[1];
-
-    // Add thousand separators to integer part
-    final formattedInteger = integerPart.replaceAllMapped(
-      RegExp(r'(\d)(?=(\d{3})+(?!\d))'),
-      (Match m) => '${m[1]},',
-    );
-
-    return [
-      const TextSpan(text: 'د.ك '), // KD at the beginning (opposite direction)
-      TextSpan(text: formattedInteger),
-      TextSpan(
-        text: '.$decimalPart',
-        style: TextStyle(fontSize: fontSize * 0.7), // Smaller font for decimals
-      ),
-    ];
   }
 
   void _toggleSubItem(String subItemId) {
@@ -602,6 +565,27 @@ class _PricingItemCardState extends State<PricingItemCard> {
         });
       }
     }
+  }
+
+  Future<void> _showFullScreenImage(String subItemId, String imageUrl) async {
+    showDialog(
+      context: context,
+      builder: (context) => Stack(
+        clipBehavior: Clip.antiAlias,
+        fit: StackFit.passthrough,
+        children: [
+          Center(child: Image.network(imageUrl, fit: BoxFit.fill)),
+          Positioned(
+            top: 8,
+            right: 8,
+            child: IconButton(
+              onPressed: () => Navigator.of(context).pop(),
+              icon: Icon(Icons.close),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   Future<void> _showDeleteItemConfirmation() async {
@@ -1171,6 +1155,28 @@ class _PricingItemCardState extends State<PricingItemCard> {
                       ),
                     ),
                   ),
+                  Positioned(
+                    bottom: 8,
+                    right: 8,
+                    child: Material(
+                      color: Colors.black54,
+                      borderRadius: BorderRadius.circular(4),
+                      child: InkWell(
+                        onTap: () => {
+                          _showFullScreenImage(subItem.id, currentImage),
+                        },
+                        borderRadius: BorderRadius.circular(4),
+                        child: Container(
+                          padding: const EdgeInsets.all(8),
+                          child: const Icon(
+                            Icons.fullscreen,
+                            size: 20,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -1254,26 +1260,22 @@ class _PricingItemCardState extends State<PricingItemCard> {
                           },
                     borderRadius: BorderRadius.circular(8),
                     child: _uploadingImages[subItem.id] == true
-                        ? const Center(
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              color: AppColors.primary,
+                        ? Padding(
+                            padding: const EdgeInsets.all(8.0),
+                            child: const Center(
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: AppColors.primary,
+                              ),
                             ),
                           )
                         : Column(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
                               const Icon(
-                                Icons.add_photo_alternate,
+                                Icons.add,
                                 size: 24,
                                 color: AppColors.textMuted,
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                'إضافة',
-                                style: AppTextStyles.caption.copyWith(
-                                  color: AppColors.textMuted,
-                                ),
                               ),
                             ],
                           ),
@@ -1538,6 +1540,117 @@ class _PricingItemCardState extends State<PricingItemCard> {
     });
   }
 
+  Future<void> _toggleSubItemVisibility(
+    PricingSubItemModel subItem,
+    bool isVisible,
+  ) async {
+    final newIsHidden = !isVisible;
+
+    try {
+      await _apiDataSource.toggleSubItemVisibility(
+        widget.projectId,
+        widget.version,
+        widget.item.id,
+        subItem.id,
+        newIsHidden,
+      );
+
+      // Update local state
+      setState(() {
+        final subItemIndex = widget.item.subItems?.indexWhere(
+          (s) => s.id == subItem.id,
+        );
+        if (subItemIndex != null && subItemIndex >= 0) {
+          widget.item.subItems![subItemIndex] = PricingSubItemModel(
+            id: subItem.id,
+            pricingItemId: subItem.pricingItemId,
+            name: subItem.name,
+            description: subItem.description,
+            notes: subItem.notes,
+            images: subItem.images,
+            profitMargin: subItem.profitMargin,
+            profitAmount: subItem.profitAmount,
+            totalCost: subItem.totalCost,
+            totalPrice: subItem.totalPrice,
+            isHidden: newIsHidden,
+            order: subItem.order,
+            createdAt: subItem.createdAt,
+            updatedAt: subItem.updatedAt,
+            elements: subItem.elements,
+          );
+        }
+      });
+
+      // Notify parent of the change
+      widget.onSubItemChanged?.call(
+        PricingSubItemModel(
+          id: subItem.id,
+          pricingItemId: subItem.pricingItemId,
+          name: subItem.name,
+          description: subItem.description,
+          notes: subItem.notes,
+          images: subItem.images,
+          profitMargin: subItem.profitMargin,
+          profitAmount: subItem.profitAmount,
+          totalCost: subItem.totalCost,
+          totalPrice: subItem.totalPrice,
+          isHidden: newIsHidden,
+          order: subItem.order,
+          createdAt: subItem.createdAt,
+          updatedAt: subItem.updatedAt,
+          elements: subItem.elements,
+        ),
+      );
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('فشل تحديث حالة الظهور: ${e.toString()}')),
+        );
+      }
+    }
+  }
+
+  Future<void> _toggleItemVisibility(bool isVisible) async {
+    final newIsHidden = !isVisible;
+
+    try {
+      await _apiDataSource.toggleItemVisibility(
+        widget.projectId,
+        widget.version,
+        widget.item.id,
+        newIsHidden,
+      );
+
+      // Local state will be updated through parent callback
+      // The parent component should handle updating the item list
+
+      // Notify parent of the change
+      widget.onItemChanged?.call(
+        PricingItemModel(
+          id: widget.item.id,
+          pricingVersionId: widget.item.pricingVersionId,
+          name: widget.item.name,
+          description: widget.item.description,
+          isHidden: newIsHidden,
+          profitMargin: widget.item.profitMargin,
+          profitAmount: widget.item.profitAmount,
+          totalCost: widget.item.totalCost,
+          totalPrice: widget.item.totalPrice,
+          order: widget.item.order,
+          createdAt: widget.item.createdAt,
+          updatedAt: widget.item.updatedAt,
+          subItems: widget.item.subItems,
+        ),
+      );
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('فشل تحديث حالة الظهور: ${e.toString()}')),
+        );
+      }
+    }
+  }
+
   Future<void> _updateSavedElement(
     String subItemId,
     String elementId,
@@ -1704,6 +1817,10 @@ class _PricingItemCardState extends State<PricingItemCard> {
                     color: Color(0xFF135BEC),
                     size: 24,
                   ),
+                  Checkbox(
+                    value: !widget.item.isHidden,
+                    onChanged: (value) => _toggleItemVisibility(value ?? false),
+                  ),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Column(
@@ -1833,6 +1950,14 @@ class _PricingItemCardState extends State<PricingItemCard> {
                                         color: AppColors.textSecondary,
                                         size: 20,
                                       ),
+                                      Checkbox(
+                                        value: !subItem.isHidden,
+                                        onChanged: (value) =>
+                                            _toggleSubItemVisibility(
+                                              subItem,
+                                              value ?? false,
+                                            ),
+                                      ),
                                       const SizedBox(width: 8),
                                       Expanded(
                                         child: Text(
@@ -1856,8 +1981,7 @@ class _PricingItemCardState extends State<PricingItemCard> {
                                                   0,
                                                   (sum, element) =>
                                                       sum +
-                                                      (element.calculatedCost ??
-                                                              0)
+                                                      element.calculatedCost
                                                           .toDouble(),
                                                 );
                                             final totalStr = total
@@ -2301,8 +2425,7 @@ class _PricingItemCardState extends State<PricingItemCard> {
                                                               0,
                                                               (sum, e) =>
                                                                   sum +
-                                                                  (e.calculatedCost ??
-                                                                          0)
+                                                                  e.calculatedCost
                                                                       .toDouble(),
                                                             );
                                                       final profit =
@@ -2317,6 +2440,8 @@ class _PricingItemCardState extends State<PricingItemCard> {
                                                           null) {
                                                         final updatedSubItem =
                                                             PricingSubItemModel(
+                                                              isHidden: subItem
+                                                                  .isHidden,
                                                               id: subItem.id,
                                                               pricingItemId: subItem
                                                                   .pricingItemId,
@@ -2486,8 +2611,7 @@ class _PricingItemCardState extends State<PricingItemCard> {
                                             0,
                                             (sum, e) =>
                                                 sum +
-                                                (e.calculatedCost ?? 0)
-                                                    .toDouble(),
+                                                e.calculatedCost.toDouble(),
                                           );
                                     final margin =
                                         _profitMargins[subItem.id] ??
@@ -2616,6 +2740,7 @@ class _PricingItemCardState extends State<PricingItemCard> {
                                             right: 12,
                                             top: 12,
                                             bottom: 12,
+                                            left: 12,
                                           ),
                                           constraints: const BoxConstraints(
                                             maxWidth: 200,
