@@ -14,6 +14,7 @@ class PricingItemsList extends StatelessWidget {
   final String? pricingStatus;
   final Map<String, bool> itemExpandedStates;
   final Map<String, Map<String, bool>> subItemExpandedStates;
+  final Map<String, double>? subItemProfitMargins;
   final Function(String itemId, bool isExpanded) onItemExpandedChanged;
   final Function(String itemId, Map<String, bool> subItemStates)
       onSubItemExpandedChanged;
@@ -30,6 +31,7 @@ class PricingItemsList extends StatelessWidget {
     this.pricingStatus,
     required this.itemExpandedStates,
     required this.subItemExpandedStates,
+    this.subItemProfitMargins,
     required this.onItemExpandedChanged,
     required this.onSubItemExpandedChanged,
     required this.onDataChanged,
@@ -67,6 +69,7 @@ class PricingItemsList extends StatelessWidget {
                 initialIsExpanded: itemExpandedStates[item.id] ?? true,
                 initialSubItemExpandedStates:
                     subItemExpandedStates[item.id] ?? {},
+                externalProfitMargins: subItemProfitMargins,
                 onExpandedChanged: (isExpanded) =>
                     onItemExpandedChanged(item.id, isExpanded),
                 onSubItemExpandedChanged: (subItemStates) =>

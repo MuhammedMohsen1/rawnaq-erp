@@ -142,6 +142,7 @@ class _PricingLayout extends StatelessWidget {
                 pricingStatus: state.pricingVersion.status,
                 itemExpandedStates: state.itemExpandedStates,
                 subItemExpandedStates: state.subItemExpandedStates,
+                subItemProfitMargins: state.subItemProfitMargins,
                 onItemExpandedChanged: (itemId, isExpanded) {
                   context.read<PricingCubit>().toggleItemExpanded(itemId);
                 },

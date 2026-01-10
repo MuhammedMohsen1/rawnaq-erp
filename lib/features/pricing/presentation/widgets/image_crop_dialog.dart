@@ -157,6 +157,7 @@ class _ImageCropDialogState extends State<ImageCropDialog> {
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(7),
                   child: Crop(
+                    key: ValueKey(_isSquareMode), // Force rebuild when mode changes
                     image: widget.imageBytes,
                     controller: _cropController,
                     onCropped: _onCropped,

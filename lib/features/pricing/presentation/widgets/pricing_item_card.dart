@@ -78,6 +78,7 @@ class PricingItemCard extends StatefulWidget {
   final VoidCallback? onItemDeleted;
   final ValueChanged<String>? onSubItemDeleted; // subItemId
   final bool isAdminOrManager; // Whether user is Admin or Manager of Department
+  final Map<String, double>? externalProfitMargins; // Profit margins from parent (e.g., bulk update)
 
   const PricingItemCard({
     super.key,
@@ -95,6 +96,7 @@ class PricingItemCard extends StatefulWidget {
     this.onItemDeleted,
     this.onSubItemDeleted,
     this.isAdminOrManager = false,
+    this.externalProfitMargins,
   });
 
   @override
@@ -169,31 +171,50 @@ class _PricingItemCardState extends State<PricingItemCard> {
       _isExpanded = widget.initialIsExpanded;
     }
 
-    // Update sub-item expanded states from parent
+    // Update sub-item expanded states from parent (only for new sub-items)
     if (widget.item.subItems != null) {
       for (var subItem in widget.item.subItems!) {
-        final parentState =
-            widget.initialSubItemExpandedStates[subItem.id] ?? false;
-        if (!_expandedSubItems.containsKey(subItem.id) ||
-            _expandedSubItems[subItem.id] != parentState) {
+        // Only initialize expanded state if not already tracked locally
+        // This prevents collapsing when widget rebuilds during user interaction
+        if (!_expandedSubItems.containsKey(subItem.id)) {
+          final parentState =
+              widget.initialSubItemExpandedStates[subItem.id] ?? false;
           _expandedSubItems[subItem.id] = parentState;
         }
         // Preserve local elements for existing sub-items
         if (!_localElements.containsKey(subItem.id)) {
           _localElements[subItem.id] = [];
         }
-        // Sync notes controller with latest data
+        // Sync notes controller with latest data (only if no pending save)
         final newNotes = subItem.notes ?? '';
         final existingController = _notesControllers[subItem.id];
+        final hasPendingNoteSave = _notesTimers[subItem.id]?.isActive ?? false;
         if (existingController == null) {
           _notesControllers[subItem.id] = TextEditingController(text: newNotes);
-        } else if (existingController.text != newNotes) {
+        } else if (existingController.text != newNotes && !hasPendingNoteSave) {
+          // Only sync if there's no pending save (user isn't actively editing)
           final selection = existingController.selection;
           existingController.text = newNotes;
           final clampedOffset = selection.baseOffset.clamp(0, newNotes.length);
           existingController.selection = TextSelection.collapsed(
             offset: clampedOffset,
           );
+        }
+
+        // Sync profit margin from external source (e.g., bulk update)
+        // Only sync if there's no pending profit margin save (user isn't actively editing)
+        final hasPendingProfitSave = _profitMarginTimers[subItem.id]?.isActive ?? false;
+        if (widget.externalProfitMargins != null &&
+            widget.pricingStatus?.toUpperCase() == 'APPROVED' &&
+            !hasPendingProfitSave) {
+          final externalMargin = widget.externalProfitMargins![subItem.id];
+          if (externalMargin != null && externalMargin != _profitMargins[subItem.id]) {
+            _profitMargins[subItem.id] = externalMargin;
+            final profitController = _profitControllers[subItem.id];
+            if (profitController != null) {
+              profitController.text = externalMargin.toStringAsFixed(2);
+            }
+          }
         }
       }
     }
