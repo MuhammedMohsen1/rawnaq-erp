@@ -15,6 +15,7 @@ import '../../features/notifications/presentation/pages/notifications_page.dart'
 import '../../features/projects/presentation/pages/site_engineer_dashboard_page.dart';
 import '../../features/projects/presentation/pages/project_details_page.dart';
 import '../../features/pricing/presentation/pages/under_pricing_page.dart';
+import '../../features/execution/presentation/pages/execution_page.dart';
 import '../../features/auth/presentation/bloc/auth_bloc.dart';
 import '../widgets/error_page.dart';
 import '../widgets/unauthorized_page.dart';
@@ -52,6 +53,9 @@ class AppRoutes {
 
   // Pricing
   static String pricing(String projectId) => '/pricing/$projectId';
+
+  // Execution
+  static String execution(String projectId) => '/execution/$projectId';
 
   // Project Details
   static String projectDetails(String projectId) => '/projects/$projectId';
@@ -240,6 +244,18 @@ class AppRouter {
               return FadePageTransition(
                 key: state.pageKey,
                 child: UnderPricingPage(projectId: projectId),
+              );
+            },
+          ),
+
+          // Execution
+          GoRoute(
+            path: '/execution/:projectId',
+            pageBuilder: (context, state) {
+              final projectId = state.pathParameters['projectId'] ?? '';
+              return FadePageTransition(
+                key: state.pageKey,
+                child: ExecutionPage(projectId: projectId),
               );
             },
           ),

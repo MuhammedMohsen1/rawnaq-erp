@@ -346,4 +346,24 @@ abstract class ApiEndpoints {
 
   // Settings Endpoints
   static const String contractTerms = '/settings/contract-terms';
+
+  // Execution Endpoints
+  static String executionDashboard(String projectId) =>
+      '/projects/$projectId/execution';
+  static String executionTransactions(String projectId) =>
+      '/projects/$projectId/execution/transactions';
+  static String executionAvailablePhases(String projectId) =>
+      '/projects/$projectId/execution/available-phases';
+  static String executionRequestInstallment(String projectId) =>
+      '/projects/$projectId/execution/installments';
+  static String approveInstallment(String requestId) =>
+      '/execution/installments/$requestId/approve';
+  static String rejectInstallment(String requestId) =>
+      '/execution/installments/$requestId/reject';
+
+  // Contract Expenses Endpoints
+  static String contractExpenses(String projectId) =>
+      '/projects/$projectId/contract/expenses';
+  static String contractExpense(String projectId, String expenseId) =>
+      '/projects/$projectId/contract/expenses/$expenseId';
 }

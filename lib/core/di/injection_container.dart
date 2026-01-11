@@ -15,6 +15,8 @@ import '../../features/financial/data/repositories/transactions_repository_impl.
 import '../../features/pricing/presentation/cubit/pricing_cubit.dart';
 import '../../features/pricing/data/datasources/pricing_api_datasource.dart';
 import '../../features/contracts/data/datasources/contracts_api_datasource.dart';
+import '../../features/execution/presentation/cubit/execution_cubit.dart';
+import '../../features/execution/data/datasources/execution_api_datasource.dart';
 
 final getIt = GetIt.instance;
 
@@ -85,6 +87,16 @@ Future<void> setupDI() async {
     () => PricingCubit(
       pricingApiDataSource: getIt(),
       contractsApiDataSource: getIt(),
+    ),
+  );
+
+  // Execution Data Sources
+  getIt.registerLazySingleton(() => ExecutionApiDataSource());
+
+  // Execution Cubit
+  getIt.registerFactory(
+    () => ExecutionCubit(
+      apiDataSource: getIt(),
     ),
   );
 }
