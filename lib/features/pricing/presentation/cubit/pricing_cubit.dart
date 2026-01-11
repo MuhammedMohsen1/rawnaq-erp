@@ -137,25 +137,55 @@ class PricingCubit extends Cubit<PricingState> {
 
   /// Update profit margin for ALL sub-items at once
   /// This allows applying a bulk profit margin across all sub-items
-  void updateAllSubItemProfitMargins(double profitMargin) {
+  /// Also persists the changes to the backend
+  Future<void> updateAllSubItemProfitMargins(
+    String projectId,
+    double profitMargin,
+  ) async {
     final currentState = state;
     if (currentState is! PricingLoaded) return;
 
     final newProfitMargins =
         Map<String, double>.from(currentState.subItemProfitMargins);
 
-    // Update all sub-items with the new profit margin
+    // Collect all sub-items to update
+    final subItemsToUpdate = <Map<String, String>>[];
     if (currentState.pricingVersion.items != null) {
       for (var item in currentState.pricingVersion.items!) {
         if (item.subItems != null) {
           for (var subItem in item.subItems!) {
             newProfitMargins[subItem.id] = profitMargin;
+            subItemsToUpdate.add({
+              'itemId': item.id,
+              'subItemId': subItem.id,
+            });
           }
         }
       }
     }
 
+    // Update local state immediately for responsive UI
     emit(currentState.copyWith(subItemProfitMargins: newProfitMargins));
+
+    // Persist each sub-item profit margin to the backend
+    try {
+      for (var subItemData in subItemsToUpdate) {
+        await pricingApiDataSource.updateSubItemProfitMargin(
+          projectId,
+          currentState.pricingVersion.version,
+          subItemData['itemId']!,
+          subItemData['subItemId']!,
+          profitMargin,
+        );
+      }
+
+      // Reload data to get updated totals from backend
+      await loadPricingData(projectId);
+    } catch (e) {
+      // Revert local state on error
+      emit(currentState);
+      rethrow;
+    }
   }
 
   /// Add a new pricing item

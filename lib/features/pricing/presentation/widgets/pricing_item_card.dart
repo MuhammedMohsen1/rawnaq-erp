@@ -678,6 +678,89 @@ class _PricingItemCardState extends State<PricingItemCard> {
     );
   }
 
+  Future<void> _cropExistingImage(String subItemId, String imageUrl, int imageIndex) async {
+    try {
+      setState(() {
+        _uploadingImages[subItemId] = true;
+      });
+
+      // Fetch the image from network
+      final response = await HttpClient().getUrl(Uri.parse(imageUrl));
+      final httpResponse = await response.close();
+      final bytes = await httpResponse.fold<List<int>>(
+        <int>[],
+        (previous, element) => previous..addAll(element),
+      );
+      final imageBytes = Uint8List.fromList(bytes);
+
+      if (!mounted) return;
+
+      // Show crop dialog
+      final croppedBytes = await ImageCropDialog.show(
+        context,
+        imageBytes,
+        fileName: 'image_$imageIndex',
+      );
+
+      if (croppedBytes == null) {
+        setState(() {
+          _uploadingImages[subItemId] = false;
+        });
+        return;
+      }
+
+      // Delete the old image
+      await _apiDataSource.deleteSubItemImage(
+        widget.projectId,
+        widget.version,
+        widget.item.id,
+        subItemId,
+        imageUrl,
+      );
+
+      // Upload the cropped image
+      await _apiDataSource.uploadSubItemImages(
+        widget.projectId,
+        widget.version,
+        widget.item.id,
+        subItemId,
+        [],
+        imageBytes: [MapEntry('cropped_image.jpg', croppedBytes.toList())],
+      );
+
+      // Refresh data
+      final updatedVersion = await _apiDataSource.getPricingVersion(
+        widget.projectId,
+        widget.version,
+      );
+      final updatedItem = updatedVersion.items?.firstWhere(
+        (i) => i.id == widget.item.id,
+      );
+
+      if (updatedItem != null && mounted) {
+        widget.onItemChanged?.call(updatedItem);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('تم قص الصورة بنجاح'),
+            duration: Duration(seconds: 2),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('فشل قص الصورة: ${e.toString()}')),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _uploadingImages[subItemId] = false;
+        });
+      }
+    }
+  }
+
   Future<void> _showDeleteItemConfirmation() async {
     final confirmed = await showDialog<bool>(
       context: context,
@@ -1245,6 +1328,29 @@ class _PricingItemCardState extends State<PricingItemCard> {
                       ),
                     ),
                   ),
+                  // Crop button
+                  Positioned(
+                    top: 8,
+                    right: 48,
+                    child: Material(
+                      color: Colors.black54,
+                      borderRadius: BorderRadius.circular(4),
+                      child: InkWell(
+                        onTap: _uploadingImages[subItem.id] == true
+                            ? null
+                            : () => _cropExistingImage(subItem.id, currentImage, safeIndex),
+                        borderRadius: BorderRadius.circular(4),
+                        child: Container(
+                          padding: const EdgeInsets.all(8),
+                          child: const Icon(
+                            Icons.crop,
+                            size: 20,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
                   Positioned(
                     bottom: 8,
                     right: 8,
@@ -1332,10 +1438,11 @@ class _PricingItemCardState extends State<PricingItemCard> {
                 height: 40,
                 decoration: BoxDecoration(
                   border: Border.all(
-                    color: const Color(0xFF4B5563),
+                    color: AppColors.primary.withValues(alpha: 0.5),
                     style: BorderStyle.solid,
                   ),
                   borderRadius: BorderRadius.circular(8),
+                  color: AppColors.primary.withValues(alpha: 0.1),
                 ),
                 child: Material(
                   color: Colors.transparent,
@@ -1362,10 +1469,10 @@ class _PricingItemCardState extends State<PricingItemCard> {
                         : Column(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              const Icon(
+                              Icon(
                                 Icons.add,
                                 size: 24,
-                                color: AppColors.textMuted,
+                                color: AppColors.primary,
                               ),
                             ],
                           ),
@@ -1910,6 +2017,14 @@ class _PricingItemCardState extends State<PricingItemCard> {
                   Checkbox(
                     value: !widget.item.isHidden,
                     onChanged: (value) => _toggleItemVisibility(value ?? false),
+                    activeColor: AppColors.primary,
+                    checkColor: Colors.white,
+                    side: BorderSide(
+                      color: widget.item.isHidden
+                          ? const Color(0xFF6B7280)
+                          : AppColors.primary,
+                      width: 1.5,
+                    ),
                   ),
                   const SizedBox(width: 8),
                   Expanded(
@@ -2073,6 +2188,14 @@ class _PricingItemCardState extends State<PricingItemCard> {
                                               subItem,
                                               value ?? false,
                                             ),
+                                        activeColor: AppColors.primary,
+                                        checkColor: Colors.white,
+                                        side: BorderSide(
+                                          color: subItem.isHidden
+                                              ? const Color(0xFF6B7280)
+                                              : AppColors.primary,
+                                          width: 1.5,
+                                        ),
                                       ),
                                       const SizedBox(width: 8),
                                       Expanded(
@@ -2258,165 +2381,103 @@ class _PricingItemCardState extends State<PricingItemCard> {
                                   ),
                                 ),
                               ],
-                              // Profit Margin Input (only show when status is APPROVED)
-                              if (widget.pricingStatus?.toUpperCase() ==
-                                  'APPROVED') ...[
-                                // Sub-item notes editor (allowed in DRAFT, APPROVED, PENDING_SIGNATURE)
-                              ] else if (widget.pricingStatus != null &&
-                                  (widget.pricingStatus!.toUpperCase() ==
-                                          'DRAFT' ||
-                                      widget.pricingStatus!.toUpperCase() ==
-                                          'PENDING_SIGNATURE')) ...[
-                                // keep notes editor also for DRAFT/PENDING_SIGNATURE when not APPROVED
-                              ],
-                              // Notes editor - only visible to Admin and Manager
-                              if (widget.isAdminOrManager &&
-                                  widget.pricingStatus != null &&
-                                  (widget.pricingStatus!.toUpperCase() ==
-                                          'APPROVED' ||
-                                      widget.pricingStatus!.toUpperCase() ==
-                                          'PENDING_SIGNATURE')) ...[
-                                Padding(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 12,
-                                    vertical: 8,
-                                  ),
-                                  child: Container(
-                                    padding: const EdgeInsets.all(12),
-                                    decoration: BoxDecoration(
-                                      color: const Color(0xFF15181E),
-                                      borderRadius: BorderRadius.circular(8),
-                                      border: Border.all(
-                                        color: const Color(0xFF363C4A),
+                              // Sub-item notes editor - always visible in sub-item body
+                              Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                  vertical: 8,
+                                ),
+                                child: TextField(
+                                  controller: _notesControllers[subItem.id],
+                                  maxLines: 2,
+                                  minLines: 1,
+                                  decoration: InputDecoration(
+                                    hintText: 'ملاحظات الفئة الفرعية...',
+                                    hintStyle: AppTextStyles.bodySmall.copyWith(
+                                      color: AppColors.textMuted,
+                                      fontSize: 12,
+                                    ),
+                                    filled: true,
+                                    fillColor: const Color(0xFF15181E),
+                                    isDense: true,
+                                    border: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(6),
+                                      borderSide: const BorderSide(
+                                        color: Color(0xFF363C4A),
                                       ),
                                     ),
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          'ملاحظات الفئة الفرعية',
-                                          style: AppTextStyles.bodyMedium
-                                              .copyWith(
-                                                fontWeight: FontWeight.w600,
-                                              ),
-                                        ),
-                                        const SizedBox(height: 8),
-                                        TextField(
-                                          controller:
-                                              _notesControllers[subItem.id],
-                                          maxLines: 3,
-                                          decoration: InputDecoration(
-                                            hintText: 'اكتب الملاحظات هنا',
-                                            hintStyle: AppTextStyles.bodySmall
-                                                .copyWith(
-                                                  color: AppColors.textMuted,
-                                                ),
-                                            filled: true,
-                                            fillColor: const Color(0xFF0F1217),
-                                            border: OutlineInputBorder(
-                                              borderRadius:
-                                                  BorderRadius.circular(8),
-                                              borderSide: const BorderSide(
-                                                color: Color(0xFF363C4A),
-                                              ),
-                                            ),
-                                            enabledBorder: OutlineInputBorder(
-                                              borderRadius:
-                                                  BorderRadius.circular(8),
-                                              borderSide: const BorderSide(
-                                                color: Color(0xFF363C4A),
-                                              ),
-                                            ),
-                                            focusedBorder: OutlineInputBorder(
-                                              borderRadius:
-                                                  BorderRadius.circular(8),
-                                              borderSide: const BorderSide(
-                                                color: AppColors.primary,
-                                              ),
-                                            ),
-                                          ),
-                                          textInputAction: TextInputAction.done,
-                                          onChanged: (value) {
-                                            // Debounce notes save
-                                            _notesTimers[subItem.id]?.cancel();
-                                            _notesTimers[subItem.id] = Timer(
-                                              const Duration(milliseconds: 700),
-                                              () async {
-                                                try {
-                                                  await _apiDataSource
-                                                      .updatePricingSubItem(
-                                                        widget.projectId,
-                                                        widget.version,
-                                                        widget.item.id,
-                                                        subItem.id,
-                                                        notes:
-                                                            value.trim().isEmpty
-                                                            ? null
-                                                            : value.trim(),
-                                                      );
-                                                } catch (_) {
-                                                  // ignore transient save errors in debounce
-                                                }
-                                              },
-                                            );
-                                          },
-                                          onSubmitted: (value) async {
-                                            try {
-                                              await _apiDataSource
-                                                  .updatePricingSubItem(
-                                                    widget.projectId,
-                                                    widget.version,
-                                                    widget.item.id,
-                                                    subItem.id,
-                                                    notes: value.trim().isEmpty
-                                                        ? null
-                                                        : value.trim(),
-                                                  );
-                                              final updatedVersion =
-                                                  await _apiDataSource
-                                                      .getPricingVersion(
-                                                        widget.projectId,
-                                                        widget.version,
-                                                      );
-                                              if (widget.onItemChanged !=
-                                                  null) {
-                                                final updatedItem =
-                                                    updatedVersion.items
-                                                        ?.firstWhere(
-                                                          (it) =>
-                                                              it.id ==
-                                                              widget.item.id,
-                                                        );
-                                                if (updatedItem != null) {
-                                                  widget.onItemChanged!(
-                                                    updatedItem,
-                                                  );
-                                                }
-                                              }
-                                            } catch (e) {
-                                              if (mounted) {
-                                                ScaffoldMessenger.of(
-                                                  context,
-                                                ).showSnackBar(
-                                                  SnackBar(
-                                                    content: Text(
-                                                      'فشل حفظ الملاحظات: ${e.toString()}',
-                                                    ),
-                                                    duration: const Duration(
-                                                      seconds: 3,
-                                                    ),
-                                                  ),
-                                                );
-                                              }
-                                            }
-                                          },
-                                        ),
-                                      ],
+                                    enabledBorder: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(6),
+                                      borderSide: const BorderSide(
+                                        color: Color(0xFF363C4A),
+                                      ),
+                                    ),
+                                    focusedBorder: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(6),
+                                      borderSide: const BorderSide(
+                                        color: AppColors.primary,
+                                      ),
+                                    ),
+                                    contentPadding: const EdgeInsets.symmetric(
+                                      horizontal: 12,
+                                      vertical: 10,
                                     ),
                                   ),
+                                  style: AppTextStyles.bodySmall.copyWith(
+                                    fontSize: 12,
+                                    color: AppColors.textPrimary,
+                                  ),
+                                  textInputAction: TextInputAction.done,
+                                  onChanged: (value) {
+                                    // Debounce notes save
+                                    _notesTimers[subItem.id]?.cancel();
+                                    _notesTimers[subItem.id] = Timer(
+                                      const Duration(milliseconds: 700),
+                                      () async {
+                                        try {
+                                          await _apiDataSource
+                                              .updatePricingSubItem(
+                                                widget.projectId,
+                                                widget.version,
+                                                widget.item.id,
+                                                subItem.id,
+                                                notes: value.trim().isEmpty
+                                                    ? null
+                                                    : value.trim(),
+                                              );
+                                        } catch (_) {
+                                          // ignore transient save errors in debounce
+                                        }
+                                      },
+                                    );
+                                  },
+                                  onSubmitted: (value) async {
+                                    final scaffoldMessenger = ScaffoldMessenger.of(context);
+                                    try {
+                                      await _apiDataSource.updatePricingSubItem(
+                                        widget.projectId,
+                                        widget.version,
+                                        widget.item.id,
+                                        subItem.id,
+                                        notes: value.trim().isEmpty
+                                            ? null
+                                            : value.trim(),
+                                      );
+                                    } catch (e) {
+                                      if (mounted) {
+                                        scaffoldMessenger.showSnackBar(
+                                          SnackBar(
+                                            content: Text(
+                                              'فشل حفظ الملاحظات: ${e.toString()}',
+                                            ),
+                                            duration: const Duration(seconds: 3),
+                                          ),
+                                        );
+                                      }
+                                    }
+                                  },
                                 ),
-                              ],
+                              ),
                               // Profit Margin Input - only visible to Admin and Manager when status is APPROVED or PENDING_SIGNATURE
                               if (widget.isAdminOrManager &&
                                   widget.pricingStatus != null &&
