@@ -16,7 +16,9 @@ class ExecutionApiDataSource {
     );
 
     final responseData = response.data as Map<String, dynamic>;
-    return ExecutionDashboardModel.fromJson(responseData);
+    // Extract nested data from API response wrapper (handles {success, code, data} format)
+    final data = responseData['data'] as Map<String, dynamic>? ?? responseData;
+    return ExecutionDashboardModel.fromJson(data);
   }
 
   /// Get paginated transactions
@@ -34,7 +36,9 @@ class ExecutionApiDataSource {
     );
 
     final responseData = response.data as Map<String, dynamic>;
-    final transactions = responseData['transactions'] as List? ?? [];
+    // Extract nested data from API response wrapper
+    final data = responseData['data'] as Map<String, dynamic>? ?? responseData;
+    final transactions = data['transactions'] as List? ?? [];
     return transactions
         .map((t) => TransactionModel.fromJson(t as Map<String, dynamic>))
         .toList();
@@ -46,8 +50,18 @@ class ExecutionApiDataSource {
       ApiEndpoints.executionAvailablePhases(projectId),
     );
 
-    final data = response.data as List? ?? [];
-    return data
+    final responseData = response.data;
+    // Handle both direct list and wrapped response formats
+    List<dynamic> phases;
+    if (responseData is List) {
+      phases = responseData;
+    } else if (responseData is Map<String, dynamic>) {
+      final data = responseData['data'];
+      phases = data is List ? data : [];
+    } else {
+      phases = [];
+    }
+    return phases
         .map((p) => PaymentPhaseModel.fromJson(p as Map<String, dynamic>))
         .toList();
   }
@@ -67,7 +81,9 @@ class ExecutionApiDataSource {
     );
 
     final responseData = response.data as Map<String, dynamic>;
-    return InstallmentRequestModel.fromJson(responseData);
+    // Extract nested data from API response wrapper
+    final data = responseData['data'] as Map<String, dynamic>? ?? responseData;
+    return InstallmentRequestModel.fromJson(data);
   }
 
   /// Approve an installment request (Admin/Manager)
@@ -77,7 +93,9 @@ class ExecutionApiDataSource {
     );
 
     final responseData = response.data as Map<String, dynamic>;
-    return InstallmentRequestModel.fromJson(responseData);
+    // Extract nested data from API response wrapper
+    final data = responseData['data'] as Map<String, dynamic>? ?? responseData;
+    return InstallmentRequestModel.fromJson(data);
   }
 
   /// Reject an installment request (Admin/Manager)
@@ -91,7 +109,9 @@ class ExecutionApiDataSource {
     );
 
     final responseData = response.data as Map<String, dynamic>;
-    return InstallmentRequestModel.fromJson(responseData);
+    // Extract nested data from API response wrapper
+    final data = responseData['data'] as Map<String, dynamic>? ?? responseData;
+    return InstallmentRequestModel.fromJson(data);
   }
 
   /// Create expense
@@ -118,6 +138,14 @@ class ExecutionApiDataSource {
   Future<void> deleteExpense(String projectId, String expenseId) async {
     await _apiClient.delete(
       ApiEndpoints.contractExpense(projectId, expenseId),
+    );
+  }
+
+  /// Create income (Admin/Manager direct income addition)
+  Future<void> createIncome(String projectId, CreateIncomeDto dto) async {
+    await _apiClient.post(
+      ApiEndpoints.executionAddIncome(projectId),
+      data: dto.toJson(),
     );
   }
 }

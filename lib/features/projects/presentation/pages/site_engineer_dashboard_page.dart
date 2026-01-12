@@ -409,7 +409,12 @@ class _SiteEngineerDashboardPageState extends State<SiteEngineerDashboardPage> {
                   height: 44,
                   child: ElevatedButton(
                     onPressed: () {
-                      context.go(AppRoutes.projectDetails(project.id));
+                      // Route to execution page for projects in execution phase
+                      if (project.status == ProjectStatus.execution) {
+                        context.go(AppRoutes.execution(project.id));
+                      } else {
+                        context.go(AppRoutes.projectDetails(project.id));
+                      }
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppColors.cardBackground,

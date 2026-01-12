@@ -105,11 +105,12 @@ class _ExecutionLayout extends StatelessWidget {
         final authState = context.read<AuthBloc>().state;
 
         bool isAdminOrManager = false;
-        bool isSiteEngineer = false;
+        bool canRequestInstallments = false;
         if (authState is AuthAuthenticated) {
           final user = authState.user;
           isAdminOrManager = user.isAdmin || user.isManager;
-          isSiteEngineer = user.role == 'SITE_ENGINEER';
+          // Any engineer type can request installments (site, junior, senior, or generic engineer)
+          canRequestInstallments = user.canRequestInstallments;
         }
 
         return Scaffold(
@@ -155,15 +156,19 @@ class _ExecutionLayout extends StatelessWidget {
                   projectId: projectId,
                   transactions: state.dashboard.transactions,
                   isAddingExpense: state.isAddingExpense,
+                  isAddingIncome: state.isAddingIncome,
                   editingTransactions: state.editingTransactions,
                   isLoadingMore: state.isLoadingMore,
                   hasMoreTransactions: state.dashboard.hasMoreTransactions,
-                  isSiteEngineer: isSiteEngineer,
+                  isSiteEngineer: canRequestInstallments,
                   isAdminOrManager: isAdminOrManager,
                   paymentSchedule: state.dashboard.paymentSchedule,
                   profitPercentage: state.dashboard.profitPercentage,
                   onAddExpense: () => _handleAddExpense(context),
-                  onRequestInstallment: isSiteEngineer
+                  onAddIncome: isAdminOrManager
+                      ? () => _handleAddIncome(context)
+                      : null,
+                  onRequestInstallment: canRequestInstallments
                       ? () => _handleRequestInstallment(context, state)
                       : null,
                   onLoadMore: () => _handleLoadMore(context),
@@ -186,6 +191,10 @@ class _ExecutionLayout extends StatelessWidget {
 
   void _handleAddExpense(BuildContext context) {
     context.read<ExecutionCubit>().startAddingExpense();
+  }
+
+  void _handleAddIncome(BuildContext context) {
+    context.read<ExecutionCubit>().startAddingIncome();
   }
 
   Future<void> _handleRequestInstallment(

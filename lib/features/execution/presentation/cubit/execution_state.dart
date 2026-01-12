@@ -19,6 +19,7 @@ class ExecutionLoading extends ExecutionState {
 class ExecutionLoaded extends ExecutionState {
   final ExecutionDashboardModel dashboard;
   final bool isAddingExpense;
+  final bool isAddingIncome;
   final Map<String, bool> editingTransactions;
   final bool isLoadingMore;
   final String? editingExpenseId;
@@ -26,6 +27,7 @@ class ExecutionLoaded extends ExecutionState {
   const ExecutionLoaded({
     required this.dashboard,
     this.isAddingExpense = false,
+    this.isAddingIncome = false,
     this.editingTransactions = const {},
     this.isLoadingMore = false,
     this.editingExpenseId,
@@ -35,6 +37,7 @@ class ExecutionLoaded extends ExecutionState {
   List<Object?> get props => [
         dashboard,
         isAddingExpense,
+        isAddingIncome,
         editingTransactions,
         isLoadingMore,
         editingExpenseId,
@@ -43,6 +46,7 @@ class ExecutionLoaded extends ExecutionState {
   ExecutionLoaded copyWith({
     ExecutionDashboardModel? dashboard,
     bool? isAddingExpense,
+    bool? isAddingIncome,
     Map<String, bool>? editingTransactions,
     bool? isLoadingMore,
     String? editingExpenseId,
@@ -51,6 +55,7 @@ class ExecutionLoaded extends ExecutionState {
     return ExecutionLoaded(
       dashboard: dashboard ?? this.dashboard,
       isAddingExpense: isAddingExpense ?? this.isAddingExpense,
+      isAddingIncome: isAddingIncome ?? this.isAddingIncome,
       editingTransactions: editingTransactions ?? this.editingTransactions,
       isLoadingMore: isLoadingMore ?? this.isLoadingMore,
       editingExpenseId: clearEditingExpenseId ? null : (editingExpenseId ?? this.editingExpenseId),

@@ -177,6 +177,34 @@ class ExecutionCubit extends Cubit<ExecutionState> {
     emit(currentState.copyWith(isAddingExpense: false));
   }
 
+  /// Start adding new income (show empty row - Admin/Manager only)
+  void startAddingIncome() {
+    final currentState = state;
+    if (currentState is! ExecutionLoaded) return;
+    emit(currentState.copyWith(isAddingIncome: true, isAddingExpense: false));
+  }
+
+  /// Cancel adding income
+  void cancelAddingIncome() {
+    final currentState = state;
+    if (currentState is! ExecutionLoaded) return;
+    emit(currentState.copyWith(isAddingIncome: false));
+  }
+
+  /// Add new income (Admin/Manager direct income addition)
+  Future<void> addIncome(String projectId, CreateIncomeDto dto) async {
+    final currentState = state;
+    if (currentState is! ExecutionLoaded) return;
+
+    try {
+      await _apiDataSource.createIncome(projectId, dto);
+      emit(currentState.copyWith(isAddingIncome: false));
+      await refreshDashboard(projectId);
+    } catch (e) {
+      rethrow;
+    }
+  }
+
   /// Toggle inline editing mode for a transaction
   void toggleEditing(String transactionId) {
     final currentState = state;

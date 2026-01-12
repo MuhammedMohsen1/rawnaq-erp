@@ -356,6 +356,8 @@ abstract class ApiEndpoints {
       '/projects/$projectId/execution/available-phases';
   static String executionRequestInstallment(String projectId) =>
       '/projects/$projectId/execution/installments';
+  static String executionAddIncome(String projectId) =>
+      '/projects/$projectId/execution/income';
   static String approveInstallment(String requestId) =>
       '/execution/installments/$requestId/approve';
   static String rejectInstallment(String requestId) =>

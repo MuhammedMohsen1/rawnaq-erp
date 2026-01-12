@@ -29,6 +29,16 @@ int _toIntOrZero(dynamic value) {
   return 0;
 }
 
+String _toStringOrEmpty(dynamic value) {
+  if (value == null) return '';
+  return value.toString();
+}
+
+String? _toStringOrNull(dynamic value) {
+  if (value == null) return null;
+  return value.toString();
+}
+
 /// Transaction item model
 class TransactionModel {
   final String id;
@@ -59,14 +69,16 @@ class TransactionModel {
 
   factory TransactionModel.fromJson(Map<String, dynamic> json) {
     return TransactionModel(
-      id: json['id'] as String,
+      id: _toStringOrEmpty(json['id']),
       type: json['type'] == 'income' ? TransactionType.income : TransactionType.expense,
-      description: json['description'] as String,
-      subDescription: json['subDescription'] as String?,
+      description: _toStringOrEmpty(json['description']),
+      subDescription: _toStringOrNull(json['subDescription']),
       amount: _toDoubleOrZero(json['amount']),
-      date: DateTime.parse(json['date'] as String),
+      date: json['date'] != null
+          ? DateTime.tryParse(json['date'].toString()) ?? DateTime.now()
+          : DateTime.now(),
       isEditable: json['isEditable'] as bool? ?? false,
-      source: json['source'] as String? ?? 'expense',
+      source: _toStringOrEmpty(json['source']),
       costType: json['costType'] == 'UNIT_BASED' ? CostType.unitBased : CostType.total,
       unitCost: _toDoubleOrNull(json['unitCost']),
       quantity: _toDoubleOrNull(json['quantity']),
@@ -115,13 +127,13 @@ class PaymentPhaseModel {
   factory PaymentPhaseModel.fromJson(Map<String, dynamic> json) {
     return PaymentPhaseModel(
       index: _toIntOrZero(json['index']),
-      phaseName: json['phaseName'] as String,
+      phaseName: _toStringOrEmpty(json['phaseName']),
       percentage: _toDoubleOrZero(json['percentage']),
       originalAmount: _toDoubleOrZero(json['originalAmount']),
       costAmount: _toDoubleOrZero(json['costAmount']),
       isRequested: json['isRequested'] as bool? ?? false,
       isApproved: json['isApproved'] as bool? ?? false,
-      requestId: json['requestId'] as String?,
+      requestId: _toStringOrNull(json['requestId']),
     );
   }
 }
@@ -157,7 +169,8 @@ class InstallmentRequestModel {
   });
 
   factory InstallmentRequestModel.fromJson(Map<String, dynamic> json) {
-    InstallmentRequestStatus parseStatus(String status) {
+    InstallmentRequestStatus parseStatus(String? status) {
+      if (status == null) return InstallmentRequestStatus.pending;
       switch (status.toUpperCase()) {
         case 'APPROVED':
           return InstallmentRequestStatus.approved;
@@ -169,20 +182,22 @@ class InstallmentRequestModel {
     }
 
     return InstallmentRequestModel(
-      id: json['id'] as String,
+      id: _toStringOrEmpty(json['id']),
       phaseIndex: _toIntOrZero(json['phaseIndex']),
-      phaseName: json['phaseName'] as String,
+      phaseName: _toStringOrEmpty(json['phaseName']),
       requestedAmount: _toDoubleOrZero(json['requestedAmount']),
       originalAmount: _toDoubleOrZero(json['originalAmount']),
       profitPercentage: _toDoubleOrZero(json['profitPercentage']),
-      status: parseStatus(json['status'] as String),
-      requestedByName: json['requestedByName'] as String,
-      createdAt: DateTime.parse(json['createdAt'] as String),
-      approvedByName: json['approvedByName'] as String?,
+      status: parseStatus(json['status'] as String?),
+      requestedByName: _toStringOrEmpty(json['requestedByName']),
+      createdAt: json['createdAt'] != null
+          ? DateTime.tryParse(json['createdAt'].toString()) ?? DateTime.now()
+          : DateTime.now(),
+      approvedByName: _toStringOrNull(json['approvedByName']),
       approvedAt: json['approvedAt'] != null
-          ? DateTime.parse(json['approvedAt'] as String)
+          ? DateTime.tryParse(json['approvedAt'].toString())
           : null,
-      rejectedReason: json['rejectedReason'] as String?,
+      rejectedReason: _toStringOrNull(json['rejectedReason']),
     );
   }
 }
@@ -224,7 +239,8 @@ class ExecutionDashboardModel {
   });
 
   factory ExecutionDashboardModel.fromJson(Map<String, dynamic> json) {
-    BudgetWarningLevel parseWarningLevel(String level) {
+    BudgetWarningLevel parseWarningLevel(String? level) {
+      if (level == null) return BudgetWarningLevel.normal;
       switch (level) {
         case 'warning':
           return BudgetWarningLevel.warning;
@@ -238,15 +254,15 @@ class ExecutionDashboardModel {
     }
 
     return ExecutionDashboardModel(
-      projectId: json['projectId'] as String,
-      projectName: json['projectName'] as String,
+      projectId: _toStringOrEmpty(json['projectId']),
+      projectName: _toStringOrEmpty(json['projectName']),
       totalReceived: _toDoubleOrZero(json['totalReceived']),
       totalExpenses: _toDoubleOrZero(json['totalExpenses']),
       netCashFlow: _toDoubleOrZero(json['netCashFlow']),
       totalBudget: _toDoubleOrZero(json['totalBudget']),
       remainingBudget: _toDoubleOrZero(json['remainingBudget']),
       budgetPercentage: _toDoubleOrZero(json['budgetPercentage']),
-      budgetWarningLevel: parseWarningLevel(json['budgetWarningLevel'] as String? ?? 'normal'),
+      budgetWarningLevel: parseWarningLevel(json['budgetWarningLevel'] as String?),
       profitPercentage: _toDoubleOrZero(json['profitPercentage']),
       transactions: (json['transactions'] as List?)
               ?.map((t) => TransactionModel.fromJson(t as Map<String, dynamic>))
@@ -377,5 +393,26 @@ class UpdateExpenseDto {
     if (date != null) map['date'] = date!.toIso8601String();
     if (pricingItemId != null) map['pricingItemId'] = pricingItemId;
     return map;
+  }
+}
+
+/// Create income DTO (for Admin/Manager direct income addition)
+class CreateIncomeDto {
+  final String description;
+  final double amount;
+  final DateTime date;
+
+  CreateIncomeDto({
+    required this.description,
+    required this.amount,
+    required this.date,
+  });
+
+  Map<String, dynamic> toJson() {
+    return {
+      'description': description,
+      'amount': amount,
+      'date': date.toIso8601String(),
+    };
   }
 }

@@ -21,42 +21,44 @@ class CashFlowSummaryCards extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      children: [
-        // Total Received Card
-        Expanded(
-          child: _SummaryCard(
-            title: 'إجمالي المستلم',
-            value: totalReceived,
-            icon: Icons.arrow_downward,
-            iconBackgroundColor: AppColors.success.withValues(alpha: 0.1),
-            iconColor: AppColors.success,
-            valueColor: AppColors.success,
+    return IntrinsicHeight(
+      child: Row(
+        children: [
+          // Total Received Card
+          Expanded(
+            child: _SummaryCard(
+              title: 'إجمالي المستلم',
+              value: totalReceived,
+              icon: Icons.arrow_downward,
+              iconBackgroundColor: AppColors.success.withValues(alpha: 0.1),
+              iconColor: AppColors.success,
+              valueColor: AppColors.success,
+            ),
           ),
-        ),
-        const SizedBox(width: 16),
-        // Total Expenses Card
-        Expanded(
-          child: _SummaryCard(
-            title: 'إجمالي المصروفات',
-            value: totalExpenses,
-            icon: Icons.arrow_upward,
-            iconBackgroundColor: AppColors.error.withValues(alpha: 0.1),
-            iconColor: AppColors.error,
-            valueColor: AppColors.error,
-            showNegative: true,
+          const SizedBox(width: 16),
+          // Total Expenses Card
+          Expanded(
+            child: _SummaryCard(
+              title: 'إجمالي المصروفات',
+              value: totalExpenses,
+              icon: Icons.arrow_upward,
+              iconBackgroundColor: AppColors.error.withValues(alpha: 0.1),
+              iconColor: AppColors.error,
+              valueColor: AppColors.error,
+              showNegative: true,
+            ),
           ),
-        ),
-        const SizedBox(width: 16),
-        // Net Cash Flow Card with Budget Progress
-        Expanded(
-          child: _NetCashFlowCard(
-            netCashFlow: netCashFlow,
-            budgetPercentage: budgetPercentage,
-            budgetWarningLevel: budgetWarningLevel,
+          const SizedBox(width: 16),
+          // Net Cash Flow Card with Budget Progress
+          Expanded(
+            child: _NetCashFlowCard(
+              netCashFlow: netCashFlow,
+              budgetPercentage: budgetPercentage,
+              budgetWarningLevel: budgetWarningLevel,
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }
@@ -119,9 +121,7 @@ class _SummaryCard extends StatelessWidget {
                 const SizedBox(height: 12),
                 Text(
                   '${displayValue.toStringAsFixed(3)} د.ك',
-                  style: AppTextStyles.statNumber.copyWith(
-                    color: valueColor,
-                  ),
+                  style: AppTextStyles.statNumber.copyWith(color: valueColor),
                 ),
               ],
             ),
@@ -133,11 +133,7 @@ class _SummaryCard extends StatelessWidget {
               color: iconBackgroundColor,
               shape: BoxShape.circle,
             ),
-            child: Icon(
-              icon,
-              color: iconColor,
-              size: 24,
-            ),
+            child: Icon(icon, color: iconColor, size: 24),
           ),
         ],
       ),

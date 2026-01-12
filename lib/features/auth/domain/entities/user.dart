@@ -120,6 +120,11 @@ class User extends Equatable {
   bool get isSeniorEngineer => role == 'senior_engineer';
   bool get isJuniorEngineer => role == 'junior_engineer';
   bool get isSiteEngineer => role == 'site_engineer';
+  bool get isEngineer => role == 'engineer';
+
+  /// Returns true if user is any type of engineer that can request installments
+  bool get canRequestInstallments =>
+      isSiteEngineer || isJuniorEngineer || isSeniorEngineer || isEngineer;
 
   // Admin sub-role checking
   bool hasAdminSubRole(String subRole) {

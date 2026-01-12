@@ -329,10 +329,13 @@ class _ProjectsListPageState extends State<ProjectsListPage> {
         return ProjectTableWidget(
           projects: state.filteredProjects,
           onProjectTap: (project) {
-            // Route to pricing page if status is underPricing or pendingApproval
+            // Route based on project status
             if (project.status == ProjectStatus.underPricing ||
                 project.status == ProjectStatus.pendingApproval) {
               context.go(AppRoutes.pricing(project.id));
+            } else if (project.status == ProjectStatus.execution) {
+              // Route to execution page for projects in execution phase
+              context.go(AppRoutes.execution(project.id));
             } else {
               context.go(AppRoutes.projectDetails(project.id));
             }
@@ -358,10 +361,13 @@ class _ProjectsListPageState extends State<ProjectsListPage> {
             return ProjectCardWidget(
               project: project,
               onTap: () {
-                // Route to pricing page if status is underPricing or pendingApproval
+                // Route based on project status
                 if (project.status == ProjectStatus.underPricing ||
                     project.status == ProjectStatus.pendingApproval) {
                   context.go(AppRoutes.pricing(project.id));
+                } else if (project.status == ProjectStatus.execution) {
+                  // Route to execution page for projects in execution phase
+                  context.go(AppRoutes.execution(project.id));
                 } else {
                   context.go(AppRoutes.projectDetails(project.id));
                 }
