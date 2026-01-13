@@ -232,7 +232,7 @@ class _PricingLayout extends StatelessWidget {
         onConfirmPricing: isProfitPending
             ? () => _handleConfirmPricing(context)
             : null,
-        onExportPdf: (isAdminOrManager && isApproved) || isProfitPending
+        onExportPdf: (isAdminOrManager && isApproved)
             ? () => _handleExportPdf(context)
             : null,
         onExportContractPdf: isProfitPending
@@ -244,7 +244,7 @@ class _PricingLayout extends StatelessWidget {
         onReturnContractToPricing: isProfitPending
             ? () => _handleReturnContractToPricing(context)
             : null,
-        onExportImages: (isAdminOrManager && isApproved) || isProfitPending
+        onExportImages: (isAdminOrManager && isApproved)
             ? () => _handleExportImages(context)
             : null,
         pricingVersionNotes: state.pricingVersion.notes,
@@ -259,7 +259,8 @@ class _PricingLayout extends StatelessWidget {
         },
         isDraft: currentStatus == 'DRAFT',
         isUnderPricing: currentStatus == 'UNDER_PRICING',
-        onBulkProfitMarginUpdate: isAdminOrManager && (isApproved || isProfitPending)
+        onBulkProfitMarginUpdate:
+            isAdminOrManager && (isApproved || isProfitPending)
             ? (profitMargin) {
                 context.read<PricingCubit>().updateAllSubItemProfitMargins(
                   projectId,
@@ -429,10 +430,11 @@ class _PricingLayout extends StatelessWidget {
 
     if (!context.mounted) return;
 
-    final confirmed = await PricingConfirmationDialogs.showConfirmContractDialog(
-      context,
-      paymentSchedule: paymentSchedule,
-    );
+    final confirmed =
+        await PricingConfirmationDialogs.showConfirmContractDialog(
+          context,
+          paymentSchedule: paymentSchedule,
+        );
 
     if (confirmed) {
       try {

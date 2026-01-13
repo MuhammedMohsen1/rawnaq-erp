@@ -126,7 +126,7 @@ class PricingApiDataSource {
       if (e.toString().contains('NotFoundException') ||
           e.toString().contains('NOT_FOUND')) {
         throw Exception(
-          'لا يمكن إضافة فئة فرعية. يرجى التحقق من أن:\n'
+          'لا يمكن إضافة عنصر. يرجى التحقق من أن:\n'
           '1. المشروع موجود\n'
           '2. إصدار التسعير في حالة "مسودة" (DRAFT)\n'
           '3. الفئة موجودة في هذا الإصدار',

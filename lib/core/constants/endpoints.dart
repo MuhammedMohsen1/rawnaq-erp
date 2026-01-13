@@ -1,7 +1,8 @@
 abstract class ApiEndpoints {
   // Base URL - Backend is running on port 3001
   // Using 127.0.0.1 instead of localhost to avoid macOS permission issues
-  static const String baseUrl = 'http://localhost:3001/api/v1';
+  static const String baseUrl =
+      'https://n9wr3h96-3001.inc1.devtunnels.ms/api/v1';
   //   static const String baseUrl = 'http://localhost:3001/api/v1';
   //   static const String baseUrl = 'https://beenedeek.com/api/v1';
   // static const String baseUrl =
@@ -333,7 +334,8 @@ abstract class ApiEndpoints {
     int version,
     String itemId,
     String subItemId,
-  ) => '/projects/$projectId/pricing/$version/items/$itemId/sub-items/$subItemId/visibility';
+  ) =>
+      '/projects/$projectId/pricing/$version/items/$itemId/sub-items/$subItemId/visibility';
 
   // Contract Endpoints
   static String contract(String projectId) => '/projects/$projectId/contract';

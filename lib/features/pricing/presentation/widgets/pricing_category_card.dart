@@ -42,12 +42,12 @@ class _PricingCategoryCardState extends State<PricingCategoryCard> {
     final result = await showDialog<String>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('إضافة فئة فرعية جديدة'),
+        title: const Text('إضافة عنصر جديد'),
         content: TextField(
           controller: nameController,
           decoration: const InputDecoration(
-            labelText: 'اسم الفئة الفرعية',
-            hintText: 'أدخل اسم الفئة الفرعية',
+            labelText: 'اسم عنصر جديد',
+            hintText: 'أدخل اسم عنصر جديد',
           ),
           autofocus: true,
         ),
@@ -115,18 +115,13 @@ class _PricingCategoryCardState extends State<PricingCategoryCard> {
                 const SizedBox(height: 16),
                 DropdownButtonFormField<String>(
                   value: costTypeController.text,
-                  decoration: const InputDecoration(
-                    labelText: 'نوع التكلفة',
-                  ),
+                  decoration: const InputDecoration(labelText: 'نوع التكلفة'),
                   items: const [
                     DropdownMenuItem(
                       value: 'UNIT_BASED',
                       child: Text('حسب الوحدة'),
                     ),
-                    DropdownMenuItem(
-                      value: 'TOTAL',
-                      child: Text('إجمالي'),
-                    ),
+                    DropdownMenuItem(value: 'TOTAL', child: Text('إجمالي')),
                   ],
                   onChanged: (value) {
                     setDialogState(() {
@@ -173,22 +168,19 @@ class _PricingCategoryCardState extends State<PricingCategoryCard> {
             ),
             TextButton(
               onPressed: () {
-                Navigator.pop(
-                  context,
-                  {
-                    'name': nameController.text,
-                    'costType': costTypeController.text,
-                    'unitCost': unitCostController.text.isNotEmpty
-                        ? double.tryParse(unitCostController.text)
-                        : null,
-                    'quantity': quantityController.text.isNotEmpty
-                        ? double.tryParse(quantityController.text)
-                        : null,
-                    'totalCost': totalCostController.text.isNotEmpty
-                        ? double.tryParse(totalCostController.text)
-                        : null,
-                  },
-                );
+                Navigator.pop(context, {
+                  'name': nameController.text,
+                  'costType': costTypeController.text,
+                  'unitCost': unitCostController.text.isNotEmpty
+                      ? double.tryParse(unitCostController.text)
+                      : null,
+                  'quantity': quantityController.text.isNotEmpty
+                      ? double.tryParse(quantityController.text)
+                      : null,
+                  'totalCost': totalCostController.text.isNotEmpty
+                      ? double.tryParse(totalCostController.text)
+                      : null,
+                });
               },
               child: const Text('إضافة'),
             ),
@@ -197,7 +189,9 @@ class _PricingCategoryCardState extends State<PricingCategoryCard> {
       ),
     );
 
-    if (result != null && result['name'] != null && result['name'].toString().isNotEmpty) {
+    if (result != null &&
+        result['name'] != null &&
+        result['name'].toString().isNotEmpty) {
       try {
         await _apiDataSource.addPricingElement(
           widget.projectId,
@@ -238,10 +232,7 @@ class _PricingCategoryCardState extends State<PricingCategoryCard> {
       decoration: BoxDecoration(
         color: AppColors.cardBackground,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: AppColors.border,
-          width: 1,
-        ),
+        border: Border.all(color: AppColors.border, width: 1),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -303,7 +294,8 @@ class _PricingCategoryCardState extends State<PricingCategoryCard> {
             ),
           ),
           // Sub-Items List
-          if (widget.item.subItems != null && widget.item.subItems!.isNotEmpty) ...[
+          if (widget.item.subItems != null &&
+              widget.item.subItems!.isNotEmpty) ...[
             ...widget.item.subItems!.map((subItem) {
               final isExpanded = _expandedSubItems[subItem.id] ?? false;
               return Column(
@@ -312,7 +304,10 @@ class _PricingCategoryCardState extends State<PricingCategoryCard> {
                   InkWell(
                     onTap: () => _toggleSubItem(subItem.id),
                     child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 12,
+                      ),
                       decoration: BoxDecoration(
                         border: Border(
                           bottom: BorderSide(
@@ -337,7 +332,8 @@ class _PricingCategoryCardState extends State<PricingCategoryCard> {
                               ),
                             ),
                           ),
-                          if (subItem.elements != null && subItem.elements!.isNotEmpty) ...[
+                          if (subItem.elements != null &&
+                              subItem.elements!.isNotEmpty) ...[
                             Text(
                               '${subItem.elements!.length} عنصر',
                               style: AppTextStyles.caption.copyWith(
@@ -358,10 +354,14 @@ class _PricingCategoryCardState extends State<PricingCategoryCard> {
                   ),
                   // Elements List (Expandable)
                   if (isExpanded) ...[
-                    if (subItem.elements != null && subItem.elements!.isNotEmpty)
+                    if (subItem.elements != null &&
+                        subItem.elements!.isNotEmpty)
                       ...subItem.elements!.map((element) {
                         return Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 24,
+                            vertical: 12,
+                          ),
                           decoration: BoxDecoration(
                             color: AppColors.scaffoldBackground,
                             border: Border(
@@ -395,26 +395,33 @@ class _PricingCategoryCardState extends State<PricingCategoryCard> {
                                     const SizedBox(height: 4),
                                     Row(
                                       children: [
-                                        if (element.costType == 'UNIT_BASED') ...[
+                                        if (element.costType ==
+                                            'UNIT_BASED') ...[
                                           Text(
                                             'الوحدة: ${element.unitCost?.toStringAsFixed(2) ?? '0.00'} د.ك',
-                                            style: AppTextStyles.caption.copyWith(
-                                              color: AppColors.textSecondary,
-                                            ),
+                                            style: AppTextStyles.caption
+                                                .copyWith(
+                                                  color:
+                                                      AppColors.textSecondary,
+                                                ),
                                           ),
                                           const SizedBox(width: 16),
                                           Text(
                                             'الكمية: ${element.quantity?.toStringAsFixed(2) ?? '0.00'}',
-                                            style: AppTextStyles.caption.copyWith(
-                                              color: AppColors.textSecondary,
-                                            ),
+                                            style: AppTextStyles.caption
+                                                .copyWith(
+                                                  color:
+                                                      AppColors.textSecondary,
+                                                ),
                                           ),
                                         ] else ...[
                                           Text(
                                             'التكلفة الإجمالية: ${element.totalCost?.toStringAsFixed(2) ?? '0.00'} د.ك',
-                                            style: AppTextStyles.caption.copyWith(
-                                              color: AppColors.textSecondary,
-                                            ),
+                                            style: AppTextStyles.caption
+                                                .copyWith(
+                                                  color:
+                                                      AppColors.textSecondary,
+                                                ),
                                           ),
                                         ],
                                       ],
@@ -478,14 +485,10 @@ class _PricingCategoryCardState extends State<PricingCategoryCard> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(
-                    Icons.add,
-                    size: 18,
-                    color: AppColors.primary,
-                  ),
+                  Icon(Icons.add, size: 18, color: AppColors.primary),
                   const SizedBox(width: 8),
                   Text(
-                    'إضافة فئة فرعية',
+                    'إضافة عنصر',
                     style: AppTextStyles.bodyMedium.copyWith(
                       color: AppColors.primary,
                       fontWeight: FontWeight.w600,
@@ -500,4 +503,3 @@ class _PricingCategoryCardState extends State<PricingCategoryCard> {
     );
   }
 }
-

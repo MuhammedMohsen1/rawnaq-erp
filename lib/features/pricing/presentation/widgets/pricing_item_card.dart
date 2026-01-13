@@ -78,7 +78,8 @@ class PricingItemCard extends StatefulWidget {
   final VoidCallback? onItemDeleted;
   final ValueChanged<String>? onSubItemDeleted; // subItemId
   final bool isAdminOrManager; // Whether user is Admin or Manager of Department
-  final Map<String, double>? externalProfitMargins; // Profit margins from parent (e.g., bulk update)
+  final Map<String, double>?
+  externalProfitMargins; // Profit margins from parent (e.g., bulk update)
 
   const PricingItemCard({
     super.key,
@@ -152,9 +153,10 @@ class _PricingItemCardState extends State<PricingItemCard> {
         }
         // Initialize notes controller
         _notesControllers[subItem.id] = TextEditingController(
-          text: subItem.notes ?? '',
+          text: subItem.description,
         );
       }
+      setState(() {});
     }
   }
 
@@ -186,7 +188,7 @@ class _PricingItemCardState extends State<PricingItemCard> {
           _localElements[subItem.id] = [];
         }
         // Sync notes controller with latest data (only if no pending save)
-        final newNotes = subItem.notes ?? '';
+        final newNotes = subItem.description ?? '';
         final existingController = _notesControllers[subItem.id];
         final hasPendingNoteSave = _notesTimers[subItem.id]?.isActive ?? false;
         if (existingController == null) {
@@ -203,12 +205,14 @@ class _PricingItemCardState extends State<PricingItemCard> {
 
         // Sync profit margin from external source (e.g., bulk update)
         // Only sync if there's no pending profit margin save (user isn't actively editing)
-        final hasPendingProfitSave = _profitMarginTimers[subItem.id]?.isActive ?? false;
+        final hasPendingProfitSave =
+            _profitMarginTimers[subItem.id]?.isActive ?? false;
         if (widget.externalProfitMargins != null &&
             widget.pricingStatus?.toUpperCase() == 'APPROVED' &&
             !hasPendingProfitSave) {
           final externalMargin = widget.externalProfitMargins![subItem.id];
-          if (externalMargin != null && externalMargin != _profitMargins[subItem.id]) {
+          if (externalMargin != null &&
+              externalMargin != _profitMargins[subItem.id]) {
             _profitMargins[subItem.id] = externalMargin;
             final profitController = _profitControllers[subItem.id];
             if (profitController != null) {
@@ -294,12 +298,7 @@ class _PricingItemCardState extends State<PricingItemCard> {
   }
 
   /// Build a compact stat chip for displaying cost, profit, or percentage
-  Widget _buildStatChip(
-    String label,
-    double value,
-    Color color, {
-    String suffix = 'KD',
-  }) {
+  Widget _buildStatChip(double value, Color color, {String suffix = 'KD'}) {
     final formattedValue = suffix == '%'
         ? value.toStringAsFixed(1)
         : value.toStringAsFixed(2);
@@ -314,15 +313,6 @@ class _PricingItemCardState extends State<PricingItemCard> {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text(
-            label,
-            style: AppTextStyles.caption.copyWith(
-              fontSize: 9,
-              color: color,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-          const SizedBox(height: 2),
           Text(
             '$formattedValue $suffix',
             style: AppTextStyles.bodySmall.copyWith(
@@ -415,7 +405,9 @@ class _PricingItemCardState extends State<PricingItemCard> {
 
                 if (croppedBytes != null) {
                   croppedImages.add(MapEntry(file.name, croppedBytes));
-                  print('Cropped image: ${file.name} (${croppedBytes.length} bytes)');
+                  print(
+                    'Cropped image: ${file.name} (${croppedBytes.length} bytes)',
+                  );
                 } else {
                   print('User cancelled cropping for: ${file.name}');
                 }
@@ -477,7 +469,9 @@ class _PricingItemCardState extends State<PricingItemCard> {
 
             if (croppedBytes != null) {
               croppedImages.add(MapEntry(file.name, croppedBytes));
-              print('Cropped image: ${file.name} (${croppedBytes.length} bytes)');
+              print(
+                'Cropped image: ${file.name} (${croppedBytes.length} bytes)',
+              );
             } else {
               print('User cancelled cropping for: ${file.name}');
             }
@@ -678,7 +672,11 @@ class _PricingItemCardState extends State<PricingItemCard> {
     );
   }
 
-  Future<void> _cropExistingImage(String subItemId, String imageUrl, int imageIndex) async {
+  Future<void> _cropExistingImage(
+    String subItemId,
+    String imageUrl,
+    int imageIndex,
+  ) async {
     try {
       setState(() {
         _uploadingImages[subItemId] = true;
@@ -955,9 +953,6 @@ class _PricingItemCardState extends State<PricingItemCard> {
 
   Future<void> _showEditItemDialog() async {
     final nameController = TextEditingController(text: widget.item.name);
-    final descriptionController = TextEditingController(
-      text: widget.item.description ?? '',
-    );
 
     final result = await showDialog<Map<String, String>>(
       context: context,
@@ -988,24 +983,6 @@ class _PricingItemCardState extends State<PricingItemCard> {
                   ),
                 ),
               ),
-              const SizedBox(height: 16),
-              TextField(
-                controller: descriptionController,
-                maxLines: 3,
-                style: const TextStyle(color: AppColors.textPrimary),
-                decoration: InputDecoration(
-                  labelText: 'الوصف (اختياري)',
-                  labelStyle: const TextStyle(color: AppColors.textSecondary),
-                  enabledBorder: OutlineInputBorder(
-                    borderSide: const BorderSide(color: Color(0xFF363C4A)),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderSide: const BorderSide(color: AppColors.primary),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                ),
-              ),
             ],
           ),
         ),
@@ -1022,10 +999,7 @@ class _PricingItemCardState extends State<PricingItemCard> {
           TextButton(
             onPressed: () {
               if (nameController.text.trim().isNotEmpty) {
-                Navigator.pop(context, {
-                  'name': nameController.text.trim(),
-                  'description': descriptionController.text.trim(),
-                });
+                Navigator.pop(context, {'name': nameController.text.trim()});
               }
             },
             child: Text(
@@ -1082,9 +1056,6 @@ class _PricingItemCardState extends State<PricingItemCard> {
 
   Future<void> _showEditSubItemDialog(PricingSubItemModel subItem) async {
     final nameController = TextEditingController(text: subItem.name);
-    final descriptionController = TextEditingController(
-      text: subItem.description ?? '',
-    );
 
     final result = await showDialog<Map<String, String>>(
       context: context,
@@ -1115,24 +1086,6 @@ class _PricingItemCardState extends State<PricingItemCard> {
                   ),
                 ),
               ),
-              const SizedBox(height: 16),
-              TextField(
-                controller: descriptionController,
-                maxLines: 3,
-                style: const TextStyle(color: AppColors.textPrimary),
-                decoration: InputDecoration(
-                  labelText: 'الوصف (اختياري)',
-                  labelStyle: const TextStyle(color: AppColors.textSecondary),
-                  enabledBorder: OutlineInputBorder(
-                    borderSide: const BorderSide(color: Color(0xFF363C4A)),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderSide: const BorderSide(color: AppColors.primary),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                ),
-              ),
             ],
           ),
         ),
@@ -1149,10 +1102,7 @@ class _PricingItemCardState extends State<PricingItemCard> {
           TextButton(
             onPressed: () {
               if (nameController.text.trim().isNotEmpty) {
-                Navigator.pop(context, {
-                  'name': nameController.text.trim(),
-                  'description': descriptionController.text.trim(),
-                });
+                Navigator.pop(context, {'name': nameController.text.trim()});
               }
             },
             child: Text(
@@ -1338,7 +1288,11 @@ class _PricingItemCardState extends State<PricingItemCard> {
                       child: InkWell(
                         onTap: _uploadingImages[subItem.id] == true
                             ? null
-                            : () => _cropExistingImage(subItem.id, currentImage, safeIndex),
+                            : () => _cropExistingImage(
+                                subItem.id,
+                                currentImage,
+                                safeIndex,
+                              ),
                         borderRadius: BorderRadius.circular(4),
                         child: Container(
                           padding: const EdgeInsets.all(8),
@@ -1996,6 +1950,13 @@ class _PricingItemCardState extends State<PricingItemCard> {
         children: [
           // Header
           GestureDetector(
+            onTap: () {
+              setState(() {
+                _isExpanded = !_isExpanded;
+              });
+              // Notify parent of state change
+              widget.onExpandedChanged?.call(_isExpanded);
+            },
             onLongPress: () => _showItemContextMenu(),
             child: Container(
               height: 71,
@@ -2056,23 +2017,23 @@ class _PricingItemCardState extends State<PricingItemCard> {
                   // Cost/Profit/Percentage chips - only in APPROVED/PENDING_SIGNATURE
                   if (widget.pricingStatus != null &&
                       (widget.pricingStatus!.toUpperCase() == 'APPROVED' ||
-                          widget.pricingStatus!.toUpperCase() == 'PENDING_SIGNATURE')) ...[
+                          widget.pricingStatus!.toUpperCase() ==
+                              'PENDING_SIGNATURE')) ...[
                     _buildStatChip(
-                      'التكلفة',
                       widget.item.totalCost,
-                      const Color(0xFF3B82F6),
+                      const Color.fromARGB(255, 235, 16, 8),
                     ),
                     const SizedBox(width: 6),
                     _buildStatChip(
-                      'الربح',
                       widget.item.profitAmount,
                       const Color(0xFF10B981),
                     ),
                     const SizedBox(width: 6),
                     _buildStatChip(
-                      'النسبة',
                       widget.item.totalCost > 0
-                          ? (widget.item.profitAmount / widget.item.totalCost * 100)
+                          ? (widget.item.profitAmount /
+                                widget.item.totalCost *
+                                100)
                           : 0.0,
                       const Color(0xFFF59E0B),
                       suffix: '%',
@@ -2209,22 +2170,23 @@ class _PricingItemCardState extends State<PricingItemCard> {
                                       ),
                                       // Show cost/profit/percentage chips in APPROVED/PENDING_SIGNATURE
                                       if (widget.pricingStatus != null &&
-                                          (widget.pricingStatus!.toUpperCase() == 'APPROVED' ||
-                                              widget.pricingStatus!.toUpperCase() == 'PENDING_SIGNATURE')) ...[
+                                          (widget.pricingStatus!
+                                                      .toUpperCase() ==
+                                                  'APPROVED' ||
+                                              widget.pricingStatus!
+                                                      .toUpperCase() ==
+                                                  'PENDING_SIGNATURE')) ...[
                                         _buildStatChip(
-                                          'التكلفة',
                                           subItem.totalCost,
-                                          const Color(0xFF3B82F6),
+                                          const Color.fromARGB(255, 235, 16, 8),
                                         ),
                                         const SizedBox(width: 4),
                                         _buildStatChip(
-                                          'الربح',
                                           subItem.profitAmount,
                                           const Color(0xFF10B981),
                                         ),
                                         const SizedBox(width: 4),
                                         _buildStatChip(
-                                          'النسبة',
                                           subItem.profitMargin,
                                           const Color(0xFFF59E0B),
                                           suffix: '%',
@@ -2389,8 +2351,8 @@ class _PricingItemCardState extends State<PricingItemCard> {
                                 ),
                                 child: TextField(
                                   controller: _notesControllers[subItem.id],
-                                  maxLines: 2,
-                                  minLines: 1,
+                                  maxLines: 3,
+
                                   decoration: InputDecoration(
                                     hintText: 'ملاحظات الفئة الفرعية...',
                                     hintStyle: AppTextStyles.bodySmall.copyWith(
@@ -2399,7 +2361,7 @@ class _PricingItemCardState extends State<PricingItemCard> {
                                     ),
                                     filled: true,
                                     fillColor: const Color(0xFF15181E),
-                                    isDense: true,
+
                                     border: OutlineInputBorder(
                                       borderRadius: BorderRadius.circular(6),
                                       borderSide: const BorderSide(
@@ -2441,7 +2403,8 @@ class _PricingItemCardState extends State<PricingItemCard> {
                                                 widget.version,
                                                 widget.item.id,
                                                 subItem.id,
-                                                notes: value.trim().isEmpty
+                                                description:
+                                                    value.trim().isEmpty
                                                     ? null
                                                     : value.trim(),
                                               );
@@ -2452,14 +2415,15 @@ class _PricingItemCardState extends State<PricingItemCard> {
                                     );
                                   },
                                   onSubmitted: (value) async {
-                                    final scaffoldMessenger = ScaffoldMessenger.of(context);
+                                    final scaffoldMessenger =
+                                        ScaffoldMessenger.of(context);
                                     try {
                                       await _apiDataSource.updatePricingSubItem(
                                         widget.projectId,
                                         widget.version,
                                         widget.item.id,
                                         subItem.id,
-                                        notes: value.trim().isEmpty
+                                        description: value.trim().isEmpty
                                             ? null
                                             : value.trim(),
                                       );
@@ -2470,7 +2434,9 @@ class _PricingItemCardState extends State<PricingItemCard> {
                                             content: Text(
                                               'فشل حفظ الملاحظات: ${e.toString()}',
                                             ),
-                                            duration: const Duration(seconds: 3),
+                                            duration: const Duration(
+                                              seconds: 3,
+                                            ),
                                           ),
                                         );
                                       }
@@ -2548,7 +2514,9 @@ class _PricingItemCardState extends State<PricingItemCard> {
                                                     inputFormatters: [
                                                       ArabicNumberInputFormatter(),
                                                       FilteringTextInputFormatter.allow(
-                                                        RegExp(r'^\d*\.?\d{0,2}'),
+                                                        RegExp(
+                                                          r'^\d*\.?\d{0,2}',
+                                                        ),
                                                       ),
                                                     ],
                                                     textAlign: TextAlign.center,
@@ -3511,7 +3479,7 @@ class _PricingItemCardState extends State<PricingItemCard> {
                           ),
                           const SizedBox(width: 8),
                           Text(
-                            'إضافة فئة فرعية',
+                            'إضافة عنصر',
                             style: AppTextStyles.bodyMedium.copyWith(
                               fontSize: 14,
                               fontWeight: FontWeight.w500,

@@ -45,8 +45,9 @@ class PricingCubit extends Cubit<PricingState> {
 
       if (versions.isEmpty) {
         // Create a new pricing version if none exists
-        pricingVersion =
-            await pricingApiDataSource.createPricingVersion(projectId);
+        pricingVersion = await pricingApiDataSource.createPricingVersion(
+          projectId,
+        );
       } else {
         // Get the latest version
         final latestVersion = versions.first;
@@ -86,13 +87,15 @@ class PricingCubit extends Cubit<PricingState> {
         }
       }
 
-      emit(PricingLoaded(
-        pricingVersion: pricingVersion,
-        projectName: null, // Can be set later if needed
-        itemExpandedStates: itemExpandedStates,
-        subItemExpandedStates: subItemExpandedStates,
-        subItemProfitMargins: subItemProfitMargins,
-      ));
+      emit(
+        PricingLoaded(
+          pricingVersion: pricingVersion,
+          projectName: null, // Can be set later if needed
+          itemExpandedStates: itemExpandedStates,
+          subItemExpandedStates: subItemExpandedStates,
+          subItemProfitMargins: subItemProfitMargins,
+        ),
+      );
     } catch (e) {
       emit(PricingError(message: 'فشل تحميل بيانات التسعير: ${e.toString()}'));
     }
@@ -114,9 +117,12 @@ class PricingCubit extends Cubit<PricingState> {
     final currentState = state;
     if (currentState is! PricingLoaded) return;
 
-    final newSubItemStates =
-        Map<String, Map<String, bool>>.from(currentState.subItemExpandedStates);
-    final itemSubStates = Map<String, bool>.from(newSubItemStates[itemId] ?? {});
+    final newSubItemStates = Map<String, Map<String, bool>>.from(
+      currentState.subItemExpandedStates,
+    );
+    final itemSubStates = Map<String, bool>.from(
+      newSubItemStates[itemId] ?? {},
+    );
     itemSubStates[subItemId] = !(itemSubStates[subItemId] ?? false);
     newSubItemStates[itemId] = itemSubStates;
 
@@ -128,8 +134,9 @@ class PricingCubit extends Cubit<PricingState> {
     final currentState = state;
     if (currentState is! PricingLoaded) return;
 
-    final newProfitMargins =
-        Map<String, double>.from(currentState.subItemProfitMargins);
+    final newProfitMargins = Map<String, double>.from(
+      currentState.subItemProfitMargins,
+    );
     newProfitMargins[subItemId] = profitMargin;
 
     emit(currentState.copyWith(subItemProfitMargins: newProfitMargins));
@@ -145,8 +152,9 @@ class PricingCubit extends Cubit<PricingState> {
     final currentState = state;
     if (currentState is! PricingLoaded) return;
 
-    final newProfitMargins =
-        Map<String, double>.from(currentState.subItemProfitMargins);
+    final newProfitMargins = Map<String, double>.from(
+      currentState.subItemProfitMargins,
+    );
 
     // Collect all sub-items to update
     final subItemsToUpdate = <Map<String, String>>[];
@@ -155,10 +163,7 @@ class PricingCubit extends Cubit<PricingState> {
         if (item.subItems != null) {
           for (var subItem in item.subItems!) {
             newProfitMargins[subItem.id] = profitMargin;
-            subItemsToUpdate.add({
-              'itemId': item.id,
-              'subItemId': subItem.id,
-            });
+            subItemsToUpdate.add({'itemId': item.id, 'subItemId': subItem.id});
           }
         }
       }
@@ -207,18 +212,14 @@ class PricingCubit extends Cubit<PricingState> {
   }
 
   /// Add a new sub-item
-  Future<void> addSubItem(
-    String projectId,
-    String itemId,
-    String name,
-  ) async {
+  Future<void> addSubItem(String projectId, String itemId, String name) async {
     final currentState = state;
     if (currentState is! PricingLoaded) return;
 
     // Check if in DRAFT status
     if (currentState.pricingVersion.status != 'DRAFT') {
       throw Exception(
-        'لا يمكن إضافة فئة فرعية. إصدار التسعير في حالة "${currentState.getStatusText()}" وليس "مسودة".',
+        'لا يمكن إضافة عنصر. إصدار التسعير في حالة "${currentState.getStatusText()}" وليس "مسودة".',
       );
     }
 
@@ -309,7 +310,8 @@ class PricingCubit extends Cubit<PricingState> {
       for (final item in currentState.pricingVersion.items!) {
         if (item.subItems != null) {
           for (final subItem in item.subItems!) {
-            final profitMargin = currentState.subItemProfitMargins[subItem.id] ??
+            final profitMargin =
+                currentState.subItemProfitMargins[subItem.id] ??
                 subItem.profitMargin;
             subItems.add({
               'subItemId': subItem.id,
@@ -374,10 +376,7 @@ class PricingCubit extends Cubit<PricingState> {
   }
 
   /// Return contract to pricing
-  Future<void> returnContractToPricing(
-    String projectId,
-    String? reason,
-  ) async {
+  Future<void> returnContractToPricing(String projectId, String? reason) async {
     final currentState = state;
     if (currentState is! PricingLoaded) return;
 
@@ -431,10 +430,9 @@ class PricingCubit extends Cubit<PricingState> {
           currentState.pricingVersion.items != null &&
           currentState.pricingVersion.items!.isNotEmpty) {
         final items = currentState.pricingVersion.items!
-            .map((item) => {
-                  'itemId': item.id,
-                  'profitMargin': item.profitMargin,
-                })
+            .map(
+              (item) => {'itemId': item.id, 'profitMargin': item.profitMargin},
+            )
             .toList();
 
         await pricingApiDataSource.calculateProfit(

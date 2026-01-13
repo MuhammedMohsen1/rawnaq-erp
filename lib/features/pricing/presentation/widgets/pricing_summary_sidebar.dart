@@ -192,6 +192,7 @@ class _PricingSummarySidebarState extends State<PricingSummarySidebar> {
 
         return Container(
           width: double.infinity,
+          padding: EdgeInsets.all(16),
           decoration: BoxDecoration(
             color: const Color(0xFF1C212B),
             border: Border.all(color: const Color(0xFF363C4A)),
@@ -205,6 +206,7 @@ class _PricingSummarySidebarState extends State<PricingSummarySidebar> {
             ],
           ),
           child: Column(
+            mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: _buildExpandedContent(
               isMobile: isMobile,
@@ -221,7 +223,13 @@ class _PricingSummarySidebarState extends State<PricingSummarySidebar> {
     required bool isTablet,
   }) {
     return Container(
-      padding: EdgeInsets.all(isMobile ? 4 : isTablet ? 5 : 6),
+      padding: EdgeInsets.all(
+        isMobile
+            ? 4
+            : isTablet
+            ? 5
+            : 6,
+      ),
       decoration: BoxDecoration(
         color: const Color(0xFF15181E),
         borderRadius: BorderRadius.circular(6),
@@ -268,7 +276,11 @@ class _PricingSummarySidebarState extends State<PricingSummarySidebar> {
                     text: TextSpan(
                       text: intPart,
                       style: TextStyle(
-                        fontSize: isMobile ? 14 : isTablet ? 16 : 18,
+                        fontSize: isMobile
+                            ? 14
+                            : isTablet
+                            ? 16
+                            : 18,
                         fontWeight: FontWeight.w900,
                         color: AppColors.textPrimary,
                         letterSpacing: -0.5,
@@ -278,7 +290,11 @@ class _PricingSummarySidebarState extends State<PricingSummarySidebar> {
                               TextSpan(
                                 text: decimalPart,
                                 style: TextStyle(
-                                  fontSize: isMobile ? 9 : isTablet ? 10 : 11,
+                                  fontSize: isMobile
+                                      ? 9
+                                      : isTablet
+                                      ? 10
+                                      : 11,
                                   fontWeight: FontWeight.w900,
                                   color: AppColors.textPrimary,
                                   letterSpacing: -0.3,
@@ -302,84 +318,73 @@ class _PricingSummarySidebarState extends State<PricingSummarySidebar> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         // Grand Total
-        Expanded(
-          flex: 3,
-          child: _buildGrandTotalCard(isMobile: true, isTablet: false),
-        ),
+        Expanded(child: _buildGrandTotalCard(isMobile: true, isTablet: false)),
         // Cost and Profit (if available) - stacked vertically
         if ((widget.totalCost != null && widget.totalProfit != null) ||
             widget.isApproved ||
             widget.isProfitPending) ...[
           const SizedBox(width: 4),
           Expanded(
-            flex: 2,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                // Cost
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(4),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF15181E),
-                    borderRadius: BorderRadius.circular(4),
-                    border: Border.all(color: const Color(0xFF363C4A)),
+            child: Container(
+              padding: const EdgeInsets.all(4),
+              decoration: BoxDecoration(
+                color: const Color(0xFF15181E),
+                borderRadius: BorderRadius.circular(4),
+                border: Border.all(color: const Color(0xFF363C4A)),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    'التكلفة',
+                    style: AppTextStyles.caption.copyWith(
+                      fontSize: 7,
+                      color: AppColors.textSecondary,
+                    ),
                   ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        'التكلفة',
-                        style: AppTextStyles.caption.copyWith(
-                          fontSize: 7,
-                          color: AppColors.textSecondary,
-                        ),
-                      ),
-                      Text(
-                        '${_formatNumberWithDecimals(widget.totalCost ?? 0.0)} KD',
-                        style: AppTextStyles.bodyLarge.copyWith(
-                          fontSize: 10,
-                          fontWeight: FontWeight.w700,
-                          color: AppColors.textPrimary,
-                        ),
-                      ),
-                    ],
+                  Text(
+                    '${_formatNumberWithDecimals(widget.totalCost ?? 0.0)} KD',
+                    style: AppTextStyles.bodyLarge.copyWith(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.textPrimary,
+                    ),
                   ),
-                ),
-                const SizedBox(height: 2),
-                // Profit
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(4),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF15181E),
-                    borderRadius: BorderRadius.circular(4),
-                    border: Border.all(color: const Color(0xFF363C4A)),
+                ],
+              ),
+            ),
+          ),
+
+          Expanded(
+            child: Container(
+              padding: const EdgeInsets.all(4),
+              decoration: BoxDecoration(
+                color: const Color(0xFF15181E),
+                borderRadius: BorderRadius.circular(4),
+                border: Border.all(color: const Color(0xFF363C4A)),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    'الربح',
+                    style: AppTextStyles.caption.copyWith(
+                      fontSize: 7,
+                      color: AppColors.textSecondary,
+                    ),
                   ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        'الربح',
-                        style: AppTextStyles.caption.copyWith(
-                          fontSize: 7,
-                          color: AppColors.textSecondary,
-                        ),
-                      ),
-                      Text(
-                        '${_formatNumberWithDecimals(widget.totalProfit ?? 0.0)} KD',
-                        style: AppTextStyles.bodyLarge.copyWith(
-                          fontSize: 10,
-                          fontWeight: FontWeight.w700,
-                          color: const Color(0xFF10B981),
-                        ),
-                      ),
-                    ],
+                  Text(
+                    '${_formatNumberWithDecimals(widget.totalProfit ?? 0.0)} KD',
+                    style: AppTextStyles.bodyLarge.copyWith(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w700,
+                      color: const Color(0xFF10B981),
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ],
@@ -430,7 +435,11 @@ class _PricingSummarySidebarState extends State<PricingSummarySidebar> {
       // Main Summary Stats - Responsive Layout - compact
       Container(
         padding: EdgeInsets.all(
-          isMobile ? 4 : isTablet ? 5 : 6,
+          isMobile
+              ? 4
+              : isTablet
+              ? 5
+              : 6,
         ),
         child: LayoutBuilder(
           builder: (context, constraints) {
@@ -463,78 +472,68 @@ class _PricingSummarySidebarState extends State<PricingSummarySidebar> {
                       widget.isProfitPending) ...[
                     SizedBox(width: 4),
                     Expanded(
-                      flex: 2,
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          // Cost
-                          Container(
-                            width: double.infinity,
-                            padding: EdgeInsets.all(isTablet ? 4 : 5),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFF15181E),
-                              borderRadius: BorderRadius.circular(4),
-                              border: Border.all(
-                                color: const Color(0xFF363C4A),
+                      child: Container(
+                        width: double.infinity,
+                        padding: EdgeInsets.all(isTablet ? 4 : 5),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF15181E),
+                          borderRadius: BorderRadius.circular(4),
+                          border: Border.all(color: const Color(0xFF363C4A)),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              'التكلفة',
+                              style: AppTextStyles.caption.copyWith(
+                                fontSize: isTablet ? 7 : 8,
+                                color: AppColors.textSecondary,
                               ),
                             ),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Text(
-                                  'التكلفة',
-                                  style: AppTextStyles.caption.copyWith(
-                                    fontSize: isTablet ? 7 : 8,
-                                    color: AppColors.textSecondary,
-                                  ),
-                                ),
-                                Text(
-                                  '${_formatNumberWithDecimals(widget.totalCost ?? 0.0)} KD',
-                                  style: AppTextStyles.bodyLarge.copyWith(
-                                    fontSize: isTablet ? 10 : 11,
-                                    fontWeight: FontWeight.w700,
-                                    color: AppColors.textPrimary,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          SizedBox(height: 2),
-                          // Profit
-                          Container(
-                            width: double.infinity,
-                            padding: EdgeInsets.all(isTablet ? 4 : 5),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFF15181E),
-                              borderRadius: BorderRadius.circular(4),
-                              border: Border.all(
-                                color: const Color(0xFF363C4A),
+                            Text(
+                              '${_formatNumberWithDecimals(widget.totalCost ?? 0.0)} KD',
+                              style: AppTextStyles.bodyLarge.copyWith(
+                                fontSize: isTablet ? 10 : 11,
+                                fontWeight: FontWeight.w700,
+                                color: AppColors.textPrimary,
                               ),
                             ),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Text(
-                                  'الربح',
-                                  style: AppTextStyles.caption.copyWith(
-                                    fontSize: isTablet ? 7 : 8,
-                                    color: AppColors.textSecondary,
-                                  ),
-                                ),
-                                Text(
-                                  '${_formatNumberWithDecimals(widget.totalProfit ?? 0.0)} KD',
-                                  style: AppTextStyles.bodyLarge.copyWith(
-                                    fontSize: isTablet ? 10 : 11,
-                                    fontWeight: FontWeight.w700,
-                                    color: const Color(0xFF10B981),
-                                  ),
-                                ),
-                              ],
+                          ],
+                        ),
+                      ),
+                    ),
+
+                    Expanded(
+                      child: Container(
+                        width: double.infinity,
+                        padding: EdgeInsets.all(isTablet ? 4 : 5),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF15181E),
+                          borderRadius: BorderRadius.circular(4),
+                          border: Border.all(color: const Color(0xFF363C4A)),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              'الربح',
+                              style: AppTextStyles.caption.copyWith(
+                                fontSize: isTablet ? 7 : 8,
+                                color: AppColors.textSecondary,
+                              ),
                             ),
-                          ),
-                        ],
+                            Text(
+                              '${_formatNumberWithDecimals(widget.totalProfit ?? 0.0)} KD',
+                              style: AppTextStyles.bodyLarge.copyWith(
+                                fontSize: isTablet ? 10 : 11,
+                                fontWeight: FontWeight.w700,
+                                color: const Color(0xFF10B981),
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   ],
@@ -543,95 +542,92 @@ class _PricingSummarySidebarState extends State<PricingSummarySidebar> {
             }
 
             // For larger screens: Grand Total on left, Cost and Profit stacked on right
-            return Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Left side: Grand Total
-                Expanded(
-                  flex: isLargeTablet ? 2 : 3,
-                  child: _buildGrandTotalCard(
-                    isMobile: false,
-                    isTablet: isTablet,
-                  ),
-                ),
-                // Cost and Profit (if available) - stacked vertically
-                if ((widget.totalCost != null && widget.totalProfit != null) ||
-                    widget.isApproved ||
-                    widget.isProfitPending) ...[
-                  SizedBox(width: isTablet ? 4 : 6),
+            return IntrinsicHeight(
+              child: Row(
+                spacing: 8,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Left side: Grand Total
                   Expanded(
-                    flex: isLargeTablet ? 1 : 2,
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        // Cost
-                        Container(
-                          width: double.infinity,
-                          padding: EdgeInsets.all(isTablet ? 4 : 5),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFF15181E),
-                            borderRadius: BorderRadius.circular(4),
-                            border: Border.all(color: const Color(0xFF363C4A)),
-                          ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Text(
-                                'التكلفة',
-                                style: AppTextStyles.caption.copyWith(
-                                  fontSize: isTablet ? 7 : 8,
-                                  color: AppColors.textSecondary,
-                                ),
-                              ),
-                              Text(
-                                '${_formatNumberWithDecimals(widget.totalCost ?? 0.0)} KD',
-                                style: AppTextStyles.bodyLarge.copyWith(
-                                  fontSize: isTablet ? 10 : 11,
-                                  fontWeight: FontWeight.w700,
-                                  color: AppColors.textPrimary,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        SizedBox(height: 2),
-                        // Profit
-                        Container(
-                          width: double.infinity,
-                          padding: EdgeInsets.all(isTablet ? 4 : 5),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFF15181E),
-                            borderRadius: BorderRadius.circular(4),
-                            border: Border.all(color: const Color(0xFF363C4A)),
-                          ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Text(
-                                'الربح',
-                                style: AppTextStyles.caption.copyWith(
-                                  fontSize: isTablet ? 7 : 8,
-                                  color: AppColors.textSecondary,
-                                ),
-                              ),
-                              Text(
-                                '${_formatNumberWithDecimals(widget.totalProfit ?? 0.0)} KD',
-                                style: AppTextStyles.bodyLarge.copyWith(
-                                  fontSize: isTablet ? 10 : 11,
-                                  fontWeight: FontWeight.w700,
-                                  color: const Color(0xFF10B981),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
+                    child: _buildGrandTotalCard(
+                      isMobile: false,
+                      isTablet: isTablet,
                     ),
                   ),
+                  // Cost and Profit (if available) - stacked vertically
+                  if ((widget.totalCost != null &&
+                          widget.totalProfit != null) ||
+                      widget.isApproved ||
+                      widget.isProfitPending) ...[
+                    Expanded(
+                      child: Container(
+                        width: double.infinity,
+                        padding: EdgeInsets.all(isTablet ? 4 : 5),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF15181E),
+                          borderRadius: BorderRadius.circular(4),
+                          border: Border.all(color: const Color(0xFF363C4A)),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'التكلفة',
+                              style: AppTextStyles.caption.copyWith(
+                                fontSize: isTablet ? 7 : 8,
+                                color: AppColors.textSecondary,
+                              ),
+                            ),
+                            Spacer(),
+                            Text(
+                              '${_formatNumberWithDecimals(widget.totalCost ?? 0.0)} KD',
+                              style: AppTextStyles.bodyLarge.copyWith(
+                                fontSize: isTablet ? 10 : 11,
+                                fontWeight: FontWeight.w700,
+                                color: AppColors.textPrimary,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+
+                    Expanded(
+                      child: Container(
+                        width: double.infinity,
+                        padding: EdgeInsets.all(isTablet ? 4 : 5),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF15181E),
+                          borderRadius: BorderRadius.circular(4),
+                          border: Border.all(color: const Color(0xFF363C4A)),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              'الربح',
+                              style: AppTextStyles.caption.copyWith(
+                                fontSize: isTablet ? 7 : 8,
+                                color: AppColors.textSecondary,
+                              ),
+                            ),
+                            Spacer(),
+                            Text(
+                              '${_formatNumberWithDecimals(widget.totalProfit ?? 0.0)} KD',
+                              style: AppTextStyles.bodyLarge.copyWith(
+                                fontSize: isTablet ? 10 : 11,
+                                fontWeight: FontWeight.w700,
+                                color: const Color(0xFF10B981),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
                 ],
-              ],
+              ),
             );
           },
         ),
@@ -680,21 +676,15 @@ class _PricingSummarySidebarState extends State<PricingSummarySidebar> {
                       isDense: true,
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(4),
-                        borderSide: const BorderSide(
-                          color: Color(0xFF363C4A),
-                        ),
+                        borderSide: const BorderSide(color: Color(0xFF363C4A)),
                       ),
                       enabledBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(4),
-                        borderSide: const BorderSide(
-                          color: Color(0xFF363C4A),
-                        ),
+                        borderSide: const BorderSide(color: Color(0xFF363C4A)),
                       ),
                       focusedBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(4),
-                        borderSide: const BorderSide(
-                          color: AppColors.primary,
-                        ),
+                        borderSide: const BorderSide(color: AppColors.primary),
                       ),
                       contentPadding: EdgeInsets.symmetric(
                         horizontal: isMobile ? 8 : 10,
@@ -775,7 +765,9 @@ class _PricingSummarySidebarState extends State<PricingSummarySidebar> {
                       Row(
                         children: [
                           Icon(
-                            _isNotesExpanded ? Icons.expand_less : Icons.expand_more,
+                            _isNotesExpanded
+                                ? Icons.expand_less
+                                : Icons.expand_more,
                             size: isMobile ? 14 : 16,
                             color: AppColors.textSecondary,
                           ),
@@ -788,10 +780,16 @@ class _PricingSummarySidebarState extends State<PricingSummarySidebar> {
                             ),
                           ),
                           // Show note count badge when collapsed
-                          if (!_isNotesExpanded && _noteControllers.any((c) => c.text.trim().isNotEmpty)) ...[
+                          if (!_isNotesExpanded &&
+                              _noteControllers.any(
+                                (c) => c.text.trim().isNotEmpty,
+                              )) ...[
                             const SizedBox(width: 4),
                             Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 4,
+                                vertical: 1,
+                              ),
                               decoration: BoxDecoration(
                                 color: AppColors.primary.withValues(alpha: 0.2),
                                 borderRadius: BorderRadius.circular(8),
@@ -845,68 +843,68 @@ class _PricingSummarySidebarState extends State<PricingSummarySidebar> {
                                 color: AppColors.textSecondary,
                               ),
                             ),
-                        ),
-                        // Text field
-                        Expanded(
-                          child: TextField(
-                            controller: _noteControllers[index],
-                            decoration: InputDecoration(
-                              hintText: 'الملاحظة',
-                              hintStyle: AppTextStyles.bodySmall.copyWith(
-                                color: AppColors.textMuted,
-                                fontSize: isMobile ? 10 : 11,
-                              ),
-                              filled: true,
-                              fillColor: const Color(0xFF0F1217),
-                              isDense: true,
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(4),
-                                borderSide: const BorderSide(
-                                  color: Color(0xFF363C4A),
-                                ),
-                              ),
-                              enabledBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(4),
-                                borderSide: const BorderSide(
-                                  color: Color(0xFF363C4A),
-                                ),
-                              ),
-                              focusedBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(4),
-                                borderSide: const BorderSide(
-                                  color: AppColors.primary,
-                                ),
-                              ),
-                              contentPadding: EdgeInsets.symmetric(
-                                horizontal: isMobile ? 8 : 10,
-                                vertical: isMobile ? 6 : 8,
-                              ),
-                            ),
-                            textInputAction: TextInputAction.done,
-                            style: TextStyle(fontSize: isMobile ? 11 : 12),
                           ),
-                        ),
-                        // Remove button
-                        if (_noteControllers.length > 1)
-                          InkWell(
-                            onTap: () => _removeNoteItem(index),
-                            borderRadius: BorderRadius.circular(4),
-                            child: Padding(
-                              padding: EdgeInsets.only(
-                                top: isMobile ? 4 : 6,
-                                left: 4,
+                          // Text field
+                          Expanded(
+                            child: TextField(
+                              controller: _noteControllers[index],
+                              decoration: InputDecoration(
+                                hintText: 'الملاحظة',
+                                hintStyle: AppTextStyles.bodySmall.copyWith(
+                                  color: AppColors.textMuted,
+                                  fontSize: isMobile ? 10 : 11,
+                                ),
+                                filled: true,
+                                fillColor: const Color(0xFF0F1217),
+                                isDense: true,
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(4),
+                                  borderSide: const BorderSide(
+                                    color: Color(0xFF363C4A),
+                                  ),
+                                ),
+                                enabledBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(4),
+                                  borderSide: const BorderSide(
+                                    color: Color(0xFF363C4A),
+                                  ),
+                                ),
+                                focusedBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(4),
+                                  borderSide: const BorderSide(
+                                    color: AppColors.primary,
+                                  ),
+                                ),
+                                contentPadding: EdgeInsets.symmetric(
+                                  horizontal: isMobile ? 8 : 10,
+                                  vertical: isMobile ? 6 : 8,
+                                ),
                               ),
-                              child: Icon(
-                                Icons.remove_circle_outline,
-                                size: isMobile ? 14 : 16,
-                                color: AppColors.error,
-                              ),
+                              textInputAction: TextInputAction.done,
+                              style: TextStyle(fontSize: isMobile ? 11 : 12),
                             ),
                           ),
-                      ],
+                          // Remove button
+                          if (_noteControllers.length > 1)
+                            InkWell(
+                              onTap: () => _removeNoteItem(index),
+                              borderRadius: BorderRadius.circular(4),
+                              child: Padding(
+                                padding: EdgeInsets.only(
+                                  top: isMobile ? 4 : 6,
+                                  left: 4,
+                                ),
+                                child: Icon(
+                                  Icons.remove_circle_outline,
+                                  size: isMobile ? 14 : 16,
+                                  color: AppColors.error,
+                                ),
+                              ),
+                            ),
+                        ],
+                      ),
                     ),
                   ),
-                ),
                 ],
               ],
             ),
@@ -915,7 +913,11 @@ class _PricingSummarySidebarState extends State<PricingSummarySidebar> {
       // Action Buttons Section - compact
       Container(
         padding: EdgeInsets.symmetric(
-          horizontal: isMobile ? 4 : isTablet ? 6 : 8,
+          horizontal: isMobile
+              ? 4
+              : isTablet
+              ? 6
+              : 8,
           vertical: isMobile ? 4 : 6,
         ),
         child: LayoutBuilder(
@@ -1088,52 +1090,6 @@ class _PricingSummarySidebarState extends State<PricingSummarySidebar> {
                         SizedBox(width: isMobile ? 6 : 8),
                         Text(
                           'تصدير عقد PDF',
-                          style: AppTextStyles.buttonLarge.copyWith(
-                            fontSize: buttonFontSize,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                );
-              }
-
-              if (widget.onConfirmContract != null) {
-                buttons.add(
-                  buildButton(
-                    onPressed: widget.onConfirmContract,
-                    backgroundColor: const Color(0xFF10B981),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(Icons.check_circle, size: iconSize),
-                        SizedBox(width: isMobile ? 6 : 8),
-                        Text(
-                          'تأكيد العقد',
-                          style: AppTextStyles.buttonLarge.copyWith(
-                            fontSize: buttonFontSize,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                );
-              }
-
-              if (widget.onReturnContractToPricing != null) {
-                buttons.add(
-                  buildButton(
-                    onPressed: widget.onReturnContractToPricing,
-                    backgroundColor: Colors.orange,
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(Icons.arrow_back, size: iconSize),
-                        SizedBox(width: isMobile ? 6 : 8),
-                        Text(
-                          'إرجاع للتسعير',
                           style: AppTextStyles.buttonLarge.copyWith(
                             fontSize: buttonFontSize,
                             fontWeight: FontWeight.w700,

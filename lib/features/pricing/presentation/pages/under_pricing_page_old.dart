@@ -148,7 +148,7 @@ class _UnderPricingPageState extends State<UnderPricingPage> {
     final result = await showDialog<String>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('إضافة فئة جديدة'),
+        title: const Text('إضافة بند جديدة'),
         content: TextField(
           controller: nameController,
           decoration: const InputDecoration(
@@ -1140,7 +1140,7 @@ class _UnderPricingPageState extends State<UnderPricingPage> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              'لا يمكن إضافة فئة فرعية. إصدار التسعير في حالة "${_getStatusText()}" وليس "مسودة".',
+              'لا يمكن إضافة عنصر. إصدار التسعير في حالة "${_getStatusText()}" وليس "مسودة".',
             ),
             duration: const Duration(seconds: 4),
           ),
@@ -1153,7 +1153,7 @@ class _UnderPricingPageState extends State<UnderPricingPage> {
     final result = await showDialog<String>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('إضافة فئة فرعية جديدة'),
+        title: const Text('إضافة عنصر جديد'),
         content: TextField(
           controller: nameController,
           decoration: const InputDecoration(
@@ -1471,7 +1471,7 @@ class _UnderPricingPageState extends State<UnderPricingPage> {
               ),
               const SizedBox(height: 8),
               Text(
-                'ابدأ بإضافة فئة جديدة',
+                'ابدأ بإضافة بند جديد',
                 style: AppTextStyles.bodyMedium.copyWith(
                   color: AppColors.textSecondary,
                 ),
@@ -1563,7 +1563,7 @@ class _UnderPricingPageState extends State<UnderPricingPage> {
               ),
               const SizedBox(height: 18),
               Text(
-                'إضافة فئة جديدة',
+                'إضافة بند جديد',
                 style: AppTextStyles.bodyLarge.copyWith(
                   fontSize: 16,
                   fontWeight: FontWeight.w600,

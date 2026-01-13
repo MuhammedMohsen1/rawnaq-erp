@@ -17,10 +17,10 @@ class PricingItemsList extends StatelessWidget {
   final Map<String, double>? subItemProfitMargins;
   final Function(String itemId, bool isExpanded) onItemExpandedChanged;
   final Function(String itemId, Map<String, bool> subItemStates)
-      onSubItemExpandedChanged;
+  onSubItemExpandedChanged;
   final VoidCallback onDataChanged;
   final Function(String subItemId, double profitMargin)
-      onSubItemProfitMarginChanged;
+  onSubItemProfitMarginChanged;
   final Function(String itemId) onAddSubItem;
 
   const PricingItemsList({
@@ -118,7 +118,7 @@ class _EmptyState extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             Text(
-              'ابدأ بإضافة فئة جديدة',
+              'ابدأ بإضافة بند جديد',
               style: AppTextStyles.bodyMedium.copyWith(
                 color: AppColors.textSecondary,
               ),

@@ -7,10 +7,7 @@ import '../../../../core/constants/app_text_styles.dart';
 class AddPricingItemButton extends StatelessWidget {
   final VoidCallback onTap;
 
-  const AddPricingItemButton({
-    super.key,
-    required this.onTap,
-  });
+  const AddPricingItemButton({super.key, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -44,7 +41,7 @@ class AddPricingItemButton extends StatelessWidget {
               ),
               const SizedBox(height: 18),
               Text(
-                'إضافة فئة جديدة',
+                'إضافة بند جديد',
                 style: AppTextStyles.bodyLarge.copyWith(
                   fontSize: 16,
                   fontWeight: FontWeight.w600,

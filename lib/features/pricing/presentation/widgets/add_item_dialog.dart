@@ -21,10 +21,7 @@ class AddItemDialog extends StatelessWidget {
       title: Text(title),
       content: TextField(
         controller: nameController,
-        decoration: InputDecoration(
-          labelText: labelText,
-          hintText: hintText,
-        ),
+        decoration: InputDecoration(labelText: labelText, hintText: hintText),
         autofocus: true,
       ),
       actions: [
@@ -45,7 +42,7 @@ class AddItemDialog extends StatelessWidget {
     return showDialog<String>(
       context: context,
       builder: (context) => const AddItemDialog(
-        title: 'إضافة فئة جديدة',
+        title: 'إضافة بند جديد',
         labelText: 'اسم الفئة',
         hintText: 'أدخل اسم الفئة',
       ),
@@ -57,9 +54,9 @@ class AddItemDialog extends StatelessWidget {
     return showDialog<String>(
       context: context,
       builder: (context) => const AddItemDialog(
-        title: 'إضافة فئة فرعية جديدة',
-        labelText: 'اسم الفئة الفرعية',
-        hintText: 'أدخل اسم الفئة الفرعية',
+        title: 'إضافة عنصر جديدة',
+        labelText: 'اسم العنصر',
+        hintText: 'أدخل اسم العنصر',
       ),
     );
   }
