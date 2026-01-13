@@ -64,8 +64,10 @@ class ProgressIndicatorWidget extends StatelessWidget {
           return AppColors.textMuted;
         case ProjectStatus.underPricing:
           return AppColors.info;
-        case ProjectStatus.profitPending:
+        case ProjectStatus.pendingSignature:
           return AppColors.warning;
+        case ProjectStatus.approved:
+          return AppColors.statusCompleted;
         case ProjectStatus.pendingApproval:
           return AppColors.warning;
         case ProjectStatus.execution:
@@ -89,4 +91,3 @@ class ProgressIndicatorWidget extends StatelessWidget {
     }
   }
 }
-

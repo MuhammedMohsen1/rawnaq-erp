@@ -8,10 +8,7 @@ import '../../domain/enums/project_status.dart';
 class ProjectHeader extends StatelessWidget {
   final ProjectEntity project;
 
-  const ProjectHeader({
-    super.key,
-    required this.project,
-  });
+  const ProjectHeader({super.key, required this.project});
 
   @override
   Widget build(BuildContext context) {
@@ -63,10 +60,7 @@ class _StatusBadge extends StatelessWidget {
           Container(
             width: 8,
             height: 8,
-            decoration: BoxDecoration(
-              color: color,
-              shape: BoxShape.circle,
-            ),
+            decoration: BoxDecoration(color: color, shape: BoxShape.circle),
           ),
           const SizedBox(width: 8),
           Text(
@@ -88,8 +82,10 @@ class _StatusBadge extends StatelessWidget {
         return AppColors.textMuted;
       case ProjectStatus.underPricing:
         return AppColors.info;
-      case ProjectStatus.profitPending:
+      case ProjectStatus.pendingSignature:
         return AppColors.warning;
+      case ProjectStatus.approved:
+        return AppColors.statusCompleted;
       case ProjectStatus.pendingApproval:
         return AppColors.warning;
       case ProjectStatus.execution:

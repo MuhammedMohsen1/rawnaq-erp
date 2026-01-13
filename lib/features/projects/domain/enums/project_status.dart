@@ -3,22 +3,25 @@
 enum ProjectStatus {
   /// Project is in draft stage
   draft,
-  
+
   /// Project is under pricing review
   underPricing,
-  
-  /// Project is pending client signature (contract preparation)
-  profitPending,
-  
+
   /// Project is pending approval
   pendingApproval,
-  
+
+  /// Project is  approved
+  approved,
+
+  /// Project is  pending signature
+  pendingSignature,
+
   /// Project is in execution phase
   execution,
-  
+
   /// Project has been completed successfully
   completed,
-  
+
   /// Project has been cancelled
   cancelled,
 }
@@ -32,10 +35,13 @@ extension ProjectStatusExtension on ProjectStatus {
         return 'مسودة';
       case ProjectStatus.underPricing:
         return 'قيد التسعير';
-      case ProjectStatus.profitPending:
-        return 'في انتظار التوقيع';
+
       case ProjectStatus.pendingApproval:
         return 'في انتظار الموافقة';
+      case ProjectStatus.approved:
+        return 'موافق عليه';
+      case ProjectStatus.pendingSignature:
+        return 'في انتظار التوقيع';
       case ProjectStatus.execution:
         return 'قيد التنفيذ';
       case ProjectStatus.completed:
@@ -52,10 +58,13 @@ extension ProjectStatusExtension on ProjectStatus {
         return 'Draft';
       case ProjectStatus.underPricing:
         return 'Under Pricing';
-      case ProjectStatus.profitPending:
+      case ProjectStatus.pendingSignature:
         return 'Pending Signature';
       case ProjectStatus.pendingApproval:
         return 'Pending Approval';
+      case ProjectStatus.approved:
+        return 'Approved';
+
       case ProjectStatus.execution:
         return 'Execution';
       case ProjectStatus.completed:
@@ -77,7 +86,9 @@ extension ProjectStatusExtension on ProjectStatus {
         return 'DRAFT';
       case ProjectStatus.underPricing:
         return 'UNDER_PRICING';
-      case ProjectStatus.profitPending:
+      case ProjectStatus.pendingSignature:
+        return 'PENDING_SIGNATURE';
+      case ProjectStatus.approved:
         return 'PENDING_SIGNATURE';
       case ProjectStatus.pendingApproval:
         return 'PENDING_APPROVAL';
@@ -99,7 +110,7 @@ extension ProjectStatusExtension on ProjectStatus {
       case 'UNDER_PRICING':
         return ProjectStatus.underPricing;
       case 'PENDING_SIGNATURE':
-        return ProjectStatus.profitPending;
+        return ProjectStatus.pendingSignature;
       case 'PENDING_APPROVAL':
         return ProjectStatus.pendingApproval;
       case 'EXECUTION':
@@ -113,4 +124,3 @@ extension ProjectStatusExtension on ProjectStatus {
     }
   }
 }
-

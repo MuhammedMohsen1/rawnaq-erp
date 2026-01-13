@@ -78,11 +78,16 @@ class ProjectCardWidget extends StatelessWidget {
                         value: 'delete',
                         child: Row(
                           children: [
-                            Icon(Icons.delete_outline,
-                                size: 18, color: AppColors.error),
+                            Icon(
+                              Icons.delete_outline,
+                              size: 18,
+                              color: AppColors.error,
+                            ),
                             SizedBox(width: 8),
-                            Text('حذف',
-                                style: TextStyle(color: AppColors.error)),
+                            Text(
+                              'حذف',
+                              style: TextStyle(color: AppColors.error),
+                            ),
                           ],
                         ),
                       ),
@@ -117,10 +122,7 @@ class ProjectCardWidget extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          'تاريخ البدء',
-                          style: AppTextStyles.caption,
-                        ),
+                        Text('تاريخ البدء', style: AppTextStyles.caption),
                         const SizedBox(height: 4),
                         Text(
                           dateFormat.format(project.startDate),
@@ -135,10 +137,7 @@ class ProjectCardWidget extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          'تاريخ الانتهاء',
-                          style: AppTextStyles.caption,
-                        ),
+                        Text('تاريخ الانتهاء', style: AppTextStyles.caption),
                         const SizedBox(height: 4),
                         Text(
                           dateFormat.format(project.endDate),
@@ -198,4 +197,3 @@ class ProjectCardWidget extends StatelessWidget {
     );
   }
 }
-

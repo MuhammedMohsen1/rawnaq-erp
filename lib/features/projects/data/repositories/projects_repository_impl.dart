@@ -215,7 +215,7 @@ class ProjectsRepositoryImpl implements ProjectsRepository {
           .where((p) => p.status == ProjectStatus.underPricing)
           .length;
       final profitPending = projects
-          .where((p) => p.status == ProjectStatus.profitPending)
+          .where((p) => p.status == ProjectStatus.pendingSignature)
           .length;
       final pendingApproval = projects
           .where((p) => p.status == ProjectStatus.pendingApproval)

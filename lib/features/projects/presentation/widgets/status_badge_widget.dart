@@ -41,10 +41,13 @@ class StatusBadgeWidget extends StatelessWidget {
         return AppColors.textMuted.withValues(alpha: 0.15);
       case ProjectStatus.underPricing:
         return AppColors.info.withValues(alpha: 0.15);
-      case ProjectStatus.profitPending:
+      case ProjectStatus.pendingSignature:
         return AppColors.warning.withValues(alpha: 0.15);
       case ProjectStatus.pendingApproval:
         return AppColors.warning.withValues(alpha: 0.15);
+      case ProjectStatus.approved:
+        return AppColors.statusCompleted.withValues(alpha: 0.15);
+
       case ProjectStatus.execution:
         return AppColors.statusActive.withValues(alpha: 0.15);
       case ProjectStatus.completed:
@@ -60,10 +63,13 @@ class StatusBadgeWidget extends StatelessWidget {
         return AppColors.textMuted;
       case ProjectStatus.underPricing:
         return AppColors.info;
-      case ProjectStatus.profitPending:
+      case ProjectStatus.pendingSignature:
         return AppColors.warning;
       case ProjectStatus.pendingApproval:
         return AppColors.warning;
+      case ProjectStatus.approved:
+        return AppColors.statusCompleted;
+
       case ProjectStatus.execution:
         return AppColors.statusActive;
       case ProjectStatus.completed:
@@ -73,4 +79,3 @@ class StatusBadgeWidget extends StatelessWidget {
     }
   }
 }
-

@@ -26,7 +26,6 @@ class ProjectsListPage extends StatefulWidget {
 
 class _ProjectsListPageState extends State<ProjectsListPage> {
   final TextEditingController _searchController = TextEditingController();
-  bool _isTableView = true;
   bool _isSearchVisible = true;
 
   @override
@@ -49,21 +48,6 @@ class _ProjectsListPageState extends State<ProjectsListPage> {
                 // Header
                 _buildHeader(context),
                 const SizedBox(height: 24),
-
-                // Search and filters
-                Visibility(
-                  visible: _isSearchVisible,
-                  child: Column(
-                    children: [
-                      _buildSearchAndFilters(context, state),
-                      const SizedBox(height: 24),
-                    ],
-                  ),
-                ),
-
-                // View toggle and pagination info
-                _buildViewToggle(context, state),
-                const SizedBox(height: 16),
 
                 // Content
                 Expanded(child: _buildContent(context, state)),
@@ -108,7 +92,10 @@ class _ProjectsListPageState extends State<ProjectsListPage> {
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.secondary,
                 foregroundColor: AppColors.white,
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 14,
+                ),
               ),
             ),
           ],
@@ -210,90 +197,6 @@ class _ProjectsListPageState extends State<ProjectsListPage> {
     );
   }
 
-  Widget _buildViewToggle(BuildContext context, ProjectsState state) {
-    final projectCount = state is ProjectsLoaded
-        ? state.filteredProjects.length
-        : 0;
-    final totalCount = state is ProjectsLoaded ? state.projects.length : 0;
-
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Text(
-          'عرض $projectCount من $totalCount',
-          style: AppTextStyles.bodyMedium,
-        ),
-        Container(
-          decoration: BoxDecoration(
-            color: AppColors.cardBackground,
-            borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: AppColors.border),
-          ),
-          child: Row(
-            children: [
-              _buildViewButton(
-                icon: Icons.table_rows_outlined,
-                label: 'عرض الجدول',
-                isSelected: _isTableView,
-                onTap: () {
-                  setState(() => _isTableView = true);
-                  context.read<ProjectsBloc>().add(const ChangeViewMode(true));
-                },
-              ),
-              _buildViewButton(
-                icon: Icons.grid_view_outlined,
-                label: 'عرض البطاقات',
-                isSelected: !_isTableView,
-                onTap: () {
-                  setState(() => _isTableView = false);
-                  context.read<ProjectsBloc>().add(const ChangeViewMode(false));
-                },
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildViewButton({
-    required IconData icon,
-    required String label,
-    required bool isSelected,
-    required VoidCallback onTap,
-  }) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(8),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-        decoration: BoxDecoration(
-          color: isSelected ? AppColors.secondary : Colors.transparent,
-          borderRadius: BorderRadius.circular(8),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              icon,
-              size: 18,
-              color: isSelected ? AppColors.white : AppColors.textSecondary,
-            ),
-            const SizedBox(width: 8),
-            Text(
-              label,
-              style: TextStyle(
-                color: isSelected ? AppColors.white : AppColors.textSecondary,
-                fontSize: 14,
-                fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
   Widget _buildContent(BuildContext context, ProjectsState state) {
     if (state is ProjectsLoading) {
       return const Center(
@@ -325,63 +228,63 @@ class _ProjectsListPageState extends State<ProjectsListPage> {
     }
 
     if (state is ProjectsLoaded) {
-      if (_isTableView) {
-        return ProjectTableWidget(
-          projects: state.filteredProjects,
-          onProjectTap: (project) {
-            // Route based on project status
-            if (project.status == ProjectStatus.underPricing ||
-                project.status == ProjectStatus.pendingApproval) {
-              context.go(AppRoutes.pricing(project.id));
-            } else if (project.status == ProjectStatus.execution) {
-              // Route to execution page for projects in execution phase
-              context.go(AppRoutes.execution(project.id));
-            } else {
-              context.go(AppRoutes.projectDetails(project.id));
-            }
-          },
-          onEditProject: (project) {
-            _showEditProjectDialog(context, project);
-          },
-          onDeleteProject: (project) {
-            _showDeleteConfirmation(context, project.id, project.name);
-          },
-        );
-      } else {
-        return GridView.builder(
-          gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-            maxCrossAxisExtent: 400,
-            childAspectRatio: 1.1,
-            crossAxisSpacing: 16,
-            mainAxisSpacing: 16,
-          ),
-          itemCount: state.filteredProjects.length,
-          itemBuilder: (context, index) {
-            final project = state.filteredProjects[index];
-            return ProjectCardWidget(
-              project: project,
-              onTap: () {
-                // Route based on project status
-                if (project.status == ProjectStatus.underPricing ||
-                    project.status == ProjectStatus.pendingApproval) {
-                  context.go(AppRoutes.pricing(project.id));
-                } else if (project.status == ProjectStatus.execution) {
-                  // Route to execution page for projects in execution phase
-                  context.go(AppRoutes.execution(project.id));
-                } else {
-                  context.go(AppRoutes.projectDetails(project.id));
-                }
-              },
-              onEdit: () {
-                _showEditProjectDialog(context, project);
-              },
-              onDelete: () {
-                _showDeleteConfirmation(context, project.id, project.name);
-              },
-            );
-          },
-        );
-      }
+      // if (_isTableView) {
+      //   return ProjectTableWidget(
+      //     projects: state.filteredProjects,
+      //     onProjectTap: (project) {
+      //       // Route based on project status
+      //       if (project.status == ProjectStatus.underPricing ||
+      //           project.status == ProjectStatus.pendingApproval) {
+      //         context.go(AppRoutes.pricing(project.id));
+      //       } else if (project.status == ProjectStatus.execution) {
+      //         // Route to execution page for projects in execution phase
+      //         context.go(AppRoutes.execution(project.id));
+      //       } else {
+      //         context.go(AppRoutes.projectDetails(project.id));
+      //       }
+      //     },
+      //     onEditProject: (project) {
+      //       _showEditProjectDialog(context, project);
+      //     },
+      //     onDeleteProject: (project) {
+      //       _showDeleteConfirmation(context, project.id, project.name);
+      //     },
+      //   );
+      // } else {
+      return GridView.builder(
+        gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+          maxCrossAxisExtent: 400,
+          childAspectRatio: 1.1,
+          crossAxisSpacing: 16,
+          mainAxisSpacing: 16,
+        ),
+        itemCount: state.filteredProjects.length,
+        itemBuilder: (context, index) {
+          final project = state.filteredProjects[index];
+          return ProjectCardWidget(
+            project: project,
+            onTap: () {
+              // Route based on project status
+              if (project.status == ProjectStatus.underPricing ||
+                  project.status == ProjectStatus.pendingApproval) {
+                context.go(AppRoutes.pricing(project.id));
+              } else if (project.status == ProjectStatus.execution) {
+                // Route to execution page for projects in execution phase
+                context.go(AppRoutes.execution(project.id));
+              } else {
+                context.go(AppRoutes.projectDetails(project.id));
+              }
+            },
+            onEdit: () {
+              _showEditProjectDialog(context, project);
+            },
+            onDelete: () {
+              _showDeleteConfirmation(context, project.id, project.name);
+            },
+          );
+        },
+      );
+      // }
     }
 
     return const SizedBox.shrink();

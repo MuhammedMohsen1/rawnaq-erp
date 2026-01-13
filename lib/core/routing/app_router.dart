@@ -323,7 +323,7 @@ class _DashboardPageState extends State<_DashboardPage> {
         int activeCount = 0;
         int delayedCount = 0;
         int onHoldCount = 0;
-        
+
         if (state is ProjectsLoaded && state.statistics != null) {
           activeCount = state.statistics!.active;
           delayedCount = state.statistics!.delayed;
@@ -334,12 +334,22 @@ class _DashboardPageState extends State<_DashboardPage> {
           // active = execution (projects in execution phase)
           // delayed = 0 (no longer tracked separately)
           // onHold = draft + underPricing + profitPending + pendingApproval
-          final execution = state.projects.where((p) => p.status == ProjectStatus.execution).length;
-          final draft = state.projects.where((p) => p.status == ProjectStatus.draft).length;
-          final underPricing = state.projects.where((p) => p.status == ProjectStatus.underPricing).length;
-          final profitPending = state.projects.where((p) => p.status == ProjectStatus.profitPending).length;
-          final pendingApproval = state.projects.where((p) => p.status == ProjectStatus.pendingApproval).length;
-          
+          final execution = state.projects
+              .where((p) => p.status == ProjectStatus.execution)
+              .length;
+          final draft = state.projects
+              .where((p) => p.status == ProjectStatus.draft)
+              .length;
+          final underPricing = state.projects
+              .where((p) => p.status == ProjectStatus.underPricing)
+              .length;
+          final profitPending = state.projects
+              .where((p) => p.status == ProjectStatus.pendingSignature)
+              .length;
+          final pendingApproval = state.projects
+              .where((p) => p.status == ProjectStatus.pendingApproval)
+              .length;
+
           activeCount = execution;
           delayedCount = 0; // No longer tracked separately
           onHoldCount = draft + underPricing + profitPending + pendingApproval;
@@ -384,8 +394,11 @@ class _DashboardPageState extends State<_DashboardPage> {
                 value: state is ProjectsLoaded && state.statistics != null
                     ? state.statistics!.completed.toString()
                     : state is ProjectsLoaded
-                        ? state.projects.where((p) => p.status == ProjectStatus.completed).length.toString()
-                        : '0',
+                    ? state.projects
+                          .where((p) => p.status == ProjectStatus.completed)
+                          .length
+                          .toString()
+                    : '0',
                 icon: Icons.check_circle,
                 color: const Color(0xFF22C55E),
               ),

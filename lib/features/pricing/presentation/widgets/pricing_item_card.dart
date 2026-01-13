@@ -1978,12 +1978,14 @@ class _PricingItemCardState extends State<PricingItemCard> {
                   Checkbox(
                     value: !widget.item.isHidden,
                     onChanged: (value) => _toggleItemVisibility(value ?? false),
-                    activeColor: AppColors.primary,
-                    checkColor: Colors.white,
+                    activeColor:
+                        AppColors.primary, // check background when checked
+                    checkColor: AppColors.black, // color of the check itself
                     side: BorderSide(
                       color: widget.item.isHidden
-                          ? const Color(0xFF6B7280)
-                          : AppColors.primary,
+                          ? AppColors
+                                .lightGrey // border color when hidden
+                          : AppColors.primary, // border color when visible
                       width: 1.5,
                     ),
                   ),
@@ -2157,12 +2159,16 @@ class _PricingItemCardState extends State<PricingItemCard> {
                                               subItem,
                                               value ?? false,
                                             ),
-                                        activeColor: AppColors.primary,
-                                        checkColor: Colors.white,
+                                        activeColor: AppColors
+                                            .primary, // background when checked
+                                        checkColor: AppColors
+                                            .black, // the check mark itself
                                         side: BorderSide(
                                           color: subItem.isHidden
-                                              ? const Color(0xFF6B7280)
-                                              : AppColors.primary,
+                                              ? AppColors
+                                                    .lightGrey // border when hidden
+                                              : AppColors
+                                                    .primary, // border when visible
                                           width: 1.5,
                                         ),
                                       ),

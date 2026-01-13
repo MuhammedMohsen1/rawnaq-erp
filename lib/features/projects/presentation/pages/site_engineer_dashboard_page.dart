@@ -84,7 +84,7 @@ class _SiteEngineerDashboardPageState extends State<SiteEngineerDashboardPage> {
     return project.status == ProjectStatus.draft ||
         project.status == ProjectStatus.underPricing ||
         project.status == ProjectStatus.pendingApproval ||
-        project.status == ProjectStatus.profitPending;
+        project.status == ProjectStatus.pendingSignature;
   }
 
   String _getPricingStatusText(String? status) {
