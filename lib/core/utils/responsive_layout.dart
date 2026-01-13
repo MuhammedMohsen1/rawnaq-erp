@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 /// Responsive layout widget that displays different widgets based on screen size
-/// 
+///
 /// Breakpoints:
 /// - Mobile: < 768px
 /// - Tablet: 768px - 1200px
@@ -25,14 +25,36 @@ class ResponsiveLayout extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        // Ensure constraints are valid
-        if (constraints.maxWidth == double.infinity || constraints.maxHeight == double.infinity) {
-          // Use MediaQuery as fallback
-          final screenWidth = MediaQuery.of(context).size.width;
-          final isMobile = screenWidth < 768;
-          final isTablet = screenWidth >= 768 && screenWidth < 1200;
+    return SafeArea(
+      top: true,
+      left: false,
+      right: false,
+      bottom: false,
+      minimum: EdgeInsets.all(16),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          // Ensure constraints are valid
+          if (constraints.maxWidth == double.infinity ||
+              constraints.maxHeight == double.infinity) {
+            // Use MediaQuery as fallback
+            final screenWidth = MediaQuery.of(context).size.width;
+            final isMobile = screenWidth < 768;
+            final isTablet = screenWidth >= 768 && screenWidth < 1200;
+
+            if (isMobile) {
+              return mobile;
+            } else if (isTablet && tablet != null) {
+              return tablet!;
+            } else if (desktop != null) {
+              return desktop!;
+            } else {
+              return tablet ?? mobile;
+            }
+          }
+
+          final isMobile = constraints.maxWidth < 768;
+          final isTablet =
+              constraints.maxWidth >= 768 && constraints.maxWidth < 1200;
 
           if (isMobile) {
             return mobile;
@@ -41,24 +63,11 @@ class ResponsiveLayout extends StatelessWidget {
           } else if (desktop != null) {
             return desktop!;
           } else {
+            // Fallback: use tablet if available, otherwise mobile
             return tablet ?? mobile;
           }
-        }
-
-        final isMobile = constraints.maxWidth < 768;
-        final isTablet = constraints.maxWidth >= 768 && constraints.maxWidth < 1200;
-
-        if (isMobile) {
-          return mobile;
-        } else if (isTablet && tablet != null) {
-          return tablet!;
-        } else if (desktop != null) {
-          return desktop!;
-        } else {
-          // Fallback: use tablet if available, otherwise mobile
-          return tablet ?? mobile;
-        }
-      },
+        },
+      ),
     );
   }
 
@@ -91,10 +100,4 @@ class ResponsiveLayout extends StatelessWidget {
 }
 
 /// Screen type enum
-enum ScreenType {
-  mobile,
-  tablet,
-  desktop,
-}
-
-
+enum ScreenType { mobile, tablet, desktop }

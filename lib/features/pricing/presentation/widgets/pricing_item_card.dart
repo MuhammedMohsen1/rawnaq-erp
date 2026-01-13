@@ -1995,15 +1995,18 @@ class _PricingItemCardState extends State<PricingItemCard> {
                       children: [
                         Text(
                           widget.item.name,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                           style: AppTextStyles.h4.copyWith(
                             fontSize: 18,
                             fontWeight: FontWeight.w700,
                           ),
                         ),
                         if (widget.item.description != null) ...[
-                          const SizedBox(height: 4),
                           Text(
                             widget.item.description!,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                             style: AppTextStyles.caption.copyWith(
                               fontSize: 12,
                               color: AppColors.textSecondary,
@@ -2016,6 +2019,7 @@ class _PricingItemCardState extends State<PricingItemCard> {
                   const SizedBox(width: 16),
                   // Cost/Profit/Percentage chips - only in APPROVED/PENDING_SIGNATURE
                   if (widget.pricingStatus != null &&
+                      widget.isAdminOrManager &&
                       (widget.pricingStatus!.toUpperCase() == 'APPROVED' ||
                           widget.pricingStatus!.toUpperCase() ==
                               'PENDING_SIGNATURE')) ...[
@@ -2023,6 +2027,7 @@ class _PricingItemCardState extends State<PricingItemCard> {
                       widget.item.totalCost,
                       const Color.fromARGB(255, 235, 16, 8),
                     ),
+
                     const SizedBox(width: 6),
                     _buildStatChip(
                       widget.item.profitAmount,
@@ -2170,6 +2175,7 @@ class _PricingItemCardState extends State<PricingItemCard> {
                                       ),
                                       // Show cost/profit/percentage chips in APPROVED/PENDING_SIGNATURE
                                       if (widget.pricingStatus != null &&
+                                          widget.isAdminOrManager &&
                                           (widget.pricingStatus!
                                                       .toUpperCase() ==
                                                   'APPROVED' ||
@@ -2193,82 +2199,73 @@ class _PricingItemCardState extends State<PricingItemCard> {
                                         ),
                                         const SizedBox(width: 8),
                                       ],
+
                                       // Show total cost in header only when NOT APPROVED/PENDING_SIGNATURE
-                                      if (widget.pricingStatus?.toUpperCase() !=
-                                              'APPROVED' &&
-                                          widget.pricingStatus?.toUpperCase() !=
-                                              'PENDING_SIGNATURE' &&
-                                          allElements.isNotEmpty) ...[
-                                        Builder(
-                                          builder: (context) {
-                                            final total = allElements
-                                                .fold<double>(
-                                                  0,
-                                                  (sum, element) =>
-                                                      sum +
-                                                      element.calculatedCost
-                                                          .toDouble(),
-                                                );
-                                            final totalStr = total
-                                                .toStringAsFixed(3);
-                                            final dotIndex = totalStr.indexOf(
-                                              '.',
-                                            );
-                                            final intPart = dotIndex >= 0
-                                                ? totalStr.substring(
-                                                    0,
-                                                    dotIndex,
-                                                  )
-                                                : totalStr;
-                                            final decimalPart = dotIndex >= 0
-                                                ? totalStr.substring(dotIndex)
-                                                : '';
-                                            return RichText(
-                                              textDirection: TextDirection.ltr,
-                                              text: TextSpan(
-                                                children: [
+                                      Builder(
+                                        builder: (context) {
+                                          final total = allElements
+                                              .fold<double>(
+                                                0,
+                                                (sum, element) =>
+                                                    sum +
+                                                    element.calculatedCost
+                                                        .toDouble(),
+                                              );
+                                          final totalStr = total
+                                              .toStringAsFixed(3);
+                                          final dotIndex = totalStr.indexOf(
+                                            '.',
+                                          );
+                                          final intPart = dotIndex >= 0
+                                              ? totalStr.substring(0, dotIndex)
+                                              : totalStr;
+                                          final decimalPart = dotIndex >= 0
+                                              ? totalStr.substring(dotIndex)
+                                              : '';
+                                          return RichText(
+                                            textDirection: TextDirection.ltr,
+                                            text: TextSpan(
+                                              children: [
+                                                TextSpan(
+                                                  text: intPart,
+                                                  style: AppTextStyles.caption
+                                                      .copyWith(
+                                                        color: AppColors
+                                                            .textSecondary,
+                                                      ),
+                                                ),
+                                                if (decimalPart.isNotEmpty)
                                                   TextSpan(
-                                                    text: intPart,
+                                                    text: decimalPart,
                                                     style: AppTextStyles.caption
                                                         .copyWith(
                                                           color: AppColors
                                                               .textSecondary,
+                                                          fontSize:
+                                                              AppTextStyles
+                                                                  .caption
+                                                                  .fontSize! *
+                                                              0.75, // smaller
                                                         ),
                                                   ),
-                                                  if (decimalPart.isNotEmpty)
-                                                    TextSpan(
-                                                      text: decimalPart,
-                                                      style: AppTextStyles
-                                                          .caption
-                                                          .copyWith(
-                                                            color: AppColors
-                                                                .textSecondary,
-                                                            fontSize:
-                                                                AppTextStyles
-                                                                    .caption
-                                                                    .fontSize! *
-                                                                0.75, // smaller
-                                                          ),
-                                                    ),
-                                                  TextSpan(
-                                                    text: ' KD',
-                                                    style: TextStyle(
-                                                      color: AppColors
-                                                          .textSecondary,
-                                                      fontSize:
-                                                          AppTextStyles
-                                                              .caption
-                                                              .fontSize! *
-                                                          0.75, // smaller
-                                                    ),
+                                                TextSpan(
+                                                  text: ' KD',
+                                                  style: TextStyle(
+                                                    color:
+                                                        AppColors.textSecondary,
+                                                    fontSize:
+                                                        AppTextStyles
+                                                            .caption
+                                                            .fontSize! *
+                                                        0.75, // smaller
                                                   ),
-                                                ],
-                                              ),
-                                            );
-                                          },
-                                        ),
-                                        const SizedBox(width: 8),
-                                      ],
+                                                ),
+                                              ],
+                                            ),
+                                          );
+                                        },
+                                      ),
+                                      const SizedBox(width: 8),
                                     ],
                                   ),
                                 ),
@@ -2768,134 +2765,6 @@ class _PricingItemCardState extends State<PricingItemCard> {
                                 ),
                               ],
                               // Cost, Profit, Total breakdown summary - Profit only visible to Admin and Manager
-                              const SizedBox(height: 12),
-                              Container(
-                                padding: const EdgeInsets.all(12),
-                                decoration: BoxDecoration(
-                                  color: const Color(0xFF15181E),
-                                  borderRadius: BorderRadius.circular(8),
-                                  border: Border.all(
-                                    color: const Color(0xFF363C4A),
-                                  ),
-                                ),
-                                child: Builder(
-                                  builder: (context) {
-                                    final cost = subItem.totalCost > 0
-                                        ? subItem.totalCost
-                                        : allElements.fold<double>(
-                                            0,
-                                            (sum, e) =>
-                                                sum +
-                                                e.calculatedCost.toDouble(),
-                                          );
-                                    final margin =
-                                        _profitMargins[subItem.id] ??
-                                        subItem.profitMargin;
-                                    final profit = cost * (margin / 100);
-                                    final total = cost + profit;
-                                    return Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          'ملخص التسعير',
-                                          style: AppTextStyles.bodyMedium
-                                              .copyWith(
-                                                fontWeight: FontWeight.w600,
-                                                fontSize: 14,
-                                              ),
-                                        ),
-                                        const SizedBox(height: 8),
-                                        Row(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.spaceBetween,
-                                          children: [
-                                            Text(
-                                              'التكلفة',
-                                              style: AppTextStyles.caption
-                                                  .copyWith(
-                                                    color:
-                                                        AppColors.textSecondary,
-                                                  ),
-                                            ),
-                                            Text(
-                                              '${cost.toStringAsFixed(3)} KD',
-                                              style: AppTextStyles.caption
-                                                  .copyWith(
-                                                    color:
-                                                        AppColors.textSecondary,
-                                                    fontWeight: FontWeight.w500,
-                                                  ),
-                                            ),
-                                          ],
-                                        ),
-                                        // Profit row - only visible to Admin and Manager
-                                        if (widget.isAdminOrManager) ...[
-                                          const SizedBox(height: 4),
-                                          Row(
-                                            mainAxisAlignment:
-                                                MainAxisAlignment.spaceBetween,
-                                            children: [
-                                              Text(
-                                                'الربح (${margin.toStringAsFixed(2)}%)',
-                                                style: AppTextStyles.caption
-                                                    .copyWith(
-                                                      color: const Color(
-                                                        0xFF10B981,
-                                                      ),
-                                                    ),
-                                              ),
-                                              Text(
-                                                '${profit.toStringAsFixed(3)} KD',
-                                                style: AppTextStyles.caption
-                                                    .copyWith(
-                                                      color: const Color(
-                                                        0xFF10B981,
-                                                      ),
-                                                      fontWeight:
-                                                          FontWeight.w500,
-                                                    ),
-                                              ),
-                                            ],
-                                          ),
-                                        ],
-                                        const SizedBox(height: 4),
-                                        const Divider(
-                                          color: Color(0xFF363C4A),
-                                          height: 1,
-                                        ),
-                                        const SizedBox(height: 4),
-                                        Row(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.spaceBetween,
-                                          children: [
-                                            Text(
-                                              'الإجمالي',
-                                              style: AppTextStyles.caption
-                                                  .copyWith(
-                                                    color:
-                                                        AppColors.textPrimary,
-                                                    fontWeight: FontWeight.w600,
-                                                    fontSize: 13,
-                                                  ),
-                                            ),
-                                            Text(
-                                              '${total.toStringAsFixed(3)} KD',
-                                              style: AppTextStyles.caption
-                                                  .copyWith(
-                                                    color:
-                                                        AppColors.textPrimary,
-                                                    fontWeight: FontWeight.w700,
-                                                    fontSize: 13,
-                                                  ),
-                                            ),
-                                          ],
-                                        ),
-                                      ],
-                                    );
-                                  },
-                                ),
-                              ),
                               // Two-column layout: Images preview on left (if exists), Elements on right
                               Padding(
                                 padding: const EdgeInsets.symmetric(
@@ -2910,6 +2779,7 @@ class _PricingItemCardState extends State<PricingItemCard> {
                                             true) ...[
                                       Flexible(
                                         flex: 1,
+                                        fit: FlexFit.loose,
                                         child: Container(
                                           margin: const EdgeInsets.only(
                                             right: 12,
@@ -3038,7 +2908,8 @@ class _PricingItemCardState extends State<PricingItemCard> {
                                     ],
                                     // Right column: Elements
                                     Expanded(
-                                      flex: 1,
+                                      flex: 2,
+
                                       child: Column(
                                         crossAxisAlignment:
                                             CrossAxisAlignment.start,

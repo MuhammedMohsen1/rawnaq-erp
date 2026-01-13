@@ -320,9 +320,10 @@ class _PricingSummarySidebarState extends State<PricingSummarySidebar> {
         // Grand Total
         Expanded(child: _buildGrandTotalCard(isMobile: true, isTablet: false)),
         // Cost and Profit (if available) - stacked vertically
-        if ((widget.totalCost != null && widget.totalProfit != null) ||
-            widget.isApproved ||
-            widget.isProfitPending) ...[
+        if (((widget.totalCost != null && widget.totalProfit != null) ||
+                widget.isApproved ||
+                widget.isProfitPending) &&
+            widget.isAdminOrManager) ...[
           const SizedBox(width: 4),
           Expanded(
             child: Container(
@@ -1208,8 +1209,9 @@ class _PricingSummarySidebarState extends State<PricingSummarySidebar> {
 
             // Return to Pricing Button
             if (widget.showReturnToPricing &&
-                widget.onReturnToPricing != null &&
-                !(widget.isAdminOrManager && widget.isPendingApproval)) {
+                    widget.onReturnToPricing != null &&
+                    !(widget.isAdminOrManager && widget.isPendingApproval) ||
+                (!widget.isAdminOrManager && widget.isPendingApproval)) {
               buttons.add(
                 buildButton(
                   onPressed: widget.onReturnToPricing,
@@ -1228,37 +1230,6 @@ class _PricingSummarySidebarState extends State<PricingSummarySidebar> {
                           fontSize: buttonFontSize,
                           fontWeight: FontWeight.w600,
                           color: AppColors.error,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              );
-            }
-
-            // Save Draft Button
-            if (widget.onSaveDraft != null &&
-                !(widget.isApproved ||
-                    widget.isProfitPending ||
-                    widget.isDraft)) {
-              buttons.add(
-                buildButton(
-                  onPressed: widget.onSaveDraft,
-                  backgroundColor: const Color(0xFFD1D5DB),
-                  isOutlined: true,
-                  borderColor: const Color(0xFF363C4A),
-                  height: buttonHeight - 6,
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(Icons.save_outlined, size: iconSize),
-                      SizedBox(width: isMobile ? 6 : 8),
-                      Text(
-                        'حفظ كمسودة',
-                        style: AppTextStyles.buttonLarge.copyWith(
-                          fontSize: buttonFontSize,
-                          fontWeight: FontWeight.w600,
-                          color: const Color(0xFFD1D5DB),
                         ),
                       ),
                     ],
