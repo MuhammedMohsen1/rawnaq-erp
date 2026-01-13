@@ -107,14 +107,77 @@ class PricingConfirmationDialogs {
     return confirmed ?? false;
   }
 
-  /// Show confirm contract dialog
-  static Future<bool> showConfirmContractDialog(BuildContext context) async {
+  /// Show confirm contract dialog with payment schedule
+  static Future<bool> showConfirmContractDialog(
+    BuildContext context, {
+    List<Map<String, dynamic>>? paymentSchedule,
+  }) async {
+    // If no payment schedule, show error dialog
+    if (paymentSchedule == null || paymentSchedule.isEmpty) {
+      await showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('تنبيه'),
+          content: const Text(
+            'يجب إضافة جدول الدفعات قبل تأكيد العقد وبدء مرحلة التنفيذ.\n\nالرجاء تصدير العقد أولاً لإضافة جدول الدفعات.',
+          ),
+          actions: [
+            ElevatedButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('حسناً'),
+            ),
+          ],
+        ),
+      );
+      return false;
+    }
+
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('تأكيد العقد ونقل المشروع للتنفيذ'),
-        content: const Text(
-          'هل أنت متأكد من تأكيد العقد؟ سيتم نقل المشروع إلى مرحلة التنفيذ.',
+        title: const Text('تأكيد بدء التنفيذ'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'هل أنت متأكد من بدء مرحلة التنفيذ؟',
+              style: TextStyle(fontSize: 16),
+            ),
+            const SizedBox(height: 16),
+            const Text(
+              'الدفعات المسجلة:',
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 8),
+            Container(
+              constraints: const BoxConstraints(maxHeight: 200),
+              child: SingleChildScrollView(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: paymentSchedule.map((phase) {
+                    final phaseName = phase['phase'] ?? 'دفعة';
+                    final percentage = phase['percentage'] ?? 0;
+                    final amount = phase['amount'];
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom: 4),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.circle, size: 8, color: Color(0xFF10B981)),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              '$phaseName: $percentage%${amount != null ? ' (${(amount as num).toStringAsFixed(3)} د.ك)' : ''}',
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  }).toList(),
+                ),
+              ),
+            ),
+          ],
         ),
         actions: [
           TextButton(

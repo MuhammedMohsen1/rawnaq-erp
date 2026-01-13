@@ -114,6 +114,30 @@ class ExecutionApiDataSource {
     return InstallmentRequestModel.fromJson(data);
   }
 
+  /// Mark installment as collected (Admin/Manager)
+  Future<InstallmentRequestModel> collectInstallment(String requestId) async {
+    final response = await _apiClient.patch(
+      ApiEndpoints.collectInstallment(requestId),
+    );
+
+    final responseData = response.data as Map<String, dynamic>;
+    // Extract nested data from API response wrapper
+    final data = responseData['data'] as Map<String, dynamic>? ?? responseData;
+    return InstallmentRequestModel.fromJson(data);
+  }
+
+  /// Unmark installment as collected (Admin/Manager)
+  Future<InstallmentRequestModel> uncollectInstallment(String requestId) async {
+    final response = await _apiClient.patch(
+      ApiEndpoints.uncollectInstallment(requestId),
+    );
+
+    final responseData = response.data as Map<String, dynamic>;
+    // Extract nested data from API response wrapper
+    final data = responseData['data'] as Map<String, dynamic>? ?? responseData;
+    return InstallmentRequestModel.fromJson(data);
+  }
+
   /// Create expense
   Future<void> createExpense(String projectId, CreateExpenseDto dto) async {
     await _apiClient.post(

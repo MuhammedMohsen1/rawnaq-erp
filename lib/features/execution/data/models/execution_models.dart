@@ -111,6 +111,7 @@ class PaymentPhaseModel {
   final double costAmount;
   final bool isRequested;
   final bool isApproved;
+  final bool isCollected;
   final String? requestId;
 
   PaymentPhaseModel({
@@ -121,6 +122,7 @@ class PaymentPhaseModel {
     required this.costAmount,
     required this.isRequested,
     required this.isApproved,
+    required this.isCollected,
     this.requestId,
   });
 
@@ -133,6 +135,7 @@ class PaymentPhaseModel {
       costAmount: _toDoubleOrZero(json['costAmount']),
       isRequested: json['isRequested'] as bool? ?? false,
       isApproved: json['isApproved'] as bool? ?? false,
+      isCollected: json['isCollected'] as bool? ?? false,
       requestId: _toStringOrNull(json['requestId']),
     );
   }
@@ -152,6 +155,9 @@ class InstallmentRequestModel {
   final String? approvedByName;
   final DateTime? approvedAt;
   final String? rejectedReason;
+  final bool isCollected;
+  final DateTime? collectedAt;
+  final String? collectedByName;
 
   InstallmentRequestModel({
     required this.id,
@@ -166,6 +172,9 @@ class InstallmentRequestModel {
     this.approvedByName,
     this.approvedAt,
     this.rejectedReason,
+    required this.isCollected,
+    this.collectedAt,
+    this.collectedByName,
   });
 
   factory InstallmentRequestModel.fromJson(Map<String, dynamic> json) {
@@ -198,6 +207,11 @@ class InstallmentRequestModel {
           ? DateTime.tryParse(json['approvedAt'].toString())
           : null,
       rejectedReason: _toStringOrNull(json['rejectedReason']),
+      isCollected: json['isCollected'] as bool? ?? false,
+      collectedAt: json['collectedAt'] != null
+          ? DateTime.tryParse(json['collectedAt'].toString())
+          : null,
+      collectedByName: _toStringOrNull(json['collectedByName']),
     );
   }
 }
@@ -210,6 +224,8 @@ class ExecutionDashboardModel {
   final double totalExpenses;
   final double netCashFlow;
   final double totalBudget;
+  final double totalPrice;
+  final double totalProfit;
   final double remainingBudget;
   final double budgetPercentage;
   final BudgetWarningLevel budgetWarningLevel;
@@ -227,6 +243,8 @@ class ExecutionDashboardModel {
     required this.totalExpenses,
     required this.netCashFlow,
     required this.totalBudget,
+    required this.totalPrice,
+    required this.totalProfit,
     required this.remainingBudget,
     required this.budgetPercentage,
     required this.budgetWarningLevel,
@@ -260,6 +278,8 @@ class ExecutionDashboardModel {
       totalExpenses: _toDoubleOrZero(json['totalExpenses']),
       netCashFlow: _toDoubleOrZero(json['netCashFlow']),
       totalBudget: _toDoubleOrZero(json['totalBudget']),
+      totalPrice: _toDoubleOrZero(json['totalPrice']),
+      totalProfit: _toDoubleOrZero(json['totalProfit']),
       remainingBudget: _toDoubleOrZero(json['remainingBudget']),
       budgetPercentage: _toDoubleOrZero(json['budgetPercentage']),
       budgetWarningLevel: parseWarningLevel(json['budgetWarningLevel'] as String?),
@@ -288,6 +308,8 @@ class ExecutionDashboardModel {
     double? totalExpenses,
     double? netCashFlow,
     double? totalBudget,
+    double? totalPrice,
+    double? totalProfit,
     double? remainingBudget,
     double? budgetPercentage,
     BudgetWarningLevel? budgetWarningLevel,
@@ -305,6 +327,8 @@ class ExecutionDashboardModel {
       totalExpenses: totalExpenses ?? this.totalExpenses,
       netCashFlow: netCashFlow ?? this.netCashFlow,
       totalBudget: totalBudget ?? this.totalBudget,
+      totalPrice: totalPrice ?? this.totalPrice,
+      totalProfit: totalProfit ?? this.totalProfit,
       remainingBudget: remainingBudget ?? this.remainingBudget,
       budgetPercentage: budgetPercentage ?? this.budgetPercentage,
       budgetWarningLevel: budgetWarningLevel ?? this.budgetWarningLevel,

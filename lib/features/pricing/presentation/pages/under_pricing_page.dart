@@ -13,6 +13,7 @@ import '../../../../core/di/injection_container.dart';
 import '../../../../core/error/exceptions.dart';
 import '../../../../core/utils/responsive_layout.dart';
 import '../../../auth/presentation/bloc/auth_bloc.dart';
+import '../../../contracts/data/datasources/contracts_api_datasource.dart';
 import '../cubit/pricing_cubit.dart';
 import '../cubit/pricing_state.dart';
 import '../utils/pricing_status_utils.dart';
@@ -407,8 +408,31 @@ class _PricingLayout extends StatelessWidget {
   }
 
   Future<void> _handleConfirmContract(BuildContext context) async {
-    final confirmed =
-        await PricingConfirmationDialogs.showConfirmContractDialog(context);
+    // Fetch the contract to get the payment schedule
+    final contractsApi = ContractsApiDataSource();
+    List<Map<String, dynamic>>? paymentSchedule;
+
+    try {
+      final contract = await contractsApi.getContract(projectId);
+      if (contract != null && contract['paymentSchedule'] != null) {
+        final scheduleData = contract['paymentSchedule'] as List?;
+        if (scheduleData != null) {
+          paymentSchedule = scheduleData
+              .map((e) => Map<String, dynamic>.from(e as Map))
+              .toList();
+        }
+      }
+    } catch (e) {
+      // If we can't fetch the contract, continue without payment schedule
+      // The dialog will show an error
+    }
+
+    if (!context.mounted) return;
+
+    final confirmed = await PricingConfirmationDialogs.showConfirmContractDialog(
+      context,
+      paymentSchedule: paymentSchedule,
+    );
 
     if (confirmed) {
       try {

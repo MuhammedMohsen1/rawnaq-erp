@@ -362,6 +362,10 @@ abstract class ApiEndpoints {
       '/execution/installments/$requestId/approve';
   static String rejectInstallment(String requestId) =>
       '/execution/installments/$requestId/reject';
+  static String collectInstallment(String requestId) =>
+      '/execution/installments/$requestId/collect';
+  static String uncollectInstallment(String requestId) =>
+      '/execution/installments/$requestId/uncollect';
 
   // Contract Expenses Endpoints
   static String contractExpenses(String projectId) =>

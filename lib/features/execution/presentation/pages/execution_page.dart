@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_text_styles.dart';
 import '../../../../core/di/injection_container.dart';
+import '../../../../core/routing/app_router.dart';
 import '../../../../core/utils/responsive_layout.dart';
 import '../../../auth/presentation/bloc/auth_bloc.dart';
 import '../../data/models/execution_models.dart';
@@ -12,6 +14,7 @@ import '../widgets/execution_header.dart';
 import '../widgets/cash_flow_summary_cards.dart';
 import '../widgets/transactions_table.dart';
 import '../widgets/pending_approvals_card.dart';
+import '../widgets/installments_section.dart';
 
 /// Execution page for projects in EXECUTION status
 class ExecutionPage extends StatelessWidget {
@@ -137,6 +140,27 @@ class _ExecutionLayout extends StatelessWidget {
                 ),
                 const SizedBox(height: 24),
 
+                // Installments section - visible to all users
+                if (state.dashboard.paymentSchedule.isNotEmpty)
+                  InstallmentsSection(
+                    paymentSchedule: state.dashboard.paymentSchedule,
+                    totalPrice: state.dashboard.totalPrice,
+                    totalCost: state.dashboard.totalBudget,
+                    totalProfit: state.dashboard.totalProfit,
+                    profitPercentage: state.dashboard.profitPercentage,
+                    isAdminOrManager: isAdminOrManager,
+                    onToggleCollected: isAdminOrManager
+                        ? (phaseIndex, requestId, isCollected) =>
+                            _handleToggleCollected(
+                              context,
+                              requestId,
+                              isCollected,
+                            )
+                        : null,
+                  ),
+                if (state.dashboard.paymentSchedule.isNotEmpty)
+                  const SizedBox(height: 24),
+
                 // Pending approvals (Admin/Manager only)
                 if (isAdminOrManager &&
                     state.dashboard.pendingInstallmentRequests.isNotEmpty)
@@ -182,11 +206,40 @@ class _ExecutionLayout extends StatelessWidget {
   }
 
   void _handleOpenPastPricing(BuildContext context) {
-    // Navigate to past pricing page
-    // This will be implemented in routing
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('فتح التسعير السابق')),
-    );
+    // Navigate to pricing page with project ID
+    context.go(AppRoutes.pricing(projectId));
+  }
+
+  Future<void> _handleToggleCollected(
+    BuildContext context,
+    String? requestId,
+    bool isCurrentlyCollected,
+  ) async {
+    if (requestId == null) return;
+
+    try {
+      if (isCurrentlyCollected) {
+        await context.read<ExecutionCubit>().uncollectInstallment(projectId, requestId);
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('تم إلغاء تحصيل الدفعة')),
+          );
+        }
+      } else {
+        await context.read<ExecutionCubit>().collectInstallment(projectId, requestId);
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('تم تحصيل الدفعة')),
+          );
+        }
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('فشل تحديث حالة التحصيل: ${e.toString()}')),
+        );
+      }
+    }
   }
 
   void _handleAddExpense(BuildContext context) {

@@ -10,6 +10,22 @@ class ContractsApiDataSource {
   ContractsApiDataSource({ApiClient? apiClient})
       : _apiClient = apiClient ?? ApiClient();
 
+  /// Get contract for a project
+  Future<Map<String, dynamic>?> getContract(String projectId) async {
+    try {
+      final response = await _apiClient.get(
+        ApiEndpoints.contract(projectId),
+      );
+      final responseData = response.data as Map<String, dynamic>;
+      // Extract nested data from API response wrapper
+      final data = responseData['data'] as Map<String, dynamic>? ?? responseData;
+      return data;
+    } catch (e) {
+      // Contract may not exist yet
+      return null;
+    }
+  }
+
   /// Export contract PDF
   Future<Uint8List> exportContractPdf(
     String projectId, {

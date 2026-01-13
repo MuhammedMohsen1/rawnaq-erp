@@ -132,6 +132,26 @@ class ExecutionCubit extends Cubit<ExecutionState> {
     }
   }
 
+  /// Mark installment as collected (Admin/Manager)
+  Future<void> collectInstallment(String projectId, String requestId) async {
+    try {
+      await _apiDataSource.collectInstallment(requestId);
+      await refreshDashboard(projectId);
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  /// Unmark installment as collected (Admin/Manager)
+  Future<void> uncollectInstallment(String projectId, String requestId) async {
+    try {
+      await _apiDataSource.uncollectInstallment(requestId);
+      await refreshDashboard(projectId);
+    } catch (e) {
+      rethrow;
+    }
+  }
+
   /// Load more transactions
   Future<void> loadMoreTransactions(String projectId) async {
     final currentState = state;
