@@ -2066,7 +2066,10 @@ class _PricingItemCardState extends State<PricingItemCard> {
                           ),
                           const SizedBox(width: 6),
                           _buildFormattedNumber(
-                            widget.item.totalPrice,
+                            widget.isAdminOrManager
+                                ? widget.item.profitAmount +
+                                      widget.item.totalCost
+                                : widget.item.totalCost,
                             fontSize: 20,
                             fontWeight: FontWeight.w700,
                           ),
@@ -2203,14 +2206,15 @@ class _PricingItemCardState extends State<PricingItemCard> {
                                       // Show total cost in header only when NOT APPROVED/PENDING_SIGNATURE
                                       Builder(
                                         builder: (context) {
-                                          final total = allElements
-                                              .fold<double>(
-                                                0,
-                                                (sum, element) =>
-                                                    sum +
-                                                    element.calculatedCost
-                                                        .toDouble(),
-                                              );
+                                          double total = 0;
+                                          if (widget.isAdminOrManager) {
+                                            total =
+                                                subItem.totalCost +
+                                                subItem.profitAmount;
+                                          } else {
+                                            total = subItem.totalCost;
+                                          }
+
                                           final totalStr = total
                                               .toStringAsFixed(3);
                                           final dotIndex = totalStr.indexOf(
@@ -2654,7 +2658,9 @@ class _PricingItemCardState extends State<PricingItemCard> {
                                                         'Profit margin changed: $clampedMargin, Status: $status',
                                                       );
                                                       if (status ==
-                                                          'APPROVED') {
+                                                              'APPROVED' ||
+                                                          status ==
+                                                              "PENDING_SIGNATURE") {
                                                         print(
                                                           'Status is APPROVED, setting up API call timer',
                                                         );

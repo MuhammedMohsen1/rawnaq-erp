@@ -25,6 +25,7 @@ class PricingSummarySidebar extends StatefulWidget {
   final bool showReturnToPricing;
   final bool isAdminOrManager;
   final bool isPendingApproval;
+  final bool isPendingSignature;
   final bool isApproved;
   final bool isProfitPending;
   final bool isDraft;
@@ -61,6 +62,7 @@ class PricingSummarySidebar extends StatefulWidget {
     this.onBulkProfitMarginUpdate,
     required this.isDraft,
     required this.isUnderPricing,
+    required this.isPendingSignature,
   });
 
   @override
@@ -264,7 +266,11 @@ class _PricingSummarySidebarState extends State<PricingSummarySidebar> {
               SizedBox(width: isMobile ? 3 : 4),
               Builder(
                 builder: (context) {
-                  final full = _formatNumberWithDecimals(widget.grandTotal);
+                  final full = _formatNumberWithDecimals(
+                    widget.isAdminOrManager
+                        ? widget.grandTotal
+                        : widget.totalCost ?? 0,
+                  );
                   final dotIndex = full.indexOf('.');
                   final intPart = dotIndex >= 0
                       ? full.substring(0, dotIndex)
@@ -1079,7 +1085,8 @@ class _PricingSummarySidebarState extends State<PricingSummarySidebar> {
 
             // Contract-specific buttons
             if (widget.isProfitPending) {
-              if (widget.onExportContractPdf != null) {
+              if (widget.onExportContractPdf != null &&
+                  widget.isAdminOrManager) {
                 buttons.add(
                   buildButton(
                     onPressed: widget.onExportContractPdf,
@@ -1102,7 +1109,7 @@ class _PricingSummarySidebarState extends State<PricingSummarySidebar> {
                 );
               }
 
-              if (widget.onConfirmPricing != null) {
+              if (widget.onConfirmPricing != null && widget.isAdminOrManager) {
                 buttons.add(
                   buildButton(
                     onPressed: widget.onConfirmPricing,
@@ -1209,9 +1216,9 @@ class _PricingSummarySidebarState extends State<PricingSummarySidebar> {
 
             // Return to Pricing Button
             if (widget.showReturnToPricing &&
-                    widget.onReturnToPricing != null &&
-                    !(widget.isAdminOrManager && widget.isPendingApproval) ||
-                (!widget.isAdminOrManager && widget.isPendingApproval)) {
+                widget.onReturnToPricing != null &&
+                (widget.isAdminOrManager ||
+                    (!widget.isAdminOrManager && widget.isPendingApproval))) {
               buttons.add(
                 buildButton(
                   onPressed: widget.onReturnToPricing,

@@ -696,15 +696,6 @@ class _UnderPricingPageState extends State<UnderPricingPage> {
           children: [
             const Text('هل أنت متأكد من إرجاع العقد إلى مرحلة التسعير؟'),
             const SizedBox(height: 16),
-            TextField(
-              controller: reasonController,
-              decoration: const InputDecoration(
-                labelText: 'السبب (اختياري)',
-                hintText: 'أدخل سبب الإرجاع',
-                border: OutlineInputBorder(),
-              ),
-              maxLines: 3,
-            ),
           ],
         ),
         actions: [

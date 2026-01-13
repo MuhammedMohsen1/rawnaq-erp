@@ -100,19 +100,11 @@ class _SummaryCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Row(
+                  mainAxisAlignment: MainAxisAlignment.start,
                   children: [
-                    Container(
-                      width: 8,
-                      height: 8,
-                      decoration: BoxDecoration(
-                        color: iconColor,
-                        shape: BoxShape.circle,
-                      ),
-                    ),
-                    const SizedBox(width: 8),
                     Text(
                       title,
-                      style: AppTextStyles.bodySmall.copyWith(
+                      style: AppTextStyles.overline.copyWith(
                         color: AppColors.textSecondary,
                       ),
                     ),
@@ -121,19 +113,19 @@ class _SummaryCard extends StatelessWidget {
                 const SizedBox(height: 12),
                 Text(
                   '${displayValue.toStringAsFixed(3)} د.ك',
-                  style: AppTextStyles.statNumber.copyWith(color: valueColor),
+                  style: AppTextStyles.sectionTitle.copyWith(color: valueColor),
                 ),
               ],
             ),
           ),
           Container(
-            width: 48,
-            height: 48,
+            width: 24,
+            height: 24,
             decoration: BoxDecoration(
               color: iconBackgroundColor,
               shape: BoxShape.circle,
             ),
-            child: Icon(icon, color: iconColor, size: 24),
+            child: Icon(icon, color: iconColor, size: 12),
           ),
         ],
       ),
@@ -192,6 +184,7 @@ class _NetCashFlowCard extends StatelessWidget {
               const SizedBox(width: 8),
               Text(
                 'صافي التدفق النقدي',
+                overflow: TextOverflow.ellipsis,
                 style: AppTextStyles.bodySmall.copyWith(
                   color: AppColors.textSecondary,
                 ),
@@ -201,7 +194,7 @@ class _NetCashFlowCard extends StatelessWidget {
           const SizedBox(height: 12),
           Text(
             '${netCashFlow.toStringAsFixed(3)} د.ك',
-            style: AppTextStyles.statNumber.copyWith(
+            style: AppTextStyles.sectionTitle.copyWith(
               color: AppColors.textPrimary,
             ),
           ),
@@ -211,8 +204,8 @@ class _NetCashFlowCard extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                '${budgetPercentage.toStringAsFixed(0)}% المتبقي من الميزانية',
-                style: AppTextStyles.bodySmall.copyWith(
+                '${budgetPercentage.toStringAsFixed(0)}% المتبقي',
+                style: AppTextStyles.overline.copyWith(
                   color: _progressColor,
                   fontWeight: FontWeight.w500,
                 ),

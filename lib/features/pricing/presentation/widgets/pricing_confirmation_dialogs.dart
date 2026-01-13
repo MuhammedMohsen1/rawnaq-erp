@@ -19,15 +19,6 @@ class PricingConfirmationDialogs {
               'هل أنت متأكد من إرجاع التسعير إلى حالة التعديل؟ سيتم إلغاء عملية المراجعة الحالية.',
             ),
             const SizedBox(height: 16),
-            TextField(
-              controller: reasonController,
-              decoration: const InputDecoration(
-                labelText: 'السبب (اختياري)',
-                hintText: 'أدخل سبب الإرجاع',
-                border: OutlineInputBorder(),
-              ),
-              maxLines: 3,
-            ),
           ],
         ),
         actions: [
@@ -45,10 +36,7 @@ class PricingConfirmationDialogs {
     );
 
     final reason = reasonController.text.trim();
-    return (
-      confirmed ?? false,
-      reason.isNotEmpty ? reason : null,
-    );
+    return (confirmed ?? false, reason.isNotEmpty ? reason : null);
   }
 
   /// Show accept pricing confirmation dialog
@@ -163,7 +151,11 @@ class PricingConfirmationDialogs {
                       padding: const EdgeInsets.only(bottom: 4),
                       child: Row(
                         children: [
-                          const Icon(Icons.circle, size: 8, color: Color(0xFF10B981)),
+                          const Icon(
+                            Icons.circle,
+                            size: 8,
+                            color: Color(0xFF10B981),
+                          ),
                           const SizedBox(width: 8),
                           Expanded(
                             child: Text(
@@ -213,15 +205,6 @@ class PricingConfirmationDialogs {
           children: [
             const Text('هل أنت متأكد من إرجاع العقد إلى مرحلة التسعير؟'),
             const SizedBox(height: 16),
-            TextField(
-              controller: reasonController,
-              decoration: const InputDecoration(
-                labelText: 'السبب (اختياري)',
-                hintText: 'أدخل سبب الإرجاع',
-                border: OutlineInputBorder(),
-              ),
-              maxLines: 3,
-            ),
           ],
         ),
         actions: [
@@ -239,9 +222,6 @@ class PricingConfirmationDialogs {
     );
 
     final reason = reasonController.text.trim();
-    return (
-      confirmed ?? false,
-      reason.isNotEmpty ? reason : null,
-    );
+    return (confirmed ?? false, reason.isNotEmpty ? reason : null);
   }
 }

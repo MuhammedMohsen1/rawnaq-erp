@@ -35,6 +35,7 @@ class TransactionsTable extends StatelessWidget {
   final Map<String, bool> editingTransactions;
   final bool isLoadingMore;
   final bool hasMoreTransactions;
+
   /// Whether the user can request installments (engineers)
   final bool isSiteEngineer;
   final bool isAdminOrManager;
@@ -90,13 +91,15 @@ class TransactionsTable extends StatelessWidget {
           if (isAddingIncome)
             _AddIncomeRow(
               projectId: projectId,
-              onCancel: () => context.read<ExecutionCubit>().cancelAddingIncome(),
+              onCancel: () =>
+                  context.read<ExecutionCubit>().cancelAddingIncome(),
             ),
           // Add expense row (if adding)
           if (isAddingExpense)
             _AddExpenseRow(
               projectId: projectId,
-              onCancel: () => context.read<ExecutionCubit>().cancelAddingExpense(),
+              onCancel: () =>
+                  context.read<ExecutionCubit>().cancelAddingExpense(),
             ),
           // Transaction rows
           ...transactions.map((transaction) {
@@ -109,10 +112,7 @@ class TransactionsTable extends StatelessWidget {
           }),
           // Load more button
           if (hasMoreTransactions)
-            _LoadMoreButton(
-              isLoading: isLoadingMore,
-              onLoadMore: onLoadMore,
-            ),
+            _LoadMoreButton(isLoading: isLoadingMore, onLoadMore: onLoadMore),
         ],
       ),
     );
@@ -137,7 +137,8 @@ class _TableHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // Show request installment button for Site Engineer
-    final showRequestInstallment = isSiteEngineer && onRequestInstallment != null;
+    final showRequestInstallment =
+        isSiteEngineer && onRequestInstallment != null;
 
     return Padding(
       padding: const EdgeInsets.all(16),
@@ -153,7 +154,10 @@ class _TableHeader extends StatelessWidget {
               style: OutlinedButton.styleFrom(
                 foregroundColor: AppColors.primary,
                 side: const BorderSide(color: AppColors.primary),
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
+                ),
               ),
             ),
             const SizedBox(width: 12),
@@ -167,7 +171,10 @@ class _TableHeader extends StatelessWidget {
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.success,
                 foregroundColor: AppColors.white,
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
+                ),
               ),
             ),
             const SizedBox(width: 12),
@@ -248,7 +255,8 @@ class _TransactionRow extends StatelessWidget {
       return _EditableExpenseRow(
         projectId: projectId,
         transaction: transaction,
-        onCancel: () => context.read<ExecutionCubit>().cancelEditing(transaction.id),
+        onCancel: () =>
+            context.read<ExecutionCubit>().cancelEditing(transaction.id),
       );
     }
 
@@ -322,14 +330,15 @@ class _TransactionRow extends StatelessWidget {
           ),
           // Actions
           SizedBox(
-            width: 80,
+            width: 100,
             child: transaction.isEditable
                 ? Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       IconButton(
-                        onPressed: () =>
-                            context.read<ExecutionCubit>().toggleEditing(transaction.id),
+                        onPressed: () => context
+                            .read<ExecutionCubit>()
+                            .toggleEditing(transaction.id),
                         icon: const Icon(Icons.edit, size: 18),
                         tooltip: 'تعديل',
                         color: AppColors.textSecondary,
@@ -364,7 +373,10 @@ class _TransactionRow extends StatelessWidget {
           ElevatedButton(
             onPressed: () {
               Navigator.of(ctx).pop();
-              context.read<ExecutionCubit>().deleteExpense(projectId, transactionId);
+              context.read<ExecutionCubit>().deleteExpense(
+                projectId,
+                transactionId,
+              );
             },
             style: ElevatedButton.styleFrom(backgroundColor: AppColors.error),
             child: const Text('حذف'),
@@ -379,10 +391,7 @@ class _AddExpenseRow extends StatefulWidget {
   final String projectId;
   final VoidCallback onCancel;
 
-  const _AddExpenseRow({
-    required this.projectId,
-    required this.onCancel,
-  });
+  const _AddExpenseRow({required this.projectId, required this.onCancel});
 
   @override
   State<_AddExpenseRow> createState() => _AddExpenseRowState();
@@ -438,7 +447,10 @@ class _AddExpenseRowState extends State<_AddExpenseRow> {
               decoration: const InputDecoration(
                 hintText: 'اسم المصروف',
                 isDense: true,
-                contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                contentPadding: EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 8,
+                ),
               ),
             ),
           ),
@@ -450,11 +462,17 @@ class _AddExpenseRowState extends State<_AddExpenseRow> {
               value: _costType,
               decoration: const InputDecoration(
                 isDense: true,
-                contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                contentPadding: EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 8,
+                ),
               ),
               items: const [
                 DropdownMenuItem(value: CostType.total, child: Text('إجمالي')),
-                DropdownMenuItem(value: CostType.unitBased, child: Text('وحدة')),
+                DropdownMenuItem(
+                  value: CostType.unitBased,
+                  child: Text('وحدة'),
+                ),
               ],
               onChanged: (value) {
                 if (value != null) setState(() => _costType = value);
@@ -472,7 +490,10 @@ class _AddExpenseRowState extends State<_AddExpenseRow> {
                 decoration: const InputDecoration(
                   hintText: 'المبلغ',
                   isDense: true,
-                  contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  contentPadding: EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 8,
+                  ),
                 ),
               ),
             )
@@ -485,7 +506,10 @@ class _AddExpenseRowState extends State<_AddExpenseRow> {
                 decoration: const InputDecoration(
                   hintText: 'سعر الوحدة',
                   isDense: true,
-                  contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                  contentPadding: EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 8,
+                  ),
                 ),
               ),
             ),
@@ -501,7 +525,10 @@ class _AddExpenseRowState extends State<_AddExpenseRow> {
                 decoration: const InputDecoration(
                   hintText: 'الكمية',
                   isDense: true,
-                  contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                  contentPadding: EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 8,
+                  ),
                 ),
               ),
             ),
@@ -537,9 +564,9 @@ class _AddExpenseRowState extends State<_AddExpenseRow> {
   Future<void> _submitExpense() async {
     final name = _nameController.text.trim();
     if (name.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('يرجى إدخال اسم المصروف')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('يرجى إدخال اسم المصروف')));
       return;
     }
 
@@ -551,16 +578,19 @@ class _AddExpenseRowState extends State<_AddExpenseRow> {
       // Convert Arabic numerals to English before parsing
       amount = _parseNumber(_amountController.text);
       if (amount == null || amount <= 0) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('يرجى إدخال مبلغ صحيح')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('يرجى إدخال مبلغ صحيح')));
         return;
       }
     } else {
       // Convert Arabic numerals to English before parsing
       unitCost = _parseNumber(_unitCostController.text);
       quantity = _parseNumber(_quantityController.text);
-      if (unitCost == null || quantity == null || unitCost <= 0 || quantity <= 0) {
+      if (unitCost == null ||
+          quantity == null ||
+          unitCost <= 0 ||
+          quantity <= 0) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('يرجى إدخال سعر الوحدة والكمية')),
         );
@@ -636,7 +666,9 @@ class _EditableExpenseRowState extends State<_EditableExpenseRow> {
   @override
   void initState() {
     super.initState();
-    _nameController = TextEditingController(text: widget.transaction.description);
+    _nameController = TextEditingController(
+      text: widget.transaction.description,
+    );
     _costType = widget.transaction.costType ?? CostType.total;
 
     if (_costType == CostType.total) {
@@ -697,7 +729,10 @@ class _EditableExpenseRowState extends State<_EditableExpenseRow> {
               decoration: const InputDecoration(
                 hintText: 'اسم المصروف',
                 isDense: true,
-                contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                contentPadding: EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 8,
+                ),
               ),
             ),
           ),
@@ -709,11 +744,17 @@ class _EditableExpenseRowState extends State<_EditableExpenseRow> {
               value: _costType,
               decoration: const InputDecoration(
                 isDense: true,
-                contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                contentPadding: EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 8,
+                ),
               ),
               items: const [
                 DropdownMenuItem(value: CostType.total, child: Text('إجمالي')),
-                DropdownMenuItem(value: CostType.unitBased, child: Text('وحدة')),
+                DropdownMenuItem(
+                  value: CostType.unitBased,
+                  child: Text('وحدة'),
+                ),
               ],
               onChanged: (value) {
                 if (value != null) setState(() => _costType = value);
@@ -731,7 +772,10 @@ class _EditableExpenseRowState extends State<_EditableExpenseRow> {
                 decoration: const InputDecoration(
                   hintText: 'المبلغ',
                   isDense: true,
-                  contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  contentPadding: EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 8,
+                  ),
                 ),
               ),
             )
@@ -744,7 +788,10 @@ class _EditableExpenseRowState extends State<_EditableExpenseRow> {
                 decoration: const InputDecoration(
                   hintText: 'سعر الوحدة',
                   isDense: true,
-                  contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                  contentPadding: EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 8,
+                  ),
                 ),
               ),
             ),
@@ -760,7 +807,10 @@ class _EditableExpenseRowState extends State<_EditableExpenseRow> {
                 decoration: const InputDecoration(
                   hintText: 'الكمية',
                   isDense: true,
-                  contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                  contentPadding: EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 8,
+                  ),
                 ),
               ),
             ),
@@ -796,9 +846,9 @@ class _EditableExpenseRowState extends State<_EditableExpenseRow> {
   Future<void> _submitUpdate() async {
     final name = _nameController.text.trim();
     if (name.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('يرجى إدخال اسم المصروف')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('يرجى إدخال اسم المصروف')));
       return;
     }
 
@@ -809,15 +859,18 @@ class _EditableExpenseRowState extends State<_EditableExpenseRow> {
     if (_costType == CostType.total) {
       amount = double.tryParse(_amountController.text);
       if (amount == null || amount <= 0) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('يرجى إدخال مبلغ صحيح')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('يرجى إدخال مبلغ صحيح')));
         return;
       }
     } else {
       unitCost = double.tryParse(_unitCostController.text);
       quantity = double.tryParse(_quantityController.text);
-      if (unitCost == null || quantity == null || unitCost <= 0 || quantity <= 0) {
+      if (unitCost == null ||
+          quantity == null ||
+          unitCost <= 0 ||
+          quantity <= 0) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('يرجى إدخال سعر الوحدة والكمية')),
         );
@@ -838,11 +891,7 @@ class _EditableExpenseRowState extends State<_EditableExpenseRow> {
 
       // Get cubit from context before async gap
       final cubit = context.read<ExecutionCubit>();
-      await cubit.updateExpense(
-        widget.projectId,
-        widget.transaction.id,
-        dto,
-      );
+      await cubit.updateExpense(widget.projectId, widget.transaction.id, dto);
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -873,10 +922,7 @@ class _LoadMoreButton extends StatelessWidget {
   final bool isLoading;
   final VoidCallback onLoadMore;
 
-  const _LoadMoreButton({
-    required this.isLoading,
-    required this.onLoadMore,
-  });
+  const _LoadMoreButton({required this.isLoading, required this.onLoadMore});
 
   @override
   Widget build(BuildContext context) {
@@ -902,10 +948,7 @@ class _AddIncomeRow extends StatefulWidget {
   final String projectId;
   final VoidCallback onCancel;
 
-  const _AddIncomeRow({
-    required this.projectId,
-    required this.onCancel,
-  });
+  const _AddIncomeRow({required this.projectId, required this.onCancel});
 
   @override
   State<_AddIncomeRow> createState() => _AddIncomeRowState();
@@ -956,7 +999,10 @@ class _AddIncomeRowState extends State<_AddIncomeRow> {
               decoration: const InputDecoration(
                 hintText: 'وصف الإيراد (مثال: دفعة العميل)',
                 isDense: true,
-                contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                contentPadding: EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 8,
+                ),
               ),
             ),
           ),
@@ -977,7 +1023,10 @@ class _AddIncomeRowState extends State<_AddIncomeRow> {
                 }
               },
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 8,
+                ),
                 decoration: BoxDecoration(
                   border: Border.all(color: AppColors.border),
                   borderRadius: BorderRadius.circular(4),
@@ -1005,7 +1054,10 @@ class _AddIncomeRowState extends State<_AddIncomeRow> {
               decoration: const InputDecoration(
                 hintText: 'المبلغ',
                 isDense: true,
-                contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                contentPadding: EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 8,
+                ),
               ),
             ),
           ),
@@ -1040,17 +1092,17 @@ class _AddIncomeRowState extends State<_AddIncomeRow> {
   Future<void> _submitIncome() async {
     final description = _descriptionController.text.trim();
     if (description.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('يرجى إدخال وصف الإيراد')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('يرجى إدخال وصف الإيراد')));
       return;
     }
 
     final amount = double.tryParse(_amountController.text);
     if (amount == null || amount <= 0) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('يرجى إدخال مبلغ صحيح')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('يرجى إدخال مبلغ صحيح')));
       return;
     }
 

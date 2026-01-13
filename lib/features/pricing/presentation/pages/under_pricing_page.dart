@@ -7,6 +7,7 @@ import 'package:intl/intl.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:open_file/open_file.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:rawnaq/core/routing/app_router.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_text_styles.dart';
 import '../../../../core/di/injection_container.dart';
@@ -159,10 +160,12 @@ class _PricingLayout extends StatelessWidget {
                 onDataChanged: () {
                   context.read<PricingCubit>().loadPricingData(projectId);
                 },
-                onSubItemProfitMarginChanged: (subItemId, profitMargin) {
-                  context.read<PricingCubit>().updateSubItemProfitMargin(
+                onSubItemProfitMarginChanged: (subItemId, profitMargin) async {
+                  await context.read<PricingCubit>().loadPricingData(projectId);
+                  await context.read<PricingCubit>().updateSubItemProfitMargin(
                     subItemId,
                     profitMargin,
+                    projectId,
                   );
                 },
                 onAddSubItem: (itemId) => _handleAddSubItem(context, itemId),
@@ -259,6 +262,7 @@ class _PricingLayout extends StatelessWidget {
         },
         isDraft: currentStatus == 'DRAFT',
         isUnderPricing: currentStatus == 'UNDER_PRICING',
+        isPendingSignature: currentStatus == 'PENDING_SIGNATURE',
         onBulkProfitMarginUpdate:
             isAdminOrManager && (isApproved || isProfitPending)
             ? (profitMargin) {
@@ -390,6 +394,7 @@ class _PricingLayout extends StatelessWidget {
     if (confirmed) {
       try {
         await context.read<PricingCubit>().confirmPricing(projectId);
+        AppRouter.router.pop();
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(

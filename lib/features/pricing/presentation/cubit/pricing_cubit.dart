@@ -130,7 +130,11 @@ class PricingCubit extends Cubit<PricingState> {
   }
 
   /// Update sub-item profit margin
-  void updateSubItemProfitMargin(String subItemId, double profitMargin) {
+  Future<void> updateSubItemProfitMargin(
+    String subItemId,
+    double profitMargin,
+    String projectId,
+  ) async {
     final currentState = state;
     if (currentState is! PricingLoaded) return;
 
@@ -217,11 +221,6 @@ class PricingCubit extends Cubit<PricingState> {
     if (currentState is! PricingLoaded) return;
 
     // Check if in DRAFT status
-    if (currentState.pricingVersion.status != 'DRAFT') {
-      throw Exception(
-        'لا يمكن إضافة عنصر. إصدار التسعير في حالة "${currentState.getStatusText()}" وليس "مسودة".',
-      );
-    }
 
     try {
       await pricingApiDataSource.addPricingSubItem(
