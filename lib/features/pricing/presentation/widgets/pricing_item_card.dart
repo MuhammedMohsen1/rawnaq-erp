@@ -7,6 +7,7 @@ import 'package:flutter/foundation.dart'
     show kIsWeb, defaultTargetPlatform, TargetPlatform;
 import 'package:image_picker/image_picker.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:pasteboard/pasteboard.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_text_styles.dart';
 import '../../../../core/utils/arabic_number_input_formatter.dart';
@@ -336,7 +337,225 @@ class _PricingItemCardState extends State<PricingItemCard> {
     );
   }
 
+  Future<Uint8List?> _getClipboardImage() async {
+    try {
+      final bytes = await Pasteboard.image;
+      if (bytes != null && bytes.isNotEmpty) {
+        print('Clipboard image found: ${bytes.length} bytes');
+        return bytes;
+      }
+    } catch (e) {
+      print('Failed to read clipboard image: $e');
+    }
+    return null;
+  }
+
   Future<void> _uploadImages(String subItemId) async {
+    print('_uploadImages called for subItem: $subItemId');
+
+    try {
+      setState(() {
+        _uploadingImages[subItemId] = true;
+      });
+
+      List<MapEntry<String, Uint8List>> croppedImages = [];
+
+      // ============================
+      // 1️⃣ TRY CLIPBOARD IMAGE FIRST
+      // ============================
+      if (!kIsWeb) {
+        final clipboardImage = await _getClipboardImage();
+
+        if (clipboardImage != null && mounted) {
+          print('Using image from clipboard');
+
+          final croppedBytes = await ImageCropDialog.show(
+            context,
+            clipboardImage,
+            fileName: 'clipboard_image.png',
+          );
+
+          if (croppedBytes != null) {
+            croppedImages.add(
+              MapEntry(
+                'clipboard_${DateTime.now().millisecondsSinceEpoch}.png',
+                croppedBytes,
+              ),
+            );
+
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('تم استخدام صورة من الحافظة'),
+                duration: Duration(seconds: 1),
+              ),
+            );
+          }
+
+          // If clipboard path succeeded or user cancelled crop → skip pickers
+          if (croppedImages.isNotEmpty) {
+            // jump to upload section
+          } else {
+            setState(() {
+              _uploadingImages[subItemId] = false;
+            });
+            return;
+          }
+        }
+      }
+
+      // ======================================
+      // 2️⃣ FALLBACK TO PICKERS IF NO CLIPBOARD
+      // ======================================
+      if (croppedImages.isEmpty) {
+        if (kIsWeb ||
+            defaultTargetPlatform == TargetPlatform.macOS ||
+            defaultTargetPlatform == TargetPlatform.windows ||
+            defaultTargetPlatform == TargetPlatform.linux) {
+          // ---------- Desktop / Web ----------
+          print('Using file_picker');
+
+          await Future.delayed(const Duration(milliseconds: 50));
+
+          final result = await FilePicker.platform.pickFiles(
+            type: FileType.image,
+            allowMultiple: true,
+            withData: true,
+            dialogTitle: 'اختر الصور',
+          );
+
+          if (result == null) {
+            setState(() {
+              _uploadingImages[subItemId] = false;
+            });
+            return;
+          }
+
+          for (var file in result.files) {
+            Uint8List? imageBytes;
+
+            if (file.bytes != null) {
+              imageBytes = file.bytes!;
+            } else if (file.path != null && !kIsWeb) {
+              imageBytes = await File(file.path!).readAsBytes();
+            }
+
+            if (imageBytes != null && mounted) {
+              final croppedBytes = await ImageCropDialog.show(
+                context,
+                imageBytes,
+                fileName: file.name,
+              );
+
+              if (croppedBytes != null) {
+                croppedImages.add(MapEntry(file.name, croppedBytes));
+              }
+            }
+          }
+        } else {
+          // ---------- Mobile ----------
+          print('Using image_picker');
+
+          List<XFile> pickedFiles = [];
+
+          try {
+            pickedFiles = await _imagePicker.pickMultiImage();
+          } catch (_) {
+            final single = await _imagePicker.pickImage(
+              source: ImageSource.gallery,
+            );
+            if (single != null) pickedFiles = [single];
+          }
+
+          for (var file in pickedFiles) {
+            final imageBytes = await file.readAsBytes();
+
+            if (mounted) {
+              final croppedBytes = await ImageCropDialog.show(
+                context,
+                imageBytes,
+                fileName: file.name,
+              );
+
+              if (croppedBytes != null) {
+                croppedImages.add(MapEntry(file.name, croppedBytes));
+              }
+            }
+          }
+        }
+      }
+
+      // ======================
+      // 3️⃣ NOTHING TO UPLOAD
+      // ======================
+      if (croppedImages.isEmpty) {
+        setState(() {
+          _uploadingImages[subItemId] = false;
+        });
+        return;
+      }
+
+      // ======================
+      // 4️⃣ UPLOAD
+      // ======================
+      final imageBytesList = croppedImages
+          .map((e) => MapEntry(e.key, e.value.toList()))
+          .toList();
+
+      await _apiDataSource.uploadSubItemImages(
+        widget.projectId,
+        widget.version,
+        widget.item.id,
+        subItemId,
+        [],
+        imageBytes: imageBytesList,
+      );
+
+      // ======================
+      // 5️⃣ REFRESH DATA
+      // ======================
+      final updatedVersion = await _apiDataSource.getPricingVersion(
+        widget.projectId,
+        widget.version,
+      );
+
+      final updatedItem = updatedVersion.items?.firstWhere(
+        (i) => i.id == widget.item.id,
+      );
+
+      if (updatedItem != null && mounted) {
+        widget.onItemChanged?.call(updatedItem);
+      }
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('تم رفع الصور بنجاح'),
+            duration: Duration(seconds: 2),
+          ),
+        );
+      }
+    } catch (e, stackTrace) {
+      print('Upload error: $e');
+      print(stackTrace);
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('فشل رفع الصور: $e'),
+            duration: const Duration(seconds: 5),
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _uploadingImages[subItemId] = false;
+        });
+      }
+    }
+  }
+
+  Future<void> _uploadImagesFilePicker(String subItemId) async {
     print('_uploadImages called for subItem: $subItemId');
     try {
       setState(() {
@@ -1409,6 +1628,14 @@ class _PricingItemCardState extends State<PricingItemCard> {
                             );
                             _uploadImages(subItem.id);
                           },
+                    onLongPress: _uploadingImages[subItem.id] == true
+                        ? null
+                        : () {
+                            print(
+                              'Upload button clicked for subItem: ${subItem.id}',
+                            );
+                            _uploadImagesFilePicker(subItem.id);
+                          },
                     borderRadius: BorderRadius.circular(8),
                     child: _uploadingImages[subItem.id] == true
                         ? Padding(
@@ -2004,17 +2231,6 @@ class _PricingItemCardState extends State<PricingItemCard> {
                             fontWeight: FontWeight.w700,
                           ),
                         ),
-                        if (widget.item.description != null) ...[
-                          Text(
-                            widget.item.description!,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: AppTextStyles.caption.copyWith(
-                              fontSize: 12,
-                              color: AppColors.textSecondary,
-                            ),
-                          ),
-                        ],
                       ],
                     ),
                   ),
@@ -2303,6 +2519,12 @@ class _PricingItemCardState extends State<PricingItemCard> {
                                             'Upload button clicked for subItem: ${subItem.id}',
                                           );
                                           _uploadImages(subItem.id);
+                                        },
+                                        onLongPress: () {
+                                          print(
+                                            'Upload button clicked for subItem: ${subItem.id}',
+                                          );
+                                          _uploadImagesFilePicker(subItem.id);
                                         },
                                         borderRadius: BorderRadius.circular(8),
                                         child: Container(
@@ -2872,6 +3094,14 @@ class _PricingItemCardState extends State<PricingItemCard> {
                                                                 'Upload button clicked for subItem: ${subItem.id}',
                                                               );
                                                               _uploadImages(
+                                                                subItem.id,
+                                                              );
+                                                            },
+                                                            onLongPress: () {
+                                                              print(
+                                                                'Upload button clicked for subItem: ${subItem.id}',
+                                                              );
+                                                              _uploadImagesFilePicker(
                                                                 subItem.id,
                                                               );
                                                             },

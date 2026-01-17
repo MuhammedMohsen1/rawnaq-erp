@@ -7,6 +7,8 @@ class CashFlowSummaryCards extends StatelessWidget {
   final double totalReceived;
   final double totalExpenses;
   final double netCashFlow;
+  final double totalBudget;
+  final double totalPrice;
   final double budgetPercentage;
   final BudgetWarningLevel budgetWarningLevel;
 
@@ -15,6 +17,8 @@ class CashFlowSummaryCards extends StatelessWidget {
     required this.totalReceived,
     required this.totalExpenses,
     required this.netCashFlow,
+    required this.totalBudget,
+    required this.totalPrice,
     required this.budgetPercentage,
     required this.budgetWarningLevel,
   });
@@ -53,10 +57,11 @@ class CashFlowSummaryCards extends StatelessWidget {
           Expanded(
             child: _NetCashFlowCard(
               netCashFlow: netCashFlow,
+              totalBudget: totalBudget,
               budgetPercentage: budgetPercentage,
               budgetWarningLevel: budgetWarningLevel,
             ),
-          ),
+          ), // Total Expenses Card
         ],
       ),
     );
@@ -136,11 +141,13 @@ class _SummaryCard extends StatelessWidget {
 class _NetCashFlowCard extends StatelessWidget {
   final double netCashFlow;
   final double budgetPercentage;
+  final double totalBudget;
   final BudgetWarningLevel budgetWarningLevel;
 
   const _NetCashFlowCard({
     required this.netCashFlow,
     required this.budgetPercentage,
+    required this.totalBudget,
     required this.budgetWarningLevel,
   });
 
@@ -204,7 +211,7 @@ class _NetCashFlowCard extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                '${budgetPercentage.toStringAsFixed(0)}% المتبقي',
+                '${budgetPercentage.toStringAsFixed(0)}% المتبقى من ${totalBudget.toStringAsFixed(0)} د.ك ',
                 style: AppTextStyles.overline.copyWith(
                   color: _progressColor,
                   fontWeight: FontWeight.w500,

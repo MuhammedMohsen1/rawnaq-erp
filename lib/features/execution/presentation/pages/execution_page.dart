@@ -63,7 +63,8 @@ class _ExecutionPageContent extends StatelessWidget {
         if (state is ExecutionError) {
           return _ErrorView(
             message: state.message,
-            onRetry: () => context.read<ExecutionCubit>().loadDashboard(projectId),
+            onRetry: () =>
+                context.read<ExecutionCubit>().loadDashboard(projectId),
           );
         }
 
@@ -135,6 +136,8 @@ class _ExecutionLayout extends StatelessWidget {
                   totalReceived: state.dashboard.totalReceived,
                   totalExpenses: state.dashboard.totalExpenses,
                   netCashFlow: state.dashboard.netCashFlow,
+                  totalBudget: state.dashboard.totalBudget,
+                  totalPrice: state.dashboard.totalPrice,
                   budgetPercentage: state.dashboard.budgetPercentage,
                   budgetWarningLevel: state.dashboard.budgetWarningLevel,
                 ),
@@ -151,11 +154,11 @@ class _ExecutionLayout extends StatelessWidget {
                     isAdminOrManager: isAdminOrManager,
                     onToggleCollected: isAdminOrManager
                         ? (phaseIndex, requestId, isCollected) =>
-                            _handleToggleCollected(
-                              context,
-                              requestId,
-                              isCollected,
-                            )
+                              _handleToggleCollected(
+                                context,
+                                requestId,
+                                isCollected,
+                              )
                         : null,
                   ),
                 if (state.dashboard.paymentSchedule.isNotEmpty)
@@ -219,18 +222,24 @@ class _ExecutionLayout extends StatelessWidget {
 
     try {
       if (isCurrentlyCollected) {
-        await context.read<ExecutionCubit>().uncollectInstallment(projectId, requestId);
+        await context.read<ExecutionCubit>().uncollectInstallment(
+          projectId,
+          requestId,
+        );
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('تم إلغاء تحصيل الدفعة')),
           );
         }
       } else {
-        await context.read<ExecutionCubit>().collectInstallment(projectId, requestId);
+        await context.read<ExecutionCubit>().collectInstallment(
+          projectId,
+          requestId,
+        );
         if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('تم تحصيل الدفعة')),
-          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(const SnackBar(content: Text('تم تحصيل الدفعة')));
         }
       }
     } catch (e) {
@@ -277,10 +286,10 @@ class _ExecutionLayout extends StatelessWidget {
     if (selectedPhase != null && context.mounted) {
       try {
         await context.read<ExecutionCubit>().requestInstallment(
-              projectId,
-              phaseIndex: selectedPhase.index,
-              phaseName: selectedPhase.phaseName,
-            );
+          projectId,
+          phaseIndex: selectedPhase.index,
+          phaseName: selectedPhase.phaseName,
+        );
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('تم إرسال طلب الدفعة للموافقة')),
@@ -301,11 +310,14 @@ class _ExecutionLayout extends StatelessWidget {
     String requestId,
   ) async {
     try {
-      await context.read<ExecutionCubit>().approveInstallment(projectId, requestId);
+      await context.read<ExecutionCubit>().approveInstallment(
+        projectId,
+        requestId,
+      );
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('تم قبول طلب الدفعة')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('تم قبول طلب الدفعة')));
       }
     } catch (e) {
       if (context.mounted) {
@@ -323,14 +335,14 @@ class _ExecutionLayout extends StatelessWidget {
   ) async {
     try {
       await context.read<ExecutionCubit>().rejectInstallment(
-            projectId,
-            requestId,
-            reason: reason,
-          );
+        projectId,
+        requestId,
+        reason: reason,
+      );
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('تم رفض طلب الدفعة')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('تم رفض طلب الدفعة')));
       }
     } catch (e) {
       if (context.mounted) {
@@ -369,7 +381,9 @@ class _RequestInstallmentDialog extends StatelessWidget {
             const SizedBox(height: 8),
             Text(
               'سيتم خصم نسبة الربح (${profitPercentage.toStringAsFixed(1)}%) من المبلغ',
-              style: AppTextStyles.bodySmall.copyWith(color: AppColors.textSecondary),
+              style: AppTextStyles.bodySmall.copyWith(
+                color: AppColors.textSecondary,
+              ),
             ),
             const SizedBox(height: 16),
             ...availablePhases.map((phase) {
@@ -380,7 +394,9 @@ class _RequestInstallmentDialog extends StatelessWidget {
                   subtitle: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('المبلغ الكامل: ${phase.originalAmount.toStringAsFixed(3)} د.ك'),
+                      Text(
+                        'المبلغ الكامل: ${phase.originalAmount.toStringAsFixed(3)} د.ك',
+                      ),
                       Text(
                         'التكلفة (بدون الربح): ${phase.costAmount.toStringAsFixed(3)} د.ك',
                         style: const TextStyle(

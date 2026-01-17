@@ -61,7 +61,10 @@ class ImageGalleryWidget extends StatelessWidget {
                 top: 9,
                 left: 9,
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 5,
+                  ),
                   decoration: BoxDecoration(
                     color: Colors.black.withOpacity(0.5),
                     borderRadius: BorderRadius.circular(4),
@@ -108,7 +111,9 @@ class ImageGalleryWidget extends StatelessWidget {
         margin: EdgeInsets.only(right: index < imageUrls.length - 1 ? 8 : 0),
         decoration: BoxDecoration(
           border: Border.all(
-            color: isSelected ? const Color(0xFF135BEC) : const Color(0xFF363C4A),
+            color: isSelected
+                ? const Color(0xFF135BEC)
+                : const Color(0xFF363C4A),
             width: isSelected ? 2 : 1,
           ),
           borderRadius: BorderRadius.circular(4),
@@ -133,10 +138,7 @@ class ImageGalleryWidget extends StatelessWidget {
                   );
                 },
               ),
-              if (!isSelected)
-                Container(
-                  color: Colors.black.withOpacity(0.4),
-                ),
+              if (!isSelected) Container(color: Colors.black.withOpacity(0.4)),
             ],
           ),
         ),
@@ -150,9 +152,7 @@ class ImageGalleryWidget extends StatelessWidget {
       height: 64,
       margin: const EdgeInsets.only(left: 8),
       decoration: BoxDecoration(
-        border: Border.all(
-          color: const Color(0xFF4B5563),
-        ),
+        border: Border.all(color: const Color(0xFF4B5563)),
         borderRadius: BorderRadius.circular(4),
       ),
       child: InkWell(
@@ -160,11 +160,7 @@ class ImageGalleryWidget extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(
-              Icons.add,
-              color: AppColors.textMuted,
-              size: 24,
-            ),
+            const Icon(Icons.add, color: AppColors.textMuted, size: 24),
             const SizedBox(height: 4),
             Text(
               'Add',
@@ -208,6 +204,7 @@ class ImageGalleryWidget extends StatelessWidget {
               const SizedBox(height: 16),
               ElevatedButton.icon(
                 onPressed: onAddImage,
+
                 icon: const Icon(Icons.add, size: 20),
                 label: const Text('إضافة صورة'),
                 style: ElevatedButton.styleFrom(
@@ -222,4 +219,3 @@ class ImageGalleryWidget extends StatelessWidget {
     );
   }
 }
-

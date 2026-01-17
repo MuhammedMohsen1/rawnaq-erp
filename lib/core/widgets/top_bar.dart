@@ -9,13 +9,8 @@ import '../../features/auth/presentation/bloc/auth_bloc.dart';
 /// Top bar component with title, search, notifications, and user profile
 class TopBar extends StatelessWidget {
   final String title;
-  final String? searchHint;
 
-  const TopBar({
-    super.key,
-    required this.title,
-    this.searchHint,
-  });
+  const TopBar({super.key, required this.title});
 
   @override
   Widget build(BuildContext context) {
@@ -24,9 +19,7 @@ class TopBar extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
       decoration: const BoxDecoration(
         color: AppColors.scaffoldBackground,
-        border: Border(
-          bottom: BorderSide(color: AppColors.border, width: 1),
-        ),
+        border: Border(bottom: BorderSide(color: AppColors.border, width: 1)),
       ),
       child: Row(
         children: [
@@ -39,41 +32,11 @@ class TopBar extends StatelessWidget {
             ),
           ),
           const Spacer(),
-          // Search bar
-          if (searchHint != null)
-            Expanded(
-              flex: 2,
-              child: Container(
-                margin: const EdgeInsets.symmetric(horizontal: 16),
-                height: 40,
-                decoration: BoxDecoration(
-                  color: AppColors.inputBackground,
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: AppColors.inputBorder),
-                ),
-                child: TextField(
-                  style: AppTextStyles.inputText,
-                  decoration: InputDecoration(
-                    hintText: searchHint,
-                    hintStyle: AppTextStyles.inputHint,
-                    prefixIcon: const Icon(
-                      Icons.search,
-                      color: AppColors.textMuted,
-                      size: 20,
-                    ),
-                    border: InputBorder.none,
-                    contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 10,
-                    ),
-                  ),
-                ),
-              ),
-            ),
           // Notifications
           Container(
             width: 40,
             height: 40,
+            margin: EdgeInsets.symmetric(horizontal: 16),
             decoration: BoxDecoration(
               color: AppColors.inputBackground,
               borderRadius: BorderRadius.circular(8),
@@ -90,13 +53,13 @@ class TopBar extends StatelessWidget {
               },
             ),
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: 16),
           // User profile
           BlocBuilder<AuthBloc, AuthState>(
             builder: (context, authState) {
               String userName = 'المستخدم';
               String userRole = 'مدير';
-              
+
               if (authState is AuthAuthenticated) {
                 userName = authState.user.name;
                 if (authState.user.isSiteEngineer) {
@@ -107,7 +70,7 @@ class TopBar extends StatelessWidget {
                   userRole = 'مدير';
                 }
               }
-              
+
               return Row(
                 children: [
                   Column(
@@ -121,7 +84,6 @@ class TopBar extends StatelessWidget {
                           fontWeight: FontWeight.w500,
                         ),
                       ),
-                      const SizedBox(height: 2),
                       Text(
                         userRole,
                         style: AppTextStyles.caption.copyWith(
@@ -129,20 +91,6 @@ class TopBar extends StatelessWidget {
                         ),
                       ),
                     ],
-                  ),
-                  const SizedBox(width: 12),
-                  Container(
-                    width: 40,
-                    height: 40,
-                    decoration: BoxDecoration(
-                      color: AppColors.primary,
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Icon(
-                      Icons.person,
-                      color: AppColors.scaffoldBackground,
-                      size: 20,
-                    ),
                   ),
                 ],
               );
@@ -153,4 +101,3 @@ class TopBar extends StatelessWidget {
     );
   }
 }
-

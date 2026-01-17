@@ -473,10 +473,11 @@ class _PricingSummarySidebarState extends State<PricingSummarySidebar> {
                     ),
                   ),
                   // Cost and Profit (if available) - stacked vertically
-                  if ((widget.totalCost != null &&
-                          widget.totalProfit != null) ||
-                      widget.isApproved ||
-                      widget.isProfitPending) ...[
+                  if (((widget.totalCost != null &&
+                              widget.totalProfit != null) ||
+                          widget.isApproved ||
+                          widget.isProfitPending) &&
+                      widget.isAdminOrManager) ...[
                     SizedBox(width: 4),
                     Expanded(
                       child: Container(
@@ -562,10 +563,11 @@ class _PricingSummarySidebarState extends State<PricingSummarySidebar> {
                     ),
                   ),
                   // Cost and Profit (if available) - stacked vertically
-                  if ((widget.totalCost != null &&
-                          widget.totalProfit != null) ||
-                      widget.isApproved ||
-                      widget.isProfitPending) ...[
+                  if (((widget.totalCost != null &&
+                              widget.totalProfit != null) ||
+                          widget.isApproved ||
+                          widget.isProfitPending) &&
+                      widget.isAdminOrManager) ...[
                     Expanded(
                       child: Container(
                         width: double.infinity,

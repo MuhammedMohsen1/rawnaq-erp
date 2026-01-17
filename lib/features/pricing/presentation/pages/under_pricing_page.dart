@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:open_file/open_file.dart';
@@ -394,7 +395,7 @@ class _PricingLayout extends StatelessWidget {
     if (confirmed) {
       try {
         await context.read<PricingCubit>().confirmPricing(projectId);
-        AppRouter.router.pop();
+        context.go(AppRoutes.projects);
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(

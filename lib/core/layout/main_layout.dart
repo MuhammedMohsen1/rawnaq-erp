@@ -42,7 +42,6 @@ class MainLayout extends StatelessWidget {
                     children: [
                       TopBar(
                         title: _getPageTitle(context, currentPath, routeState),
-                        searchHint: 'ابحث عن المشاريع والمهام...',
                       ),
                       Expanded(
                         child: SizedBox(
