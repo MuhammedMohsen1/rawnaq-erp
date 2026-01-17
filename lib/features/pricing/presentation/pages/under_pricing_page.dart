@@ -287,12 +287,12 @@ class _PricingLayout extends StatelessWidget {
         if (context.mounted) {
           ScaffoldMessenger.of(
             context,
-          ).showSnackBar(const SnackBar(content: Text('تم إضافة الفئة بنجاح')));
+          ).showSnackBar(const SnackBar(content: Text('تم إضافة البند بنجاح')));
         }
       } catch (e) {
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('فشل إضافة الفئة: ${e.toString()}')),
+            SnackBar(content: Text('فشل إضافة البند: ${e.toString()}')),
           );
         }
       }
@@ -306,14 +306,14 @@ class _PricingLayout extends StatelessWidget {
         await context.read<PricingCubit>().addSubItem(projectId, itemId, name);
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('تم إضافة الفئة الفرعية بنجاح')),
+            const SnackBar(content: Text('تم إضافة البند الفرعية بنجاح')),
           );
         }
       } catch (e) {
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('فشل إضافة الفئة الفرعية: ${e.toString()}'),
+              content: Text('فشل إضافة البند الفرعية: ${e.toString()}'),
               duration: const Duration(seconds: 5),
             ),
           );

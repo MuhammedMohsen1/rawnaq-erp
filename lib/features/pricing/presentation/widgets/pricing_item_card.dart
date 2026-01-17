@@ -767,7 +767,7 @@ class _PricingItemCardState extends State<PricingItemCard> {
               'لا يمكن رفع الصور. يرجى التحقق من أن:\n'
               '1. المشروع موجود\n'
               '2. إصدار التسعير في حالة "مسودة" (DRAFT)\n'
-              '3. الفئة والفئة الفرعية موجودة في هذا الإصدار';
+              '3. البند والبند الفرعية موجودة في هذا الإصدار';
         }
 
         ScaffoldMessenger.of(context).showSnackBar(
@@ -1035,7 +1035,7 @@ class _PricingItemCardState extends State<PricingItemCard> {
           style: AppTextStyles.h4.copyWith(color: AppColors.textPrimary),
         ),
         content: Text(
-          'هل أنت متأكد من حذف الفئة الفرعية "$subItemName"؟\n\nسيتم حذف جميع العناصر المرتبطة بها.',
+          'هل أنت متأكد من حذف البند الفرعية "$subItemName"؟\n\nسيتم حذف جميع العناصر المرتبطة بها.',
           style: AppTextStyles.bodyMedium.copyWith(
             color: AppColors.textSecondary,
           ),
@@ -1281,7 +1281,7 @@ class _PricingItemCardState extends State<PricingItemCard> {
       builder: (context) => AlertDialog(
         backgroundColor: const Color(0xFF1C212B),
         title: Text(
-          'تعديل الفئة الفرعية',
+          'تعديل البند الفرعية',
           style: AppTextStyles.h4.copyWith(color: AppColors.textPrimary),
         ),
         content: SingleChildScrollView(
@@ -1293,7 +1293,7 @@ class _PricingItemCardState extends State<PricingItemCard> {
                 autofocus: true,
                 style: const TextStyle(color: AppColors.textPrimary),
                 decoration: InputDecoration(
-                  labelText: 'اسم الفئة الفرعية',
+                  labelText: 'اسم البند الفرعية',
                   labelStyle: const TextStyle(color: AppColors.textSecondary),
                   enabledBorder: OutlineInputBorder(
                     borderSide: const BorderSide(color: Color(0xFF363C4A)),
@@ -1362,7 +1362,7 @@ class _PricingItemCardState extends State<PricingItemCard> {
           widget.onItemChanged?.call(updatedItem);
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
-              content: Text('تم تحديث الفئة الفرعية بنجاح'),
+              content: Text('تم تحديث البند الفرعية بنجاح'),
               duration: Duration(seconds: 2),
             ),
           );
@@ -1370,7 +1370,7 @@ class _PricingItemCardState extends State<PricingItemCard> {
       } catch (e) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('فشل تحديث الفئة الفرعية: ${e.toString()}')),
+            SnackBar(content: Text('فشل تحديث البند الفرعية: ${e.toString()}')),
           );
         }
       }
@@ -1389,7 +1389,7 @@ class _PricingItemCardState extends State<PricingItemCard> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('تم حذف الفئة الفرعية بنجاح'),
+            content: Text('تم حذف البند الفرعية بنجاح'),
             duration: Duration(seconds: 2),
           ),
         );
@@ -1399,7 +1399,7 @@ class _PricingItemCardState extends State<PricingItemCard> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('فشل حذف الفئة الفرعية: ${e.toString()}')),
+          SnackBar(content: Text('فشل حذف البند الفرعية: ${e.toString()}')),
         );
       }
     }
@@ -2583,7 +2583,7 @@ class _PricingItemCardState extends State<PricingItemCard> {
                                   maxLines: 3,
 
                                   decoration: InputDecoration(
-                                    hintText: 'ملاحظات الفئة الفرعية...',
+                                    hintText: 'ملاحظات البند الفرعية...',
                                     hintStyle: AppTextStyles.bodySmall.copyWith(
                                       color: AppColors.textMuted,
                                       fontSize: 12,

@@ -75,13 +75,13 @@ class _PricingCategoryCardState extends State<PricingCategoryCard> {
         widget.onItemChanged();
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('تم إضافة الفئة الفرعية بنجاح')),
+            const SnackBar(content: Text('تم إضافة البند الفرعية بنجاح')),
           );
         }
       } catch (e) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('فشل إضافة الفئة الفرعية: ${e.toString()}')),
+            SnackBar(content: Text('فشل إضافة البند الفرعية: ${e.toString()}')),
           );
         }
       }

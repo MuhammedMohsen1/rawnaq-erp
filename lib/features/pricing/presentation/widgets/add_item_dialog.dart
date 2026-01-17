@@ -43,8 +43,8 @@ class AddItemDialog extends StatelessWidget {
       context: context,
       builder: (context) => const AddItemDialog(
         title: 'إضافة بند جديد',
-        labelText: 'اسم الفئة',
-        hintText: 'أدخل اسم الفئة',
+        labelText: 'اسم بند',
+        hintText: 'أدخل اسم البند',
       ),
     );
   }

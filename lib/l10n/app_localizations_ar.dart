@@ -995,13 +995,13 @@ class AppLocalizationsAr extends AppLocalizations {
   String get priceMinValue => 'يجب أن يكون السعر أكبر من 0';
 
   @override
-  String get category => 'الفئة';
+  String get category => 'البند';
 
   @override
-  String get selectCategory => 'اختر الفئة';
+  String get selectCategory => 'اختر البند';
 
   @override
-  String get pleaseSelectCategory => 'يرجى اختيار فئة';
+  String get pleaseSelectCategory => 'يرجى اختيار بند';
 
   @override
   String get imageUrl => 'رابط الصورة';
