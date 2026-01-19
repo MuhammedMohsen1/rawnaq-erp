@@ -60,7 +60,13 @@ class MainLayout extends StatelessWidget {
           // Mobile layout with bottom navigation
           return Scaffold(
             backgroundColor: AppColors.sidebarBackground,
-            body: child,
+            body: SafeArea(
+              top: true,
+              left: false,
+              right: false,
+              bottom: false,
+              child: child,
+            ),
             bottomNavigationBar: AppBottomNavBar(currentPath: currentPath),
           );
         }
