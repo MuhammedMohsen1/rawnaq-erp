@@ -67,54 +67,68 @@ class TransactionsTable extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: AppColors.cardBackground,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.border),
-      ),
-      child: Column(
-        children: [
-          // Header with actions
-          _TableHeader(
-            onAddExpense: onAddExpense,
-            onAddIncome: onAddIncome,
-            onRequestInstallment: onRequestInstallment,
-            isSiteEngineer: isSiteEngineer,
-            isAdminOrManager: isAdminOrManager,
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isCompact = constraints.maxWidth < 720;
+        return Container(
+          decoration: BoxDecoration(
+            color: AppColors.cardBackground,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: AppColors.border),
           ),
-          const Divider(height: 1, color: AppColors.border),
-          // Column headers
-          _ColumnHeaders(),
-          const Divider(height: 1, color: AppColors.border),
-          // Add income row (if adding - Admin/Manager only)
-          if (isAddingIncome)
-            _AddIncomeRow(
-              projectId: projectId,
-              onCancel: () =>
-                  context.read<ExecutionCubit>().cancelAddingIncome(),
-            ),
-          // Add expense row (if adding)
-          if (isAddingExpense)
-            _AddExpenseRow(
-              projectId: projectId,
-              onCancel: () =>
-                  context.read<ExecutionCubit>().cancelAddingExpense(),
-            ),
-          // Transaction rows
-          ...transactions.map((transaction) {
-            final isEditing = editingTransactions[transaction.id] ?? false;
-            return _TransactionRow(
-              projectId: projectId,
-              transaction: transaction,
-              isEditing: isEditing,
-            );
-          }),
-          // Load more button
-          if (hasMoreTransactions)
-            _LoadMoreButton(isLoading: isLoadingMore, onLoadMore: onLoadMore),
-        ],
-      ),
+          child: Column(
+            children: [
+              // Header with actions
+              _TableHeader(
+                onAddExpense: onAddExpense,
+                onAddIncome: onAddIncome,
+                onRequestInstallment: onRequestInstallment,
+                isSiteEngineer: isSiteEngineer,
+                isAdminOrManager: isAdminOrManager,
+                isCompact: isCompact,
+              ),
+              const Divider(height: 1, color: AppColors.border),
+              // Column headers
+              if (!isCompact) ...[
+                _ColumnHeaders(),
+                const Divider(height: 1, color: AppColors.border),
+              ],
+              // Add income row (if adding - Admin/Manager only)
+              if (isAddingIncome)
+                _AddIncomeRow(
+                  projectId: projectId,
+                  onCancel: () =>
+                      context.read<ExecutionCubit>().cancelAddingIncome(),
+                  isCompact: isCompact,
+                ),
+              // Add expense row (if adding)
+              if (isAddingExpense)
+                _AddExpenseRow(
+                  projectId: projectId,
+                  onCancel: () =>
+                      context.read<ExecutionCubit>().cancelAddingExpense(),
+                  isCompact: isCompact,
+                ),
+              // Transaction rows
+              ...transactions.map((transaction) {
+                final isEditing = editingTransactions[transaction.id] ?? false;
+                return _TransactionRow(
+                  projectId: projectId,
+                  transaction: transaction,
+                  isEditing: isEditing,
+                  isCompact: isCompact,
+                );
+              }),
+              // Load more button
+              if (hasMoreTransactions)
+                _LoadMoreButton(
+                  isLoading: isLoadingMore,
+                  onLoadMore: onLoadMore,
+                ),
+            ],
+          ),
+        );
+      },
     );
   }
 }
@@ -125,6 +139,7 @@ class _TableHeader extends StatelessWidget {
   final VoidCallback? onRequestInstallment;
   final bool isSiteEngineer;
   final bool isAdminOrManager;
+  final bool isCompact;
 
   const _TableHeader({
     required this.onAddExpense,
@@ -132,6 +147,7 @@ class _TableHeader extends StatelessWidget {
     this.onRequestInstallment,
     required this.isSiteEngineer,
     required this.isAdminOrManager,
+    required this.isCompact,
   });
 
   @override
@@ -140,57 +156,68 @@ class _TableHeader extends StatelessWidget {
     final showRequestInstallment =
         isSiteEngineer && onRequestInstallment != null;
 
+    List<Widget> spaced(List<Widget> children) {
+      if (children.isEmpty) return [];
+      final spacedChildren = <Widget>[];
+      for (int i = 0; i < children.length; i++) {
+        spacedChildren.add(children[i]);
+        if (i != children.length - 1) {
+          spacedChildren.add(const SizedBox(width: 12));
+        }
+      }
+      return spacedChildren;
+    }
+
+    final actions = <Widget>[
+      if (showRequestInstallment)
+        OutlinedButton.icon(
+          onPressed: onRequestInstallment,
+          icon: const Icon(Icons.request_page, size: 18),
+          label: const Text('طلب دفعة'),
+          style: OutlinedButton.styleFrom(
+            foregroundColor: AppColors.primary,
+            side: const BorderSide(color: AppColors.primary),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          ),
+        ),
+      if (isAdminOrManager && onAddIncome != null)
+        ElevatedButton.icon(
+          onPressed: onAddIncome,
+          icon: const Icon(Icons.arrow_downward, size: 18),
+          label: const Text('إضافة إيراد'),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: AppColors.success,
+            foregroundColor: AppColors.white,
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          ),
+        ),
+      ElevatedButton.icon(
+        onPressed: onAddExpense,
+        icon: const Icon(Icons.arrow_upward, size: 18),
+        label: const Text('إضافة مصروف'),
+        style: ElevatedButton.styleFrom(
+          backgroundColor: AppColors.error,
+          foregroundColor: AppColors.white,
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        ),
+      ),
+    ];
+
     return Padding(
       padding: const EdgeInsets.all(16),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.end,
-        children: [
-          // Request Installment button (Site Engineer only)
-          if (showRequestInstallment) ...[
-            OutlinedButton.icon(
-              onPressed: onRequestInstallment,
-              icon: const Icon(Icons.request_page, size: 18),
-              label: const Text('طلب دفعة'),
-              style: OutlinedButton.styleFrom(
-                foregroundColor: AppColors.primary,
-                side: const BorderSide(color: AppColors.primary),
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 12,
-                ),
+      child: Align(
+        alignment: AlignmentDirectional.centerEnd,
+        child: isCompact
+            ? Wrap(
+                spacing: 12,
+                runSpacing: 8,
+                alignment: WrapAlignment.end,
+                children: actions,
+              )
+            : Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: spaced(actions),
               ),
-            ),
-            const SizedBox(width: 12),
-          ],
-          // Add Income button (Admin/Manager only)
-          if (isAdminOrManager && onAddIncome != null) ...[
-            ElevatedButton.icon(
-              onPressed: onAddIncome,
-              icon: const Icon(Icons.arrow_downward, size: 18),
-              label: const Text('إضافة إيراد'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.success,
-                foregroundColor: AppColors.white,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 12,
-                ),
-              ),
-            ),
-            const SizedBox(width: 12),
-          ],
-          // Add Expense button (everyone)
-          ElevatedButton.icon(
-            onPressed: onAddExpense,
-            icon: const Icon(Icons.arrow_upward, size: 18),
-            label: const Text('إضافة مصروف'),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.error,
-              foregroundColor: AppColors.white,
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            ),
-          ),
-        ],
       ),
     );
   }
@@ -242,11 +269,13 @@ class _TransactionRow extends StatelessWidget {
   final String projectId;
   final TransactionModel transaction;
   final bool isEditing;
+  final bool isCompact;
 
   const _TransactionRow({
     required this.projectId,
     required this.transaction,
     required this.isEditing,
+    required this.isCompact,
   });
 
   @override
@@ -257,11 +286,115 @@ class _TransactionRow extends StatelessWidget {
         transaction: transaction,
         onCancel: () =>
             context.read<ExecutionCubit>().cancelEditing(transaction.id),
+        isCompact: isCompact,
       );
     }
 
     final dateFormat = DateFormat('MMM dd, yyyy');
     final isIncome = transaction.type == TransactionType.income;
+
+    if (isCompact) {
+      return Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        decoration: BoxDecoration(
+          border: Border(
+            bottom: BorderSide(color: AppColors.border.withValues(alpha: 0.5)),
+          ),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  width: 36,
+                  height: 36,
+                  decoration: BoxDecoration(
+                    color: isIncome
+                        ? AppColors.success.withValues(alpha: 0.1)
+                        : AppColors.error.withValues(alpha: 0.1),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    isIncome ? Icons.arrow_downward : Icons.arrow_upward,
+                    color: isIncome ? AppColors.success : AppColors.error,
+                    size: 18,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        transaction.description,
+                        style: AppTextStyles.tableCellBold,
+                      ),
+                      if (transaction.subDescription != null)
+                        Text(
+                          transaction.subDescription!,
+                          style: AppTextStyles.bodySmall,
+                        ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Expanded(
+                  child: _CompactInfoItem(
+                    label: 'التاريخ',
+                    value: Text(
+                      dateFormat.format(transaction.date),
+                      style: AppTextStyles.tableCell,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: _CompactInfoItem(
+                    label: 'المبلغ',
+                    value: Text(
+                      '${isIncome ? '+' : ''}${transaction.amount.toStringAsFixed(3)}',
+                      style: AppTextStyles.tableCellBold.copyWith(
+                        color: isIncome ? AppColors.success : AppColors.error,
+                      ),
+                      textAlign: TextAlign.end,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            if (transaction.isEditable) ...[
+              const SizedBox(height: 8),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  IconButton(
+                    onPressed: () => context
+                        .read<ExecutionCubit>()
+                        .toggleEditing(transaction.id),
+                    icon: const Icon(Icons.edit, size: 18),
+                    tooltip: 'تعديل',
+                    color: AppColors.textSecondary,
+                  ),
+                  IconButton(
+                    onPressed: () =>
+                        _showDeleteConfirmation(context, transaction.id),
+                    icon: const Icon(Icons.delete_outline, size: 18),
+                    tooltip: 'حذف',
+                    color: AppColors.error,
+                  ),
+                ],
+              ),
+            ],
+          ],
+        ),
+      );
+    }
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -390,8 +523,13 @@ class _TransactionRow extends StatelessWidget {
 class _AddExpenseRow extends StatefulWidget {
   final String projectId;
   final VoidCallback onCancel;
+  final bool isCompact;
 
-  const _AddExpenseRow({required this.projectId, required this.onCancel});
+  const _AddExpenseRow({
+    required this.projectId,
+    required this.onCancel,
+    required this.isCompact,
+  });
 
   @override
   State<_AddExpenseRow> createState() => _AddExpenseRowState();
@@ -420,12 +558,17 @@ class _AddExpenseRowState extends State<_AddExpenseRow> {
     return Container(
       padding: const EdgeInsets.all(16),
       color: AppColors.success.withValues(alpha: 0.05),
-      child: Row(
-        children: [
-          // Type icon placeholder
-          SizedBox(
-            width: 60,
-            child: Container(
+      child: widget.isCompact ? _buildCompactForm() : _buildWideForm(),
+    );
+  }
+
+  Widget _buildCompactForm() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Row(
+          children: [
+            Container(
               width: 36,
               height: 36,
               decoration: BoxDecoration(
@@ -438,126 +581,237 @@ class _AddExpenseRowState extends State<_AddExpenseRow> {
                 size: 18,
               ),
             ),
-          ),
-          // Name input
-          Expanded(
-            flex: 2,
-            child: TextField(
-              controller: _nameController,
-              decoration: const InputDecoration(
-                hintText: 'اسم المصروف',
-                isDense: true,
-                contentPadding: EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 8,
-                ),
-              ),
-            ),
-          ),
-          const SizedBox(width: 8),
-          // Cost type dropdown
-          SizedBox(
-            width: 120,
-            child: DropdownButtonFormField<CostType>(
-              value: _costType,
-              decoration: const InputDecoration(
-                isDense: true,
-                contentPadding: EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 8,
-                ),
-              ),
-              items: const [
-                DropdownMenuItem(value: CostType.total, child: Text('إجمالي')),
-                DropdownMenuItem(
-                  value: CostType.unitBased,
-                  child: Text('وحدة'),
-                ),
-              ],
-              onChanged: (value) {
-                if (value != null) setState(() => _costType = value);
-              },
-            ),
-          ),
-          const SizedBox(width: 8),
-          // Amount or Unit cost + Quantity
-          if (_costType == CostType.total)
-            SizedBox(
-              width: 120,
-              child: TextField(
-                controller: _amountController,
-                keyboardType: TextInputType.number,
-                decoration: const InputDecoration(
-                  hintText: 'المبلغ',
-                  isDense: true,
-                  contentPadding: EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 8,
-                  ),
-                ),
-              ),
-            )
-          else ...[
-            SizedBox(
-              width: 80,
-              child: TextField(
-                controller: _unitCostController,
-                keyboardType: TextInputType.number,
-                decoration: const InputDecoration(
-                  hintText: 'سعر الوحدة',
-                  isDense: true,
-                  contentPadding: EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 8,
-                  ),
-                ),
-              ),
-            ),
-            const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 4),
-              child: Text('×'),
-            ),
-            SizedBox(
-              width: 60,
-              child: TextField(
-                controller: _quantityController,
-                keyboardType: TextInputType.number,
-                decoration: const InputDecoration(
-                  hintText: 'الكمية',
-                  isDense: true,
-                  contentPadding: EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 8,
-                  ),
-                ),
-              ),
-            ),
+            const SizedBox(width: 12),
+            Text('إضافة مصروف', style: AppTextStyles.tableCellBold),
           ],
-          const SizedBox(width: 8),
-          // Actions
-          Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              IconButton(
-                onPressed: widget.onCancel,
-                icon: const Icon(Icons.close, color: AppColors.error),
-                tooltip: 'إلغاء',
+        ),
+        const SizedBox(height: 12),
+        TextField(
+          controller: _nameController,
+          decoration: const InputDecoration(
+            hintText: 'اسم المصروف',
+            isDense: true,
+            contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          ),
+        ),
+        const SizedBox(height: 8),
+        DropdownButtonFormField<CostType>(
+          value: _costType,
+          decoration: const InputDecoration(
+            isDense: true,
+            contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          ),
+          items: const [
+            DropdownMenuItem(value: CostType.total, child: Text('إجمالي')),
+            DropdownMenuItem(value: CostType.unitBased, child: Text('وحدة')),
+          ],
+          onChanged: (value) {
+            if (value != null) setState(() => _costType = value);
+          },
+        ),
+        const SizedBox(height: 8),
+        if (_costType == CostType.total)
+          TextField(
+            controller: _amountController,
+            keyboardType: TextInputType.number,
+            decoration: const InputDecoration(
+              hintText: 'المبلغ',
+              isDense: true,
+              contentPadding: EdgeInsets.symmetric(
+                horizontal: 12,
+                vertical: 10,
               ),
-              IconButton(
-                onPressed: _isSubmitting ? null : _submitExpense,
-                icon: _isSubmitting
-                    ? const SizedBox(
-                        width: 18,
-                        height: 18,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : const Icon(Icons.check, color: AppColors.success),
-                tooltip: 'حفظ',
+            ),
+          )
+        else
+          Row(
+            children: [
+              Expanded(
+                child: TextField(
+                  controller: _unitCostController,
+                  keyboardType: TextInputType.number,
+                  decoration: const InputDecoration(
+                    hintText: 'سعر الوحدة',
+                    isDense: true,
+                    contentPadding: EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 10,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: TextField(
+                  controller: _quantityController,
+                  keyboardType: TextInputType.number,
+                  decoration: const InputDecoration(
+                    hintText: 'الكمية',
+                    isDense: true,
+                    contentPadding: EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 10,
+                    ),
+                  ),
+                ),
               ),
             ],
           ),
+        const SizedBox(height: 12),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.end,
+          children: [
+            IconButton(
+              onPressed: widget.onCancel,
+              icon: const Icon(Icons.close, color: AppColors.error),
+              tooltip: 'إلغاء',
+            ),
+            IconButton(
+              onPressed: _isSubmitting ? null : _submitExpense,
+              icon: _isSubmitting
+                  ? const SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Icon(Icons.check, color: AppColors.success),
+              tooltip: 'حفظ',
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildWideForm() {
+    return Row(
+      children: [
+        // Type icon placeholder
+        SizedBox(
+          width: 60,
+          child: Container(
+            width: 36,
+            height: 36,
+            decoration: BoxDecoration(
+              color: AppColors.error.withValues(alpha: 0.1),
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(
+              Icons.arrow_upward,
+              color: AppColors.error,
+              size: 18,
+            ),
+          ),
+        ),
+        // Name input
+        Expanded(
+          flex: 2,
+          child: TextField(
+            controller: _nameController,
+            decoration: const InputDecoration(
+              hintText: 'اسم المصروف',
+              isDense: true,
+              contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            ),
+          ),
+        ),
+        const SizedBox(width: 8),
+        // Cost type dropdown
+        SizedBox(
+          width: 120,
+          child: DropdownButtonFormField<CostType>(
+            value: _costType,
+            decoration: const InputDecoration(
+              isDense: true,
+              contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            ),
+            items: const [
+              DropdownMenuItem(value: CostType.total, child: Text('إجمالي')),
+              DropdownMenuItem(value: CostType.unitBased, child: Text('وحدة')),
+            ],
+            onChanged: (value) {
+              if (value != null) setState(() => _costType = value);
+            },
+          ),
+        ),
+        const SizedBox(width: 8),
+        // Amount or Unit cost + Quantity
+        if (_costType == CostType.total)
+          SizedBox(
+            width: 120,
+            child: TextField(
+              controller: _amountController,
+              keyboardType: TextInputType.number,
+              decoration: const InputDecoration(
+                hintText: 'المبلغ',
+                isDense: true,
+                contentPadding: EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 8,
+                ),
+              ),
+            ),
+          )
+        else ...[
+          SizedBox(
+            width: 80,
+            child: TextField(
+              controller: _unitCostController,
+              keyboardType: TextInputType.number,
+              decoration: const InputDecoration(
+                hintText: 'سعر الوحدة',
+                isDense: true,
+                contentPadding: EdgeInsets.symmetric(
+                  horizontal: 8,
+                  vertical: 8,
+                ),
+              ),
+            ),
+          ),
+          const Padding(
+            padding: EdgeInsets.symmetric(horizontal: 4),
+            child: Text('×'),
+          ),
+          SizedBox(
+            width: 60,
+            child: TextField(
+              controller: _quantityController,
+              keyboardType: TextInputType.number,
+              decoration: const InputDecoration(
+                hintText: 'الكمية',
+                isDense: true,
+                contentPadding: EdgeInsets.symmetric(
+                  horizontal: 8,
+                  vertical: 8,
+                ),
+              ),
+            ),
+          ),
         ],
-      ),
+        const SizedBox(width: 8),
+        // Actions
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            IconButton(
+              onPressed: widget.onCancel,
+              icon: const Icon(Icons.close, color: AppColors.error),
+              tooltip: 'إلغاء',
+            ),
+            IconButton(
+              onPressed: _isSubmitting ? null : _submitExpense,
+              icon: _isSubmitting
+                  ? const SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Icon(Icons.check, color: AppColors.success),
+              tooltip: 'حفظ',
+            ),
+          ],
+        ),
+      ],
     );
   }
 
@@ -644,11 +898,13 @@ class _EditableExpenseRow extends StatefulWidget {
   final String projectId;
   final TransactionModel transaction;
   final VoidCallback onCancel;
+  final bool isCompact;
 
   const _EditableExpenseRow({
     required this.projectId,
     required this.transaction,
     required this.onCancel,
+    required this.isCompact,
   });
 
   @override
@@ -702,12 +958,17 @@ class _EditableExpenseRowState extends State<_EditableExpenseRow> {
     return Container(
       padding: const EdgeInsets.all(16),
       color: AppColors.primary.withValues(alpha: 0.05),
-      child: Row(
-        children: [
-          // Type icon
-          SizedBox(
-            width: 60,
-            child: Container(
+      child: widget.isCompact ? _buildCompactForm() : _buildWideForm(),
+    );
+  }
+
+  Widget _buildCompactForm() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Row(
+          children: [
+            Container(
               width: 36,
               height: 36,
               decoration: BoxDecoration(
@@ -720,126 +981,237 @@ class _EditableExpenseRowState extends State<_EditableExpenseRow> {
                 size: 18,
               ),
             ),
-          ),
-          // Name input
-          Expanded(
-            flex: 2,
-            child: TextField(
-              controller: _nameController,
-              decoration: const InputDecoration(
-                hintText: 'اسم المصروف',
-                isDense: true,
-                contentPadding: EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 8,
-                ),
-              ),
-            ),
-          ),
-          const SizedBox(width: 8),
-          // Cost type dropdown
-          SizedBox(
-            width: 120,
-            child: DropdownButtonFormField<CostType>(
-              value: _costType,
-              decoration: const InputDecoration(
-                isDense: true,
-                contentPadding: EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 8,
-                ),
-              ),
-              items: const [
-                DropdownMenuItem(value: CostType.total, child: Text('إجمالي')),
-                DropdownMenuItem(
-                  value: CostType.unitBased,
-                  child: Text('وحدة'),
-                ),
-              ],
-              onChanged: (value) {
-                if (value != null) setState(() => _costType = value);
-              },
-            ),
-          ),
-          const SizedBox(width: 8),
-          // Amount or Unit cost + Quantity
-          if (_costType == CostType.total)
-            SizedBox(
-              width: 120,
-              child: TextField(
-                controller: _amountController,
-                keyboardType: TextInputType.number,
-                decoration: const InputDecoration(
-                  hintText: 'المبلغ',
-                  isDense: true,
-                  contentPadding: EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 8,
-                  ),
-                ),
-              ),
-            )
-          else ...[
-            SizedBox(
-              width: 80,
-              child: TextField(
-                controller: _unitCostController,
-                keyboardType: TextInputType.number,
-                decoration: const InputDecoration(
-                  hintText: 'سعر الوحدة',
-                  isDense: true,
-                  contentPadding: EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 8,
-                  ),
-                ),
-              ),
-            ),
-            const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 4),
-              child: Text('×'),
-            ),
-            SizedBox(
-              width: 60,
-              child: TextField(
-                controller: _quantityController,
-                keyboardType: TextInputType.number,
-                decoration: const InputDecoration(
-                  hintText: 'الكمية',
-                  isDense: true,
-                  contentPadding: EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 8,
-                  ),
-                ),
-              ),
-            ),
+            const SizedBox(width: 12),
+            Text('تعديل المصروف', style: AppTextStyles.tableCellBold),
           ],
-          const SizedBox(width: 8),
-          // Actions
-          Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              IconButton(
-                onPressed: widget.onCancel,
-                icon: const Icon(Icons.close, color: AppColors.error),
-                tooltip: 'إلغاء',
+        ),
+        const SizedBox(height: 12),
+        TextField(
+          controller: _nameController,
+          decoration: const InputDecoration(
+            hintText: 'اسم المصروف',
+            isDense: true,
+            contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          ),
+        ),
+        const SizedBox(height: 8),
+        DropdownButtonFormField<CostType>(
+          value: _costType,
+          decoration: const InputDecoration(
+            isDense: true,
+            contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          ),
+          items: const [
+            DropdownMenuItem(value: CostType.total, child: Text('إجمالي')),
+            DropdownMenuItem(value: CostType.unitBased, child: Text('وحدة')),
+          ],
+          onChanged: (value) {
+            if (value != null) setState(() => _costType = value);
+          },
+        ),
+        const SizedBox(height: 8),
+        if (_costType == CostType.total)
+          TextField(
+            controller: _amountController,
+            keyboardType: TextInputType.number,
+            decoration: const InputDecoration(
+              hintText: 'المبلغ',
+              isDense: true,
+              contentPadding: EdgeInsets.symmetric(
+                horizontal: 12,
+                vertical: 10,
               ),
-              IconButton(
-                onPressed: _isSubmitting ? null : _submitUpdate,
-                icon: _isSubmitting
-                    ? const SizedBox(
-                        width: 18,
-                        height: 18,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : const Icon(Icons.check, color: AppColors.success),
-                tooltip: 'حفظ',
+            ),
+          )
+        else
+          Row(
+            children: [
+              Expanded(
+                child: TextField(
+                  controller: _unitCostController,
+                  keyboardType: TextInputType.number,
+                  decoration: const InputDecoration(
+                    hintText: 'سعر الوحدة',
+                    isDense: true,
+                    contentPadding: EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 10,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: TextField(
+                  controller: _quantityController,
+                  keyboardType: TextInputType.number,
+                  decoration: const InputDecoration(
+                    hintText: 'الكمية',
+                    isDense: true,
+                    contentPadding: EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 10,
+                    ),
+                  ),
+                ),
               ),
             ],
           ),
+        const SizedBox(height: 12),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.end,
+          children: [
+            IconButton(
+              onPressed: widget.onCancel,
+              icon: const Icon(Icons.close, color: AppColors.error),
+              tooltip: 'إلغاء',
+            ),
+            IconButton(
+              onPressed: _isSubmitting ? null : _submitUpdate,
+              icon: _isSubmitting
+                  ? const SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Icon(Icons.check, color: AppColors.success),
+              tooltip: 'حفظ',
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildWideForm() {
+    return Row(
+      children: [
+        // Type icon
+        SizedBox(
+          width: 60,
+          child: Container(
+            width: 36,
+            height: 36,
+            decoration: BoxDecoration(
+              color: AppColors.error.withValues(alpha: 0.1),
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(
+              Icons.arrow_upward,
+              color: AppColors.error,
+              size: 18,
+            ),
+          ),
+        ),
+        // Name input
+        Expanded(
+          flex: 2,
+          child: TextField(
+            controller: _nameController,
+            decoration: const InputDecoration(
+              hintText: 'اسم المصروف',
+              isDense: true,
+              contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            ),
+          ),
+        ),
+        const SizedBox(width: 8),
+        // Cost type dropdown
+        SizedBox(
+          width: 120,
+          child: DropdownButtonFormField<CostType>(
+            value: _costType,
+            decoration: const InputDecoration(
+              isDense: true,
+              contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            ),
+            items: const [
+              DropdownMenuItem(value: CostType.total, child: Text('إجمالي')),
+              DropdownMenuItem(value: CostType.unitBased, child: Text('وحدة')),
+            ],
+            onChanged: (value) {
+              if (value != null) setState(() => _costType = value);
+            },
+          ),
+        ),
+        const SizedBox(width: 8),
+        // Amount or Unit cost + Quantity
+        if (_costType == CostType.total)
+          SizedBox(
+            width: 120,
+            child: TextField(
+              controller: _amountController,
+              keyboardType: TextInputType.number,
+              decoration: const InputDecoration(
+                hintText: 'المبلغ',
+                isDense: true,
+                contentPadding: EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 8,
+                ),
+              ),
+            ),
+          )
+        else ...[
+          SizedBox(
+            width: 80,
+            child: TextField(
+              controller: _unitCostController,
+              keyboardType: TextInputType.number,
+              decoration: const InputDecoration(
+                hintText: 'سعر الوحدة',
+                isDense: true,
+                contentPadding: EdgeInsets.symmetric(
+                  horizontal: 8,
+                  vertical: 8,
+                ),
+              ),
+            ),
+          ),
+          const Padding(
+            padding: EdgeInsets.symmetric(horizontal: 4),
+            child: Text('×'),
+          ),
+          SizedBox(
+            width: 60,
+            child: TextField(
+              controller: _quantityController,
+              keyboardType: TextInputType.number,
+              decoration: const InputDecoration(
+                hintText: 'الكمية',
+                isDense: true,
+                contentPadding: EdgeInsets.symmetric(
+                  horizontal: 8,
+                  vertical: 8,
+                ),
+              ),
+            ),
+          ),
         ],
-      ),
+        const SizedBox(width: 8),
+        // Actions
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            IconButton(
+              onPressed: widget.onCancel,
+              icon: const Icon(Icons.close, color: AppColors.error),
+              tooltip: 'إلغاء',
+            ),
+            IconButton(
+              onPressed: _isSubmitting ? null : _submitUpdate,
+              icon: _isSubmitting
+                  ? const SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Icon(Icons.check, color: AppColors.success),
+              tooltip: 'حفظ',
+            ),
+          ],
+        ),
+      ],
     );
   }
 
@@ -947,8 +1319,13 @@ class _LoadMoreButton extends StatelessWidget {
 class _AddIncomeRow extends StatefulWidget {
   final String projectId;
   final VoidCallback onCancel;
+  final bool isCompact;
 
-  const _AddIncomeRow({required this.projectId, required this.onCancel});
+  const _AddIncomeRow({
+    required this.projectId,
+    required this.onCancel,
+    required this.isCompact,
+  });
 
   @override
   State<_AddIncomeRow> createState() => _AddIncomeRowState();
@@ -972,12 +1349,17 @@ class _AddIncomeRowState extends State<_AddIncomeRow> {
     return Container(
       padding: const EdgeInsets.all(16),
       color: AppColors.primary.withValues(alpha: 0.05),
-      child: Row(
-        children: [
-          // Type icon (income)
-          SizedBox(
-            width: 60,
-            child: Container(
+      child: widget.isCompact ? _buildCompactForm() : _buildWideForm(),
+    );
+  }
+
+  Widget _buildCompactForm() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Row(
+          children: [
+            Container(
               width: 36,
               height: 36,
               decoration: BoxDecoration(
@@ -990,102 +1372,191 @@ class _AddIncomeRowState extends State<_AddIncomeRow> {
                 size: 18,
               ),
             ),
+            const SizedBox(width: 12),
+            Text('إضافة إيراد', style: AppTextStyles.tableCellBold),
+          ],
+        ),
+        const SizedBox(height: 12),
+        TextField(
+          controller: _descriptionController,
+          decoration: const InputDecoration(
+            hintText: 'وصف الإيراد (مثال: دفعة العميل)',
+            isDense: true,
+            contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
           ),
-          // Description input
-          Expanded(
-            flex: 2,
-            child: TextField(
-              controller: _descriptionController,
-              decoration: const InputDecoration(
-                hintText: 'وصف الإيراد (مثال: دفعة العميل)',
-                isDense: true,
-                contentPadding: EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 8,
+        ),
+        const SizedBox(height: 8),
+        InkWell(
+          onTap: () async {
+            final date = await showDatePicker(
+              context: context,
+              initialDate: _selectedDate,
+              firstDate: DateTime(2020),
+              lastDate: DateTime.now().add(const Duration(days: 365)),
+            );
+            if (date != null) {
+              setState(() => _selectedDate = date);
+            }
+          },
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            decoration: BoxDecoration(
+              border: Border.all(color: AppColors.border),
+              borderRadius: BorderRadius.circular(4),
+            ),
+            child: Row(
+              children: [
+                const Icon(Icons.calendar_today, size: 16),
+                const SizedBox(width: 8),
+                Text(
+                  '${_selectedDate.day}/${_selectedDate.month}/${_selectedDate.year}',
+                  style: AppTextStyles.bodySmall,
                 ),
+              ],
+            ),
+          ),
+        ),
+        const SizedBox(height: 8),
+        TextField(
+          controller: _amountController,
+          keyboardType: TextInputType.number,
+          decoration: const InputDecoration(
+            hintText: 'المبلغ',
+            isDense: true,
+            contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          ),
+        ),
+        const SizedBox(height: 12),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.end,
+          children: [
+            IconButton(
+              onPressed: widget.onCancel,
+              icon: const Icon(Icons.close, color: AppColors.error),
+              tooltip: 'إلغاء',
+            ),
+            IconButton(
+              onPressed: _isSubmitting ? null : _submitIncome,
+              icon: _isSubmitting
+                  ? const SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Icon(Icons.check, color: AppColors.success),
+              tooltip: 'حفظ',
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildWideForm() {
+    return Row(
+      children: [
+        // Type icon (income)
+        SizedBox(
+          width: 60,
+          child: Container(
+            width: 36,
+            height: 36,
+            decoration: BoxDecoration(
+              color: AppColors.success.withValues(alpha: 0.1),
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(
+              Icons.arrow_downward,
+              color: AppColors.success,
+              size: 18,
+            ),
+          ),
+        ),
+        // Description input
+        Expanded(
+          flex: 2,
+          child: TextField(
+            controller: _descriptionController,
+            decoration: const InputDecoration(
+              hintText: 'وصف الإيراد (مثال: دفعة العميل)',
+              isDense: true,
+              contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            ),
+          ),
+        ),
+        const SizedBox(width: 8),
+        // Date picker
+        SizedBox(
+          width: 130,
+          child: InkWell(
+            onTap: () async {
+              final date = await showDatePicker(
+                context: context,
+                initialDate: _selectedDate,
+                firstDate: DateTime(2020),
+                lastDate: DateTime.now().add(const Duration(days: 365)),
+              );
+              if (date != null) {
+                setState(() => _selectedDate = date);
+              }
+            },
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              decoration: BoxDecoration(
+                border: Border.all(color: AppColors.border),
+                borderRadius: BorderRadius.circular(4),
+              ),
+              child: Row(
+                children: [
+                  const Icon(Icons.calendar_today, size: 16),
+                  const SizedBox(width: 4),
+                  Text(
+                    '${_selectedDate.day}/${_selectedDate.month}/${_selectedDate.year}',
+                    style: AppTextStyles.bodySmall,
+                  ),
+                ],
               ),
             ),
           ),
-          const SizedBox(width: 8),
-          // Date picker
-          SizedBox(
-            width: 130,
-            child: InkWell(
-              onTap: () async {
-                final date = await showDatePicker(
-                  context: context,
-                  initialDate: _selectedDate,
-                  firstDate: DateTime(2020),
-                  lastDate: DateTime.now().add(const Duration(days: 365)),
-                );
-                if (date != null) {
-                  setState(() => _selectedDate = date);
-                }
-              },
-              child: Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 8,
-                ),
-                decoration: BoxDecoration(
-                  border: Border.all(color: AppColors.border),
-                  borderRadius: BorderRadius.circular(4),
-                ),
-                child: Row(
-                  children: [
-                    const Icon(Icons.calendar_today, size: 16),
-                    const SizedBox(width: 4),
-                    Text(
-                      '${_selectedDate.day}/${_selectedDate.month}/${_selectedDate.year}',
-                      style: AppTextStyles.bodySmall,
-                    ),
-                  ],
-                ),
-              ),
+        ),
+        const SizedBox(width: 8),
+        // Amount input
+        SizedBox(
+          width: 120,
+          child: TextField(
+            controller: _amountController,
+            keyboardType: TextInputType.number,
+            decoration: const InputDecoration(
+              hintText: 'المبلغ',
+              isDense: true,
+              contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             ),
           ),
-          const SizedBox(width: 8),
-          // Amount input
-          SizedBox(
-            width: 120,
-            child: TextField(
-              controller: _amountController,
-              keyboardType: TextInputType.number,
-              decoration: const InputDecoration(
-                hintText: 'المبلغ',
-                isDense: true,
-                contentPadding: EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 8,
-                ),
-              ),
+        ),
+        const SizedBox(width: 8),
+        // Actions
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            IconButton(
+              onPressed: widget.onCancel,
+              icon: const Icon(Icons.close, color: AppColors.error),
+              tooltip: 'إلغاء',
             ),
-          ),
-          const SizedBox(width: 8),
-          // Actions
-          Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              IconButton(
-                onPressed: widget.onCancel,
-                icon: const Icon(Icons.close, color: AppColors.error),
-                tooltip: 'إلغاء',
-              ),
-              IconButton(
-                onPressed: _isSubmitting ? null : _submitIncome,
-                icon: _isSubmitting
-                    ? const SizedBox(
-                        width: 18,
-                        height: 18,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : const Icon(Icons.check, color: AppColors.success),
-                tooltip: 'حفظ',
-              ),
-            ],
-          ),
-        ],
-      ),
+            IconButton(
+              onPressed: _isSubmitting ? null : _submitIncome,
+              icon: _isSubmitting
+                  ? const SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Icon(Icons.check, color: AppColors.success),
+              tooltip: 'حفظ',
+            ),
+          ],
+        ),
+      ],
     );
   }
 
@@ -1141,5 +1612,29 @@ class _AddIncomeRowState extends State<_AddIncomeRow> {
         setState(() => _isSubmitting = false);
       }
     }
+  }
+}
+
+class _CompactInfoItem extends StatelessWidget {
+  final String label;
+  final Widget value;
+
+  const _CompactInfoItem({required this.label, required this.value});
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: AppTextStyles.bodySmall.copyWith(
+            color: AppColors.textSecondary,
+          ),
+        ),
+        const SizedBox(height: 4),
+        value,
+      ],
+    );
   }
 }

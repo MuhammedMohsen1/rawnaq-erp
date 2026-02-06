@@ -286,30 +286,47 @@ class _DashboardPageState extends State<_DashboardPage> {
             ..add(const LoadProjects()),
       child: BlocBuilder<ProjectsBloc, ProjectsState>(
         builder: (context, state) {
-          return SingleChildScrollView(
-            padding: const EdgeInsets.all(24),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Key Metrics Section
-                _buildStatsCards(context),
-                const SizedBox(height: 32),
+          return LayoutBuilder(
+            builder: (context, constraints) {
+              final isNarrow = constraints.maxWidth < 600;
+              final isCompact = constraints.maxWidth < 900;
+              final padding = isNarrow ? 16.0 : isCompact ? 20.0 : 24.0;
 
-                // Financial Overview Section
-                _buildFinancialOverview(context),
-                const SizedBox(height: 32),
-
-                // Recent Users and Activity Section
-                Row(
+              return SingleChildScrollView(
+                padding: EdgeInsets.all(padding),
+                child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Expanded(flex: 2, child: _buildRecentUsers(context)),
-                    const SizedBox(width: 24),
-                    Expanded(flex: 1, child: _buildRecentActivity(context)),
+                    // Key Metrics Section
+                    _buildStatsCards(context),
+                    const SizedBox(height: 32),
+
+                    // Financial Overview Section
+                    _buildFinancialOverview(context),
+                    const SizedBox(height: 32),
+
+                    // Recent Users and Activity Section
+                    if (isNarrow)
+                      Column(
+                        children: [
+                          _buildRecentUsers(context),
+                          const SizedBox(height: 24),
+                          _buildRecentActivity(context),
+                        ],
+                      )
+                    else
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Expanded(flex: 2, child: _buildRecentUsers(context)),
+                          const SizedBox(width: 24),
+                          Expanded(flex: 1, child: _buildRecentActivity(context)),
+                        ],
+                      ),
                   ],
                 ),
-              ],
-            ),
+              );
+            },
           );
         },
       ),
@@ -355,40 +372,34 @@ class _DashboardPageState extends State<_DashboardPage> {
           onHoldCount = draft + underPricing + profitPending + pendingApproval;
         }
 
-        return Row(
-          children: [
-            Expanded(
-              child: _buildStatCard(
+        return LayoutBuilder(
+          builder: (context, constraints) {
+            final isNarrow = constraints.maxWidth < 520;
+            final isCompact = constraints.maxWidth < 900;
+
+            final cards = [
+              _buildStatCard(
                 context,
                 title: 'المشاريع النشطة',
                 value: activeCount.toString(),
                 icon: Icons.folder,
                 color: const Color(0xFF3B82F6),
               ),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: _buildStatCard(
+              _buildStatCard(
                 context,
                 title: 'المشاريع المتأخرة',
                 value: delayedCount.toString(),
                 icon: Icons.warning,
                 color: const Color(0xFFEF4444),
               ),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: _buildStatCard(
+              _buildStatCard(
                 context,
                 title: 'المشاريع المعلقة',
                 value: onHoldCount.toString(),
                 icon: Icons.pause_circle,
                 color: const Color(0xFFF59E0B),
               ),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: _buildStatCard(
+              _buildStatCard(
                 context,
                 title: 'المشاريع المكتملة',
                 value: state is ProjectsLoaded && state.statistics != null
@@ -402,8 +413,43 @@ class _DashboardPageState extends State<_DashboardPage> {
                 icon: Icons.check_circle,
                 color: const Color(0xFF22C55E),
               ),
-            ),
-          ],
+            ];
+
+            if (isNarrow) {
+              return Column(
+                children: [
+                  for (int i = 0; i < cards.length; i++) ...[
+                    cards[i],
+                    if (i != cards.length - 1) const SizedBox(height: 12),
+                  ],
+                ],
+              );
+            }
+
+            if (isCompact) {
+              final cardWidth = (constraints.maxWidth - 16) / 2;
+              return Wrap(
+                spacing: 16,
+                runSpacing: 16,
+                children: [
+                  for (final card in cards)
+                    SizedBox(width: cardWidth, child: card),
+                ],
+              );
+            }
+
+            return Row(
+              children: [
+                Expanded(child: cards[0]),
+                const SizedBox(width: 16),
+                Expanded(child: cards[1]),
+                const SizedBox(width: 16),
+                Expanded(child: cards[2]),
+                const SizedBox(width: 16),
+                Expanded(child: cards[3]),
+              ],
+            );
+          },
         );
       },
     );
@@ -460,108 +506,181 @@ class _DashboardPageState extends State<_DashboardPage> {
   }
 
   Widget _buildFinancialOverview(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        color: const Color(0xFF161B22),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFF30363D)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isNarrow = constraints.maxWidth < 600;
+        final padding = isNarrow ? 16.0 : 24.0;
+
+        return Container(
+          padding: EdgeInsets.all(padding),
+          decoration: BoxDecoration(
+            color: const Color(0xFF161B22),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: const Color(0xFF30363D)),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'نظرة عامة مالية',
-                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
+              if (isNarrow)
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'نظرة عامة مالية',
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    'التسعير الفعلي مقابل التكلفة الفعلية',
+                    const SizedBox(height: 4),
+                    Text(
+                      'التسعير الفعلي مقابل التكلفة الفعلية',
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: const Color(0xFF8B949E),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Row(
+                      children: [
+                        Text(
+                          '\$450,000',
+                          style: Theme.of(context).textTheme.headlineMedium
+                              ?.copyWith(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                              ),
+                        ),
+                        const SizedBox(width: 8),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 4,
+                          ),
+                          decoration: BoxDecoration(
+                            color: const Color(
+                              0xFF22C55E,
+                            ).withValues(alpha: 0.15),
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: Text(
+                            '+12.5%',
+                            style: Theme.of(context).textTheme.bodySmall
+                                ?.copyWith(
+                                  color: const Color(0xFF22C55E),
+                                  fontWeight: FontWeight.w600,
+                                ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                )
+              else
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'نظرة عامة مالية',
+                          style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          'التسعير الفعلي مقابل التكلفة الفعلية',
+                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                            color: const Color(0xFF8B949E),
+                          ),
+                        ),
+                      ],
+                    ),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        Row(
+                          children: [
+                            Text(
+                              '\$450,000',
+                              style: Theme.of(context).textTheme.headlineMedium
+                                  ?.copyWith(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                            ),
+                            const SizedBox(width: 8),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 4,
+                              ),
+                              decoration: BoxDecoration(
+                                color: const Color(
+                                  0xFF22C55E,
+                                ).withValues(alpha: 0.15),
+                                borderRadius: BorderRadius.circular(4),
+                              ),
+                              child: Text(
+                                '+12.5%',
+                                style: Theme.of(context).textTheme.bodySmall
+                                    ?.copyWith(
+                                      color: const Color(0xFF22C55E),
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              const SizedBox(height: 24),
+              // Time period selector
+              if (isNarrow)
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: [
+                    _buildPeriodButton('سنة', _selectedPeriod == 'Year'),
+                    _buildPeriodButton('شهر', _selectedPeriod == 'Month'),
+                    _buildPeriodButton('أسبوع', _selectedPeriod == 'Week'),
+                  ],
+                )
+              else
+                Row(
+                  children: [
+                    _buildPeriodButton('سنة', _selectedPeriod == 'Year'),
+                    const SizedBox(width: 8),
+                    _buildPeriodButton('شهر', _selectedPeriod == 'Month'),
+                    const SizedBox(width: 8),
+                    _buildPeriodButton('أسبوع', _selectedPeriod == 'Week'),
+                  ],
+                ),
+              const SizedBox(height: 24),
+              // Chart placeholder
+              Container(
+                height: isNarrow ? 160 : 200,
+                decoration: BoxDecoration(
+                  color: const Color(0xFF0D1117),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Center(
+                  child: Text(
+                    'تصور الرسم البياني',
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                       color: const Color(0xFF8B949E),
                     ),
                   ),
-                ],
-              ),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Row(
-                    children: [
-                      Text(
-                        '\$450,000',
-                        style: Theme.of(context).textTheme.headlineMedium
-                            ?.copyWith(
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold,
-                            ),
-                      ),
-                      const SizedBox(width: 8),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 4,
-                        ),
-                        decoration: BoxDecoration(
-                          color: const Color(
-                            0xFF22C55E,
-                          ).withValues(alpha: 0.15),
-                          borderRadius: BorderRadius.circular(4),
-                        ),
-                        child: Text(
-                          '+12.5%',
-                          style: Theme.of(context).textTheme.bodySmall
-                              ?.copyWith(
-                                color: const Color(0xFF22C55E),
-                                fontWeight: FontWeight.w600,
-                              ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ],
-          ),
-          const SizedBox(height: 24),
-          // Time period selector
-          Row(
-            children: [
-              _buildPeriodButton('سنة', _selectedPeriod == 'Year'),
-              const SizedBox(width: 8),
-              _buildPeriodButton('شهر', _selectedPeriod == 'Month'),
-              const SizedBox(width: 8),
-              _buildPeriodButton('أسبوع', _selectedPeriod == 'Week'),
-            ],
-          ),
-          const SizedBox(height: 24),
-          // Chart placeholder
-          Container(
-            height: 200,
-            decoration: BoxDecoration(
-              color: const Color(0xFF0D1117),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Center(
-              child: Text(
-                'تصور الرسم البياني',
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: const Color(0xFF8B949E),
                 ),
               ),
-            ),
+            ],
           ),
-        ],
-      ),
+        );
+      },
     );
   }
 
@@ -608,82 +727,138 @@ class _DashboardPageState extends State<_DashboardPage> {
   }
 
   Widget _buildRecentUsers(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        color: const Color(0xFF161B22),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFF30363D)),
+    const users = [
+      _UserRowData(
+        name: 'رفيدة أحمد',
+        email: 'Rofida@Rawnaq.com',
+        role: 'مدير',
+        status: 'نشط',
+        statusColor: Color(0xFF22C55E),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                'المستخدمون الأخيرون',
-                style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              TextButton(onPressed: () {}, child: const Text('عرض الكل')),
-            ],
+      _UserRowData(
+        name: 'شيماء علي',
+        email: 'Shymaa@Rawnaq.com',
+        role: 'مدير مشروع',
+        status: 'غياب',
+        statusColor: Color(0xFFF59E0B),
+      ),
+      _UserRowData(
+        name: 'أبو مكة',
+        email: 'AboMaka@Rawnaq.com',
+        role: 'مهندس',
+        status: 'غير نشط',
+        statusColor: Color(0xFF6E7681),
+      ),
+    ];
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isNarrow = constraints.maxWidth < 600;
+        final padding = isNarrow ? 16.0 : 24.0;
+
+        return Container(
+          padding: EdgeInsets.all(padding),
+          decoration: BoxDecoration(
+            color: const Color(0xFF161B22),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: const Color(0xFF30363D)),
           ),
-          const SizedBox(height: 16),
-          // Table
-          Table(
-            columnWidths: const {
-              0: FlexColumnWidth(2),
-              1: FlexColumnWidth(2),
-              2: FlexColumnWidth(1.5),
-              3: FlexColumnWidth(1.5),
-              4: FlexColumnWidth(1),
-            },
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
             children: [
-              // Header
-              TableRow(
-                decoration: const BoxDecoration(
-                  border: Border(
-                    bottom: BorderSide(color: Color(0xFF30363D), width: 1),
+              if (isNarrow)
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'المستخدمون الأخيرون',
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Align(
+                      alignment: AlignmentDirectional.centerEnd,
+                      child:
+                          TextButton(onPressed: () {}, child: const Text('عرض الكل')),
+                    ),
+                  ],
+                )
+              else
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'المستخدمون الأخيرون',
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    TextButton(onPressed: () {}, child: const Text('عرض الكل')),
+                  ],
+                ),
+              const SizedBox(height: 16),
+              if (isNarrow)
+                Column(
+                  children: [
+                    for (int i = 0; i < users.length; i++) ...[
+                      _buildUserCard(users[i]),
+                      if (i != users.length - 1) const SizedBox(height: 12),
+                    ],
+                  ],
+                )
+              else
+                SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(
+                      minWidth: constraints.maxWidth,
+                    ),
+                    child: Table(
+                      columnWidths: const {
+                        0: FlexColumnWidth(2),
+                        1: FlexColumnWidth(2),
+                        2: FlexColumnWidth(1.5),
+                        3: FlexColumnWidth(1.5),
+                        4: FlexColumnWidth(1),
+                      },
+                      children: [
+                        // Header
+                        TableRow(
+                          decoration: const BoxDecoration(
+                            border: Border(
+                              bottom:
+                                  BorderSide(color: Color(0xFF30363D), width: 1),
+                            ),
+                          ),
+                          children: [
+                            _buildTableCell('اسم المستخدم', isHeader: true),
+                            _buildTableCell('البريد الإلكتروني', isHeader: true),
+                            _buildTableCell('الدور', isHeader: true),
+                            _buildTableCell('الحالة', isHeader: true),
+                            _buildTableCell('الإجراءات', isHeader: true),
+                          ],
+                        ),
+                        // Rows
+                        for (final user in users)
+                          _buildUserRow(
+                            user.name,
+                            user.email,
+                            user.role,
+                            user.status,
+                            user.statusColor,
+                          ),
+                      ],
+                    ),
                   ),
                 ),
-                children: [
-                  _buildTableCell('اسم المستخدم', isHeader: true),
-                  _buildTableCell('البريد الإلكتروني', isHeader: true),
-                  _buildTableCell('الدور', isHeader: true),
-                  _buildTableCell('الحالة', isHeader: true),
-                  _buildTableCell('الإجراءات', isHeader: true),
-                ],
-              ),
-              // Rows
-              _buildUserRow(
-                'رفيدة أحمد',
-                'Rofida@Rawnaq.com',
-                'مدير',
-                'نشط',
-                const Color(0xFF22C55E),
-              ),
-              _buildUserRow(
-                'شيماء علي',
-                'Shymaa@Rawnaq.com',
-                'مدير مشروع',
-                'غياب',
-                const Color(0xFFF59E0B),
-              ),
-              _buildUserRow(
-                'أبو مكة',
-                'AboMaka@Rawnaq.com',
-                'مهندس',
-                'غير نشط',
-                const Color(0xFF6E7681),
-              ),
             ],
           ),
-        ],
-      ),
+        );
+      },
     );
   }
 
@@ -746,62 +921,150 @@ class _DashboardPageState extends State<_DashboardPage> {
   }
 
   Widget _buildRecentActivity(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isNarrow = constraints.maxWidth < 600;
+        final padding = isNarrow ? 16.0 : 24.0;
+
+        return Container(
+          padding: EdgeInsets.all(padding),
+          decoration: BoxDecoration(
+            color: const Color(0xFF161B22),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: const Color(0xFF30363D)),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              if (isNarrow)
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'النشاط الأخير',
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Align(
+                      alignment: AlignmentDirectional.centerEnd,
+                      child:
+                          TextButton(onPressed: () {}, child: const Text('عرض الكل')),
+                    ),
+                  ],
+                )
+              else
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'النشاط الأخير',
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    TextButton(onPressed: () {}, child: const Text('عرض الكل')),
+                  ],
+                ),
+              const SizedBox(height: 16),
+              Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  _buildActivityItem(
+                    Icons.description,
+                    'تم رفع مخطط جديد',
+                    'رفع أحمد "الموقع أ - المرحلة 2.pdf"',
+                    'منذ 25 دقيقة',
+                  ),
+                  const SizedBox(height: 16),
+                  _buildActivityItem(
+                    Icons.check_circle,
+                    'تمت الموافقة على الفاتورة',
+                    'وافق المدير المالي على الفاتورة رقم 3092',
+                    'منذ ساعتين',
+                    iconColor: const Color(0xFF22C55E),
+                  ),
+                  const SizedBox(height: 16),
+                  _buildActivityItem(
+                    Icons.warning,
+                    'تنبيه نقص المواد',
+                    'مخزون منخفض من أكياس الأسمنت (النوع 2)',
+                    'منذ 5 ساعات',
+                    iconColor: const Color(0xFFF59E0B),
+                  ),
+                  const SizedBox(height: 16),
+                  _buildActivityItem(
+                    Icons.warning,
+                    'تنبيه نقص المواد',
+                    'مخزون منخفض من أكياس الأسمنت (النوع 2)',
+                    'منذ 5 ساعات',
+                    iconColor: const Color(0xFFF59E0B),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildUserCard(_UserRowData user) {
     return Container(
-      padding: const EdgeInsets.all(24),
+      padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: const Color(0xFF161B22),
-        borderRadius: BorderRadius.circular(12),
+        color: const Color(0xFF0D1117),
+        borderRadius: BorderRadius.circular(8),
         border: Border.all(color: const Color(0xFF30363D)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                'النشاط الأخير',
-                style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
+              Expanded(
+                child: Text(
+                  user.name,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 14,
+                  ),
                 ),
               ),
-              TextButton(onPressed: () {}, child: const Text('عرض الكل')),
+              const Icon(
+                Icons.more_vert,
+                color: Color(0xFF8B949E),
+                size: 18,
+              ),
             ],
           ),
-          const SizedBox(height: 16),
-          Column(
-            mainAxisSize: MainAxisSize.min,
+          const SizedBox(height: 6),
+          Text(
+            user.email,
+            style: const TextStyle(color: Color(0xFF8B949E), fontSize: 12),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            user.role,
+            style: const TextStyle(color: Colors.white, fontSize: 12),
+          ),
+          const SizedBox(height: 8),
+          Row(
             children: [
-              _buildActivityItem(
-                Icons.description,
-                'تم رفع مخطط جديد',
-                'رفع أحمد "الموقع أ - المرحلة 2.pdf"',
-                'منذ 25 دقيقة',
+              Container(
+                width: 8,
+                height: 8,
+                decoration:
+                    BoxDecoration(color: user.statusColor, shape: BoxShape.circle),
               ),
-              const SizedBox(height: 16),
-              _buildActivityItem(
-                Icons.check_circle,
-                'تمت الموافقة على الفاتورة',
-                'وافق المدير المالي على الفاتورة رقم 3092',
-                'منذ ساعتين',
-                iconColor: const Color(0xFF22C55E),
-              ),
-              const SizedBox(height: 16),
-              _buildActivityItem(
-                Icons.warning,
-                'تنبيه نقص المواد',
-                'مخزون منخفض من أكياس الأسمنت (النوع 2)',
-                'منذ 5 ساعات',
-                iconColor: const Color(0xFFF59E0B),
-              ),
-              const SizedBox(height: 16),
-              _buildActivityItem(
-                Icons.warning,
-                'تنبيه نقص المواد',
-                'مخزون منخفض من أكياس الأسمنت (النوع 2)',
-                'منذ 5 ساعات',
-                iconColor: const Color(0xFFF59E0B),
+              const SizedBox(width: 8),
+              Text(
+                user.status,
+                style: const TextStyle(color: Colors.white, fontSize: 12),
               ),
             ],
           ),
@@ -910,4 +1173,20 @@ class _PlaceholderPage extends StatelessWidget {
       ),
     );
   }
+}
+
+class _UserRowData {
+  final String name;
+  final String email;
+  final String role;
+  final String status;
+  final Color statusColor;
+
+  const _UserRowData({
+    required this.name,
+    required this.email,
+    required this.role,
+    required this.status,
+    required this.statusColor,
+  });
 }
