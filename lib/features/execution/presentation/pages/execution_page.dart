@@ -140,6 +140,8 @@ class _ExecutionLayout extends StatelessWidget {
                   totalPrice: state.dashboard.totalPrice,
                   budgetPercentage: state.dashboard.budgetPercentage,
                   budgetWarningLevel: state.dashboard.budgetWarningLevel,
+                  startDate: state.dashboard.startDate,
+                  endDate: state.dashboard.endDate,
                 ),
                 const SizedBox(height: 24),
 
@@ -190,6 +192,8 @@ class _ExecutionLayout extends StatelessWidget {
                   isSiteEngineer: canRequestInstallments,
                   isAdminOrManager: isAdminOrManager,
                   paymentSchedule: state.dashboard.paymentSchedule,
+                  pendingInstallmentRequests:
+                      state.dashboard.pendingInstallmentRequests,
                   profitPercentage: state.dashboard.profitPercentage,
                   onAddExpense: () => _handleAddExpense(context),
                   onAddIncome: isAdminOrManager

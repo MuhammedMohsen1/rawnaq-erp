@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_text_styles.dart';
 import '../../domain/enums/transaction_type.dart';
@@ -11,6 +12,8 @@ class CashFlowSummaryCards extends StatelessWidget {
   final double totalPrice;
   final double budgetPercentage;
   final BudgetWarningLevel budgetWarningLevel;
+  final DateTime? startDate;
+  final DateTime? endDate;
 
   const CashFlowSummaryCards({
     super.key,
@@ -21,42 +24,63 @@ class CashFlowSummaryCards extends StatelessWidget {
     required this.totalPrice,
     required this.budgetPercentage,
     required this.budgetWarningLevel,
+    this.startDate,
+    this.endDate,
   });
 
   @override
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        final isCompact = constraints.maxWidth < 720;
+        final isNarrow = constraints.maxWidth < 720;
+        final isCompact = constraints.maxWidth < 1100;
 
-        if (isCompact) {
+        final cards = [
+          _SummaryCard(
+            title: 'إجمالي المستلم',
+            value: totalReceived,
+            icon: Icons.arrow_downward,
+            iconBackgroundColor: AppColors.success.withValues(alpha: 0.1),
+            iconColor: AppColors.success,
+            valueColor: AppColors.success,
+          ),
+          _SummaryCard(
+            title: 'إجمالي المصروفات',
+            value: totalExpenses,
+            icon: Icons.arrow_upward,
+            iconBackgroundColor: AppColors.error.withValues(alpha: 0.1),
+            iconColor: AppColors.error,
+            valueColor: AppColors.error,
+            showNegative: true,
+          ),
+          _NetCashFlowCard(
+            netCashFlow: netCashFlow,
+            totalBudget: totalBudget,
+            budgetPercentage: budgetPercentage,
+            budgetWarningLevel: budgetWarningLevel,
+          ),
+          _DateProgressCard(startDate: startDate, endDate: endDate),
+        ];
+
+        if (isNarrow) {
           return Column(
             children: [
-              _SummaryCard(
-                title: 'إجمالي المستلم',
-                value: totalReceived,
-                icon: Icons.arrow_downward,
-                iconBackgroundColor: AppColors.success.withValues(alpha: 0.1),
-                iconColor: AppColors.success,
-                valueColor: AppColors.success,
-              ),
-              const SizedBox(height: 12),
-              _SummaryCard(
-                title: 'إجمالي المصروفات',
-                value: totalExpenses,
-                icon: Icons.arrow_upward,
-                iconBackgroundColor: AppColors.error.withValues(alpha: 0.1),
-                iconColor: AppColors.error,
-                valueColor: AppColors.error,
-                showNegative: true,
-              ),
-              const SizedBox(height: 12),
-              _NetCashFlowCard(
-                netCashFlow: netCashFlow,
-                totalBudget: totalBudget,
-                budgetPercentage: budgetPercentage,
-                budgetWarningLevel: budgetWarningLevel,
-              ),
+              for (int i = 0; i < cards.length; i++) ...[
+                cards[i],
+                if (i != cards.length - 1) const SizedBox(height: 12),
+              ],
+            ],
+          );
+        }
+
+        if (isCompact) {
+          final cardWidth = (constraints.maxWidth - 16) / 2;
+          return Wrap(
+            spacing: 16,
+            runSpacing: 16,
+            children: [
+              for (final card in cards)
+                SizedBox(width: cardWidth, child: card),
             ],
           );
         }
@@ -64,40 +88,13 @@ class CashFlowSummaryCards extends StatelessWidget {
         return IntrinsicHeight(
           child: Row(
             children: [
-              // Total Received Card
-              Expanded(
-                child: _SummaryCard(
-                  title: 'إجمالي المستلم',
-                  value: totalReceived,
-                  icon: Icons.arrow_downward,
-                  iconBackgroundColor: AppColors.success.withValues(alpha: 0.1),
-                  iconColor: AppColors.success,
-                  valueColor: AppColors.success,
-                ),
-              ),
+              Expanded(child: cards[0]),
               const SizedBox(width: 16),
-              // Total Expenses Card
-              Expanded(
-                child: _SummaryCard(
-                  title: 'إجمالي المصروفات',
-                  value: totalExpenses,
-                  icon: Icons.arrow_upward,
-                  iconBackgroundColor: AppColors.error.withValues(alpha: 0.1),
-                  iconColor: AppColors.error,
-                  valueColor: AppColors.error,
-                  showNegative: true,
-                ),
-              ),
+              Expanded(child: cards[1]),
               const SizedBox(width: 16),
-              // Net Cash Flow Card with Budget Progress
-              Expanded(
-                child: _NetCashFlowCard(
-                  netCashFlow: netCashFlow,
-                  totalBudget: totalBudget,
-                  budgetPercentage: budgetPercentage,
-                  budgetWarningLevel: budgetWarningLevel,
-                ),
-              ),
+              Expanded(child: cards[2]),
+              const SizedBox(width: 16),
+              Expanded(child: cards[3]),
             ],
           ),
         );
@@ -271,6 +268,99 @@ class _NetCashFlowCard extends StatelessWidget {
               minHeight: 8,
             ),
           ),
+        ],
+      ),
+    );
+  }
+}
+
+class _DateProgressCard extends StatelessWidget {
+  final DateTime? startDate;
+  final DateTime? endDate;
+
+  const _DateProgressCard({this.startDate, this.endDate});
+
+  @override
+  Widget build(BuildContext context) {
+    final dateFormat = DateFormat('dd/MM/yyyy');
+    final now = DateTime.now();
+
+    final isValidRange =
+        startDate != null && endDate != null && !endDate!.isBefore(startDate!);
+
+    int? totalDays;
+    int? elapsedDays;
+    double? percent;
+
+    if (isValidRange) {
+      totalDays = endDate!.difference(startDate!).inDays;
+      if (totalDays <= 0) {
+        totalDays = 1;
+      }
+
+      final rawElapsed = now.difference(startDate!).inDays;
+      elapsedDays = rawElapsed.clamp(0, totalDays).toInt();
+      percent = (elapsedDays / totalDays) * 100;
+    }
+
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: AppColors.cardBackground,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppColors.border),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'تقدم الجدول الزمني',
+            style: AppTextStyles.overline.copyWith(
+              color: AppColors.textSecondary,
+            ),
+          ),
+          const SizedBox(height: 12),
+          Text(
+            isValidRange ? '${percent!.toStringAsFixed(0)}%' : 'غير متاح',
+            style: AppTextStyles.sectionTitle.copyWith(
+              color: AppColors.textPrimary,
+            ),
+          ),
+          const SizedBox(height: 8),
+          if (isValidRange) ...[
+            Text(
+              '${elapsedDays!} / $totalDays يوم',
+              style: AppTextStyles.bodySmall.copyWith(
+                color: AppColors.textSecondary,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              'اليوم: ${dateFormat.format(now)}',
+              style: AppTextStyles.bodySmall.copyWith(
+                color: AppColors.textSecondary,
+              ),
+            ),
+            const SizedBox(height: 12),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(4),
+              child: LinearProgressIndicator(
+                value: (percent! / 100).clamp(0, 1),
+                backgroundColor: AppColors.border,
+                valueColor: const AlwaysStoppedAnimation<Color>(
+                  AppColors.primary,
+                ),
+                minHeight: 8,
+              ),
+            ),
+          ] else ...[
+            Text(
+              'لا توجد بيانات تاريخ البدء أو الانتهاء',
+              style: AppTextStyles.bodySmall.copyWith(
+                color: AppColors.textSecondary,
+              ),
+            ),
+          ],
         ],
       ),
     );

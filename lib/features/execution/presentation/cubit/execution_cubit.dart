@@ -90,6 +90,46 @@ class ExecutionCubit extends Cubit<ExecutionState> {
     }
   }
 
+  /// Update installment (inline edit)
+  Future<void> updateInstallment(
+    String projectId,
+    String installmentId,
+    UpdateInstallmentDto dto,
+  ) async {
+    final currentState = state;
+    if (currentState is! ExecutionLoaded) return;
+
+    try {
+      await _apiDataSource.updateInstallment(projectId, installmentId, dto);
+      final newEditingStates =
+          Map<String, bool>.from(currentState.editingTransactions);
+      newEditingStates.remove(installmentId);
+      emit(currentState.copyWith(
+        editingTransactions: newEditingStates,
+        clearEditingExpenseId: true,
+      ));
+      await refreshDashboard(projectId);
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  /// Delete installment
+  Future<void> deleteInstallment(
+    String projectId,
+    String installmentId,
+  ) async {
+    final currentState = state;
+    if (currentState is! ExecutionLoaded) return;
+
+    try {
+      await _apiDataSource.deleteInstallment(projectId, installmentId);
+      await refreshDashboard(projectId);
+    } catch (e) {
+      rethrow;
+    }
+  }
+
   /// Request installment (Site Engineer)
   Future<void> requestInstallment(
     String projectId, {

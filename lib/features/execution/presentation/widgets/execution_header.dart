@@ -23,17 +23,16 @@ class ExecutionHeader extends StatelessWidget {
             children: [
               Text(
                 projectName,
-                style: AppTextStyles.h2.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
+                style: AppTextStyles.h2.copyWith(fontWeight: FontWeight.bold),
               ),
-              const SizedBox(height: 4),
-              Text(
-                'إدارة مصروفات الموقع، تتبع الدفعات، ومراقبة التدفق النقدي',
-                style: AppTextStyles.bodyMedium.copyWith(
-                  color: AppColors.textSecondary,
-                ),
-              ),
+              // const SizedBox(height: 4),
+
+              // Text(
+              //   'إدارة مصروفات الموقع، تتبع الدفعات، ومراقبة التدفق النقدي',
+              //   style: AppTextStyles.bodyMedium.copyWith(
+              //     color: AppColors.textSecondary,
+              //   ),
+              // ),
             ],
           ),
         ),
@@ -41,7 +40,7 @@ class ExecutionHeader extends StatelessWidget {
           OutlinedButton.icon(
             onPressed: onOpenPastPricing,
             icon: const Icon(Icons.history, size: 18),
-            label: const Text('فتح التسعير السابق'),
+            label: const Text('التسعير'),
             style: OutlinedButton.styleFrom(
               foregroundColor: AppColors.textPrimary,
               side: const BorderSide(color: AppColors.border),

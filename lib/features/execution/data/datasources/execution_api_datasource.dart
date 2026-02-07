@@ -138,6 +138,28 @@ class ExecutionApiDataSource {
     return InstallmentRequestModel.fromJson(data);
   }
 
+  /// Update installment (not wired yet)
+  Future<void> updateInstallment(
+    String projectId,
+    String installmentId,
+    UpdateInstallmentDto dto,
+  ) async {
+    await _apiClient.patch(
+      ApiEndpoints.updateInstallment(installmentId),
+      data: dto.toJson(),
+    );
+  }
+
+  /// Delete installment (not wired yet)
+  Future<void> deleteInstallment(
+    String projectId,
+    String installmentId,
+  ) async {
+    await _apiClient.delete(
+      ApiEndpoints.deleteInstallment(installmentId),
+    );
+  }
+
   /// Create expense
   Future<void> createExpense(String projectId, CreateExpenseDto dto) async {
     await _apiClient.post(

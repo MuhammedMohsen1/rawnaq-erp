@@ -40,6 +40,7 @@ class TransactionsTable extends StatelessWidget {
   final bool isSiteEngineer;
   final bool isAdminOrManager;
   final List<PaymentPhaseModel> paymentSchedule;
+  final List<InstallmentRequestModel> pendingInstallmentRequests;
   final double profitPercentage;
   final VoidCallback onAddExpense;
   final VoidCallback? onAddIncome;
@@ -58,6 +59,7 @@ class TransactionsTable extends StatelessWidget {
     required this.isSiteEngineer,
     required this.isAdminOrManager,
     required this.paymentSchedule,
+    required this.pendingInstallmentRequests,
     required this.profitPercentage,
     required this.onAddExpense,
     this.onAddIncome,
@@ -112,11 +114,32 @@ class TransactionsTable extends StatelessWidget {
               // Transaction rows
               ...transactions.map((transaction) {
                 final isEditing = editingTransactions[transaction.id] ?? false;
+                InstallmentRequestModel? pendingRequest;
+                String? requestId = transaction.requestId;
+                for (final request in pendingInstallmentRequests) {
+                  if (request.id == requestId) {
+                    pendingRequest = request;
+                    break;
+                  }
+                }
+                if (pendingRequest == null) {
+                  for (final request in pendingInstallmentRequests) {
+                    if (request.phaseName == transaction.description ||
+                        request.phaseName == transaction.subDescription) {
+                      pendingRequest = request;
+                      break;
+                    }
+                  }
+                }
+                requestId ??= pendingRequest?.id;
+                final installmentRequestId = requestId ?? transaction.id;
                 return _TransactionRow(
                   projectId: projectId,
                   transaction: transaction,
                   isEditing: isEditing,
                   isCompact: isCompact,
+                  isAdminOrManager: isAdminOrManager,
+                  installmentRequestId: installmentRequestId,
                 );
               }),
               // Load more button
@@ -270,16 +293,34 @@ class _TransactionRow extends StatelessWidget {
   final TransactionModel transaction;
   final bool isEditing;
   final bool isCompact;
+  final bool isAdminOrManager;
+  final String installmentRequestId;
 
   const _TransactionRow({
     required this.projectId,
     required this.transaction,
     required this.isEditing,
     required this.isCompact,
+    required this.isAdminOrManager,
+    required this.installmentRequestId,
   });
 
   @override
   Widget build(BuildContext context) {
+    final isInstallment = transaction.source.toLowerCase() == 'installment';
+    final canEditInstallment = isAdminOrManager && isInstallment;
+
+    if (isEditing && canEditInstallment) {
+      return _EditableInstallmentRow(
+        projectId: projectId,
+        transaction: transaction,
+        installmentRequestId: installmentRequestId,
+        onCancel: () =>
+            context.read<ExecutionCubit>().cancelEditing(transaction.id),
+        isCompact: isCompact,
+      );
+    }
+
     if (isEditing && transaction.isEditable) {
       return _EditableExpenseRow(
         projectId: projectId,
@@ -292,6 +333,8 @@ class _TransactionRow extends StatelessWidget {
 
     final dateFormat = DateFormat('MMM dd, yyyy');
     final isIncome = transaction.type == TransactionType.income;
+
+    final canEdit = isInstallment ? canEditInstallment : transaction.isEditable;
 
     if (isCompact) {
       return Container(
@@ -368,7 +411,7 @@ class _TransactionRow extends StatelessWidget {
                 ),
               ],
             ),
-            if (transaction.isEditable) ...[
+            if (canEdit) ...[
               const SizedBox(height: 8),
               Row(
                 mainAxisAlignment: MainAxisAlignment.end,
@@ -382,8 +425,12 @@ class _TransactionRow extends StatelessWidget {
                     color: AppColors.textSecondary,
                   ),
                   IconButton(
-                    onPressed: () =>
-                        _showDeleteConfirmation(context, transaction.id),
+                    onPressed: () => isInstallment
+                        ? _showDeleteInstallmentConfirmation(
+                            context,
+                            installmentRequestId,
+                          )
+                        : _showDeleteConfirmation(context, transaction.id),
                     icon: const Icon(Icons.delete_outline, size: 18),
                     tooltip: 'حذف',
                     color: AppColors.error,
@@ -464,7 +511,7 @@ class _TransactionRow extends StatelessWidget {
           // Actions
           SizedBox(
             width: 100,
-            child: transaction.isEditable
+            child: canEdit
                 ? Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
@@ -477,8 +524,12 @@ class _TransactionRow extends StatelessWidget {
                         color: AppColors.textSecondary,
                       ),
                       IconButton(
-                        onPressed: () =>
-                            _showDeleteConfirmation(context, transaction.id),
+                        onPressed: () => isInstallment
+                            ? _showDeleteInstallmentConfirmation(
+                                context,
+                                installmentRequestId,
+                              )
+                            : _showDeleteConfirmation(context, transaction.id),
                         icon: const Icon(Icons.delete_outline, size: 18),
                         tooltip: 'حذف',
                         color: AppColors.error,
@@ -510,6 +561,45 @@ class _TransactionRow extends StatelessWidget {
                 projectId,
                 transactionId,
               );
+            },
+            style: ElevatedButton.styleFrom(backgroundColor: AppColors.error),
+            child: const Text('حذف'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showDeleteInstallmentConfirmation(
+    BuildContext context,
+    String installmentId,
+  ) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('تأكيد الحذف'),
+        content: const Text('هل أنت متأكد من حذف هذه الدفعة؟'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: const Text('إلغاء'),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              Navigator.of(ctx).pop();
+              try {
+                await context.read<ExecutionCubit>().deleteInstallment(
+                  projectId,
+                  installmentId,
+                );
+              } catch (e) {
+                if (context.mounted) {
+                  final message = 'فشل حذف الدفعة: ${e.toString()}';
+                  ScaffoldMessenger.of(
+                    context,
+                  ).showSnackBar(SnackBar(content: Text(message)));
+                }
+              }
             },
             style: ElevatedButton.styleFrom(backgroundColor: AppColors.error),
             child: const Text('حذف'),
@@ -1317,6 +1407,293 @@ class _EditableExpenseRowState extends State<_EditableExpenseRow> {
             backgroundColor: AppColors.error,
           ),
         );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isSubmitting = false);
+      }
+    }
+  }
+}
+
+class _EditableInstallmentRow extends StatefulWidget {
+  final String projectId;
+  final TransactionModel transaction;
+  final String installmentRequestId;
+  final VoidCallback onCancel;
+  final bool isCompact;
+
+  const _EditableInstallmentRow({
+    required this.projectId,
+    required this.transaction,
+    required this.installmentRequestId,
+    required this.onCancel,
+    required this.isCompact,
+  });
+
+  @override
+  State<_EditableInstallmentRow> createState() =>
+      _EditableInstallmentRowState();
+}
+
+class _EditableInstallmentRowState extends State<_EditableInstallmentRow> {
+  late TextEditingController _nameController;
+  late TextEditingController _originalAmountController;
+  late TextEditingController _requestedAmountController;
+  bool _isSubmitting = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _nameController = TextEditingController(
+      text: widget.transaction.description,
+    );
+    _originalAmountController = TextEditingController();
+    _requestedAmountController = TextEditingController(
+      text: widget.transaction.amount.abs().toString(),
+    );
+    if (widget.transaction.originalAmount != null) {
+      _originalAmountController.text =
+          widget.transaction.originalAmount!.toString();
+    }
+  }
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _originalAmountController.dispose();
+    _requestedAmountController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      color: AppColors.primary.withValues(alpha: 0.05),
+      child: widget.isCompact ? _buildCompactForm() : _buildWideForm(),
+    );
+  }
+
+  Widget _buildCompactForm() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Row(
+          children: [
+            Container(
+              width: 36,
+              height: 36,
+              decoration: BoxDecoration(
+                color: AppColors.success.withValues(alpha: 0.1),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.arrow_downward,
+                color: AppColors.success,
+                size: 18,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Text('تعديل الدفعة', style: AppTextStyles.tableCellBold),
+          ],
+        ),
+        const SizedBox(height: 12),
+        TextField(
+          controller: _nameController,
+          decoration: const InputDecoration(
+            hintText: 'اسم الدفعة',
+            isDense: true,
+            contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          ),
+        ),
+        const SizedBox(height: 8),
+        TextField(
+          controller: _originalAmountController,
+          keyboardType: const TextInputType.numberWithOptions(
+            decimal: true,
+            signed: false,
+          ),
+          decoration: const InputDecoration(
+            hintText: 'المبلغ الأصلي',
+            isDense: true,
+            contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          ),
+        ),
+        const SizedBox(height: 8),
+        TextField(
+          controller: _requestedAmountController,
+          keyboardType: const TextInputType.numberWithOptions(
+            decimal: true,
+            signed: false,
+          ),
+          decoration: const InputDecoration(
+            hintText: 'المبلغ المطلوب',
+            isDense: true,
+            contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          ),
+        ),
+        const SizedBox(height: 12),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.end,
+          children: [
+            IconButton(
+              onPressed: widget.onCancel,
+              icon: const Icon(Icons.close, color: AppColors.error),
+              tooltip: 'إلغاء',
+            ),
+            IconButton(
+              onPressed: _isSubmitting ? null : _submitUpdate,
+              icon: _isSubmitting
+                  ? const SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Icon(Icons.check, color: AppColors.success),
+              tooltip: 'حفظ',
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildWideForm() {
+    return Row(
+      children: [
+        SizedBox(
+          width: 60,
+          child: Container(
+            width: 36,
+            height: 36,
+            decoration: BoxDecoration(
+              color: AppColors.success.withValues(alpha: 0.1),
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(
+              Icons.arrow_downward,
+              color: AppColors.success,
+              size: 18,
+            ),
+          ),
+        ),
+        Expanded(
+          flex: 2,
+          child: TextField(
+            controller: _nameController,
+            decoration: const InputDecoration(
+              hintText: 'اسم الدفعة',
+              isDense: true,
+              contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            ),
+          ),
+        ),
+        const SizedBox(width: 8),
+        Expanded(
+          flex: 1,
+          child: TextField(
+            controller: _originalAmountController,
+            keyboardType: const TextInputType.numberWithOptions(
+              decimal: true,
+              signed: false,
+            ),
+            decoration: const InputDecoration(
+              hintText: 'المبلغ الأصلي',
+              isDense: true,
+              contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            ),
+          ),
+        ),
+        const SizedBox(width: 8),
+        Expanded(
+          flex: 1,
+          child: TextField(
+            controller: _requestedAmountController,
+            keyboardType: const TextInputType.numberWithOptions(
+              decimal: true,
+              signed: false,
+            ),
+            decoration: const InputDecoration(
+              hintText: 'المبلغ المطلوب',
+              isDense: true,
+              contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            ),
+          ),
+        ),
+        const SizedBox(width: 8),
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            IconButton(
+              onPressed: widget.onCancel,
+              icon: const Icon(Icons.close, color: AppColors.error),
+              tooltip: 'إلغاء',
+            ),
+            IconButton(
+              onPressed: _isSubmitting ? null : _submitUpdate,
+              icon: _isSubmitting
+                  ? const SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Icon(Icons.check, color: AppColors.success),
+              tooltip: 'حفظ',
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Future<void> _submitUpdate() async {
+    final name = _nameController.text.trim();
+    final originalAmount = _parseNumber(_originalAmountController.text);
+    final requestedAmount = _parseNumber(_requestedAmountController.text);
+
+    final hasOriginal =
+        originalAmount != null && originalAmount > 0;
+    final hasRequested =
+        requestedAmount != null && requestedAmount > 0;
+
+    if (name.isEmpty && !hasOriginal && !hasRequested) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('يرجى إدخال الاسم أو المبالغ')),
+      );
+      return;
+    }
+
+    setState(() => _isSubmitting = true);
+
+    try {
+      final dto = UpdateInstallmentDto(
+        phaseName: name.isEmpty ? null : name,
+        originalAmount: hasOriginal ? originalAmount : null,
+        requestedAmount: hasRequested ? requestedAmount : null,
+      );
+      final cubit = context.read<ExecutionCubit>();
+      await cubit.updateInstallment(
+        widget.projectId,
+        widget.installmentRequestId,
+        dto,
+      );
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('تم تحديث الدفعة بنجاح'),
+            backgroundColor: AppColors.success,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        final message = 'فشل تحديث الدفعة: ${e.toString()}';
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(message), backgroundColor: AppColors.error),
+        );
+        context.read<ExecutionCubit>().cancelEditing(widget.transaction.id);
       }
     } finally {
       if (mounted) {

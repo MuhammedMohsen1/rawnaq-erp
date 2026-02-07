@@ -367,6 +367,10 @@ abstract class ApiEndpoints {
       '/execution/installments/$requestId/collect';
   static String uncollectInstallment(String requestId) =>
       '/execution/installments/$requestId/uncollect';
+  static String updateInstallment(String requestId) =>
+      '/execution/installments/$requestId';
+  static String deleteInstallment(String requestId) =>
+      '/execution/installments/$requestId';
 
   // Contract Expenses Endpoints
   static String contractExpenses(String projectId) =>

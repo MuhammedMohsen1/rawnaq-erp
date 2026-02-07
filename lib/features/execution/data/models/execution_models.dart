@@ -49,6 +49,8 @@ class TransactionModel {
   final DateTime date;
   final bool isEditable;
   final String source; // 'expense' or 'installment'
+  final String? requestId;
+  final double? originalAmount;
   final CostType? costType;
   final double? unitCost;
   final double? quantity;
@@ -62,6 +64,8 @@ class TransactionModel {
     required this.date,
     required this.isEditable,
     required this.source,
+    this.requestId,
+    this.originalAmount,
     this.costType,
     this.unitCost,
     this.quantity,
@@ -70,7 +74,9 @@ class TransactionModel {
   factory TransactionModel.fromJson(Map<String, dynamic> json) {
     return TransactionModel(
       id: _toStringOrEmpty(json['id']),
-      type: json['type'] == 'income' ? TransactionType.income : TransactionType.expense,
+      type: json['type'] == 'income'
+          ? TransactionType.income
+          : TransactionType.expense,
       description: _toStringOrEmpty(json['description']),
       subDescription: _toStringOrNull(json['subDescription']),
       amount: _toDoubleOrZero(json['amount']),
@@ -79,7 +85,11 @@ class TransactionModel {
           : DateTime.now(),
       isEditable: json['isEditable'] as bool? ?? false,
       source: _toStringOrEmpty(json['source']),
-      costType: json['costType'] == 'UNIT_BASED' ? CostType.unitBased : CostType.total,
+      requestId: _toStringOrNull(json['requestId']),
+      originalAmount: _toDoubleOrNull(json['originalAmount']),
+      costType: json['costType'] == 'UNIT_BASED'
+          ? CostType.unitBased
+          : CostType.total,
       unitCost: _toDoubleOrNull(json['unitCost']),
       quantity: _toDoubleOrNull(json['quantity']),
     );
@@ -95,6 +105,8 @@ class TransactionModel {
       'date': date.toIso8601String(),
       'isEditable': isEditable,
       'source': source,
+      if (requestId != null) 'requestId': requestId,
+      if (originalAmount != null) 'originalAmount': originalAmount,
       'costType': costType == CostType.unitBased ? 'UNIT_BASED' : 'TOTAL',
       'unitCost': unitCost,
       'quantity': quantity,
@@ -220,6 +232,8 @@ class InstallmentRequestModel {
 class ExecutionDashboardModel {
   final String projectId;
   final String projectName;
+  final DateTime? startDate;
+  final DateTime? endDate;
   final double totalReceived;
   final double totalExpenses;
   final double netCashFlow;
@@ -239,6 +253,8 @@ class ExecutionDashboardModel {
   ExecutionDashboardModel({
     required this.projectId,
     required this.projectName,
+    this.startDate,
+    this.endDate,
     required this.totalReceived,
     required this.totalExpenses,
     required this.netCashFlow,
@@ -274,6 +290,12 @@ class ExecutionDashboardModel {
     return ExecutionDashboardModel(
       projectId: _toStringOrEmpty(json['projectId']),
       projectName: _toStringOrEmpty(json['projectName']),
+      startDate: json['startDate'] != null
+          ? DateTime.tryParse(json['startDate'].toString())
+          : null,
+      endDate: json['endDate'] != null
+          ? DateTime.tryParse(json['endDate'].toString())
+          : null,
       totalReceived: _toDoubleOrZero(json['totalReceived']),
       totalExpenses: _toDoubleOrZero(json['totalExpenses']),
       netCashFlow: _toDoubleOrZero(json['netCashFlow']),
@@ -282,18 +304,28 @@ class ExecutionDashboardModel {
       totalProfit: _toDoubleOrZero(json['totalProfit']),
       remainingBudget: _toDoubleOrZero(json['remainingBudget']),
       budgetPercentage: _toDoubleOrZero(json['budgetPercentage']),
-      budgetWarningLevel: parseWarningLevel(json['budgetWarningLevel'] as String?),
+      budgetWarningLevel: parseWarningLevel(
+        json['budgetWarningLevel'] as String?,
+      ),
       profitPercentage: _toDoubleOrZero(json['profitPercentage']),
-      transactions: (json['transactions'] as List?)
+      transactions:
+          (json['transactions'] as List?)
               ?.map((t) => TransactionModel.fromJson(t as Map<String, dynamic>))
               .toList() ??
           [],
-      paymentSchedule: (json['paymentSchedule'] as List?)
-              ?.map((p) => PaymentPhaseModel.fromJson(p as Map<String, dynamic>))
+      paymentSchedule:
+          (json['paymentSchedule'] as List?)
+              ?.map(
+                (p) => PaymentPhaseModel.fromJson(p as Map<String, dynamic>),
+              )
               .toList() ??
           [],
-      pendingInstallmentRequests: (json['pendingInstallmentRequests'] as List?)
-              ?.map((r) => InstallmentRequestModel.fromJson(r as Map<String, dynamic>))
+      pendingInstallmentRequests:
+          (json['pendingInstallmentRequests'] as List?)
+              ?.map(
+                (r) =>
+                    InstallmentRequestModel.fromJson(r as Map<String, dynamic>),
+              )
               .toList() ??
           [],
       hasMoreTransactions: json['hasMoreTransactions'] as bool? ?? false,
@@ -304,6 +336,8 @@ class ExecutionDashboardModel {
   ExecutionDashboardModel copyWith({
     String? projectId,
     String? projectName,
+    DateTime? startDate,
+    DateTime? endDate,
     double? totalReceived,
     double? totalExpenses,
     double? netCashFlow,
@@ -323,6 +357,8 @@ class ExecutionDashboardModel {
     return ExecutionDashboardModel(
       projectId: projectId ?? this.projectId,
       projectName: projectName ?? this.projectName,
+      startDate: startDate ?? this.startDate,
+      endDate: endDate ?? this.endDate,
       totalReceived: totalReceived ?? this.totalReceived,
       totalExpenses: totalExpenses ?? this.totalExpenses,
       netCashFlow: netCashFlow ?? this.netCashFlow,
@@ -335,9 +371,11 @@ class ExecutionDashboardModel {
       profitPercentage: profitPercentage ?? this.profitPercentage,
       transactions: transactions ?? this.transactions,
       paymentSchedule: paymentSchedule ?? this.paymentSchedule,
-      pendingInstallmentRequests: pendingInstallmentRequests ?? this.pendingInstallmentRequests,
+      pendingInstallmentRequests:
+          pendingInstallmentRequests ?? this.pendingInstallmentRequests,
       hasMoreTransactions: hasMoreTransactions ?? this.hasMoreTransactions,
-      totalTransactionsCount: totalTransactionsCount ?? this.totalTransactionsCount,
+      totalTransactionsCount:
+          totalTransactionsCount ?? this.totalTransactionsCount,
     );
   }
 }
@@ -416,6 +454,27 @@ class UpdateExpenseDto {
     if (quantity != null) map['quantity'] = quantity;
     if (date != null) map['date'] = date!.toIso8601String();
     if (pricingItemId != null) map['pricingItemId'] = pricingItemId;
+    return map;
+  }
+}
+
+/// Update installment DTO
+class UpdateInstallmentDto {
+  final String? phaseName;
+  final double? originalAmount;
+  final double? requestedAmount;
+
+  UpdateInstallmentDto({
+    this.phaseName,
+    this.originalAmount,
+    this.requestedAmount,
+  });
+
+  Map<String, dynamic> toJson() {
+    final map = <String, dynamic>{};
+    if (phaseName != null) map['phaseName'] = phaseName;
+    if (originalAmount != null) map['originalAmount'] = originalAmount;
+    if (requestedAmount != null) map['requestedAmount'] = requestedAmount;
     return map;
   }
 }
