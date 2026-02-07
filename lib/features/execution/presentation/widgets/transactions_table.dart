@@ -613,7 +613,10 @@ class _AddExpenseRowState extends State<_AddExpenseRow> {
         if (_costType == CostType.total)
           TextField(
             controller: _amountController,
-            keyboardType: TextInputType.number,
+            keyboardType: const TextInputType.numberWithOptions(
+              decimal: true,
+              signed: false,
+            ),
             decoration: const InputDecoration(
               hintText: 'المبلغ',
               isDense: true,
@@ -629,7 +632,10 @@ class _AddExpenseRowState extends State<_AddExpenseRow> {
               Expanded(
                 child: TextField(
                   controller: _unitCostController,
-                  keyboardType: TextInputType.number,
+                  keyboardType: const TextInputType.numberWithOptions(
+                    decimal: true,
+                    signed: false,
+                  ),
                   decoration: const InputDecoration(
                     hintText: 'سعر الوحدة',
                     isDense: true,
@@ -644,7 +650,10 @@ class _AddExpenseRowState extends State<_AddExpenseRow> {
               Expanded(
                 child: TextField(
                   controller: _quantityController,
-                  keyboardType: TextInputType.number,
+                  keyboardType: const TextInputType.numberWithOptions(
+                    decimal: true,
+                    signed: false,
+                  ),
                   decoration: const InputDecoration(
                     hintText: 'الكمية',
                     isDense: true,
@@ -741,7 +750,10 @@ class _AddExpenseRowState extends State<_AddExpenseRow> {
             width: 120,
             child: TextField(
               controller: _amountController,
-              keyboardType: TextInputType.number,
+              keyboardType: const TextInputType.numberWithOptions(
+                decimal: true,
+                signed: false,
+              ),
               decoration: const InputDecoration(
                 hintText: 'المبلغ',
                 isDense: true,
@@ -757,7 +769,10 @@ class _AddExpenseRowState extends State<_AddExpenseRow> {
             width: 80,
             child: TextField(
               controller: _unitCostController,
-              keyboardType: TextInputType.number,
+              keyboardType: const TextInputType.numberWithOptions(
+                decimal: true,
+                signed: false,
+              ),
               decoration: const InputDecoration(
                 hintText: 'سعر الوحدة',
                 isDense: true,
@@ -776,7 +791,10 @@ class _AddExpenseRowState extends State<_AddExpenseRow> {
             width: 60,
             child: TextField(
               controller: _quantityController,
-              keyboardType: TextInputType.number,
+              keyboardType: const TextInputType.numberWithOptions(
+                decimal: true,
+                signed: false,
+              ),
               decoration: const InputDecoration(
                 hintText: 'الكمية',
                 isDense: true,
@@ -1013,7 +1031,10 @@ class _EditableExpenseRowState extends State<_EditableExpenseRow> {
         if (_costType == CostType.total)
           TextField(
             controller: _amountController,
-            keyboardType: TextInputType.number,
+            keyboardType: const TextInputType.numberWithOptions(
+              decimal: true,
+              signed: false,
+            ),
             decoration: const InputDecoration(
               hintText: 'المبلغ',
               isDense: true,
@@ -1029,7 +1050,10 @@ class _EditableExpenseRowState extends State<_EditableExpenseRow> {
               Expanded(
                 child: TextField(
                   controller: _unitCostController,
-                  keyboardType: TextInputType.number,
+                  keyboardType: const TextInputType.numberWithOptions(
+                    decimal: true,
+                    signed: false,
+                  ),
                   decoration: const InputDecoration(
                     hintText: 'سعر الوحدة',
                     isDense: true,
@@ -1044,7 +1068,10 @@ class _EditableExpenseRowState extends State<_EditableExpenseRow> {
               Expanded(
                 child: TextField(
                   controller: _quantityController,
-                  keyboardType: TextInputType.number,
+                  keyboardType: const TextInputType.numberWithOptions(
+                    decimal: true,
+                    signed: false,
+                  ),
                   decoration: const InputDecoration(
                     hintText: 'الكمية',
                     isDense: true,
@@ -1141,7 +1168,10 @@ class _EditableExpenseRowState extends State<_EditableExpenseRow> {
             width: 120,
             child: TextField(
               controller: _amountController,
-              keyboardType: TextInputType.number,
+              keyboardType: const TextInputType.numberWithOptions(
+                decimal: true,
+                signed: false,
+              ),
               decoration: const InputDecoration(
                 hintText: 'المبلغ',
                 isDense: true,
@@ -1157,7 +1187,10 @@ class _EditableExpenseRowState extends State<_EditableExpenseRow> {
             width: 80,
             child: TextField(
               controller: _unitCostController,
-              keyboardType: TextInputType.number,
+              keyboardType: const TextInputType.numberWithOptions(
+                decimal: true,
+                signed: false,
+              ),
               decoration: const InputDecoration(
                 hintText: 'سعر الوحدة',
                 isDense: true,
@@ -1176,7 +1209,10 @@ class _EditableExpenseRowState extends State<_EditableExpenseRow> {
             width: 60,
             child: TextField(
               controller: _quantityController,
-              keyboardType: TextInputType.number,
+              keyboardType: const TextInputType.numberWithOptions(
+                decimal: true,
+                signed: false,
+              ),
               decoration: const InputDecoration(
                 hintText: 'الكمية',
                 isDense: true,
@@ -1419,7 +1455,10 @@ class _AddIncomeRowState extends State<_AddIncomeRow> {
         const SizedBox(height: 8),
         TextField(
           controller: _amountController,
-          keyboardType: TextInputType.number,
+          keyboardType: const TextInputType.numberWithOptions(
+            decimal: true,
+            signed: false,
+          ),
           decoration: const InputDecoration(
             hintText: 'المبلغ',
             isDense: true,
@@ -1525,7 +1564,10 @@ class _AddIncomeRowState extends State<_AddIncomeRow> {
           width: 120,
           child: TextField(
             controller: _amountController,
-            keyboardType: TextInputType.number,
+            keyboardType: const TextInputType.numberWithOptions(
+              decimal: true,
+              signed: false,
+            ),
             decoration: const InputDecoration(
               hintText: 'المبلغ',
               isDense: true,
