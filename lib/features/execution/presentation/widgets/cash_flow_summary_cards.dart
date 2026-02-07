@@ -282,7 +282,7 @@ class _DateProgressCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final dateFormat = DateFormat('dd/MM/yyyy');
+    final dateFormat = DateFormat('d MMMM', 'ar');
     final now = DateTime.now();
 
     final isValidRange =
@@ -290,6 +290,7 @@ class _DateProgressCard extends StatelessWidget {
 
     int? totalDays;
     int? elapsedDays;
+    int? daysLeft;
     double? percent;
 
     if (isValidRange) {
@@ -301,6 +302,9 @@ class _DateProgressCard extends StatelessWidget {
       final rawElapsed = now.difference(startDate!).inDays;
       elapsedDays = rawElapsed.clamp(0, totalDays).toInt();
       percent = (elapsedDays / totalDays) * 100;
+
+      final rawLeft = endDate!.difference(now).inDays;
+      daysLeft = rawLeft < 0 ? 0 : rawLeft;
     }
 
     return Container(
@@ -314,14 +318,14 @@ class _DateProgressCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'تقدم الجدول الزمني',
+            'تاريخ التسليم',
             style: AppTextStyles.overline.copyWith(
               color: AppColors.textSecondary,
             ),
           ),
           const SizedBox(height: 12),
           Text(
-            isValidRange ? '${percent!.toStringAsFixed(0)}%' : 'غير متاح',
+            isValidRange ? dateFormat.format(endDate!) : 'غير متاح',
             style: AppTextStyles.sectionTitle.copyWith(
               color: AppColors.textPrimary,
             ),
@@ -329,14 +333,9 @@ class _DateProgressCard extends StatelessWidget {
           const SizedBox(height: 8),
           if (isValidRange) ...[
             Text(
-              '${elapsedDays!} / $totalDays يوم',
-              style: AppTextStyles.bodySmall.copyWith(
-                color: AppColors.textSecondary,
-              ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              'اليوم: ${dateFormat.format(now)}',
+              'التقدم: ${percent!.toStringAsFixed(0)}% · المتبقي: $daysLeft يوم',
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
               style: AppTextStyles.bodySmall.copyWith(
                 color: AppColors.textSecondary,
               ),
