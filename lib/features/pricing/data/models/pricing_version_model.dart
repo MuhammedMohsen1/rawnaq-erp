@@ -1,5 +1,3 @@
-import 'package:rawnaq/features/pricing/domain/entities/pricing_item.dart';
-
 /// Model for Pricing Version
 class PricingVersionModel {
   final String id;
@@ -10,6 +8,9 @@ class PricingVersionModel {
   final double totalCost;
   final double totalProfit;
   final double totalPrice;
+  final double originalTotalAmount;
+  final double deductionAmount;
+  final double totalAmountAfterDeduction;
   final String? notes;
   final String createdById;
   final DateTime createdAt;
@@ -24,6 +25,9 @@ class PricingVersionModel {
     required this.totalCost,
     required this.totalProfit,
     required this.totalPrice,
+    required this.originalTotalAmount,
+    required this.deductionAmount,
+    required this.totalAmountAfterDeduction,
     this.notes,
     required this.createdById,
     required this.createdAt,
@@ -42,6 +46,19 @@ class PricingVersionModel {
       return 0.0;
     }
 
+    final totalPrice = _toDoubleOrZero(json['totalPrice']);
+    final originalTotalAmount = json.containsKey('originalTotalAmount')
+        ? _toDoubleOrZero(json['originalTotalAmount'])
+        : totalPrice;
+    final deductionAmount = json.containsKey('deductionAmount')
+        ? _toDoubleOrZero(json['deductionAmount'])
+        : 0.0;
+    final totalAmountAfterDeduction = json.containsKey(
+          'totalAmountAfterDeduction',
+        )
+        ? _toDoubleOrZero(json['totalAmountAfterDeduction'])
+        : (originalTotalAmount - deductionAmount);
+
     return PricingVersionModel(
       id: json['id'] as String,
       projectId: json['projectId'] as String,
@@ -51,7 +68,11 @@ class PricingVersionModel {
       status: json['status'] as String,
       totalCost: _toDoubleOrZero(json['totalCost']),
       totalProfit: _toDoubleOrZero(json['totalProfit']),
-      totalPrice: _toDoubleOrZero(json['totalPrice']),
+      totalPrice: totalPrice,
+      originalTotalAmount: originalTotalAmount,
+      deductionAmount: deductionAmount,
+      totalAmountAfterDeduction:
+          totalAmountAfterDeduction < 0 ? 0 : totalAmountAfterDeduction,
       notes: json['notes'] as String?,
       createdById: json['createdById'] as String,
       createdAt: DateTime.parse(json['createdAt'] as String),
@@ -76,6 +97,9 @@ class PricingVersionModel {
       'totalCost': totalCost,
       'totalProfit': totalProfit,
       'totalPrice': totalPrice,
+      'originalTotalAmount': originalTotalAmount,
+      'deductionAmount': deductionAmount,
+      'totalAmountAfterDeduction': totalAmountAfterDeduction,
       'notes': notes,
       'createdById': createdById,
       'createdAt': createdAt.toIso8601String(),

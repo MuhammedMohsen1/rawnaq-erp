@@ -79,8 +79,7 @@ class CashFlowSummaryCards extends StatelessWidget {
             spacing: 16,
             runSpacing: 16,
             children: [
-              for (final card in cards)
-                SizedBox(width: cardWidth, child: card),
+              for (final card in cards) SizedBox(width: cardWidth, child: card),
             ],
           );
         }
@@ -307,6 +306,8 @@ class _DateProgressCard extends StatelessWidget {
       daysLeft = rawLeft < 0 ? 0 : rawLeft;
     }
 
+    final percentValue = percent ?? 0;
+
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -325,7 +326,9 @@ class _DateProgressCard extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           Text(
-            isValidRange ? dateFormat.format(endDate!) : 'غير متاح',
+            isValidRange && endDate != null
+                ? dateFormat.format(endDate!)
+                : 'غير متاح',
             style: AppTextStyles.sectionTitle.copyWith(
               color: AppColors.textPrimary,
             ),
@@ -333,7 +336,7 @@ class _DateProgressCard extends StatelessWidget {
           const SizedBox(height: 8),
           if (isValidRange) ...[
             Text(
-              'التقدم: ${percent!.toStringAsFixed(0)}% · المتبقي: $daysLeft يوم',
+              'التقدم: ${percentValue.toStringAsFixed(0)}% · المتبقي: $daysLeft يوم',
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: AppTextStyles.bodySmall.copyWith(
@@ -344,7 +347,7 @@ class _DateProgressCard extends StatelessWidget {
             ClipRRect(
               borderRadius: BorderRadius.circular(4),
               child: LinearProgressIndicator(
-                value: (percent! / 100).clamp(0, 1),
+                value: (percentValue / 100).clamp(0, 1),
                 backgroundColor: AppColors.border,
                 valueColor: const AlwaysStoppedAnimation<Color>(
                   AppColors.primary,

@@ -26,6 +26,7 @@ class PricingLoaded extends PricingState {
   final Map<String, bool> itemExpandedStates;
   final Map<String, Map<String, bool>> subItemExpandedStates;
   final Map<String, double> subItemProfitMargins;
+  final double deductionAmount;
 
   const PricingLoaded({
     required this.pricingVersion,
@@ -33,6 +34,7 @@ class PricingLoaded extends PricingState {
     required this.itemExpandedStates,
     required this.subItemExpandedStates,
     required this.subItemProfitMargins,
+    required this.deductionAmount,
   });
 
   @override
@@ -42,6 +44,7 @@ class PricingLoaded extends PricingState {
         itemExpandedStates,
         subItemExpandedStates,
         subItemProfitMargins,
+        deductionAmount,
       ];
 
   /// Create a copy with updated fields
@@ -51,6 +54,7 @@ class PricingLoaded extends PricingState {
     Map<String, bool>? itemExpandedStates,
     Map<String, Map<String, bool>>? subItemExpandedStates,
     Map<String, double>? subItemProfitMargins,
+    double? deductionAmount,
   }) {
     return PricingLoaded(
       pricingVersion: pricingVersion ?? this.pricingVersion,
@@ -59,6 +63,7 @@ class PricingLoaded extends PricingState {
       subItemExpandedStates:
           subItemExpandedStates ?? this.subItemExpandedStates,
       subItemProfitMargins: subItemProfitMargins ?? this.subItemProfitMargins,
+      deductionAmount: deductionAmount ?? this.deductionAmount,
     );
   }
 

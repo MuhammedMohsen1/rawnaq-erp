@@ -94,11 +94,21 @@ class PricingCubit extends Cubit<PricingState> {
           itemExpandedStates: itemExpandedStates,
           subItemExpandedStates: subItemExpandedStates,
           subItemProfitMargins: subItemProfitMargins,
+          deductionAmount: pricingVersion.deductionAmount,
         ),
       );
     } catch (e) {
       emit(PricingError(message: 'فشل تحميل بيانات التسعير: ${e.toString()}'));
     }
+  }
+
+  /// Update deduction amount for pricing calculations
+  void updateDeductionAmount(double deductionAmount) {
+    final currentState = state;
+    if (currentState is! PricingLoaded) return;
+
+    final cappedAmount = deductionAmount < 0 ? 0.0 : deductionAmount;
+    emit(currentState.copyWith(deductionAmount: cappedAmount));
   }
 
   /// Toggle item expanded state
@@ -292,7 +302,8 @@ class PricingCubit extends Cubit<PricingState> {
     final currentState = state;
     if (currentState is! PricingLoaded) return;
 
-    if (currentState.pricingVersion.status != 'APPROVED') {
+    if (currentState.pricingVersion.status != 'APPROVED' &&
+        currentState.pricingVersion.status != 'PENDING_SIGNATURE') {
       throw Exception(
         'لا يمكن حساب الربح. الحالة الحالية: "${currentState.getStatusText()}"',
       );
@@ -324,6 +335,10 @@ class PricingCubit extends Cubit<PricingState> {
         projectId,
         currentState.pricingVersion.version,
         items: subItems,
+        deductionAmount:
+            currentState.deductionAmount > 0
+                ? currentState.deductionAmount
+                : null,
       );
 
       await loadPricingData(projectId);
@@ -438,6 +453,10 @@ class PricingCubit extends Cubit<PricingState> {
           projectId,
           currentState.pricingVersion.version,
           items: items,
+          deductionAmount:
+              currentState.deductionAmount > 0
+                  ? currentState.deductionAmount
+                  : null,
         );
 
         await loadPricingData(projectId);

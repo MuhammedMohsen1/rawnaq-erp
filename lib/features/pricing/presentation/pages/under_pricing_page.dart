@@ -207,12 +207,16 @@ class _PricingLayout extends StatelessWidget {
     final isApproved = currentStatus == 'APPROVED';
     final isProfitPending = currentStatus == 'PENDING_SIGNATURE';
 
-    return ConstrainedBox(
+        return ConstrainedBox(
       constraints: BoxConstraints(
         maxHeight: MediaQuery.of(context).size.height,
       ),
       child: PricingSummarySidebar(
-        grandTotal: state.pricingVersion.totalPrice ?? 0.0,
+        grandTotal: state.pricingVersion.totalPrice,
+        originalTotalAmount: state.pricingVersion.originalTotalAmount,
+        deductionAmount: state.deductionAmount,
+        totalAmountAfterDeduction:
+            state.pricingVersion.totalAmountAfterDeduction,
         totalCost: state.pricingVersion.totalCost,
         totalProfit: state.pricingVersion.totalProfit,
         totalElements: state.getTotalElementsCount(),
@@ -250,6 +254,36 @@ class _PricingLayout extends StatelessWidget {
             : null,
         onExportImages: (isAdminOrManager && isApproved)
             ? () => _handleExportImages(context)
+            : null,
+        onDeductionAmountChanged:
+            isAdminOrManager && (isApproved || isProfitPending)
+            ? (value) {
+                context.read<PricingCubit>().updateDeductionAmount(value);
+              }
+            : null,
+        onDeductionAmountApplied:
+            isAdminOrManager && (isApproved || isProfitPending)
+            ? (value) async {
+                final cubit = context.read<PricingCubit>();
+                final currentState = cubit.state;
+                if (currentState is! PricingLoaded) return;
+
+                try {
+                  await cubit.calculateProfitForSubItems(projectId);
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('تم تحديث الخصم بنجاح'),
+                        duration: Duration(seconds: 2),
+                      ),
+                    );
+                  }
+                } catch (e) {
+                  if (context.mounted) {
+                    _showErrorMessage(context, 'فشل تحديث الخصم', e);
+                  }
+                }
+              }
             : null,
         pricingVersionNotes: state.pricingVersion.notes,
         onUpdateNotes: isAdminOrManager
@@ -572,12 +606,12 @@ class _PricingLayout extends StatelessWidget {
     final state = context.read<PricingCubit>().state;
     if (state is! PricingLoaded) return;
 
-    final result = await showDialog<bool>(
+        final result = await showDialog<bool>(
       context: context,
       builder: (context) => ContractExportDialog(
         projectId: projectId,
         projectName: state.projectName ?? 'project',
-        totalAmount: state.pricingVersion.totalPrice ?? 0.0,
+        totalAmount: state.pricingVersion.totalAmountAfterDeduction,
       ),
     );
 

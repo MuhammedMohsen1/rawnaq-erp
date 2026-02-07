@@ -420,10 +420,15 @@ class PricingApiDataSource {
     required List<Map<String, dynamic>>
     items, // [{itemId: string, profitMargin: number}]
     String? notes,
+    double? deductionAmount,
   }) async {
     final response = await _apiClient.post(
       ApiEndpoints.calculateProfit(projectId, version),
-      data: {'items': items, if (notes != null) 'notes': notes},
+      data: {
+        'items': items,
+        if (notes != null) 'notes': notes,
+        if (deductionAmount != null) 'deductionAmount': deductionAmount,
+      },
     );
 
     final responseData = response.data as Map<String, dynamic>;
@@ -507,10 +512,15 @@ class PricingApiDataSource {
     required List<Map<String, dynamic>>
     items, // [{subItemId: string, profitMargin: number}]
     String? notes,
+    double? deductionAmount,
   }) async {
     final response = await _apiClient.post(
       ApiEndpoints.calculateSubItemProfit(projectId, version),
-      data: {'items': items, if (notes != null) 'notes': notes},
+      data: {
+        'items': items,
+        if (notes != null) 'notes': notes,
+        if (deductionAmount != null) 'deductionAmount': deductionAmount,
+      },
     );
 
     final responseData = response.data as Map<String, dynamic>;

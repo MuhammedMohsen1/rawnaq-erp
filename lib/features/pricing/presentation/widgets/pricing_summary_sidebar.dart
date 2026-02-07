@@ -7,6 +7,9 @@ import '../../../../core/utils/arabic_number_input_formatter.dart';
 
 class PricingSummarySidebar extends StatefulWidget {
   final double grandTotal;
+  final double originalTotalAmount;
+  final double deductionAmount;
+  final double totalAmountAfterDeduction;
   final double? totalCost;
   final double? totalProfit;
   final int totalElements;
@@ -33,10 +36,15 @@ class PricingSummarySidebar extends StatefulWidget {
   final String? pricingVersionNotes;
   final Function(String)? onUpdateNotes;
   final Function(double)? onBulkProfitMarginUpdate;
+  final Function(double)? onDeductionAmountChanged;
+  final Function(double)? onDeductionAmountApplied;
 
   const PricingSummarySidebar({
     super.key,
     required this.grandTotal,
+    required this.originalTotalAmount,
+    required this.deductionAmount,
+    required this.totalAmountAfterDeduction,
     this.totalCost,
     this.totalProfit,
     required this.totalElements,
@@ -60,6 +68,8 @@ class PricingSummarySidebar extends StatefulWidget {
     this.pricingVersionNotes,
     this.onUpdateNotes,
     this.onBulkProfitMarginUpdate,
+    this.onDeductionAmountChanged,
+    this.onDeductionAmountApplied,
     required this.isDraft,
     required this.isUnderPricing,
     required this.isPendingSignature,
@@ -73,12 +83,16 @@ class _PricingSummarySidebarState extends State<PricingSummarySidebar> {
   List<TextEditingController> _noteControllers = [];
   Timer? _notesSaveTimer;
   final TextEditingController _bulkProfitController = TextEditingController();
+  final TextEditingController _deductionController = TextEditingController();
+  final FocusNode _deductionFocusNode = FocusNode();
+  Timer? _deductionSaveTimer;
   bool _isNotesExpanded = false;
 
   @override
   void initState() {
     super.initState();
     _initializeNoteControllers();
+    _deductionController.text = _formatPlainNumber(widget.deductionAmount);
   }
 
   void _initializeNoteControllers() {
@@ -117,12 +131,21 @@ class _PricingSummarySidebarState extends State<PricingSummarySidebar> {
     if (widget.pricingVersionNotes != oldWidget.pricingVersionNotes) {
       _initializeNoteControllers();
     }
+    if (widget.deductionAmount != oldWidget.deductionAmount) {
+      if (!_deductionFocusNode.hasFocus) {
+        _deductionController.text =
+            _formatPlainNumber(widget.deductionAmount);
+      }
+    }
   }
 
   @override
   void dispose() {
     _notesSaveTimer?.cancel();
+    _deductionSaveTimer?.cancel();
     _bulkProfitController.dispose();
+    _deductionController.dispose();
+    _deductionFocusNode.dispose();
     for (var controller in _noteControllers) {
       controller.removeListener(_onNoteItemChanged);
       controller.dispose();
@@ -182,6 +205,10 @@ class _PricingSummarySidebarState extends State<PricingSummarySidebar> {
     );
 
     return '$formattedInteger.$decimalPart';
+  }
+
+  String _formatPlainNumber(double value) {
+    return value.toStringAsFixed(3);
   }
 
   @override
@@ -320,82 +347,164 @@ class _PricingSummarySidebarState extends State<PricingSummarySidebar> {
   }
 
   Widget _buildMobileStatsLayout() {
-    return Row(
+    return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Grand Total
-        Expanded(child: _buildGrandTotalCard(isMobile: true, isTablet: false)),
-        // Cost and Profit (if available) - stacked vertically
-        if (((widget.totalCost != null && widget.totalProfit != null) ||
-                widget.isApproved ||
-                widget.isProfitPending) &&
-            widget.isAdminOrManager) ...[
-          const SizedBox(width: 4),
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: _buildGrandTotalCard(isMobile: true, isTablet: false),
+            ),
+            if (((widget.totalCost != null && widget.totalProfit != null) ||
+                    widget.isApproved ||
+                    widget.isProfitPending) &&
+                widget.isAdminOrManager) ...[
+              const SizedBox(width: 4),
+              Expanded(
+                child: Container(
+                  padding: const EdgeInsets.all(4),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF15181E),
+                    borderRadius: BorderRadius.circular(4),
+                    border: Border.all(color: const Color(0xFF363C4A)),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        'التكلفة',
+                        style: AppTextStyles.caption.copyWith(
+                          fontSize: 7,
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
+                      Text(
+                        '${_formatNumberWithDecimals(widget.totalCost ?? 0.0)} KD',
+                        style: AppTextStyles.bodyLarge.copyWith(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.textPrimary,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(width: 4),
+              Expanded(
+                child: Container(
+                  padding: const EdgeInsets.all(4),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF15181E),
+                    borderRadius: BorderRadius.circular(4),
+                    border: Border.all(color: const Color(0xFF363C4A)),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        'الربح',
+                        style: AppTextStyles.caption.copyWith(
+                          fontSize: 7,
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
+                      Text(
+                        '${_formatNumberWithDecimals(widget.totalProfit ?? 0.0)} KD',
+                        style: AppTextStyles.bodyLarge.copyWith(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w700,
+                          color: const Color(0xFF10B981),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ],
+        ),
+        const SizedBox(height: 6),
+        _buildDeductionSummaryRow(isMobile: true, isTablet: false),
+      ],
+    );
+  }
+
+  Widget _buildDeductionSummaryRow({
+    required bool isMobile,
+    required bool isTablet,
+  }) {
+    final totalAfter = (widget.originalTotalAmount - widget.deductionAmount);
+    final safeTotalAfter = totalAfter < 0 ? 0.0 : totalAfter;
+    final textStyle = AppTextStyles.bodySmall.copyWith(
+      fontSize: isMobile ? 9 : (isTablet ? 10 : 11),
+      color: AppColors.textSecondary,
+    );
+    final valueStyle = AppTextStyles.bodyMedium.copyWith(
+      fontSize: isMobile ? 10 : (isTablet ? 11 : 12),
+      fontWeight: FontWeight.w700,
+      color: AppColors.textPrimary,
+    );
+
+    return Container(
+      width: double.infinity,
+      padding: EdgeInsets.symmetric(
+        horizontal: isMobile ? 6 : 8,
+        vertical: isMobile ? 6 : 8,
+      ),
+      decoration: BoxDecoration(
+        color: const Color(0xFF15181E),
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(color: const Color(0xFF363C4A)),
+      ),
+      child: Row(
+        children: [
           Expanded(
-            child: Container(
-              padding: const EdgeInsets.all(4),
-              decoration: BoxDecoration(
-                color: const Color(0xFF15181E),
-                borderRadius: BorderRadius.circular(4),
-                border: Border.all(color: const Color(0xFF363C4A)),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    'التكلفة',
-                    style: AppTextStyles.caption.copyWith(
-                      fontSize: 7,
-                      color: AppColors.textSecondary,
-                    ),
-                  ),
-                  Text(
-                    '${_formatNumberWithDecimals(widget.totalCost ?? 0.0)} KD',
-                    style: AppTextStyles.bodyLarge.copyWith(
-                      fontSize: 10,
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.textPrimary,
-                    ),
-                  ),
-                ],
-              ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('الإجمالي قبل الخصم', style: textStyle),
+                const SizedBox(height: 4),
+                Text(
+                  '${_formatNumberWithDecimals(widget.originalTotalAmount)} KD',
+                  style: valueStyle,
+                ),
+              ],
             ),
           ),
-
+          const SizedBox(width: 8),
           Expanded(
-            child: Container(
-              padding: const EdgeInsets.all(4),
-              decoration: BoxDecoration(
-                color: const Color(0xFF15181E),
-                borderRadius: BorderRadius.circular(4),
-                border: Border.all(color: const Color(0xFF363C4A)),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    'الربح',
-                    style: AppTextStyles.caption.copyWith(
-                      fontSize: 7,
-                      color: AppColors.textSecondary,
-                    ),
-                  ),
-                  Text(
-                    '${_formatNumberWithDecimals(widget.totalProfit ?? 0.0)} KD',
-                    style: AppTextStyles.bodyLarge.copyWith(
-                      fontSize: 10,
-                      fontWeight: FontWeight.w700,
-                      color: const Color(0xFF10B981),
-                    ),
-                  ),
-                ],
-              ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('الخصم', style: textStyle),
+                const SizedBox(height: 4),
+                Text(
+                  '${_formatNumberWithDecimals(widget.deductionAmount)} KD',
+                  style: valueStyle.copyWith(color: AppColors.error),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('الإجمالي بعد الخصم', style: textStyle),
+                const SizedBox(height: 4),
+                Text(
+                  '${_formatNumberWithDecimals(safeTotalAfter)} KD',
+                  style: valueStyle.copyWith(color: const Color(0xFF10B981)),
+                ),
+              ],
             ),
           ),
         ],
-      ],
+      ),
     );
   }
 
@@ -461,182 +570,305 @@ class _PricingSummarySidebarState extends State<PricingSummarySidebar> {
             // For tablets and desktops, use adaptive layout
             if (isSmallTablet) {
               // Use same layout as larger screens but more compact
-              return Row(
+              return Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Left side: Grand Total
-                  Expanded(
-                    flex: 3,
-                    child: _buildGrandTotalCard(
-                      isMobile: false,
-                      isTablet: true,
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Left side: Grand Total
+                      Expanded(
+                        flex: 3,
+                        child: _buildGrandTotalCard(
+                          isMobile: false,
+                          isTablet: true,
+                        ),
+                      ),
+                      // Cost and Profit (if available) - stacked vertically
+                      if (((widget.totalCost != null &&
+                                  widget.totalProfit != null) ||
+                              widget.isApproved ||
+                              widget.isProfitPending) &&
+                          widget.isAdminOrManager) ...[
+                        SizedBox(width: 4),
+                        Expanded(
+                          child: Container(
+                            width: double.infinity,
+                            padding: EdgeInsets.all(isTablet ? 4 : 5),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF15181E),
+                              borderRadius: BorderRadius.circular(4),
+                              border: Border.all(
+                                color: const Color(0xFF363C4A),
+                              ),
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(
+                                  'التكلفة',
+                                  style: AppTextStyles.caption.copyWith(
+                                    fontSize: isTablet ? 7 : 8,
+                                    color: AppColors.textSecondary,
+                                  ),
+                                ),
+                                Text(
+                                  '${_formatNumberWithDecimals(widget.totalCost ?? 0.0)} KD',
+                                  style: AppTextStyles.bodyLarge.copyWith(
+                                    fontSize: isTablet ? 10 : 11,
+                                    fontWeight: FontWeight.w700,
+                                    color: AppColors.textPrimary,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                        SizedBox(width: 4),
+                        Expanded(
+                          child: Container(
+                            width: double.infinity,
+                            padding: EdgeInsets.all(isTablet ? 4 : 5),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF15181E),
+                              borderRadius: BorderRadius.circular(4),
+                              border: Border.all(
+                                color: const Color(0xFF363C4A),
+                              ),
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(
+                                  'الربح',
+                                  style: AppTextStyles.caption.copyWith(
+                                    fontSize: isTablet ? 7 : 8,
+                                    color: AppColors.textSecondary,
+                                  ),
+                                ),
+                                Text(
+                                  '${_formatNumberWithDecimals(widget.totalProfit ?? 0.0)} KD',
+                                  style: AppTextStyles.bodyLarge.copyWith(
+                                    fontSize: isTablet ? 10 : 11,
+                                    fontWeight: FontWeight.w700,
+                                    color: const Color(0xFF10B981),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                  const SizedBox(height: 6),
+                  _buildDeductionSummaryRow(isMobile: false, isTablet: true),
+                ],
+              );
+            }
+
+            if (isLargeTablet) {
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  IntrinsicHeight(
+                    child: Row(
+                      spacing: 6,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Expanded(
+                          child: _buildGrandTotalCard(
+                            isMobile: false,
+                            isTablet: true,
+                          ),
+                        ),
+                        if (((widget.totalCost != null &&
+                                    widget.totalProfit != null) ||
+                                widget.isApproved ||
+                                widget.isProfitPending) &&
+                            widget.isAdminOrManager) ...[
+                          Expanded(
+                            child: Container(
+                              width: double.infinity,
+                              padding: EdgeInsets.all(isTablet ? 4 : 5),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFF15181E),
+                                borderRadius: BorderRadius.circular(4),
+                                border: Border.all(
+                                  color: const Color(0xFF363C4A),
+                                ),
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'التكلفة',
+                                    style: AppTextStyles.caption.copyWith(
+                                      fontSize: isTablet ? 7 : 8,
+                                      color: AppColors.textSecondary,
+                                    ),
+                                  ),
+                                  Spacer(),
+                                  Text(
+                                    '${_formatNumberWithDecimals(widget.totalCost ?? 0.0)} KD',
+                                    style: AppTextStyles.bodyLarge.copyWith(
+                                      fontSize: isTablet ? 10 : 11,
+                                      fontWeight: FontWeight.w700,
+                                      color: AppColors.textPrimary,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                          Expanded(
+                            child: Container(
+                              width: double.infinity,
+                              padding: EdgeInsets.all(isTablet ? 4 : 5),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFF15181E),
+                                borderRadius: BorderRadius.circular(4),
+                                border: Border.all(
+                                  color: const Color(0xFF363C4A),
+                                ),
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text(
+                                    'الربح',
+                                    style: AppTextStyles.caption.copyWith(
+                                      fontSize: isTablet ? 7 : 8,
+                                      color: AppColors.textSecondary,
+                                    ),
+                                  ),
+                                  Spacer(),
+                                  Text(
+                                    '${_formatNumberWithDecimals(widget.totalProfit ?? 0.0)} KD',
+                                    style: AppTextStyles.bodyLarge.copyWith(
+                                      fontSize: isTablet ? 10 : 11,
+                                      fontWeight: FontWeight.w700,
+                                      color: const Color(0xFF10B981),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ],
+                      ],
                     ),
                   ),
-                  // Cost and Profit (if available) - stacked vertically
-                  if (((widget.totalCost != null &&
-                              widget.totalProfit != null) ||
-                          widget.isApproved ||
-                          widget.isProfitPending) &&
-                      widget.isAdminOrManager) ...[
-                    SizedBox(width: 4),
-                    Expanded(
-                      child: Container(
-                        width: double.infinity,
-                        padding: EdgeInsets.all(isTablet ? 4 : 5),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF15181E),
-                          borderRadius: BorderRadius.circular(4),
-                          border: Border.all(color: const Color(0xFF363C4A)),
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text(
-                              'التكلفة',
-                              style: AppTextStyles.caption.copyWith(
-                                fontSize: isTablet ? 7 : 8,
-                                color: AppColors.textSecondary,
-                              ),
-                            ),
-                            Text(
-                              '${_formatNumberWithDecimals(widget.totalCost ?? 0.0)} KD',
-                              style: AppTextStyles.bodyLarge.copyWith(
-                                fontSize: isTablet ? 10 : 11,
-                                fontWeight: FontWeight.w700,
-                                color: AppColors.textPrimary,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-
-                    Expanded(
-                      child: Container(
-                        width: double.infinity,
-                        padding: EdgeInsets.all(isTablet ? 4 : 5),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF15181E),
-                          borderRadius: BorderRadius.circular(4),
-                          border: Border.all(color: const Color(0xFF363C4A)),
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text(
-                              'الربح',
-                              style: AppTextStyles.caption.copyWith(
-                                fontSize: isTablet ? 7 : 8,
-                                color: AppColors.textSecondary,
-                              ),
-                            ),
-                            Text(
-                              '${_formatNumberWithDecimals(widget.totalProfit ?? 0.0)} KD',
-                              style: AppTextStyles.bodyLarge.copyWith(
-                                fontSize: isTablet ? 10 : 11,
-                                fontWeight: FontWeight.w700,
-                                color: const Color(0xFF10B981),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ],
+                  const SizedBox(height: 8),
+                  _buildDeductionSummaryRow(isMobile: false, isTablet: true),
                 ],
               );
             }
 
             // For larger screens: Grand Total on left, Cost and Profit stacked on right
-            return IntrinsicHeight(
-              child: Row(
-                spacing: 8,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Left side: Grand Total
-                  Expanded(
-                    child: _buildGrandTotalCard(
-                      isMobile: false,
-                      isTablet: isTablet,
-                    ),
-                  ),
-                  // Cost and Profit (if available) - stacked vertically
-                  if (((widget.totalCost != null &&
-                              widget.totalProfit != null) ||
-                          widget.isApproved ||
-                          widget.isProfitPending) &&
-                      widget.isAdminOrManager) ...[
-                    Expanded(
-                      child: Container(
-                        width: double.infinity,
-                        padding: EdgeInsets.all(isTablet ? 4 : 5),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF15181E),
-                          borderRadius: BorderRadius.circular(4),
-                          border: Border.all(color: const Color(0xFF363C4A)),
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'التكلفة',
-                              style: AppTextStyles.caption.copyWith(
-                                fontSize: isTablet ? 7 : 8,
-                                color: AppColors.textSecondary,
-                              ),
-                            ),
-                            Spacer(),
-                            Text(
-                              '${_formatNumberWithDecimals(widget.totalCost ?? 0.0)} KD',
-                              style: AppTextStyles.bodyLarge.copyWith(
-                                fontSize: isTablet ? 10 : 11,
-                                fontWeight: FontWeight.w700,
-                                color: AppColors.textPrimary,
-                              ),
-                            ),
-                          ],
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                IntrinsicHeight(
+                  child: Row(
+                    spacing: 8,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Left side: Grand Total
+                      Expanded(
+                        child: _buildGrandTotalCard(
+                          isMobile: false,
+                          isTablet: isTablet,
                         ),
                       ),
-                    ),
+                      // Cost and Profit (if available) - stacked vertically
+                      if (((widget.totalCost != null &&
+                                  widget.totalProfit != null) ||
+                              widget.isApproved ||
+                              widget.isProfitPending) &&
+                          widget.isAdminOrManager) ...[
+                        Expanded(
+                          child: Container(
+                            width: double.infinity,
+                            padding: EdgeInsets.all(isTablet ? 4 : 5),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF15181E),
+                              borderRadius: BorderRadius.circular(4),
+                              border: Border.all(
+                                color: const Color(0xFF363C4A),
+                              ),
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'التكلفة',
+                                  style: AppTextStyles.caption.copyWith(
+                                    fontSize: isTablet ? 7 : 8,
+                                    color: AppColors.textSecondary,
+                                  ),
+                                ),
+                                Spacer(),
+                                Text(
+                                  '${_formatNumberWithDecimals(widget.totalCost ?? 0.0)} KD',
+                                  style: AppTextStyles.bodyLarge.copyWith(
+                                    fontSize: isTablet ? 10 : 11,
+                                    fontWeight: FontWeight.w700,
+                                    color: AppColors.textPrimary,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
 
-                    Expanded(
-                      child: Container(
-                        width: double.infinity,
-                        padding: EdgeInsets.all(isTablet ? 4 : 5),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF15181E),
-                          borderRadius: BorderRadius.circular(4),
-                          border: Border.all(color: const Color(0xFF363C4A)),
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(
-                              'الربح',
-                              style: AppTextStyles.caption.copyWith(
-                                fontSize: isTablet ? 7 : 8,
-                                color: AppColors.textSecondary,
+                        Expanded(
+                          child: Container(
+                            width: double.infinity,
+                            padding: EdgeInsets.all(isTablet ? 4 : 5),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF15181E),
+                              borderRadius: BorderRadius.circular(4),
+                              border: Border.all(
+                                color: const Color(0xFF363C4A),
                               ),
                             ),
-                            Spacer(),
-                            Text(
-                              '${_formatNumberWithDecimals(widget.totalProfit ?? 0.0)} KD',
-                              style: AppTextStyles.bodyLarge.copyWith(
-                                fontSize: isTablet ? 10 : 11,
-                                fontWeight: FontWeight.w700,
-                                color: const Color(0xFF10B981),
-                              ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              mainAxisAlignment:
+                                  MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(
+                                  'الربح',
+                                  style: AppTextStyles.caption.copyWith(
+                                    fontSize: isTablet ? 7 : 8,
+                                    color: AppColors.textSecondary,
+                                  ),
+                                ),
+                                Spacer(),
+                                Text(
+                                  '${_formatNumberWithDecimals(widget.totalProfit ?? 0.0)} KD',
+                                  style: AppTextStyles.bodyLarge.copyWith(
+                                    fontSize: isTablet ? 10 : 11,
+                                    fontWeight: FontWeight.w700,
+                                    color: const Color(0xFF10B981),
+                                  ),
+                                ),
+                              ],
                             ),
-                          ],
+                          ),
                         ),
-                      ),
-                    ),
-                  ],
-                ],
-              ),
+                      ],
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 8),
+                _buildDeductionSummaryRow(isMobile: false, isTablet: false),
+              ],
             );
           },
         ),
@@ -737,6 +969,101 @@ class _PricingSummarySidebarState extends State<PricingSummarySidebar> {
                       fontWeight: FontWeight.w600,
                     ),
                   ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      if (widget.isAdminOrManager &&
+          widget.onDeductionAmountChanged != null &&
+          widget.onDeductionAmountApplied != null)
+        Container(
+          padding: EdgeInsets.symmetric(
+            horizontal: isMobile ? 4 : 6,
+            vertical: isMobile ? 3 : 4,
+          ),
+          child: Container(
+            padding: EdgeInsets.all(isMobile ? 4 : 6),
+            decoration: BoxDecoration(
+              color: const Color(0xFF15181E),
+              borderRadius: BorderRadius.circular(6),
+              border: Border.all(color: const Color(0xFF363C4A)),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'قيمة الخصم',
+                  style: AppTextStyles.caption.copyWith(
+                    fontSize: isMobile ? 10 : 11,
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+                SizedBox(height: isMobile ? 4 : 6),
+                TextField(
+                  controller: _deductionController,
+                  focusNode: _deductionFocusNode,
+                  keyboardType: const TextInputType.numberWithOptions(
+                    decimal: true,
+                  ),
+                  inputFormatters: [
+                    ArabicNumberInputFormatter(),
+                    FilteringTextInputFormatter.allow(
+                      RegExp(r'^\d*\.?\d{0,3}'),
+                    ),
+                  ],
+                  style: AppTextStyles.bodyMedium.copyWith(
+                    fontSize: isMobile ? 11 : 12,
+                  ),
+                  decoration: InputDecoration(
+                    hintText: 'أدخل الخصم (KD)',
+                    hintStyle: AppTextStyles.bodySmall.copyWith(
+                      color: AppColors.textMuted,
+                      fontSize: isMobile ? 10 : 11,
+                    ),
+                    filled: true,
+                    fillColor: const Color(0xFF0F1217),
+                    isDense: true,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(4),
+                      borderSide: const BorderSide(color: Color(0xFF363C4A)),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(4),
+                      borderSide: const BorderSide(color: Color(0xFF363C4A)),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(4),
+                      borderSide: const BorderSide(color: AppColors.primary),
+                    ),
+                    contentPadding: EdgeInsets.symmetric(
+                      horizontal: isMobile ? 8 : 10,
+                      vertical: isMobile ? 6 : 8,
+                    ),
+                  ),
+                  onChanged: (value) {
+                    if (value.trim().isEmpty) {
+                      widget.onDeductionAmountChanged!(0.0);
+                      _deductionSaveTimer?.cancel();
+                      if (widget.onDeductionAmountApplied != null) {
+                        _deductionSaveTimer = Timer(
+                          const Duration(milliseconds: 600),
+                          () => widget.onDeductionAmountApplied!(0.0),
+                        );
+                      }
+                      return;
+                    }
+                    final parsed = double.tryParse(value) ?? 0.0;
+                    widget.onDeductionAmountChanged!(parsed);
+
+                    if (widget.onDeductionAmountApplied != null) {
+                      _deductionSaveTimer?.cancel();
+                      _deductionSaveTimer = Timer(
+                        const Duration(milliseconds: 600),
+                        () => widget.onDeductionAmountApplied!(parsed),
+                      );
+                    }
+                  },
                 ),
               ],
             ),

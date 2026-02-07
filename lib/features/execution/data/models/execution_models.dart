@@ -120,6 +120,8 @@ class PaymentPhaseModel {
   final String phaseName;
   final double percentage;
   final double originalAmount;
+  final double deductionAmount;
+  final double amountAfterDeduction;
   final double costAmount;
   final bool isRequested;
   final bool isApproved;
@@ -131,6 +133,8 @@ class PaymentPhaseModel {
     required this.phaseName,
     required this.percentage,
     required this.originalAmount,
+    required this.deductionAmount,
+    required this.amountAfterDeduction,
     required this.costAmount,
     required this.isRequested,
     required this.isApproved,
@@ -139,11 +143,20 @@ class PaymentPhaseModel {
   });
 
   factory PaymentPhaseModel.fromJson(Map<String, dynamic> json) {
+    final originalAmount = _toDoubleOrZero(json['originalAmount']);
+    final deductionAmount = _toDoubleOrZero(json['deductionAmount']);
+    final amountAfterDeduction = json.containsKey('amountAfterDeduction')
+        ? _toDoubleOrZero(json['amountAfterDeduction'])
+        : (originalAmount - deductionAmount);
+
     return PaymentPhaseModel(
       index: _toIntOrZero(json['index']),
       phaseName: _toStringOrEmpty(json['phaseName']),
       percentage: _toDoubleOrZero(json['percentage']),
-      originalAmount: _toDoubleOrZero(json['originalAmount']),
+      originalAmount: originalAmount,
+      deductionAmount: deductionAmount,
+      amountAfterDeduction:
+          amountAfterDeduction < 0 ? 0 : amountAfterDeduction,
       costAmount: _toDoubleOrZero(json['costAmount']),
       isRequested: json['isRequested'] as bool? ?? false,
       isApproved: json['isApproved'] as bool? ?? false,
@@ -239,6 +252,9 @@ class ExecutionDashboardModel {
   final double netCashFlow;
   final double totalBudget;
   final double totalPrice;
+  final double originalTotalAmount;
+  final double deductionAmount;
+  final double totalAmountAfterDeduction;
   final double totalProfit;
   final double remainingBudget;
   final double budgetPercentage;
@@ -260,6 +276,9 @@ class ExecutionDashboardModel {
     required this.netCashFlow,
     required this.totalBudget,
     required this.totalPrice,
+    required this.originalTotalAmount,
+    required this.deductionAmount,
+    required this.totalAmountAfterDeduction,
     required this.totalProfit,
     required this.remainingBudget,
     required this.budgetPercentage,
@@ -287,6 +306,19 @@ class ExecutionDashboardModel {
       }
     }
 
+    final totalPrice = _toDoubleOrZero(json['totalPrice']);
+    final originalTotalAmount = json.containsKey('originalTotalAmount')
+        ? _toDoubleOrZero(json['originalTotalAmount'])
+        : totalPrice;
+    final deductionAmount = json.containsKey('deductionAmount')
+        ? _toDoubleOrZero(json['deductionAmount'])
+        : 0.0;
+    final totalAmountAfterDeduction = json.containsKey(
+          'totalAmountAfterDeduction',
+        )
+        ? _toDoubleOrZero(json['totalAmountAfterDeduction'])
+        : (originalTotalAmount - deductionAmount);
+
     return ExecutionDashboardModel(
       projectId: _toStringOrEmpty(json['projectId']),
       projectName: _toStringOrEmpty(json['projectName']),
@@ -300,7 +332,11 @@ class ExecutionDashboardModel {
       totalExpenses: _toDoubleOrZero(json['totalExpenses']),
       netCashFlow: _toDoubleOrZero(json['netCashFlow']),
       totalBudget: _toDoubleOrZero(json['totalBudget']),
-      totalPrice: _toDoubleOrZero(json['totalPrice']),
+      totalPrice: totalPrice,
+      originalTotalAmount: originalTotalAmount,
+      deductionAmount: deductionAmount,
+      totalAmountAfterDeduction:
+          totalAmountAfterDeduction < 0 ? 0 : totalAmountAfterDeduction,
       totalProfit: _toDoubleOrZero(json['totalProfit']),
       remainingBudget: _toDoubleOrZero(json['remainingBudget']),
       budgetPercentage: _toDoubleOrZero(json['budgetPercentage']),
@@ -343,6 +379,9 @@ class ExecutionDashboardModel {
     double? netCashFlow,
     double? totalBudget,
     double? totalPrice,
+    double? originalTotalAmount,
+    double? deductionAmount,
+    double? totalAmountAfterDeduction,
     double? totalProfit,
     double? remainingBudget,
     double? budgetPercentage,
@@ -364,6 +403,10 @@ class ExecutionDashboardModel {
       netCashFlow: netCashFlow ?? this.netCashFlow,
       totalBudget: totalBudget ?? this.totalBudget,
       totalPrice: totalPrice ?? this.totalPrice,
+      originalTotalAmount: originalTotalAmount ?? this.originalTotalAmount,
+      deductionAmount: deductionAmount ?? this.deductionAmount,
+      totalAmountAfterDeduction:
+          totalAmountAfterDeduction ?? this.totalAmountAfterDeduction,
       totalProfit: totalProfit ?? this.totalProfit,
       remainingBudget: remainingBudget ?? this.remainingBudget,
       budgetPercentage: budgetPercentage ?? this.budgetPercentage,
