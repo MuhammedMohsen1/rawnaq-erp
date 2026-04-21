@@ -133,8 +133,7 @@ class _PricingSummarySidebarState extends State<PricingSummarySidebar> {
     }
     if (widget.deductionAmount != oldWidget.deductionAmount) {
       if (!_deductionFocusNode.hasFocus) {
-        _deductionController.text =
-            _formatPlainNumber(widget.deductionAmount);
+        _deductionController.text = _formatPlainNumber(widget.deductionAmount);
       }
     }
   }
@@ -839,8 +838,7 @@ class _PricingSummarySidebarState extends State<PricingSummarySidebar> {
                             ),
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
-                              mainAxisAlignment:
-                                  MainAxisAlignment.spaceBetween,
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
                                 Text(
                                   'الربح',

@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -11,7 +13,6 @@ import '../bloc/projects_bloc.dart';
 import '../bloc/projects_event.dart';
 import '../bloc/projects_state.dart';
 import '../widgets/project_filters_widget.dart';
-import '../widgets/project_table_widget.dart';
 import '../widgets/project_card_widget.dart';
 import '../widgets/create_project_dialog.dart';
 import '../widgets/edit_project_dialog.dart';
@@ -69,19 +70,6 @@ class _ProjectsListPageState extends State<ProjectsListPage> {
         Text('قائمة المشاريع', style: AppTextStyles.pageTitle),
         Row(
           children: [
-            IconButton(
-              onPressed: () {
-                setState(() {
-                  _isSearchVisible = !_isSearchVisible;
-                });
-              },
-              icon: Icon(
-                _isSearchVisible ? Icons.search_off : Icons.search,
-                color: AppColors.textSecondary,
-              ),
-              tooltip: _isSearchVisible ? 'إخفاء البحث' : 'إظهار البحث',
-            ),
-            const SizedBox(width: 8),
             ElevatedButton.icon(
               onPressed: () {
                 // TODO: Show create project dialog
@@ -104,98 +92,98 @@ class _ProjectsListPageState extends State<ProjectsListPage> {
     );
   }
 
-  Widget _buildSearchAndFilters(BuildContext context, ProjectsState state) {
-    final teamMembers = state is ProjectsLoaded
-        ? state.teamMembers
-        : <TeamMemberEntity>[];
-    final statusFilter = state is ProjectsLoaded ? state.statusFilter : null;
-    final managerFilter = state is ProjectsLoaded ? state.managerFilter : null;
-    final teamMemberFilter = state is ProjectsLoaded
-        ? state.teamMemberFilter
-        : null;
+  // Widget _buildSearchAndFilters(BuildContext context, ProjectsState state) {
+  //   final teamMembers = state is ProjectsLoaded
+  //       ? state.teamMembers
+  //       : <TeamMemberEntity>[];
+  //   final statusFilter = state is ProjectsLoaded ? state.statusFilter : null;
+  //   final managerFilter = state is ProjectsLoaded ? state.managerFilter : null;
+  //   final teamMemberFilter = state is ProjectsLoaded
+  //       ? state.teamMemberFilter
+  //       : null;
 
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: AppColors.cardBackground,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.border),
-      ),
-      child: Column(
-        children: [
-          // Search bar
-          TextField(
-            controller: _searchController,
-            style: AppTextStyles.inputText,
-            decoration: InputDecoration(
-              hintText: 'ابحث عن مشروع بالاسم...',
-              hintStyle: AppTextStyles.inputHint,
-              prefixIcon: const Icon(Icons.search, color: AppColors.textMuted),
-              suffixIcon: _searchController.text.isNotEmpty
-                  ? IconButton(
-                      icon: const Icon(Icons.clear, color: AppColors.textMuted),
-                      onPressed: () {
-                        _searchController.clear();
-                        context.read<ProjectsBloc>().add(
-                          const SearchProjects(''),
-                        );
-                      },
-                    )
-                  : null,
-              filled: true,
-              fillColor: AppColors.inputBackground,
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
-                borderSide: const BorderSide(color: AppColors.inputBorder),
-              ),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
-                borderSide: const BorderSide(color: AppColors.inputBorder),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
-                borderSide: const BorderSide(
-                  color: AppColors.inputFocusBorder,
-                  width: 2,
-                ),
-              ),
-              contentPadding: const EdgeInsets.symmetric(
-                horizontal: 16,
-                vertical: 14,
-              ),
-            ),
-            onChanged: (value) {
-              context.read<ProjectsBloc>().add(SearchProjects(value));
-            },
-          ),
-          const SizedBox(height: 16),
+  //   return Container(
+  //     padding: const EdgeInsets.all(20),
+  //     decoration: BoxDecoration(
+  //       color: AppColors.cardBackground,
+  //       borderRadius: BorderRadius.circular(12),
+  //       border: Border.all(color: AppColors.border),
+  //     ),
+  //     child: Column(
+  //       children: [
+  //         // Search bar
+  //         TextField(
+  //           controller: _searchController,
+  //           style: AppTextStyles.inputText,
+  //           decoration: InputDecoration(
+  //             hintText: 'ابحث عن مشروع بالاسم...',
+  //             hintStyle: AppTextStyles.inputHint,
+  //             prefixIcon: const Icon(Icons.search, color: AppColors.textMuted),
+  //             suffixIcon: _searchController.text.isNotEmpty
+  //                 ? IconButton(
+  //                     icon: const Icon(Icons.clear, color: AppColors.textMuted),
+  //                     onPressed: () {
+  //                       _searchController.clear();
+  //                       context.read<ProjectsBloc>().add(
+  //                         const SearchProjects(''),
+  //                       );
+  //                     },
+  //                   )
+  //                 : null,
+  //             filled: true,
+  //             fillColor: AppColors.inputBackground,
+  //             border: OutlineInputBorder(
+  //               borderRadius: BorderRadius.circular(8),
+  //               borderSide: const BorderSide(color: AppColors.inputBorder),
+  //             ),
+  //             enabledBorder: OutlineInputBorder(
+  //               borderRadius: BorderRadius.circular(8),
+  //               borderSide: const BorderSide(color: AppColors.inputBorder),
+  //             ),
+  //             focusedBorder: OutlineInputBorder(
+  //               borderRadius: BorderRadius.circular(8),
+  //               borderSide: const BorderSide(
+  //                 color: AppColors.inputFocusBorder,
+  //                 width: 2,
+  //               ),
+  //             ),
+  //             contentPadding: const EdgeInsets.symmetric(
+  //               horizontal: 16,
+  //               vertical: 14,
+  //             ),
+  //           ),
+  //           onChanged: (value) {
+  //             context.read<ProjectsBloc>().add(SearchProjects(value));
+  //           },
+  //         ),
+  //         const SizedBox(height: 16),
 
-          // Filters
-          ProjectFiltersWidget(
-            selectedStatus: statusFilter,
-            selectedManagerId: managerFilter,
-            selectedTeamMemberId: teamMemberFilter,
-            teamMembers: teamMembers,
-            onStatusChanged: (status) {
-              context.read<ProjectsBloc>().add(FilterByStatus(status));
-            },
-            onManagerChanged: (managerId) {
-              context.read<ProjectsBloc>().add(FilterByManager(managerId));
-            },
-            onTeamMemberChanged: (teamMemberId) {
-              context.read<ProjectsBloc>().add(
-                FilterByTeamMember(teamMemberId),
-              );
-            },
-            onReset: () {
-              _searchController.clear();
-              context.read<ProjectsBloc>().add(const ClearFilters());
-            },
-          ),
-        ],
-      ),
-    );
-  }
+  //         // Filters
+  //         ProjectFiltersWidget(
+  //           selectedStatus: statusFilter,
+  //           selectedManagerId: managerFilter,
+  //           selectedTeamMemberId: teamMemberFilter,
+  //           teamMembers: teamMembers,
+  //           onStatusChanged: (status) {
+  //             context.read<ProjectsBloc>().add(FilterByStatus(status));
+  //           },
+  //           onManagerChanged: (managerId) {
+  //             context.read<ProjectsBloc>().add(FilterByManager(managerId));
+  //           },
+  //           onTeamMemberChanged: (teamMemberId) {
+  //             context.read<ProjectsBloc>().add(
+  //               FilterByTeamMember(teamMemberId),
+  //             );
+  //           },
+  //           onReset: () {
+  //             _searchController.clear();
+  //             context.read<ProjectsBloc>().add(const ClearFilters());
+  //           },
+  //         ),
+  //       ],
+  //     ),
+  //   );
+  // }
 
   Widget _buildContent(BuildContext context, ProjectsState state) {
     if (state is ProjectsLoading) {
@@ -291,8 +279,16 @@ class _ProjectsListPageState extends State<ProjectsListPage> {
   }
 
   Widget _buildPagination(BuildContext context, ProjectsLoaded state) {
-    final totalProjects = state.projects.length;
+    final totalProjects = state.totalItems;
     final showingCount = state.filteredProjects.length;
+    final startIndex = totalProjects == 0
+        ? 0
+        : ((state.currentPage - 1) * state.pageSize) + 1;
+    final endIndex = totalProjects == 0
+        ? 0
+        : math.min(startIndex + showingCount - 1, totalProjects);
+    final canGoPrevious = state.currentPage > 1;
+    final canGoNext = state.currentPage < state.totalPages;
 
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 16),
@@ -300,15 +296,26 @@ class _ProjectsListPageState extends State<ProjectsListPage> {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text(
-            'عرض 1-$showingCount من $totalProjects',
+            'عرض $startIndex-$endIndex من $totalProjects',
             style: AppTextStyles.bodyMedium,
           ),
           Row(
             children: [
               OutlinedButton(
-                onPressed: () {
-                  // Previous page
-                },
+                onPressed: canGoPrevious
+                    ? () {
+                        context.read<ProjectsBloc>().add(
+                          LoadProjects(
+                            status: state.statusFilter,
+                            managerId: state.managerFilter,
+                            teamMemberId: state.teamMemberFilter,
+                            searchQuery: state.searchQuery,
+                            page: state.currentPage - 1,
+                            limit: state.pageSize,
+                          ),
+                        );
+                      }
+                    : null,
                 style: OutlinedButton.styleFrom(
                   foregroundColor: AppColors.textSecondary,
                   side: const BorderSide(color: AppColors.border),
@@ -320,10 +327,26 @@ class _ProjectsListPageState extends State<ProjectsListPage> {
                 child: const Text('السابق'),
               ),
               const SizedBox(width: 8),
+              Text(
+                '${state.currentPage} / ${state.totalPages}',
+                style: AppTextStyles.bodyMedium,
+              ),
+              const SizedBox(width: 8),
               OutlinedButton(
-                onPressed: () {
-                  // Next page
-                },
+                onPressed: canGoNext
+                    ? () {
+                        context.read<ProjectsBloc>().add(
+                          LoadProjects(
+                            status: state.statusFilter,
+                            managerId: state.managerFilter,
+                            teamMemberId: state.teamMemberFilter,
+                            searchQuery: state.searchQuery,
+                            page: state.currentPage + 1,
+                            limit: state.pageSize,
+                          ),
+                        );
+                      }
+                    : null,
                 style: OutlinedButton.styleFrom(
                   foregroundColor: AppColors.textSecondary,
                   side: const BorderSide(color: AppColors.border),

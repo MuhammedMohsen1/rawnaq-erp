@@ -15,7 +15,7 @@ class ProjectsRepositoryImpl implements ProjectsRepository {
     : _dataSource = dataSource ?? ProjectsApiDataSource();
 
   @override
-  Future<Either<Failure, List<ProjectEntity>>> getProjects({
+  Future<Either<Failure, PaginatedProjectsResult>> getProjects({
     ProjectStatus? status,
     String? managerId,
     String? teamMemberId,
@@ -36,8 +36,18 @@ class ProjectsRepositoryImpl implements ProjectsRepository {
       final projects = projectsList
           .map((json) => ProjectModel.fromJson(json as Map<String, dynamic>))
           .toList();
+      final total = (response['total'] as num?)?.toInt() ?? projects.length;
+      final currentPage = (response['page'] as num?)?.toInt() ?? (page ?? 1);
+      final currentLimit = (response['limit'] as num?)?.toInt() ?? (limit ?? 10);
 
-      return Right(projects);
+      return Right(
+        PaginatedProjectsResult(
+          projects: projects,
+          total: total,
+          page: currentPage,
+          limit: currentLimit,
+        ),
+      );
     } catch (e) {
       return Left(ServerFailure(message: e.toString()));
     }

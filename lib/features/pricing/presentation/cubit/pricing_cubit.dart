@@ -246,6 +246,116 @@ class PricingCubit extends Cubit<PricingState> {
     }
   }
 
+  Future<void> reorderItems(
+    String projectId,
+    int oldIndex,
+    int newIndex,
+  ) async {
+    final currentState = state;
+    if (currentState is! PricingLoaded) return;
+
+    final items = currentState.pricingVersion.items;
+    if (items == null || items.isEmpty) return;
+
+    final normalizedNewIndex = oldIndex < newIndex ? newIndex - 1 : newIndex;
+    if (oldIndex == normalizedNewIndex ||
+        oldIndex < 0 ||
+        normalizedNewIndex < 0 ||
+        oldIndex >= items.length ||
+        normalizedNewIndex >= items.length) {
+      return;
+    }
+
+    final reorderedItems = List<PricingItemModel>.from(items);
+    final movedItem = reorderedItems.removeAt(oldIndex);
+    reorderedItems.insert(normalizedNewIndex, movedItem);
+
+    final orderedItems = reorderedItems.asMap().entries.map((entry) {
+      return entry.value.copyWith(order: entry.key + 1);
+    }).toList();
+
+    final optimisticState = currentState.copyWith(
+      pricingVersion: currentState.pricingVersion.copyWith(items: orderedItems),
+    );
+
+    emit(optimisticState);
+
+    try {
+      for (final item in orderedItems) {
+        await pricingApiDataSource.updatePricingItem(
+          projectId,
+          currentState.pricingVersion.version,
+          item.id,
+          order: item.order,
+        );
+      }
+    } catch (e) {
+      emit(currentState);
+      rethrow;
+    }
+  }
+
+  Future<void> reorderSubItems(
+    String projectId,
+    String itemId,
+    int oldIndex,
+    int newIndex,
+  ) async {
+    final currentState = state;
+    if (currentState is! PricingLoaded) return;
+
+    final items = currentState.pricingVersion.items;
+    if (items == null || items.isEmpty) return;
+
+    final itemIndex = items.indexWhere((item) => item.id == itemId);
+    if (itemIndex == -1) return;
+
+    final targetItem = items[itemIndex];
+    final subItems = targetItem.subItems;
+    if (subItems == null || subItems.isEmpty) return;
+
+    final normalizedNewIndex = oldIndex < newIndex ? newIndex - 1 : newIndex;
+    if (oldIndex == normalizedNewIndex ||
+        oldIndex < 0 ||
+        normalizedNewIndex < 0 ||
+        oldIndex >= subItems.length ||
+        normalizedNewIndex >= subItems.length) {
+      return;
+    }
+
+    final reorderedSubItems = List<PricingSubItemModel>.from(subItems);
+    final movedSubItem = reorderedSubItems.removeAt(oldIndex);
+    reorderedSubItems.insert(normalizedNewIndex, movedSubItem);
+
+    final orderedSubItems = reorderedSubItems.asMap().entries.map((entry) {
+      return entry.value.copyWith(order: entry.key + 1);
+    }).toList();
+
+    final updatedItems = List<PricingItemModel>.from(items);
+    updatedItems[itemIndex] = targetItem.copyWith(subItems: orderedSubItems);
+
+    final optimisticState = currentState.copyWith(
+      pricingVersion: currentState.pricingVersion.copyWith(items: updatedItems),
+    );
+
+    emit(optimisticState);
+
+    try {
+      for (final subItem in orderedSubItems) {
+        await pricingApiDataSource.updatePricingSubItem(
+          projectId,
+          currentState.pricingVersion.version,
+          itemId,
+          subItem.id,
+          order: subItem.order,
+        );
+      }
+    } catch (e) {
+      emit(currentState);
+      rethrow;
+    }
+  }
+
   /// Return pricing to draft status
   Future<void> returnToPricing(String projectId, String? reason) async {
     final currentState = state;
@@ -335,10 +445,9 @@ class PricingCubit extends Cubit<PricingState> {
         projectId,
         currentState.pricingVersion.version,
         items: subItems,
-        deductionAmount:
-            currentState.deductionAmount > 0
-                ? currentState.deductionAmount
-                : null,
+        deductionAmount: currentState.deductionAmount > 0
+            ? currentState.deductionAmount
+            : null,
       );
 
       await loadPricingData(projectId);
@@ -453,10 +562,9 @@ class PricingCubit extends Cubit<PricingState> {
           projectId,
           currentState.pricingVersion.version,
           items: items,
-          deductionAmount:
-              currentState.deductionAmount > 0
-                  ? currentState.deductionAmount
-                  : null,
+          deductionAmount: currentState.deductionAmount > 0
+              ? currentState.deductionAmount
+              : null,
         );
 
         await loadPricingData(projectId);

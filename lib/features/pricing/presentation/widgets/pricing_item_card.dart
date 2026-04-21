@@ -81,6 +81,8 @@ class PricingItemCard extends StatefulWidget {
   final bool isAdminOrManager; // Whether user is Admin or Manager of Department
   final Map<String, double>?
   externalProfitMargins; // Profit margins from parent (e.g., bulk update)
+  final bool canReorderSubItems;
+  final Future<void> Function(int oldIndex, int newIndex)? onReorderSubItems;
 
   const PricingItemCard({
     super.key,
@@ -99,6 +101,8 @@ class PricingItemCard extends StatefulWidget {
     this.onSubItemDeleted,
     this.isAdminOrManager = false,
     this.externalProfitMargins,
+    this.canReorderSubItems = false,
+    this.onReorderSubItems,
   });
 
   @override
@@ -335,6 +339,14 @@ class _PricingItemCardState extends State<PricingItemCard> {
     widget.onSubItemExpandedChanged?.call(
       Map<String, bool>.from(_expandedSubItems),
     );
+  }
+
+  Future<void> _handleSubItemReorder(int oldIndex, int newIndex) async {
+    if (!widget.canReorderSubItems || widget.onReorderSubItems == null) {
+      return;
+    }
+
+    await widget.onReorderSubItems!(oldIndex, newIndex);
   }
 
   Future<Uint8List?> _getClipboardImage() async {
@@ -2326,1239 +2338,1308 @@ class _PricingItemCardState extends State<PricingItemCard> {
                   // Sub-Items List
                   if (widget.item.subItems != null &&
                       widget.item.subItems!.isNotEmpty)
-                    ...widget.item.subItems!.map((subItem) {
-                      final isSubItemExpanded =
-                          _expandedSubItems[subItem.id] ?? false;
-                      final allElements = _getAllElementsForSubItem(subItem.id);
-                      return Container(
-                        margin: const EdgeInsets.only(bottom: 16),
-                        decoration: BoxDecoration(
-                          border: Border.all(
-                            color: const Color(0xFF363C4A),
-                            width: 1,
+                    ReorderableListView(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      buildDefaultDragHandles: false,
+                      onReorder: _handleSubItemReorder,
+                      children: widget.item.subItems!.asMap().entries.map((
+                        entry,
+                      ) {
+                        final index = entry.key;
+                        final subItem = entry.value;
+                        final isSubItemExpanded =
+                            _expandedSubItems[subItem.id] ?? false;
+                        final allElements = _getAllElementsForSubItem(
+                          subItem.id,
+                        );
+                        return Container(
+                          key: ValueKey('pricing-sub-item-${subItem.id}'),
+                          margin: const EdgeInsets.only(bottom: 16),
+                          decoration: BoxDecoration(
+                            border: Border.all(
+                              color: const Color(0xFF363C4A),
+                              width: 1,
+                            ),
+                            borderRadius: BorderRadius.circular(8),
                           ),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Column(
-                          children: [
-                            // Sub-Item Header (Foldable)
-                            GestureDetector(
-                              onLongPress: () =>
-                                  _showSubItemContextMenu(subItem),
-                              child: InkWell(
-                                onTap: () => _toggleSubItem(subItem.id),
-                                child: Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 12,
-                                    vertical: 12,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: const Color(0xFF2A313D),
-                                    borderRadius: BorderRadius.only(
-                                      topLeft: Radius.circular(8),
-                                      topRight: Radius.circular(8),
+                          child: Column(
+                            children: [
+                              // Sub-Item Header (Foldable)
+                              GestureDetector(
+                                onLongPress: () =>
+                                    _showSubItemContextMenu(subItem),
+                                child: InkWell(
+                                  onTap: () => _toggleSubItem(subItem.id),
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 12,
+                                      vertical: 12,
                                     ),
-                                  ),
-                                  child: Row(
-                                    children: [
-                                      Icon(
-                                        isSubItemExpanded
-                                            ? Icons.expand_less
-                                            : Icons.expand_more,
-                                        color: AppColors.textSecondary,
-                                        size: 20,
+                                    decoration: BoxDecoration(
+                                      color: const Color(0xFF2A313D),
+                                      borderRadius: BorderRadius.only(
+                                        topLeft: Radius.circular(8),
+                                        topRight: Radius.circular(8),
                                       ),
-                                      Checkbox(
-                                        value: !subItem.isHidden,
-                                        onChanged: (value) =>
-                                            _toggleSubItemVisibility(
-                                              subItem,
-                                              value ?? false,
-                                            ),
-                                        activeColor: AppColors
-                                            .primary, // background when checked
-                                        checkColor: AppColors
-                                            .black, // the check mark itself
-                                        side: BorderSide(
-                                          color: subItem.isHidden
-                                              ? AppColors
-                                                    .lightGrey // border when hidden
-                                              : AppColors
-                                                    .primary, // border when visible
-                                          width: 1.5,
+                                    ),
+                                    child: Row(
+                                      children: [
+                                        Icon(
+                                          isSubItemExpanded
+                                              ? Icons.expand_less
+                                              : Icons.expand_more,
+                                          color: AppColors.textSecondary,
+                                          size: 20,
                                         ),
-                                      ),
-                                      const SizedBox(width: 8),
-                                      Expanded(
-                                        child: Text(
-                                          subItem.name,
-                                          style: AppTextStyles.bodyLarge
-                                              .copyWith(
-                                                fontWeight: FontWeight.w600,
+                                        Checkbox(
+                                          value: !subItem.isHidden,
+                                          onChanged: (value) =>
+                                              _toggleSubItemVisibility(
+                                                subItem,
+                                                value ?? false,
                                               ),
-                                        ),
-                                      ),
-                                      // Show cost/profit/percentage chips in APPROVED/PENDING_SIGNATURE
-                                      if (widget.pricingStatus != null &&
-                                          widget.isAdminOrManager &&
-                                          (widget.pricingStatus!
-                                                      .toUpperCase() ==
-                                                  'APPROVED' ||
-                                              widget.pricingStatus!
-                                                      .toUpperCase() ==
-                                                  'PENDING_SIGNATURE')) ...[
-                                        _buildStatChip(
-                                          subItem.totalCost,
-                                          const Color.fromARGB(255, 235, 16, 8),
-                                        ),
-                                        const SizedBox(width: 4),
-                                        _buildStatChip(
-                                          subItem.profitAmount,
-                                          const Color(0xFF10B981),
-                                        ),
-                                        const SizedBox(width: 4),
-                                        _buildStatChip(
-                                          subItem.profitMargin,
-                                          const Color(0xFFF59E0B),
-                                          suffix: '%',
+                                          activeColor: AppColors
+                                              .primary, // background when checked
+                                          checkColor: AppColors
+                                              .black, // the check mark itself
+                                          side: BorderSide(
+                                            color: subItem.isHidden
+                                                ? AppColors
+                                                      .lightGrey // border when hidden
+                                                : AppColors
+                                                      .primary, // border when visible
+                                            width: 1.5,
+                                          ),
                                         ),
                                         const SizedBox(width: 8),
-                                      ],
-
-                                      // Show total cost in header only when NOT APPROVED/PENDING_SIGNATURE
-                                      Builder(
-                                        builder: (context) {
-                                          double total = 0;
-                                          if (widget.isAdminOrManager) {
-                                            total =
-                                                subItem.totalCost +
-                                                subItem.profitAmount;
-                                          } else {
-                                            total = subItem.totalCost;
-                                          }
-
-                                          final totalStr = total
-                                              .toStringAsFixed(3);
-                                          final dotIndex = totalStr.indexOf(
-                                            '.',
-                                          );
-                                          final intPart = dotIndex >= 0
-                                              ? totalStr.substring(0, dotIndex)
-                                              : totalStr;
-                                          final decimalPart = dotIndex >= 0
-                                              ? totalStr.substring(dotIndex)
-                                              : '';
-                                          return RichText(
-                                            textDirection: TextDirection.ltr,
-                                            text: TextSpan(
-                                              children: [
-                                                TextSpan(
-                                                  text: intPart,
-                                                  style: AppTextStyles.caption
-                                                      .copyWith(
-                                                        color: AppColors
-                                                            .textSecondary,
-                                                      ),
+                                        Expanded(
+                                          child: Text(
+                                            subItem.name,
+                                            style: AppTextStyles.bodyLarge
+                                                .copyWith(
+                                                  fontWeight: FontWeight.w600,
                                                 ),
-                                                if (decimalPart.isNotEmpty)
+                                          ),
+                                        ),
+                                        if (widget.canReorderSubItems) ...[
+                                          const SizedBox(width: 8),
+                                          ReorderableDragStartListener(
+                                            index: index,
+                                            child: const Icon(
+                                              Icons.drag_indicator,
+                                              color: AppColors.textSecondary,
+                                              size: 20,
+                                            ),
+                                          ),
+                                        ],
+                                        // Show cost/profit/percentage chips in APPROVED/PENDING_SIGNATURE
+                                        if (widget.pricingStatus != null &&
+                                            widget.isAdminOrManager &&
+                                            (widget.pricingStatus!
+                                                        .toUpperCase() ==
+                                                    'APPROVED' ||
+                                                widget.pricingStatus!
+                                                        .toUpperCase() ==
+                                                    'PENDING_SIGNATURE')) ...[
+                                          _buildStatChip(
+                                            subItem.totalCost,
+                                            const Color.fromARGB(
+                                              255,
+                                              235,
+                                              16,
+                                              8,
+                                            ),
+                                          ),
+                                          const SizedBox(width: 4),
+                                          _buildStatChip(
+                                            subItem.profitAmount,
+                                            const Color(0xFF10B981),
+                                          ),
+                                          const SizedBox(width: 4),
+                                          _buildStatChip(
+                                            subItem.profitMargin,
+                                            const Color(0xFFF59E0B),
+                                            suffix: '%',
+                                          ),
+                                          const SizedBox(width: 8),
+                                        ],
+
+                                        // Show total cost in header only when NOT APPROVED/PENDING_SIGNATURE
+                                        Builder(
+                                          builder: (context) {
+                                            double total = 0;
+                                            if (widget.isAdminOrManager) {
+                                              total =
+                                                  subItem.totalCost +
+                                                  subItem.profitAmount;
+                                            } else {
+                                              total = subItem.totalCost;
+                                            }
+
+                                            final totalStr = total
+                                                .toStringAsFixed(3);
+                                            final dotIndex = totalStr.indexOf(
+                                              '.',
+                                            );
+                                            final intPart = dotIndex >= 0
+                                                ? totalStr.substring(
+                                                    0,
+                                                    dotIndex,
+                                                  )
+                                                : totalStr;
+                                            final decimalPart = dotIndex >= 0
+                                                ? totalStr.substring(dotIndex)
+                                                : '';
+                                            return RichText(
+                                              textDirection: TextDirection.ltr,
+                                              text: TextSpan(
+                                                children: [
                                                   TextSpan(
-                                                    text: decimalPart,
+                                                    text: intPart,
                                                     style: AppTextStyles.caption
                                                         .copyWith(
                                                           color: AppColors
                                                               .textSecondary,
-                                                          fontSize:
-                                                              AppTextStyles
-                                                                  .caption
-                                                                  .fontSize! *
-                                                              0.75, // smaller
                                                         ),
                                                   ),
-                                                TextSpan(
-                                                  text: ' KD',
-                                                  style: TextStyle(
-                                                    color:
-                                                        AppColors.textSecondary,
-                                                    fontSize:
-                                                        AppTextStyles
-                                                            .caption
-                                                            .fontSize! *
-                                                        0.75, // smaller
+                                                  if (decimalPart.isNotEmpty)
+                                                    TextSpan(
+                                                      text: decimalPart,
+                                                      style: AppTextStyles
+                                                          .caption
+                                                          .copyWith(
+                                                            color: AppColors
+                                                                .textSecondary,
+                                                            fontSize:
+                                                                AppTextStyles
+                                                                    .caption
+                                                                    .fontSize! *
+                                                                0.75, // smaller
+                                                          ),
+                                                    ),
+                                                  TextSpan(
+                                                    text: ' KD',
+                                                    style: TextStyle(
+                                                      color: AppColors
+                                                          .textSecondary,
+                                                      fontSize:
+                                                          AppTextStyles
+                                                              .caption
+                                                              .fontSize! *
+                                                          0.75, // smaller
+                                                    ),
                                                   ),
-                                                ),
-                                              ],
-                                            ),
-                                          );
-                                        },
-                                      ),
-                                      const SizedBox(width: 8),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                            ),
-                            // Elements List (Expandable)
-                            if (isSubItemExpanded) ...[
-                              // Add Image Button when no images - show above Elements table (top left)
-                              if (subItem.images.isEmpty &&
-                                  _uploadingImages[subItem.id] != true) ...[
-                                Padding(
-                                  padding: const EdgeInsets.only(
-                                    bottom: 16,
-                                    left: 12,
-                                    right: 12,
-                                    top: 12,
-                                  ),
-                                  child: Align(
-                                    alignment: Alignment.centerLeft,
-                                    child: Material(
-                                      color: Colors.transparent,
-                                      child: InkWell(
-                                        onTap: () {
-                                          print(
-                                            'Upload button clicked for subItem: ${subItem.id}',
-                                          );
-                                          _uploadImages(subItem.id);
-                                        },
-                                        onLongPress: () {
-                                          print(
-                                            'Upload button clicked for subItem: ${subItem.id}',
-                                          );
-                                          _uploadImagesFilePicker(subItem.id);
-                                        },
-                                        borderRadius: BorderRadius.circular(8),
-                                        child: Container(
-                                          height: 50,
-                                          padding: const EdgeInsets.symmetric(
-                                            horizontal: 16,
-                                            vertical: 12,
-                                          ),
-                                          decoration: BoxDecoration(
-                                            border: Border.all(
-                                              color: const Color(0xFF4B5563),
-                                              style: BorderStyle.solid,
-                                            ),
-                                            borderRadius: BorderRadius.circular(
-                                              8,
-                                            ),
-                                            color: const Color(
-                                              0xFF2A313D,
-                                            ).withOpacity(0.3),
-                                          ),
-                                          child: Row(
-                                            mainAxisSize: MainAxisSize.min,
-                                            children: [
-                                              const Icon(
-                                                Icons.add_photo_alternate,
-                                                size: 18,
-                                                color: AppColors.primary,
+                                                ],
                                               ),
-                                              const SizedBox(width: 8),
-                                              Text(
-                                                'إضافة صور',
-                                                style: AppTextStyles.bodyMedium
-                                                    .copyWith(
-                                                      color: AppColors.primary,
-                                                      fontSize: 14,
-                                                      fontWeight:
-                                                          FontWeight.w500,
-                                                    ),
-                                              ),
-                                            ],
-                                          ),
+                                            );
+                                          },
                                         ),
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ],
-                              // Sub-item notes editor - always visible in sub-item body
-                              Padding(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 12,
-                                  vertical: 8,
-                                ),
-                                child: TextField(
-                                  controller: _notesControllers[subItem.id],
-                                  maxLines: 3,
-
-                                  decoration: InputDecoration(
-                                    hintText: 'ملاحظات البند الفرعية...',
-                                    hintStyle: AppTextStyles.bodySmall.copyWith(
-                                      color: AppColors.textMuted,
-                                      fontSize: 12,
-                                    ),
-                                    filled: true,
-                                    fillColor: const Color(0xFF15181E),
-
-                                    border: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(6),
-                                      borderSide: const BorderSide(
-                                        color: Color(0xFF363C4A),
-                                      ),
-                                    ),
-                                    enabledBorder: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(6),
-                                      borderSide: const BorderSide(
-                                        color: Color(0xFF363C4A),
-                                      ),
-                                    ),
-                                    focusedBorder: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(6),
-                                      borderSide: const BorderSide(
-                                        color: AppColors.primary,
-                                      ),
-                                    ),
-                                    contentPadding: const EdgeInsets.symmetric(
-                                      horizontal: 12,
-                                      vertical: 10,
-                                    ),
-                                  ),
-                                  style: AppTextStyles.bodySmall.copyWith(
-                                    fontSize: 12,
-                                    color: AppColors.textPrimary,
-                                  ),
-                                  textInputAction: TextInputAction.done,
-                                  onChanged: (value) {
-                                    // Debounce notes save
-                                    _notesTimers[subItem.id]?.cancel();
-                                    _notesTimers[subItem.id] = Timer(
-                                      const Duration(milliseconds: 700),
-                                      () async {
-                                        try {
-                                          await _apiDataSource
-                                              .updatePricingSubItem(
-                                                widget.projectId,
-                                                widget.version,
-                                                widget.item.id,
-                                                subItem.id,
-                                                description:
-                                                    value.trim().isEmpty
-                                                    ? null
-                                                    : value.trim(),
-                                              );
-                                        } catch (_) {
-                                          // ignore transient save errors in debounce
-                                        }
-                                      },
-                                    );
-                                  },
-                                  onSubmitted: (value) async {
-                                    final scaffoldMessenger =
-                                        ScaffoldMessenger.of(context);
-                                    try {
-                                      await _apiDataSource.updatePricingSubItem(
-                                        widget.projectId,
-                                        widget.version,
-                                        widget.item.id,
-                                        subItem.id,
-                                        description: value.trim().isEmpty
-                                            ? null
-                                            : value.trim(),
-                                      );
-                                    } catch (e) {
-                                      if (mounted) {
-                                        scaffoldMessenger.showSnackBar(
-                                          SnackBar(
-                                            content: Text(
-                                              'فشل حفظ الملاحظات: ${e.toString()}',
-                                            ),
-                                            duration: const Duration(
-                                              seconds: 3,
-                                            ),
-                                          ),
-                                        );
-                                      }
-                                    }
-                                  },
-                                ),
-                              ),
-                              // Profit Margin Input - only visible to Admin and Manager when status is APPROVED or PENDING_SIGNATURE
-                              if (widget.isAdminOrManager &&
-                                  widget.pricingStatus != null &&
-                                  (widget.pricingStatus!.toUpperCase() ==
-                                          'APPROVED' ||
-                                      widget.pricingStatus!.toUpperCase() ==
-                                          'PENDING_SIGNATURE')) ...[
-                                Padding(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 12,
-                                    vertical: 12,
-                                  ),
-                                  child: Container(
-                                    padding: const EdgeInsets.all(12),
-                                    decoration: BoxDecoration(
-                                      color: const Color(0xFF15181E),
-                                      borderRadius: BorderRadius.circular(8),
-                                      border: Border.all(
-                                        color: const Color(0xFF363C4A),
-                                      ),
-                                    ),
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Row(
-                                          children: [
-                                            Expanded(
-                                              child: Text(
-                                                'نسبة الربح (%)',
-                                                style: AppTextStyles.bodyMedium
-                                                    .copyWith(
-                                                      fontWeight:
-                                                          FontWeight.w600,
-                                                    ),
-                                              ),
-                                            ),
-                                            SizedBox(
-                                              width: 120,
-                                              child: Builder(
-                                                builder: (context) {
-                                                  // Get or create controller for this subItem
-                                                  if (!_profitControllers
-                                                      .containsKey(
-                                                        subItem.id,
-                                                      )) {
-                                                    final initialValue =
-                                                        _profitMargins[subItem
-                                                            .id] ??
-                                                        subItem.profitMargin;
-                                                    _profitControllers[subItem
-                                                            .id] =
-                                                        TextEditingController(
-                                                          text: initialValue
-                                                              .toStringAsFixed(
-                                                                2,
-                                                              ),
-                                                        );
-                                                  }
-                                                  return TextField(
-                                                    controller:
-                                                        _profitControllers[subItem
-                                                            .id]!,
-                                                    keyboardType:
-                                                        const TextInputType.numberWithOptions(
-                                                          decimal: true,
-                                                        ),
-                                                    inputFormatters: [
-                                                      ArabicNumberInputFormatter(),
-                                                      FilteringTextInputFormatter.allow(
-                                                        RegExp(
-                                                          r'^\d*\.?\d{0,2}',
-                                                        ),
-                                                      ),
-                                                    ],
-                                                    textAlign: TextAlign.center,
-                                                    style: AppTextStyles
-                                                        .bodyMedium,
-                                                    decoration: InputDecoration(
-                                                      filled: true,
-                                                      fillColor: const Color(
-                                                        0xFF2A313D,
-                                                      ),
-                                                      border: OutlineInputBorder(
-                                                        borderRadius:
-                                                            BorderRadius.circular(
-                                                              8,
-                                                            ),
-                                                        borderSide:
-                                                            const BorderSide(
-                                                              color: Color(
-                                                                0xFF363C4A,
-                                                              ),
-                                                            ),
-                                                      ),
-                                                      enabledBorder:
-                                                          OutlineInputBorder(
-                                                            borderRadius:
-                                                                BorderRadius.circular(
-                                                                  8,
-                                                                ),
-                                                            borderSide:
-                                                                const BorderSide(
-                                                                  color: Color(
-                                                                    0xFF363C4A,
-                                                                  ),
-                                                                ),
-                                                          ),
-                                                      focusedBorder:
-                                                          OutlineInputBorder(
-                                                            borderRadius:
-                                                                BorderRadius.circular(
-                                                                  8,
-                                                                ),
-                                                            borderSide:
-                                                                const BorderSide(
-                                                                  color: AppColors
-                                                                      .primary,
-                                                                ),
-                                                          ),
-                                                      contentPadding:
-                                                          const EdgeInsets.symmetric(
-                                                            horizontal: 12,
-                                                            vertical: 12,
-                                                          ),
-                                                    ),
-                                                    onChanged: (value) {
-                                                      // Parse the input value as a percentage (e.g., 15 for 15%, 15.5 for 15.5%)
-                                                      // The value is stored as-is (15 = 15%), and will be divided by 100 when calculating profit
-                                                      final margin =
-                                                          double.tryParse(
-                                                            value,
-                                                          ) ??
-                                                          0.0;
-                                                      // Ensure margin is non-negative
-                                                      final clampedMargin =
-                                                          margin < 0
-                                                          ? 0.0
-                                                          : margin;
-
-                                                      setState(() {
-                                                        _profitMargins[subItem
-                                                                .id] =
-                                                            clampedMargin;
-                                                      });
-
-                                                      // Calculate profit: cost * (margin / 100)
-                                                      final cost =
-                                                          subItem.totalCost > 0
-                                                          ? subItem.totalCost
-                                                          : allElements.fold<
-                                                              double
-                                                            >(
-                                                              0,
-                                                              (sum, e) =>
-                                                                  sum +
-                                                                  e.calculatedCost
-                                                                      .toDouble(),
-                                                            );
-                                                      final profit =
-                                                          cost *
-                                                          (clampedMargin / 100);
-                                                      final totalPrice =
-                                                          cost + profit;
-
-                                                      // Update subItem profit margin locally
-                                                      if (widget
-                                                              .onSubItemChanged !=
-                                                          null) {
-                                                        final updatedSubItem =
-                                                            PricingSubItemModel(
-                                                              isHidden: subItem
-                                                                  .isHidden,
-                                                              id: subItem.id,
-                                                              pricingItemId: subItem
-                                                                  .pricingItemId,
-                                                              name:
-                                                                  subItem.name,
-                                                              description: subItem
-                                                                  .description,
-                                                              images: subItem
-                                                                  .images,
-                                                              profitMargin:
-                                                                  clampedMargin,
-                                                              profitAmount:
-                                                                  profit,
-                                                              totalCost: cost,
-                                                              totalPrice:
-                                                                  totalPrice,
-                                                              order:
-                                                                  subItem.order,
-                                                              createdAt: subItem
-                                                                  .createdAt,
-                                                              updatedAt: subItem
-                                                                  .updatedAt,
-                                                              elements: subItem
-                                                                  .elements,
-                                                            );
-                                                        widget
-                                                            .onSubItemChanged!(
-                                                          updatedSubItem,
-                                                        );
-                                                      }
-
-                                                      // Only call API if status is APPROVED
-                                                      final status = widget
-                                                          .pricingStatus
-                                                          ?.toUpperCase()
-                                                          .trim();
-                                                      print(
-                                                        'Profit margin changed: $clampedMargin, Status: $status',
-                                                      );
-                                                      if (status ==
-                                                              'APPROVED' ||
-                                                          status ==
-                                                              "PENDING_SIGNATURE") {
-                                                        print(
-                                                          'Status is APPROVED, setting up API call timer',
-                                                        );
-                                                        // Cancel previous timer for this sub-item
-                                                        _profitMarginTimers[subItem
-                                                                .id]
-                                                            ?.cancel();
-
-                                                        // Debounce API call (wait 800ms after user stops typing)
-                                                        _profitMarginTimers[subItem
-                                                            .id] = Timer(
-                                                          const Duration(
-                                                            milliseconds: 800,
-                                                          ),
-                                                          () async {
-                                                            try {
-                                                              print(
-                                                                'Calling API to update profit margin for subItem: ${subItem.id}, margin: $clampedMargin',
-                                                              );
-                                                              // Call API to update profit margin
-                                                              await _apiDataSource
-                                                                  .updateSubItemProfitMargin(
-                                                                    widget
-                                                                        .projectId,
-                                                                    widget
-                                                                        .version,
-                                                                    widget
-                                                                        .item
-                                                                        .id,
-                                                                    subItem.id,
-                                                                    clampedMargin,
-                                                                  );
-                                                              print(
-                                                                'API call successful',
-                                                              );
-
-                                                              // Reload pricing data to get updated values
-                                                              final updatedVersion =
-                                                                  await _apiDataSource
-                                                                      .getPricingVersion(
-                                                                        widget
-                                                                            .projectId,
-                                                                        widget
-                                                                            .version,
-                                                                      );
-
-                                                              // Notify parent to reload data
-                                                              if (widget
-                                                                      .onItemChanged !=
-                                                                  null) {
-                                                                // Find the updated item in the response
-                                                                final updatedItem = updatedVersion
-                                                                    .items
-                                                                    ?.firstWhere(
-                                                                      (item) =>
-                                                                          item.id ==
-                                                                          widget
-                                                                              .item
-                                                                              .id,
-                                                                    );
-                                                                if (updatedItem !=
-                                                                    null) {
-                                                                  widget
-                                                                      .onItemChanged!(
-                                                                    updatedItem,
-                                                                  );
-                                                                }
-                                                              }
-                                                            } catch (e) {
-                                                              print(
-                                                                'Error updating profit margin: $e',
-                                                              );
-                                                              // Show error message
-                                                              if (mounted) {
-                                                                ScaffoldMessenger.of(
-                                                                  context,
-                                                                ).showSnackBar(
-                                                                  SnackBar(
-                                                                    content: Text(
-                                                                      'فشل تحديث نسبة الربح: ${e.toString()}',
-                                                                    ),
-                                                                    duration:
-                                                                        const Duration(
-                                                                          seconds:
-                                                                              3,
-                                                                        ),
-                                                                  ),
-                                                                );
-                                                              }
-                                                            }
-                                                          },
-                                                        );
-                                                      } else {
-                                                        print(
-                                                          'Status is not APPROVED, skipping API call. Status: $status',
-                                                        );
-                                                      }
-                                                    },
-                                                  );
-                                                },
-                                              ),
-                                            ),
-                                          ],
-                                        ),
+                                        const SizedBox(width: 8),
                                       ],
                                     ),
                                   ),
                                 ),
-                              ],
-                              // Cost, Profit, Total breakdown summary - Profit only visible to Admin and Manager
-                              // Two-column layout: Images preview on left (if exists), Elements on right
-                              Padding(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 12,
-                                ),
-                                child: Row(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    // Left column: Images Preview (only show if images exist or uploading)
-                                    if (subItem.images.isNotEmpty ||
-                                        _uploadingImages[subItem.id] ==
-                                            true) ...[
-                                      Flexible(
-                                        flex: 1,
-                                        fit: FlexFit.loose,
-                                        child: Container(
-                                          margin: const EdgeInsets.only(
-                                            right: 12,
-                                            top: 12,
-                                            bottom: 12,
-                                            left: 12,
-                                          ),
-                                          constraints: const BoxConstraints(
-                                            maxWidth: 200,
-                                            minWidth: 100,
-                                            maxHeight: 300,
+                              ),
+                              // Elements List (Expandable)
+                              if (isSubItemExpanded) ...[
+                                // Add Image Button when no images - show above Elements table (top left)
+                                if (subItem.images.isEmpty &&
+                                    _uploadingImages[subItem.id] != true) ...[
+                                  Padding(
+                                    padding: const EdgeInsets.only(
+                                      bottom: 16,
+                                      left: 12,
+                                      right: 12,
+                                      top: 12,
+                                    ),
+                                    child: Align(
+                                      alignment: Alignment.centerLeft,
+                                      child: Material(
+                                        color: Colors.transparent,
+                                        child: InkWell(
+                                          onTap: () {
+                                            print(
+                                              'Upload button clicked for subItem: ${subItem.id}',
+                                            );
+                                            _uploadImages(subItem.id);
+                                          },
+                                          onLongPress: () {
+                                            print(
+                                              'Upload button clicked for subItem: ${subItem.id}',
+                                            );
+                                            _uploadImagesFilePicker(subItem.id);
+                                          },
+                                          borderRadius: BorderRadius.circular(
+                                            8,
                                           ),
                                           child: Container(
-                                            padding: const EdgeInsets.all(12),
+                                            height: 50,
+                                            padding: const EdgeInsets.symmetric(
+                                              horizontal: 16,
+                                              vertical: 12,
+                                            ),
                                             decoration: BoxDecoration(
                                               border: Border.all(
-                                                color: const Color(0xFF363C4A),
+                                                color: const Color(0xFF4B5563),
+                                                style: BorderStyle.solid,
                                               ),
                                               borderRadius:
                                                   BorderRadius.circular(8),
-                                              color: const Color(0xFF1C212B),
+                                              color: const Color(
+                                                0xFF2A313D,
+                                              ).withOpacity(0.3),
                                             ),
-                                            child: Column(
-                                              crossAxisAlignment:
-                                                  CrossAxisAlignment.start,
+                                            child: Row(
                                               mainAxisSize: MainAxisSize.min,
                                               children: [
-                                                // Images Header
-                                                Container(
-                                                  padding: const EdgeInsets.all(
-                                                    12,
-                                                  ),
-                                                  decoration:
-                                                      const BoxDecoration(
-                                                        border: Border(
-                                                          bottom: BorderSide(
-                                                            color: Color(
-                                                              0xFF363C4A,
-                                                            ),
-                                                          ),
-                                                        ),
-                                                      ),
-                                                  child: Row(
-                                                    children: [
-                                                      Text(
-                                                        subItem.images.isEmpty
-                                                            ? '0/0 Photos'
-                                                            : '${(_selectedImageIndex[subItem.id] ?? 0) + 1}/${subItem.images.length} Photos',
-                                                        style: AppTextStyles
-                                                            .bodyMedium
-                                                            .copyWith(
-                                                              fontWeight:
-                                                                  FontWeight
-                                                                      .w600,
-                                                            ),
-                                                      ),
-                                                      const Spacer(),
-                                                      if (_uploadingImages[subItem
-                                                              .id] ==
-                                                          true)
-                                                        const SizedBox(
-                                                          width: 16,
-                                                          height: 16,
-                                                          child:
-                                                              CircularProgressIndicator(
-                                                                strokeWidth: 2,
-                                                                color: AppColors
-                                                                    .primary,
-                                                              ),
-                                                        )
-                                                      else
-                                                        Material(
-                                                          color: Colors
-                                                              .transparent,
-                                                          child: InkWell(
-                                                            onTap: () {
-                                                              print(
-                                                                'Upload button clicked for subItem: ${subItem.id}',
-                                                              );
-                                                              _uploadImages(
-                                                                subItem.id,
-                                                              );
-                                                            },
-                                                            onLongPress: () {
-                                                              print(
-                                                                'Upload button clicked for subItem: ${subItem.id}',
-                                                              );
-                                                              _uploadImagesFilePicker(
-                                                                subItem.id,
-                                                              );
-                                                            },
-                                                            borderRadius:
-                                                                BorderRadius.circular(
-                                                                  4,
-                                                                ),
-                                                            child: Container(
-                                                              padding:
-                                                                  const EdgeInsets.all(
-                                                                    4,
-                                                                  ),
-                                                              child: const Icon(
-                                                                Icons
-                                                                    .add_photo_alternate,
-                                                                size: 18,
-                                                                color: AppColors
-                                                                    .primary,
-                                                              ),
-                                                            ),
-                                                          ),
-                                                        ),
-                                                    ],
-                                                  ),
+                                                const Icon(
+                                                  Icons.add_photo_alternate,
+                                                  size: 18,
+                                                  color: AppColors.primary,
                                                 ),
-                                                // Main Image Display
-                                                Expanded(
-                                                  child: subItem.images.isEmpty
-                                                      ? const Center(
-                                                          child:
-                                                              CircularProgressIndicator(
-                                                                strokeWidth: 2,
-                                                                color: AppColors
-                                                                    .primary,
-                                                              ),
-                                                        )
-                                                      : _buildImagePreview(
-                                                          subItem,
-                                                        ),
+                                                const SizedBox(width: 8),
+                                                Text(
+                                                  'إضافة صور',
+                                                  style: AppTextStyles
+                                                      .bodyMedium
+                                                      .copyWith(
+                                                        color:
+                                                            AppColors.primary,
+                                                        fontSize: 14,
+                                                        fontWeight:
+                                                            FontWeight.w500,
+                                                      ),
                                                 ),
                                               ],
                                             ),
                                           ),
                                         ),
                                       ),
-                                    ],
-                                    // Right column: Elements
-                                    Expanded(
-                                      flex: 2,
+                                    ),
+                                  ),
+                                ],
+                                // Sub-item notes editor - always visible in sub-item body
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 12,
+                                    vertical: 8,
+                                  ),
+                                  child: TextField(
+                                    controller: _notesControllers[subItem.id],
+                                    maxLines: 3,
 
+                                    decoration: InputDecoration(
+                                      hintText: 'ملاحظات البند الفرعية...',
+                                      hintStyle: AppTextStyles.bodySmall
+                                          .copyWith(
+                                            color: AppColors.textMuted,
+                                            fontSize: 12,
+                                          ),
+                                      filled: true,
+                                      fillColor: const Color(0xFF15181E),
+
+                                      border: OutlineInputBorder(
+                                        borderRadius: BorderRadius.circular(6),
+                                        borderSide: const BorderSide(
+                                          color: Color(0xFF363C4A),
+                                        ),
+                                      ),
+                                      enabledBorder: OutlineInputBorder(
+                                        borderRadius: BorderRadius.circular(6),
+                                        borderSide: const BorderSide(
+                                          color: Color(0xFF363C4A),
+                                        ),
+                                      ),
+                                      focusedBorder: OutlineInputBorder(
+                                        borderRadius: BorderRadius.circular(6),
+                                        borderSide: const BorderSide(
+                                          color: AppColors.primary,
+                                        ),
+                                      ),
+                                      contentPadding:
+                                          const EdgeInsets.symmetric(
+                                            horizontal: 12,
+                                            vertical: 10,
+                                          ),
+                                    ),
+                                    style: AppTextStyles.bodySmall.copyWith(
+                                      fontSize: 12,
+                                      color: AppColors.textPrimary,
+                                    ),
+                                    textInputAction: TextInputAction.done,
+                                    onChanged: (value) {
+                                      // Debounce notes save
+                                      _notesTimers[subItem.id]?.cancel();
+                                      _notesTimers[subItem.id] = Timer(
+                                        const Duration(milliseconds: 700),
+                                        () async {
+                                          try {
+                                            await _apiDataSource
+                                                .updatePricingSubItem(
+                                                  widget.projectId,
+                                                  widget.version,
+                                                  widget.item.id,
+                                                  subItem.id,
+                                                  description:
+                                                      value.trim().isEmpty
+                                                      ? null
+                                                      : value.trim(),
+                                                );
+                                          } catch (_) {
+                                            // ignore transient save errors in debounce
+                                          }
+                                        },
+                                      );
+                                    },
+                                    onSubmitted: (value) async {
+                                      final scaffoldMessenger =
+                                          ScaffoldMessenger.of(context);
+                                      try {
+                                        await _apiDataSource
+                                            .updatePricingSubItem(
+                                              widget.projectId,
+                                              widget.version,
+                                              widget.item.id,
+                                              subItem.id,
+                                              description: value.trim().isEmpty
+                                                  ? null
+                                                  : value.trim(),
+                                            );
+                                      } catch (e) {
+                                        if (mounted) {
+                                          scaffoldMessenger.showSnackBar(
+                                            SnackBar(
+                                              content: Text(
+                                                'فشل حفظ الملاحظات: ${e.toString()}',
+                                              ),
+                                              duration: const Duration(
+                                                seconds: 3,
+                                              ),
+                                            ),
+                                          );
+                                        }
+                                      }
+                                    },
+                                  ),
+                                ),
+                                // Profit Margin Input - only visible to Admin and Manager when status is APPROVED or PENDING_SIGNATURE
+                                if (widget.isAdminOrManager &&
+                                    widget.pricingStatus != null &&
+                                    (widget.pricingStatus!.toUpperCase() ==
+                                            'APPROVED' ||
+                                        widget.pricingStatus!.toUpperCase() ==
+                                            'PENDING_SIGNATURE')) ...[
+                                  Padding(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 12,
+                                      vertical: 12,
+                                    ),
+                                    child: Container(
+                                      padding: const EdgeInsets.all(12),
+                                      decoration: BoxDecoration(
+                                        color: const Color(0xFF15181E),
+                                        borderRadius: BorderRadius.circular(8),
+                                        border: Border.all(
+                                          color: const Color(0xFF363C4A),
+                                        ),
+                                      ),
                                       child: Column(
                                         crossAxisAlignment:
                                             CrossAxisAlignment.start,
                                         children: [
-                                          // Always show elements table when there are elements
-                                          if (allElements.isNotEmpty) ...[
-                                            // Table Header
-                                            Container(
-                                              height: 41.5,
-                                              padding:
-                                                  const EdgeInsets.symmetric(
-                                                    horizontal: 8,
-                                                  ),
-                                              child: Row(
-                                                children: [
-                                                  Expanded(
-                                                    flex: 2,
-                                                    child: Text(
-                                                      'وصف العنصر',
-                                                      style: AppTextStyles
-                                                          .caption
-                                                          .copyWith(
-                                                            fontSize: 12,
-                                                            fontWeight:
-                                                                FontWeight.w500,
-                                                            color: const Color(
-                                                              0xFF6B7280,
-                                                            ),
+                                          Row(
+                                            children: [
+                                              Expanded(
+                                                child: Text(
+                                                  'نسبة الربح (%)',
+                                                  style: AppTextStyles
+                                                      .bodyMedium
+                                                      .copyWith(
+                                                        fontWeight:
+                                                            FontWeight.w600,
+                                                      ),
+                                                ),
+                                              ),
+                                              SizedBox(
+                                                width: 120,
+                                                child: Builder(
+                                                  builder: (context) {
+                                                    // Get or create controller for this subItem
+                                                    if (!_profitControllers
+                                                        .containsKey(
+                                                          subItem.id,
+                                                        )) {
+                                                      final initialValue =
+                                                          _profitMargins[subItem
+                                                              .id] ??
+                                                          subItem.profitMargin;
+                                                      _profitControllers[subItem
+                                                              .id] =
+                                                          TextEditingController(
+                                                            text: initialValue
+                                                                .toStringAsFixed(
+                                                                  2,
+                                                                ),
+                                                          );
+                                                    }
+                                                    return TextField(
+                                                      controller:
+                                                          _profitControllers[subItem
+                                                              .id]!,
+                                                      keyboardType:
+                                                          const TextInputType.numberWithOptions(
+                                                            decimal: true,
                                                           ),
-                                                    ),
-                                                  ),
-                                                  const SizedBox(width: 8),
-                                                  Expanded(
-                                                    flex: 2,
-                                                    child: Text(
-                                                      'التكلفة (دينار)',
-                                                      style: AppTextStyles
-                                                          .caption
-                                                          .copyWith(
-                                                            fontSize: 12,
-                                                            fontWeight:
-                                                                FontWeight.w500,
-                                                            color: const Color(
-                                                              0xFF6B7280,
-                                                            ),
+                                                      inputFormatters: [
+                                                        ArabicNumberInputFormatter(),
+                                                        FilteringTextInputFormatter.allow(
+                                                          RegExp(
+                                                            r'^\d*\.?\d{0,2}',
                                                           ),
+                                                        ),
+                                                      ],
                                                       textAlign:
                                                           TextAlign.center,
-                                                    ),
-                                                  ),
-                                                ],
-                                              ),
-                                            ),
-                                            const SizedBox(height: 12),
-                                            // Elements as Table Rows
-                                            // Display in order: newest local elements first (at top), then saved elements
-                                            ...allElements.asMap().entries.map((
-                                              entry,
-                                            ) {
-                                              final index = entry.key;
-                                              final element = entry.value;
-                                              final isLocal = element.id
-                                                  .startsWith('temp-');
-
-                                              // Safely find local element
-                                              LocalElement? localElement;
-                                              if (isLocal) {
-                                                try {
-                                                  localElement =
-                                                      _localElements[subItem.id]
-                                                          ?.firstWhere(
-                                                            (e) =>
-                                                                e.tempId ==
-                                                                element.id,
-                                                          );
-                                                } catch (e) {
-                                                  localElement = null;
-                                                }
-                                              }
-
-                                              final isSaving =
-                                                  (isLocal &&
-                                                      localElement != null &&
-                                                      (_savingElements[element
-                                                              .id] ==
-                                                          true)) ||
-                                                  (!isLocal &&
-                                                      _updatingElements[element
-                                                              .id] ==
-                                                          true);
-
-                                              // Convert element to PricingItem for table row
-                                              final pricingItem = PricingItem(
-                                                id: element.id,
-                                                description: element.name,
-                                                quantity:
-                                                    element.costType ==
-                                                        'UNIT_BASED'
-                                                    ? element.quantity
-                                                    : null,
-                                                unitPrice:
-                                                    element.costType ==
-                                                        'UNIT_BASED'
-                                                    ? element.unitCost
-                                                    : null,
-                                                total: element.calculatedCost,
-                                              );
-
-                                              return Stack(
-                                                key: ValueKey(
-                                                  'element-${subItem.id}-${element.id}-$index',
-                                                ),
-                                                children: [
-                                                  PricingTableRow(
-                                                    item: pricingItem,
-                                                    isNewRow:
-                                                        isLocal &&
-                                                        localElement != null &&
-                                                        !localElement
-                                                            .hasRequiredData,
-                                                    onDelete: () =>
-                                                        _deleteElement(
-                                                          subItem.id,
-                                                          element.id,
-                                                          isLocal,
+                                                      style: AppTextStyles
+                                                          .bodyMedium,
+                                                      decoration: InputDecoration(
+                                                        filled: true,
+                                                        fillColor: const Color(
+                                                          0xFF2A313D,
                                                         ),
-                                                    onChanged: (updatedItem) {
-                                                      if (isLocal &&
-                                                          localElement !=
-                                                              null) {
-                                                        // Determine cost type based on what's filled
-                                                        String newCostType =
-                                                            localElement
-                                                                .costType;
-                                                        if (updatedItem
-                                                                    .quantity !=
-                                                                null &&
-                                                            updatedItem
-                                                                    .unitPrice !=
-                                                                null) {
-                                                          newCostType =
-                                                              'UNIT_BASED';
-                                                        } else if (updatedItem
-                                                                    .total >
-                                                                0 &&
-                                                            updatedItem
-                                                                    .quantity ==
-                                                                null &&
-                                                            updatedItem
-                                                                    .unitPrice ==
-                                                                null) {
-                                                          newCostType = 'TOTAL';
-                                                        }
-
-                                                        // Update local element - only update name if it's not empty
-                                                        final updated = LocalElement(
-                                                          tempId: localElement
-                                                              .tempId,
-                                                          subItemId:
-                                                              localElement
-                                                                  .subItemId,
-                                                          name: updatedItem
-                                                              .description
-                                                              .trim(),
-                                                          costType: newCostType,
-                                                          unitCost: updatedItem
-                                                              .unitPrice,
-                                                          quantity: updatedItem
-                                                              .quantity,
-                                                          totalCost:
-                                                              newCostType ==
-                                                                  'TOTAL'
-                                                              ? updatedItem
-                                                                    .total
-                                                              : null,
-                                                          isCompleted:
-                                                              localElement
-                                                                  .isCompleted,
-                                                        );
-                                                        _updateLocalElement(
-                                                          subItem.id,
-                                                          element.id,
-                                                          updated,
-                                                        );
-                                                      } else {
-                                                        // Store latest values and schedule update with debounce
-                                                        _pendingUpdates[element
-                                                                .id] =
-                                                            updatedItem;
-                                                        _scheduleUpdateElement(
-                                                          subItem.id,
-                                                          element.id,
-                                                          updatedItem,
-                                                        );
-                                                      }
-                                                    },
-                                                    onFieldCompleted: () {
-                                                      // Trigger immediate save when user finishes editing field (blur or submit)
-                                                      if (isLocal &&
-                                                          localElement !=
-                                                              null &&
-                                                          localElement
-                                                              .hasRequiredData &&
-                                                          !localElement
-                                                              .isCompleted) {
-                                                        // Cancel debounce timer and save immediately
-                                                        _saveTimers[element.id]
-                                                            ?.cancel();
-                                                        _saveTimers.remove(
-                                                          element.id,
-                                                        );
-                                                        _saveElementToBackend(
-                                                          subItem.id,
-                                                          localElement,
-                                                        );
-                                                      } else if (!isLocal) {
-                                                        // Cancel debounce timer and update immediately with latest values
-                                                        _updateTimers[element
-                                                                .id]
-                                                            ?.cancel();
-                                                        _updateTimers.remove(
-                                                          element.id,
-                                                        );
-                                                        final pendingItem =
-                                                            _pendingUpdates[element
-                                                                .id];
-                                                        if (pendingItem !=
-                                                            null) {
-                                                          _pendingUpdates
-                                                              .remove(
-                                                                element.id,
-                                                              );
-                                                          _updateSavedElement(
-                                                            subItem.id,
-                                                            element.id,
-                                                            pendingItem,
-                                                          );
-                                                        }
-                                                      }
-                                                    },
-                                                  ),
-                                                  if (isSaving)
-                                                    Positioned.fill(
-                                                      child: Container(
-                                                        color: Colors.black
-                                                            .withOpacity(0.3),
-                                                        child: const Center(
-                                                          child:
-                                                              CircularProgressIndicator(
-                                                                strokeWidth: 2,
+                                                        border: OutlineInputBorder(
+                                                          borderRadius:
+                                                              BorderRadius.circular(
+                                                                8,
+                                                              ),
+                                                          borderSide:
+                                                              const BorderSide(
+                                                                color: Color(
+                                                                  0xFF363C4A,
+                                                                ),
+                                                              ),
+                                                        ),
+                                                        enabledBorder:
+                                                            OutlineInputBorder(
+                                                              borderRadius:
+                                                                  BorderRadius.circular(
+                                                                    8,
+                                                                  ),
+                                                              borderSide:
+                                                                  const BorderSide(
+                                                                    color: Color(
+                                                                      0xFF363C4A,
+                                                                    ),
+                                                                  ),
+                                                            ),
+                                                        focusedBorder: OutlineInputBorder(
+                                                          borderRadius:
+                                                              BorderRadius.circular(
+                                                                8,
+                                                              ),
+                                                          borderSide:
+                                                              const BorderSide(
                                                                 color: AppColors
                                                                     .primary,
                                                               ),
                                                         ),
+                                                        contentPadding:
+                                                            const EdgeInsets.symmetric(
+                                                              horizontal: 12,
+                                                              vertical: 12,
+                                                            ),
                                                       ),
-                                                    ),
-                                                ],
-                                              );
-                                            }),
-                                            // Add Element Button
-                                            const SizedBox(height: 12),
-                                            Container(
-                                              height: 46,
+                                                      onChanged: (value) {
+                                                        // Parse the input value as a percentage (e.g., 15 for 15%, 15.5 for 15.5%)
+                                                        // The value is stored as-is (15 = 15%), and will be divided by 100 when calculating profit
+                                                        final margin =
+                                                            double.tryParse(
+                                                              value,
+                                                            ) ??
+                                                            0.0;
+                                                        // Ensure margin is non-negative
+                                                        final clampedMargin =
+                                                            margin < 0
+                                                            ? 0.0
+                                                            : margin;
+
+                                                        setState(() {
+                                                          _profitMargins[subItem
+                                                                  .id] =
+                                                              clampedMargin;
+                                                        });
+
+                                                        // Calculate profit: cost * (margin / 100)
+                                                        final cost =
+                                                            subItem.totalCost >
+                                                                0
+                                                            ? subItem.totalCost
+                                                            : allElements.fold<
+                                                                double
+                                                              >(
+                                                                0,
+                                                                (sum, e) =>
+                                                                    sum +
+                                                                    e.calculatedCost
+                                                                        .toDouble(),
+                                                              );
+                                                        final profit =
+                                                            cost *
+                                                            (clampedMargin /
+                                                                100);
+                                                        final totalPrice =
+                                                            cost + profit;
+
+                                                        // Update subItem profit margin locally
+                                                        if (widget
+                                                                .onSubItemChanged !=
+                                                            null) {
+                                                          final updatedSubItem =
+                                                              PricingSubItemModel(
+                                                                isHidden: subItem
+                                                                    .isHidden,
+                                                                id: subItem.id,
+                                                                pricingItemId:
+                                                                    subItem
+                                                                        .pricingItemId,
+                                                                name: subItem
+                                                                    .name,
+                                                                description: subItem
+                                                                    .description,
+                                                                images: subItem
+                                                                    .images,
+                                                                profitMargin:
+                                                                    clampedMargin,
+                                                                profitAmount:
+                                                                    profit,
+                                                                totalCost: cost,
+                                                                totalPrice:
+                                                                    totalPrice,
+                                                                order: subItem
+                                                                    .order,
+                                                                createdAt: subItem
+                                                                    .createdAt,
+                                                                updatedAt: subItem
+                                                                    .updatedAt,
+                                                                elements: subItem
+                                                                    .elements,
+                                                              );
+                                                          widget
+                                                              .onSubItemChanged!(
+                                                            updatedSubItem,
+                                                          );
+                                                        }
+
+                                                        // Only call API if status is APPROVED
+                                                        final status = widget
+                                                            .pricingStatus
+                                                            ?.toUpperCase()
+                                                            .trim();
+                                                        print(
+                                                          'Profit margin changed: $clampedMargin, Status: $status',
+                                                        );
+                                                        if (status ==
+                                                                'APPROVED' ||
+                                                            status ==
+                                                                "PENDING_SIGNATURE") {
+                                                          print(
+                                                            'Status is APPROVED, setting up API call timer',
+                                                          );
+                                                          // Cancel previous timer for this sub-item
+                                                          _profitMarginTimers[subItem
+                                                                  .id]
+                                                              ?.cancel();
+
+                                                          // Debounce API call (wait 800ms after user stops typing)
+                                                          _profitMarginTimers[subItem
+                                                              .id] = Timer(
+                                                            const Duration(
+                                                              milliseconds: 800,
+                                                            ),
+                                                            () async {
+                                                              try {
+                                                                print(
+                                                                  'Calling API to update profit margin for subItem: ${subItem.id}, margin: $clampedMargin',
+                                                                );
+                                                                // Call API to update profit margin
+                                                                await _apiDataSource
+                                                                    .updateSubItemProfitMargin(
+                                                                      widget
+                                                                          .projectId,
+                                                                      widget
+                                                                          .version,
+                                                                      widget
+                                                                          .item
+                                                                          .id,
+                                                                      subItem
+                                                                          .id,
+                                                                      clampedMargin,
+                                                                    );
+                                                                print(
+                                                                  'API call successful',
+                                                                );
+
+                                                                // Reload pricing data to get updated values
+                                                                final updatedVersion =
+                                                                    await _apiDataSource.getPricingVersion(
+                                                                      widget
+                                                                          .projectId,
+                                                                      widget
+                                                                          .version,
+                                                                    );
+
+                                                                // Notify parent to reload data
+                                                                if (widget
+                                                                        .onItemChanged !=
+                                                                    null) {
+                                                                  // Find the updated item in the response
+                                                                  final updatedItem = updatedVersion
+                                                                      .items
+                                                                      ?.firstWhere(
+                                                                        (
+                                                                          item,
+                                                                        ) =>
+                                                                            item.id ==
+                                                                            widget.item.id,
+                                                                      );
+                                                                  if (updatedItem !=
+                                                                      null) {
+                                                                    widget
+                                                                        .onItemChanged!(
+                                                                      updatedItem,
+                                                                    );
+                                                                  }
+                                                                }
+                                                              } catch (e) {
+                                                                print(
+                                                                  'Error updating profit margin: $e',
+                                                                );
+                                                                // Show error message
+                                                                if (mounted) {
+                                                                  ScaffoldMessenger.of(
+                                                                    context,
+                                                                  ).showSnackBar(
+                                                                    SnackBar(
+                                                                      content: Text(
+                                                                        'فشل تحديث نسبة الربح: ${e.toString()}',
+                                                                      ),
+                                                                      duration: const Duration(
+                                                                        seconds:
+                                                                            3,
+                                                                      ),
+                                                                    ),
+                                                                  );
+                                                                }
+                                                              }
+                                                            },
+                                                          );
+                                                        } else {
+                                                          print(
+                                                            'Status is not APPROVED, skipping API call. Status: $status',
+                                                          );
+                                                        }
+                                                      },
+                                                    );
+                                                  },
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                                // Cost, Profit, Total breakdown summary - Profit only visible to Admin and Manager
+                                // Two-column layout: Images preview on left (if exists), Elements on right
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 12,
+                                  ),
+                                  child: Row(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      // Left column: Images Preview (only show if images exist or uploading)
+                                      if (subItem.images.isNotEmpty ||
+                                          _uploadingImages[subItem.id] ==
+                                              true) ...[
+                                        Flexible(
+                                          flex: 1,
+                                          fit: FlexFit.loose,
+                                          child: Container(
+                                            margin: const EdgeInsets.only(
+                                              right: 12,
+                                              top: 12,
+                                              bottom: 12,
+                                              left: 12,
+                                            ),
+                                            constraints: const BoxConstraints(
+                                              maxWidth: 200,
+                                              minWidth: 100,
+                                              maxHeight: 300,
+                                            ),
+                                            child: Container(
+                                              padding: const EdgeInsets.all(12),
                                               decoration: BoxDecoration(
+                                                border: Border.all(
+                                                  color: const Color(
+                                                    0xFF363C4A,
+                                                  ),
+                                                ),
                                                 borderRadius:
                                                     BorderRadius.circular(8),
+                                                color: const Color(0xFF1C212B),
                                               ),
-                                              child: CustomPaint(
-                                                painter: DashedBorderPainter(
-                                                  color: const Color(
-                                                    0xFF4B5563,
+                                              child: Column(
+                                                crossAxisAlignment:
+                                                    CrossAxisAlignment.start,
+                                                mainAxisSize: MainAxisSize.min,
+                                                children: [
+                                                  // Images Header
+                                                  Container(
+                                                    padding:
+                                                        const EdgeInsets.all(
+                                                          12,
+                                                        ),
+                                                    decoration:
+                                                        const BoxDecoration(
+                                                          border: Border(
+                                                            bottom: BorderSide(
+                                                              color: Color(
+                                                                0xFF363C4A,
+                                                              ),
+                                                            ),
+                                                          ),
+                                                        ),
+                                                    child: Row(
+                                                      children: [
+                                                        Text(
+                                                          subItem.images.isEmpty
+                                                              ? '0/0 Photos'
+                                                              : '${(_selectedImageIndex[subItem.id] ?? 0) + 1}/${subItem.images.length} Photos',
+                                                          style: AppTextStyles
+                                                              .bodyMedium
+                                                              .copyWith(
+                                                                fontWeight:
+                                                                    FontWeight
+                                                                        .w600,
+                                                              ),
+                                                        ),
+                                                        const Spacer(),
+                                                        if (_uploadingImages[subItem
+                                                                .id] ==
+                                                            true)
+                                                          const SizedBox(
+                                                            width: 16,
+                                                            height: 16,
+                                                            child:
+                                                                CircularProgressIndicator(
+                                                                  strokeWidth:
+                                                                      2,
+                                                                  color: AppColors
+                                                                      .primary,
+                                                                ),
+                                                          )
+                                                        else
+                                                          Material(
+                                                            color: Colors
+                                                                .transparent,
+                                                            child: InkWell(
+                                                              onTap: () {
+                                                                print(
+                                                                  'Upload button clicked for subItem: ${subItem.id}',
+                                                                );
+                                                                _uploadImages(
+                                                                  subItem.id,
+                                                                );
+                                                              },
+                                                              onLongPress: () {
+                                                                print(
+                                                                  'Upload button clicked for subItem: ${subItem.id}',
+                                                                );
+                                                                _uploadImagesFilePicker(
+                                                                  subItem.id,
+                                                                );
+                                                              },
+                                                              borderRadius:
+                                                                  BorderRadius.circular(
+                                                                    4,
+                                                                  ),
+                                                              child: Container(
+                                                                padding:
+                                                                    const EdgeInsets.all(
+                                                                      4,
+                                                                    ),
+                                                                child: const Icon(
+                                                                  Icons
+                                                                      .add_photo_alternate,
+                                                                  size: 18,
+                                                                  color: AppColors
+                                                                      .primary,
+                                                                ),
+                                                              ),
+                                                            ),
+                                                          ),
+                                                      ],
+                                                    ),
                                                   ),
-                                                  strokeWidth: 1.5,
-                                                  dashWidth: 6,
-                                                  dashSpace: 4,
-                                                  radius: 8,
-                                                ),
-                                                child: InkWell(
-                                                  onTap: () => _addLocalElement(
-                                                    subItem.id,
+                                                  // Main Image Display
+                                                  Expanded(
+                                                    child:
+                                                        subItem.images.isEmpty
+                                                        ? const Center(
+                                                            child:
+                                                                CircularProgressIndicator(
+                                                                  strokeWidth:
+                                                                      2,
+                                                                  color: AppColors
+                                                                      .primary,
+                                                                ),
+                                                          )
+                                                        : _buildImagePreview(
+                                                            subItem,
+                                                          ),
                                                   ),
-                                                  borderRadius:
-                                                      BorderRadius.circular(8),
-                                                  child: Row(
-                                                    mainAxisAlignment:
-                                                        MainAxisAlignment
-                                                            .center,
-                                                    children: [
-                                                      const Icon(
-                                                        Icons.add,
-                                                        color:
-                                                            AppColors.primary,
-                                                        size: 20,
-                                                      ),
-                                                      const SizedBox(width: 8),
-                                                      Text(
-                                                        'إضافة عنصر',
+                                                ],
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                      // Right column: Elements
+                                      Expanded(
+                                        flex: 2,
+
+                                        child: Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            // Always show elements table when there are elements
+                                            if (allElements.isNotEmpty) ...[
+                                              // Table Header
+                                              Container(
+                                                height: 41.5,
+                                                padding:
+                                                    const EdgeInsets.symmetric(
+                                                      horizontal: 8,
+                                                    ),
+                                                child: Row(
+                                                  children: [
+                                                    Expanded(
+                                                      flex: 2,
+                                                      child: Text(
+                                                        'وصف العنصر',
                                                         style: AppTextStyles
-                                                            .bodyMedium
+                                                            .caption
                                                             .copyWith(
-                                                              fontSize: 14,
+                                                              fontSize: 12,
                                                               fontWeight:
                                                                   FontWeight
                                                                       .w500,
-                                                              color: AppColors
-                                                                  .primary,
+                                                              color:
+                                                                  const Color(
+                                                                    0xFF6B7280,
+                                                                  ),
                                                             ),
                                                       ),
-                                                    ],
+                                                    ),
+                                                    const SizedBox(width: 8),
+                                                    Expanded(
+                                                      flex: 2,
+                                                      child: Text(
+                                                        'التكلفة (دينار)',
+                                                        style: AppTextStyles
+                                                            .caption
+                                                            .copyWith(
+                                                              fontSize: 12,
+                                                              fontWeight:
+                                                                  FontWeight
+                                                                      .w500,
+                                                              color:
+                                                                  const Color(
+                                                                    0xFF6B7280,
+                                                                  ),
+                                                            ),
+                                                        textAlign:
+                                                            TextAlign.center,
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                              ),
+                                              const SizedBox(height: 12),
+                                              // Elements as Table Rows
+                                              // Display in order: newest local elements first (at top), then saved elements
+                                              ...allElements.asMap().entries.map((
+                                                entry,
+                                              ) {
+                                                final index = entry.key;
+                                                final element = entry.value;
+                                                final isLocal = element.id
+                                                    .startsWith('temp-');
+
+                                                // Safely find local element
+                                                LocalElement? localElement;
+                                                if (isLocal) {
+                                                  try {
+                                                    localElement =
+                                                        _localElements[subItem
+                                                                .id]
+                                                            ?.firstWhere(
+                                                              (e) =>
+                                                                  e.tempId ==
+                                                                  element.id,
+                                                            );
+                                                  } catch (e) {
+                                                    localElement = null;
+                                                  }
+                                                }
+
+                                                final isSaving =
+                                                    (isLocal &&
+                                                        localElement != null &&
+                                                        (_savingElements[element
+                                                                .id] ==
+                                                            true)) ||
+                                                    (!isLocal &&
+                                                        _updatingElements[element
+                                                                .id] ==
+                                                            true);
+
+                                                // Convert element to PricingItem for table row
+                                                final pricingItem = PricingItem(
+                                                  id: element.id,
+                                                  description: element.name,
+                                                  quantity:
+                                                      element.costType ==
+                                                          'UNIT_BASED'
+                                                      ? element.quantity
+                                                      : null,
+                                                  unitPrice:
+                                                      element.costType ==
+                                                          'UNIT_BASED'
+                                                      ? element.unitCost
+                                                      : null,
+                                                  total: element.calculatedCost,
+                                                );
+
+                                                return Stack(
+                                                  key: ValueKey(
+                                                    'element-${subItem.id}-${element.id}-$index',
+                                                  ),
+                                                  children: [
+                                                    PricingTableRow(
+                                                      item: pricingItem,
+                                                      isNewRow:
+                                                          isLocal &&
+                                                          localElement !=
+                                                              null &&
+                                                          !localElement
+                                                              .hasRequiredData,
+                                                      onDelete: () =>
+                                                          _deleteElement(
+                                                            subItem.id,
+                                                            element.id,
+                                                            isLocal,
+                                                          ),
+                                                      onChanged: (updatedItem) {
+                                                        if (isLocal &&
+                                                            localElement !=
+                                                                null) {
+                                                          // Determine cost type based on what's filled
+                                                          String newCostType =
+                                                              localElement
+                                                                  .costType;
+                                                          if (updatedItem
+                                                                      .quantity !=
+                                                                  null &&
+                                                              updatedItem
+                                                                      .unitPrice !=
+                                                                  null) {
+                                                            newCostType =
+                                                                'UNIT_BASED';
+                                                          } else if (updatedItem
+                                                                      .total >
+                                                                  0 &&
+                                                              updatedItem
+                                                                      .quantity ==
+                                                                  null &&
+                                                              updatedItem
+                                                                      .unitPrice ==
+                                                                  null) {
+                                                            newCostType =
+                                                                'TOTAL';
+                                                          }
+
+                                                          // Update local element - only update name if it's not empty
+                                                          final updated = LocalElement(
+                                                            tempId: localElement
+                                                                .tempId,
+                                                            subItemId:
+                                                                localElement
+                                                                    .subItemId,
+                                                            name: updatedItem
+                                                                .description
+                                                                .trim(),
+                                                            costType:
+                                                                newCostType,
+                                                            unitCost:
+                                                                updatedItem
+                                                                    .unitPrice,
+                                                            quantity:
+                                                                updatedItem
+                                                                    .quantity,
+                                                            totalCost:
+                                                                newCostType ==
+                                                                    'TOTAL'
+                                                                ? updatedItem
+                                                                      .total
+                                                                : null,
+                                                            isCompleted:
+                                                                localElement
+                                                                    .isCompleted,
+                                                          );
+                                                          _updateLocalElement(
+                                                            subItem.id,
+                                                            element.id,
+                                                            updated,
+                                                          );
+                                                        } else {
+                                                          // Store latest values and schedule update with debounce
+                                                          _pendingUpdates[element
+                                                                  .id] =
+                                                              updatedItem;
+                                                          _scheduleUpdateElement(
+                                                            subItem.id,
+                                                            element.id,
+                                                            updatedItem,
+                                                          );
+                                                        }
+                                                      },
+                                                      onFieldCompleted: () {
+                                                        // Trigger immediate save when user finishes editing field (blur or submit)
+                                                        if (isLocal &&
+                                                            localElement !=
+                                                                null &&
+                                                            localElement
+                                                                .hasRequiredData &&
+                                                            !localElement
+                                                                .isCompleted) {
+                                                          // Cancel debounce timer and save immediately
+                                                          _saveTimers[element
+                                                                  .id]
+                                                              ?.cancel();
+                                                          _saveTimers.remove(
+                                                            element.id,
+                                                          );
+                                                          _saveElementToBackend(
+                                                            subItem.id,
+                                                            localElement,
+                                                          );
+                                                        } else if (!isLocal) {
+                                                          // Cancel debounce timer and update immediately with latest values
+                                                          _updateTimers[element
+                                                                  .id]
+                                                              ?.cancel();
+                                                          _updateTimers.remove(
+                                                            element.id,
+                                                          );
+                                                          final pendingItem =
+                                                              _pendingUpdates[element
+                                                                  .id];
+                                                          if (pendingItem !=
+                                                              null) {
+                                                            _pendingUpdates
+                                                                .remove(
+                                                                  element.id,
+                                                                );
+                                                            _updateSavedElement(
+                                                              subItem.id,
+                                                              element.id,
+                                                              pendingItem,
+                                                            );
+                                                          }
+                                                        }
+                                                      },
+                                                    ),
+                                                    if (isSaving)
+                                                      Positioned.fill(
+                                                        child: Container(
+                                                          color: Colors.black
+                                                              .withOpacity(0.3),
+                                                          child: const Center(
+                                                            child:
+                                                                CircularProgressIndicator(
+                                                                  strokeWidth:
+                                                                      2,
+                                                                  color: AppColors
+                                                                      .primary,
+                                                                ),
+                                                          ),
+                                                        ),
+                                                      ),
+                                                  ],
+                                                );
+                                              }),
+                                              // Add Element Button
+                                              const SizedBox(height: 12),
+                                              Container(
+                                                height: 46,
+                                                decoration: BoxDecoration(
+                                                  borderRadius:
+                                                      BorderRadius.circular(8),
+                                                ),
+                                                child: CustomPaint(
+                                                  painter: DashedBorderPainter(
+                                                    color: const Color(
+                                                      0xFF4B5563,
+                                                    ),
+                                                    strokeWidth: 1.5,
+                                                    dashWidth: 6,
+                                                    dashSpace: 4,
+                                                    radius: 8,
+                                                  ),
+                                                  child: InkWell(
+                                                    onTap: () =>
+                                                        _addLocalElement(
+                                                          subItem.id,
+                                                        ),
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                          8,
+                                                        ),
+                                                    child: Row(
+                                                      mainAxisAlignment:
+                                                          MainAxisAlignment
+                                                              .center,
+                                                      children: [
+                                                        const Icon(
+                                                          Icons.add,
+                                                          color:
+                                                              AppColors.primary,
+                                                          size: 20,
+                                                        ),
+                                                        const SizedBox(
+                                                          width: 8,
+                                                        ),
+                                                        Text(
+                                                          'إضافة عنصر',
+                                                          style: AppTextStyles
+                                                              .bodyMedium
+                                                              .copyWith(
+                                                                fontSize: 14,
+                                                                fontWeight:
+                                                                    FontWeight
+                                                                        .w500,
+                                                                color: AppColors
+                                                                    .primary,
+                                                              ),
+                                                        ),
+                                                      ],
+                                                    ),
                                                   ),
                                                 ),
                                               ),
-                                            ),
-                                          ] else ...[
-                                            Padding(
-                                              padding: const EdgeInsets.all(24),
-                                              child: Column(
-                                                children: [
-                                                  Center(
-                                                    child: Text(
-                                                      'لا توجد عناصر بعد',
-                                                      style: AppTextStyles
-                                                          .bodyMedium
-                                                          .copyWith(
-                                                            color: AppColors
-                                                                .textMuted,
-                                                          ),
-                                                    ),
-                                                  ),
-                                                  const SizedBox(height: 16),
-                                                  // Add Element Button when no elements
-                                                  Container(
-                                                    height: 46,
-                                                    decoration: BoxDecoration(
-                                                      borderRadius:
-                                                          BorderRadius.circular(
-                                                            8,
-                                                          ),
-                                                    ),
-                                                    child: CustomPaint(
-                                                      painter:
-                                                          DashedBorderPainter(
-                                                            color: const Color(
-                                                              0xFF4B5563,
+                                            ] else ...[
+                                              Padding(
+                                                padding: const EdgeInsets.all(
+                                                  24,
+                                                ),
+                                                child: Column(
+                                                  children: [
+                                                    Center(
+                                                      child: Text(
+                                                        'لا توجد عناصر بعد',
+                                                        style: AppTextStyles
+                                                            .bodyMedium
+                                                            .copyWith(
+                                                              color: AppColors
+                                                                  .textMuted,
                                                             ),
-                                                            strokeWidth: 1.5,
-                                                            dashWidth: 6,
-                                                            dashSpace: 4,
-                                                            radius: 8,
-                                                          ),
-                                                      child: InkWell(
-                                                        onTap: () =>
-                                                            _addLocalElement(
-                                                              subItem.id,
-                                                            ),
+                                                      ),
+                                                    ),
+                                                    const SizedBox(height: 16),
+                                                    // Add Element Button when no elements
+                                                    Container(
+                                                      height: 46,
+                                                      decoration: BoxDecoration(
                                                         borderRadius:
                                                             BorderRadius.circular(
                                                               8,
                                                             ),
-                                                        child: Row(
-                                                          mainAxisAlignment:
-                                                              MainAxisAlignment
-                                                                  .center,
-                                                          children: [
-                                                            const Icon(
-                                                              Icons.add,
-                                                              color: AppColors
-                                                                  .primary,
-                                                              size: 20,
-                                                            ),
-                                                            const SizedBox(
-                                                              width: 8,
-                                                            ),
-                                                            Text(
-                                                              'إضافة عنصر',
-                                                              style: AppTextStyles
-                                                                  .bodyMedium
-                                                                  .copyWith(
-                                                                    fontSize:
-                                                                        14,
-                                                                    fontWeight:
-                                                                        FontWeight
-                                                                            .w500,
-                                                                    color: AppColors
-                                                                        .primary,
+                                                      ),
+                                                      child: CustomPaint(
+                                                        painter:
+                                                            DashedBorderPainter(
+                                                              color:
+                                                                  const Color(
+                                                                    0xFF4B5563,
                                                                   ),
+                                                              strokeWidth: 1.5,
+                                                              dashWidth: 6,
+                                                              dashSpace: 4,
+                                                              radius: 8,
                                                             ),
-                                                          ],
+                                                        child: InkWell(
+                                                          onTap: () =>
+                                                              _addLocalElement(
+                                                                subItem.id,
+                                                              ),
+                                                          borderRadius:
+                                                              BorderRadius.circular(
+                                                                8,
+                                                              ),
+                                                          child: Row(
+                                                            mainAxisAlignment:
+                                                                MainAxisAlignment
+                                                                    .center,
+                                                            children: [
+                                                              const Icon(
+                                                                Icons.add,
+                                                                color: AppColors
+                                                                    .primary,
+                                                                size: 20,
+                                                              ),
+                                                              const SizedBox(
+                                                                width: 8,
+                                                              ),
+                                                              Text(
+                                                                'إضافة عنصر',
+                                                                style: AppTextStyles
+                                                                    .bodyMedium
+                                                                    .copyWith(
+                                                                      fontSize:
+                                                                          14,
+                                                                      fontWeight:
+                                                                          FontWeight
+                                                                              .w500,
+                                                                      color: AppColors
+                                                                          .primary,
+                                                                    ),
+                                                              ),
+                                                            ],
+                                                          ),
                                                         ),
                                                       ),
                                                     ),
-                                                  ),
-                                                ],
+                                                  ],
+                                                ),
                                               ),
-                                            ),
+                                            ],
                                           ],
-                                        ],
+                                        ),
                                       ),
-                                    ),
-                                  ],
+                                    ],
+                                  ),
                                 ),
-                              ),
+                              ],
                             ],
-                          ],
-                        ),
-                      );
-                    })
+                          ),
+                        );
+                      }).toList(),
+                    )
                   else ...[
                     Padding(
                       padding: const EdgeInsets.all(16),

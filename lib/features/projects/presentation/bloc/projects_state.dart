@@ -35,6 +35,8 @@ class ProjectsLoaded extends ProjectsState {
   final bool isTableView;
   final int currentPage;
   final int totalPages;
+  final int totalItems;
+  final int pageSize;
 
   const ProjectsLoaded({
     required this.projects,
@@ -48,22 +50,26 @@ class ProjectsLoaded extends ProjectsState {
     this.isTableView = true,
     this.currentPage = 1,
     this.totalPages = 1,
+    this.totalItems = 0,
+    this.pageSize = 10,
   });
 
   @override
   List<Object?> get props => [
-        projects,
-        filteredProjects,
-        teamMembers,
-        statistics,
-        statusFilter,
-        managerFilter,
-        teamMemberFilter,
-        searchQuery,
-        isTableView,
-        currentPage,
-        totalPages,
-      ];
+    projects,
+    filteredProjects,
+    teamMembers,
+    statistics,
+    statusFilter,
+    managerFilter,
+    teamMemberFilter,
+    searchQuery,
+    isTableView,
+    currentPage,
+    totalPages,
+    totalItems,
+    pageSize,
+  ];
 
   /// Create a copy with updated fields
   ProjectsLoaded copyWith({
@@ -78,6 +84,8 @@ class ProjectsLoaded extends ProjectsState {
     bool? isTableView,
     int? currentPage,
     int? totalPages,
+    int? totalItems,
+    int? pageSize,
     bool clearStatusFilter = false,
     bool clearManagerFilter = false,
     bool clearTeamMemberFilter = false,
@@ -88,13 +96,21 @@ class ProjectsLoaded extends ProjectsState {
       filteredProjects: filteredProjects ?? this.filteredProjects,
       teamMembers: teamMembers ?? this.teamMembers,
       statistics: statistics ?? this.statistics,
-      statusFilter: clearStatusFilter ? null : (statusFilter ?? this.statusFilter),
-      managerFilter: clearManagerFilter ? null : (managerFilter ?? this.managerFilter),
-      teamMemberFilter: clearTeamMemberFilter ? null : (teamMemberFilter ?? this.teamMemberFilter),
+      statusFilter: clearStatusFilter
+          ? null
+          : (statusFilter ?? this.statusFilter),
+      managerFilter: clearManagerFilter
+          ? null
+          : (managerFilter ?? this.managerFilter),
+      teamMemberFilter: clearTeamMemberFilter
+          ? null
+          : (teamMemberFilter ?? this.teamMemberFilter),
       searchQuery: clearSearchQuery ? null : (searchQuery ?? this.searchQuery),
       isTableView: isTableView ?? this.isTableView,
       currentPage: currentPage ?? this.currentPage,
       totalPages: totalPages ?? this.totalPages,
+      totalItems: totalItems ?? this.totalItems,
+      pageSize: pageSize ?? this.pageSize,
     );
   }
 }
@@ -114,10 +130,7 @@ class ProjectsError extends ProjectsState {
   final String message;
   final ProjectsLoaded? previousState;
 
-  const ProjectsError({
-    required this.message,
-    this.previousState,
-  });
+  const ProjectsError({required this.message, this.previousState});
 
   @override
   List<Object?> get props => [message, previousState];
@@ -128,10 +141,7 @@ class ProjectCreated extends ProjectsState {
   final ProjectEntity project;
   final ProjectsLoaded previousState;
 
-  const ProjectCreated({
-    required this.project,
-    required this.previousState,
-  });
+  const ProjectCreated({required this.project, required this.previousState});
 
   @override
   List<Object?> get props => [project, previousState];
@@ -142,10 +152,7 @@ class ProjectUpdated extends ProjectsState {
   final ProjectEntity project;
   final ProjectsLoaded previousState;
 
-  const ProjectUpdated({
-    required this.project,
-    required this.previousState,
-  });
+  const ProjectUpdated({required this.project, required this.previousState});
 
   @override
   List<Object?> get props => [project, previousState];
@@ -156,12 +163,8 @@ class ProjectDeleted extends ProjectsState {
   final String projectId;
   final ProjectsLoaded previousState;
 
-  const ProjectDeleted({
-    required this.projectId,
-    required this.previousState,
-  });
+  const ProjectDeleted({required this.projectId, required this.previousState});
 
   @override
   List<Object?> get props => [projectId, previousState];
 }
-

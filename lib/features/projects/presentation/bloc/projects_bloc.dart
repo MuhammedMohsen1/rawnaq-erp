@@ -33,18 +33,22 @@ class ProjectsBloc extends Bloc<ProjectsEvent, ProjectsState> {
   ) async {
     emit(const ProjectsLoading());
 
+    final requestedPage = event.page ?? 1;
+    final requestedLimit = event.limit ?? 10;
     final result = await _repository.getProjects(
       status: event.status,
       managerId: event.managerId,
       teamMemberId: event.teamMemberId,
       searchQuery: event.searchQuery,
+      page: requestedPage,
+      limit: requestedLimit,
     );
 
     await result.fold(
       (failure) async {
         emit(ProjectsError(message: failure.message));
       },
-      (projects) async {
+      (paginatedResult) async {
         // Also load team members and statistics
         final teamMembersResult = await _repository.getTeamMembers();
         final statisticsResult = await _repository.getProjectStatistics();
@@ -60,14 +64,18 @@ class ProjectsBloc extends Bloc<ProjectsEvent, ProjectsState> {
         );
 
         emit(ProjectsLoaded(
-          projects: projects,
-          filteredProjects: projects,
+          projects: paginatedResult.projects,
+          filteredProjects: paginatedResult.projects,
           teamMembers: teamMembers.cast(),
           statistics: statistics,
           statusFilter: event.status,
           managerFilter: event.managerId,
           teamMemberFilter: event.teamMemberId,
           searchQuery: event.searchQuery,
+          currentPage: paginatedResult.page,
+          totalPages: paginatedResult.totalPages,
+          totalItems: paginatedResult.total,
+          pageSize: paginatedResult.limit,
         ));
       },
     );
@@ -84,6 +92,8 @@ class ProjectsBloc extends Bloc<ProjectsEvent, ProjectsState> {
         managerId: currentState.managerFilter,
         teamMemberId: currentState.teamMemberFilter,
         searchQuery: currentState.searchQuery,
+        page: currentState.currentPage,
+        limit: currentState.pageSize,
       ));
     } else {
       add(const LoadProjects());
@@ -129,6 +139,8 @@ class ProjectsBloc extends Bloc<ProjectsEvent, ProjectsState> {
         managerId: currentState.managerFilter,
         teamMemberId: currentState.teamMemberFilter,
         searchQuery: currentState.searchQuery,
+        page: 1,
+        limit: currentState.pageSize,
       ));
     }
   }
@@ -145,6 +157,8 @@ class ProjectsBloc extends Bloc<ProjectsEvent, ProjectsState> {
         managerId: event.managerId,
         teamMemberId: currentState.teamMemberFilter,
         searchQuery: currentState.searchQuery,
+        page: 1,
+        limit: currentState.pageSize,
       ));
     }
   }
@@ -161,6 +175,8 @@ class ProjectsBloc extends Bloc<ProjectsEvent, ProjectsState> {
         managerId: currentState.managerFilter,
         teamMemberId: event.teamMemberId,
         searchQuery: currentState.searchQuery,
+        page: 1,
+        limit: currentState.pageSize,
       ));
     }
   }
@@ -214,7 +230,7 @@ class ProjectsBloc extends Bloc<ProjectsEvent, ProjectsState> {
         (failure) async {
           emit(ProjectsError(message: failure.message));
         },
-        (projects) async {
+        (paginatedResult) async {
           final teamMembersResult = await _repository.getTeamMembers();
           final statisticsResult = await _repository.getProjectStatistics();
 
@@ -229,10 +245,14 @@ class ProjectsBloc extends Bloc<ProjectsEvent, ProjectsState> {
           );
 
           emit(ProjectsLoaded(
-            projects: projects,
-            filteredProjects: projects,
+            projects: paginatedResult.projects,
+            filteredProjects: paginatedResult.projects,
             teamMembers: teamMembers.cast(),
             statistics: statistics,
+            currentPage: paginatedResult.page,
+            totalPages: paginatedResult.totalPages,
+            totalItems: paginatedResult.total,
+            pageSize: paginatedResult.limit,
           ));
         },
       );
@@ -385,4 +405,3 @@ class ProjectsBloc extends Bloc<ProjectsEvent, ProjectsState> {
     }
   }
 }
-

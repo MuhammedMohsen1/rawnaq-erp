@@ -170,6 +170,21 @@ class _PricingLayout extends StatelessWidget {
                   );
                 },
                 onAddSubItem: (itemId) => _handleAddSubItem(context, itemId),
+                onReorderItems: (oldIndex, newIndex) async {
+                  await context.read<PricingCubit>().reorderItems(
+                    projectId,
+                    oldIndex,
+                    newIndex,
+                  );
+                },
+                onReorderSubItems: (itemId, oldIndex, newIndex) async {
+                  await context.read<PricingCubit>().reorderSubItems(
+                    projectId,
+                    itemId,
+                    oldIndex,
+                    newIndex,
+                  );
+                },
               ),
               const SizedBox(height: 24),
 
@@ -207,7 +222,7 @@ class _PricingLayout extends StatelessWidget {
     final isApproved = currentStatus == 'APPROVED';
     final isProfitPending = currentStatus == 'PENDING_SIGNATURE';
 
-        return ConstrainedBox(
+    return ConstrainedBox(
       constraints: BoxConstraints(
         maxHeight: MediaQuery.of(context).size.height,
       ),
@@ -606,7 +621,7 @@ class _PricingLayout extends StatelessWidget {
     final state = context.read<PricingCubit>().state;
     if (state is! PricingLoaded) return;
 
-        final result = await showDialog<bool>(
+    final result = await showDialog<bool>(
       context: context,
       builder: (context) => ContractExportDialog(
         projectId: projectId,

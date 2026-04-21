@@ -7,7 +7,7 @@ import '../enums/project_status.dart';
 /// Repository interface for projects
 abstract class ProjectsRepository {
   /// Get all projects with optional filters
-  Future<Either<Failure, List<ProjectEntity>>> getProjects({
+  Future<Either<Failure, PaginatedProjectsResult>> getProjects({
     ProjectStatus? status,
     String? managerId,
     String? teamMemberId,
@@ -40,6 +40,26 @@ abstract class ProjectsRepository {
   Future<Either<Failure, ProjectStatistics>> getProjectStatistics();
 }
 
+class PaginatedProjectsResult {
+  final List<ProjectEntity> projects;
+  final int total;
+  final int page;
+  final int limit;
+
+  const PaginatedProjectsResult({
+    required this.projects,
+    required this.total,
+    required this.page,
+    required this.limit,
+  });
+
+  int get totalPages {
+    if (limit <= 0) return 1;
+    final pages = (total / limit).ceil();
+    return pages > 0 ? pages : 1;
+  }
+}
+
 /// Statistics about projects
 class ProjectStatistics {
   final int total;
@@ -66,4 +86,3 @@ class ProjectStatistics {
     );
   }
 }
-

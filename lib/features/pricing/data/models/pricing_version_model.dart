@@ -53,9 +53,8 @@ class PricingVersionModel {
     final deductionAmount = json.containsKey('deductionAmount')
         ? _toDoubleOrZero(json['deductionAmount'])
         : 0.0;
-    final totalAmountAfterDeduction = json.containsKey(
-          'totalAmountAfterDeduction',
-        )
+    final totalAmountAfterDeduction =
+        json.containsKey('totalAmountAfterDeduction')
         ? _toDoubleOrZero(json['totalAmountAfterDeduction'])
         : (originalTotalAmount - deductionAmount);
 
@@ -71,8 +70,9 @@ class PricingVersionModel {
       totalPrice: totalPrice,
       originalTotalAmount: originalTotalAmount,
       deductionAmount: deductionAmount,
-      totalAmountAfterDeduction:
-          totalAmountAfterDeduction < 0 ? 0 : totalAmountAfterDeduction,
+      totalAmountAfterDeduction: totalAmountAfterDeduction < 0
+          ? 0
+          : totalAmountAfterDeduction,
       notes: json['notes'] as String?,
       createdById: json['createdById'] as String,
       createdAt: DateTime.parse(json['createdAt'] as String),
@@ -106,6 +106,43 @@ class PricingVersionModel {
       'updatedAt': updatedAt.toIso8601String(),
       'items': items?.map((item) => item.toJson()).toList(),
     };
+  }
+
+  PricingVersionModel copyWith({
+    String? id,
+    String? projectId,
+    int? version,
+    String? status,
+    double? totalCost,
+    double? totalProfit,
+    double? totalPrice,
+    double? originalTotalAmount,
+    double? deductionAmount,
+    double? totalAmountAfterDeduction,
+    String? notes,
+    String? createdById,
+    DateTime? createdAt,
+    DateTime? updatedAt,
+    List<PricingItemModel>? items,
+  }) {
+    return PricingVersionModel(
+      id: id ?? this.id,
+      projectId: projectId ?? this.projectId,
+      version: version ?? this.version,
+      status: status ?? this.status,
+      totalCost: totalCost ?? this.totalCost,
+      totalProfit: totalProfit ?? this.totalProfit,
+      totalPrice: totalPrice ?? this.totalPrice,
+      originalTotalAmount: originalTotalAmount ?? this.originalTotalAmount,
+      deductionAmount: deductionAmount ?? this.deductionAmount,
+      totalAmountAfterDeduction:
+          totalAmountAfterDeduction ?? this.totalAmountAfterDeduction,
+      notes: notes ?? this.notes,
+      createdById: createdById ?? this.createdById,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      items: items ?? this.items,
+    );
   }
 }
 
@@ -204,6 +241,38 @@ class PricingItemModel {
       'updatedAt': updatedAt.toIso8601String(),
       'subItems': subItems?.map((subItem) => subItem.toJson()).toList(),
     };
+  }
+
+  PricingItemModel copyWith({
+    String? id,
+    String? pricingVersionId,
+    String? name,
+    bool? isHidden,
+    String? description,
+    double? profitMargin,
+    double? profitAmount,
+    double? totalCost,
+    double? totalPrice,
+    int? order,
+    DateTime? createdAt,
+    DateTime? updatedAt,
+    List<PricingSubItemModel>? subItems,
+  }) {
+    return PricingItemModel(
+      id: id ?? this.id,
+      pricingVersionId: pricingVersionId ?? this.pricingVersionId,
+      name: name ?? this.name,
+      description: description ?? this.description,
+      isHidden: isHidden ?? this.isHidden,
+      profitMargin: profitMargin ?? this.profitMargin,
+      profitAmount: profitAmount ?? this.profitAmount,
+      totalCost: totalCost ?? this.totalCost,
+      totalPrice: totalPrice ?? this.totalPrice,
+      order: order ?? this.order,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      subItems: subItems ?? this.subItems,
+    );
   }
 }
 
@@ -314,6 +383,42 @@ class PricingSubItemModel {
       'updatedAt': updatedAt?.toIso8601String(),
       'elements': elements?.map((element) => element.toJson()).toList(),
     };
+  }
+
+  PricingSubItemModel copyWith({
+    String? id,
+    String? pricingItemId,
+    String? name,
+    String? description,
+    String? notes,
+    List<String>? images,
+    double? profitMargin,
+    double? profitAmount,
+    double? totalCost,
+    double? totalPrice,
+    bool? isHidden,
+    int? order,
+    DateTime? createdAt,
+    DateTime? updatedAt,
+    List<PricingElementModel>? elements,
+  }) {
+    return PricingSubItemModel(
+      id: id ?? this.id,
+      pricingItemId: pricingItemId ?? this.pricingItemId,
+      name: name ?? this.name,
+      description: description ?? this.description,
+      notes: notes ?? this.notes,
+      images: images ?? this.images,
+      profitMargin: profitMargin ?? this.profitMargin,
+      profitAmount: profitAmount ?? this.profitAmount,
+      totalCost: totalCost ?? this.totalCost,
+      totalPrice: totalPrice ?? this.totalPrice,
+      isHidden: isHidden ?? this.isHidden,
+      order: order ?? this.order,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      elements: elements ?? this.elements,
+    );
   }
 }
 
