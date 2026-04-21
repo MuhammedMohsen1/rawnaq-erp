@@ -108,6 +108,8 @@ class PricingItemsList extends StatelessWidget {
                         );
                       },
                       onAddSubItem: () => onAddSubItem(item.id),
+                      canReorderItem: canReorder,
+                      itemReorderIndex: index,
                       canReorderSubItems: canReorder,
                       onReorderSubItems: (oldSubIndex, newSubIndex) async {
                         if (onReorderSubItems == null) return;
@@ -119,25 +121,6 @@ class PricingItemsList extends StatelessWidget {
                       },
                     ),
                   ),
-                  if (canReorder) ...[
-                    const SizedBox(width: 8),
-                    ReorderableDragStartListener(
-                      index: index,
-                      child: Container(
-                        margin: const EdgeInsets.only(top: 12),
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF2A313D),
-                          borderRadius: BorderRadius.circular(8),
-                          border: Border.all(color: const Color(0xFF363C4A)),
-                        ),
-                        child: const Icon(
-                          Icons.drag_indicator,
-                          color: AppColors.textSecondary,
-                        ),
-                      ),
-                    ),
-                  ],
                 ],
               ),
             );

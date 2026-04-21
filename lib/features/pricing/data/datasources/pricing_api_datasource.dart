@@ -163,6 +163,41 @@ class PricingApiDataSource {
     );
   }
 
+  Future<PricingItemModel> reorderPricingItem(
+    String projectId,
+    int version,
+    String itemId,
+    int targetOrder,
+  ) async {
+    final response = await _apiClient.patch(
+      ApiEndpoints.reorderPricingItems(projectId, version),
+      data: {'itemId': itemId, 'targetOrder': targetOrder},
+    );
+
+    final responseData = response.data as Map<String, dynamic>;
+    return PricingItemModel.fromJson(
+      responseData['data'] as Map<String, dynamic>,
+    );
+  }
+
+  Future<PricingSubItemModel> reorderPricingSubItem(
+    String projectId,
+    int version,
+    String itemId,
+    String subItemId,
+    int targetOrder,
+  ) async {
+    final response = await _apiClient.patch(
+      ApiEndpoints.reorderPricingSubItems(projectId, version, itemId),
+      data: {'subItemId': subItemId, 'targetOrder': targetOrder},
+    );
+
+    final responseData = response.data as Map<String, dynamic>;
+    return PricingSubItemModel.fromJson(
+      responseData['data'] as Map<String, dynamic>,
+    );
+  }
+
   /// Upload images to a pricing sub-item
   /// imagePaths: List of file paths (for desktop/mobile)
   /// imageBytes: Optional list of (bytes, filename) tuples (for web)

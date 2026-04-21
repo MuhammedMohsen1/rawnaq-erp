@@ -246,6 +246,8 @@ abstract class ApiEndpoints {
       '/projects/$projectId/pricing/$version';
   static String pricingItems(String projectId, int version) =>
       '/projects/$projectId/pricing/$version/items';
+  static String reorderPricingItems(String projectId, int version) =>
+      '/projects/$projectId/pricing/$version/items/reorder';
   static String pricingItem(String projectId, int version, String itemId) =>
       '/projects/$projectId/pricing/$version/items/$itemId';
   static String deletePricingItem(
@@ -255,6 +257,11 @@ abstract class ApiEndpoints {
   ) => '/projects/$projectId/pricing/$version/items/$itemId';
   static String pricingSubItems(String projectId, int version, String itemId) =>
       '/projects/$projectId/pricing/$version/items/$itemId/sub-items';
+  static String reorderPricingSubItems(
+    String projectId,
+    int version,
+    String itemId,
+  ) => '/projects/$projectId/pricing/$version/items/$itemId/sub-items/reorder';
   static String pricingSubItem(
     String projectId,
     int version,

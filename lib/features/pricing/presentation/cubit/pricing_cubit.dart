@@ -281,14 +281,12 @@ class PricingCubit extends Cubit<PricingState> {
     emit(optimisticState);
 
     try {
-      for (final item in orderedItems) {
-        await pricingApiDataSource.updatePricingItem(
-          projectId,
-          currentState.pricingVersion.version,
-          item.id,
-          order: item.order,
-        );
-      }
+      await pricingApiDataSource.reorderPricingItem(
+        projectId,
+        currentState.pricingVersion.version,
+        movedItem.id,
+        normalizedNewIndex + 1,
+      );
     } catch (e) {
       emit(currentState);
       rethrow;
@@ -341,15 +339,13 @@ class PricingCubit extends Cubit<PricingState> {
     emit(optimisticState);
 
     try {
-      for (final subItem in orderedSubItems) {
-        await pricingApiDataSource.updatePricingSubItem(
-          projectId,
-          currentState.pricingVersion.version,
-          itemId,
-          subItem.id,
-          order: subItem.order,
-        );
-      }
+      await pricingApiDataSource.reorderPricingSubItem(
+        projectId,
+        currentState.pricingVersion.version,
+        itemId,
+        movedSubItem.id,
+        normalizedNewIndex + 1,
+      );
     } catch (e) {
       emit(currentState);
       rethrow;
