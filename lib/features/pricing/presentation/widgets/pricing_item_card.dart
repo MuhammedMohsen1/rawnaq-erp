@@ -95,7 +95,7 @@ class PricingItemCard extends StatefulWidget {
     this.onItemChanged,
     this.onSubItemChanged,
     this.onAddSubItem,
-    this.initialIsExpanded = true,
+    this.initialIsExpanded = false,
     this.initialSubItemExpandedStates = const {},
     this.onExpandedChanged,
     this.onSubItemExpandedChanged,
@@ -366,198 +366,101 @@ class _PricingItemCardState extends State<PricingItemCard> {
     return null;
   }
 
-  Future<void> _uploadImages(String subItemId) async {
-    print('_uploadImages called for subItem: $subItemId');
+  Future<List<MapEntry<String, Uint8List>>> _pickImagesForPreview({
+    required bool tryClipboardFirst,
+    required bool forceFilePicker,
+  }) async {
+    final pickedImages = <MapEntry<String, Uint8List>>[];
+
+    if (tryClipboardFirst && !kIsWeb) {
+      final clipboardImage = await _getClipboardImage();
+      if (clipboardImage != null) {
+        pickedImages.add(
+          MapEntry(
+            'clipboard_${DateTime.now().millisecondsSinceEpoch}.png',
+            clipboardImage,
+          ),
+        );
+        return pickedImages;
+      }
+    }
+
+    final useFilePicker =
+        forceFilePicker ||
+        kIsWeb ||
+        defaultTargetPlatform == TargetPlatform.macOS ||
+        defaultTargetPlatform == TargetPlatform.windows ||
+        defaultTargetPlatform == TargetPlatform.linux;
+
+    if (useFilePicker) {
+      await Future.delayed(const Duration(milliseconds: 50));
+
+      final result = await FilePicker.platform.pickFiles(
+        type: FileType.image,
+        allowMultiple: true,
+        withData: true,
+        dialogTitle: 'اختر الصور',
+      );
+
+      if (result == null) return pickedImages;
+
+      for (final file in result.files) {
+        Uint8List? imageBytes = file.bytes;
+
+        if (imageBytes == null && file.path != null && !kIsWeb) {
+          imageBytes = await File(file.path!).readAsBytes();
+        }
+
+        if (imageBytes != null) {
+          pickedImages.add(MapEntry(file.name, imageBytes));
+        }
+      }
+
+      return pickedImages;
+    }
+
+    List<XFile> pickedFiles = [];
+
+    try {
+      pickedFiles = await _imagePicker.pickMultiImage();
+    } catch (_) {
+      final single = await _imagePicker.pickImage(source: ImageSource.gallery);
+      if (single != null) pickedFiles = [single];
+    }
+
+    for (final file in pickedFiles) {
+      pickedImages.add(MapEntry(file.name, await file.readAsBytes()));
+    }
+
+    return pickedImages;
+  }
+
+  Future<void> _pickImages(String subItemId) async {
+    print('_pickImages called for subItem: $subItemId');
 
     try {
       setState(() {
         _uploadingImages[subItemId] = true;
       });
 
-      List<MapEntry<String, Uint8List>> croppedImages = [];
-
-      // ============================
-      // 1️⃣ TRY CLIPBOARD IMAGE FIRST
-      // ============================
-      if (!kIsWeb) {
-        final clipboardImage = await _getClipboardImage();
-
-        if (clipboardImage != null && mounted) {
-          print('Using image from clipboard');
-
-          final croppedBytes = await ImageCropDialog.show(
-            context,
-            clipboardImage,
-            fileName: 'clipboard_image.png',
-          );
-
-          if (croppedBytes != null) {
-            croppedImages.add(
-              MapEntry(
-                'clipboard_${DateTime.now().millisecondsSinceEpoch}.png',
-                croppedBytes,
-              ),
-            );
-
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('تم استخدام صورة من الحافظة'),
-                duration: Duration(seconds: 1),
-              ),
-            );
-          }
-
-          // If clipboard path succeeded or user cancelled crop → skip pickers
-          if (croppedImages.isNotEmpty) {
-            // jump to upload section
-          } else {
-            setState(() {
-              _uploadingImages[subItemId] = false;
-            });
-            return;
-          }
-        }
-      }
-
-      // ======================================
-      // 2️⃣ FALLBACK TO PICKERS IF NO CLIPBOARD
-      // ======================================
-      if (croppedImages.isEmpty) {
-        if (kIsWeb ||
-            defaultTargetPlatform == TargetPlatform.macOS ||
-            defaultTargetPlatform == TargetPlatform.windows ||
-            defaultTargetPlatform == TargetPlatform.linux) {
-          // ---------- Desktop / Web ----------
-          print('Using file_picker');
-
-          await Future.delayed(const Duration(milliseconds: 50));
-
-          final result = await FilePicker.platform.pickFiles(
-            type: FileType.image,
-            allowMultiple: true,
-            withData: true,
-            dialogTitle: 'اختر الصور',
-          );
-
-          if (result == null) {
-            setState(() {
-              _uploadingImages[subItemId] = false;
-            });
-            return;
-          }
-
-          for (var file in result.files) {
-            Uint8List? imageBytes;
-
-            if (file.bytes != null) {
-              imageBytes = file.bytes!;
-            } else if (file.path != null && !kIsWeb) {
-              imageBytes = await File(file.path!).readAsBytes();
-            }
-
-            if (imageBytes != null && mounted) {
-              final croppedBytes = await ImageCropDialog.show(
-                context,
-                imageBytes,
-                fileName: file.name,
-              );
-
-              if (croppedBytes != null) {
-                croppedImages.add(MapEntry(file.name, croppedBytes));
-              }
-            }
-          }
-        } else {
-          // ---------- Mobile ----------
-          print('Using image_picker');
-
-          List<XFile> pickedFiles = [];
-
-          try {
-            pickedFiles = await _imagePicker.pickMultiImage();
-          } catch (_) {
-            final single = await _imagePicker.pickImage(
-              source: ImageSource.gallery,
-            );
-            if (single != null) pickedFiles = [single];
-          }
-
-          for (var file in pickedFiles) {
-            final imageBytes = await file.readAsBytes();
-
-            if (mounted) {
-              final croppedBytes = await ImageCropDialog.show(
-                context,
-                imageBytes,
-                fileName: file.name,
-              );
-
-              if (croppedBytes != null) {
-                croppedImages.add(MapEntry(file.name, croppedBytes));
-              }
-            }
-          }
-        }
-      }
-
-      // ======================
-      // 3️⃣ NOTHING TO UPLOAD
-      // ======================
-      if (croppedImages.isEmpty) {
-        setState(() {
-          _uploadingImages[subItemId] = false;
-        });
-        return;
-      }
-
-      // ======================
-      // 4️⃣ UPLOAD
-      // ======================
-      final imageBytesList = croppedImages
-          .map((e) => MapEntry(e.key, e.value.toList()))
-          .toList();
-
-      await _apiDataSource.uploadSubItemImages(
-        widget.projectId,
-        widget.version,
-        widget.item.id,
-        subItemId,
-        [],
-        imageBytes: imageBytesList,
+      final pickedImages = await _pickImagesForPreview(
+        tryClipboardFirst: true,
+        forceFilePicker: false,
       );
 
-      // ======================
-      // 5️⃣ REFRESH DATA
-      // ======================
-      final updatedVersion = await _apiDataSource.getPricingVersion(
-        widget.projectId,
-        widget.version,
-      );
-
-      final updatedItem = updatedVersion.items?.firstWhere(
-        (i) => i.id == widget.item.id,
-      );
-
-      if (updatedItem != null && mounted) {
-        widget.onItemChanged?.call(updatedItem);
-      }
+      if (pickedImages.isEmpty) return;
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('تم رفع الصور بنجاح'),
-            duration: Duration(seconds: 2),
-          ),
-        );
+        await _showUploadPreviewDialog(subItemId, pickedImages);
       }
     } catch (e, stackTrace) {
-      print('Upload error: $e');
+      print('Image selection error: $e');
       print(stackTrace);
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('فشل رفع الصور: $e'),
+            content: Text('فشل اختيار الصور: $e'),
             duration: const Duration(seconds: 5),
           ),
         );
@@ -571,216 +474,32 @@ class _PricingItemCardState extends State<PricingItemCard> {
     }
   }
 
-  Future<void> _uploadImagesFilePicker(String subItemId) async {
-    print('_uploadImages called for subItem: $subItemId');
+  Future<void> _pickImagesWithFilePicker(String subItemId) async {
+    print('_pickImagesWithFilePicker called for subItem: $subItemId');
     try {
       setState(() {
         _uploadingImages[subItemId] = true;
       });
 
-      List<MapEntry<String, Uint8List>> croppedImages = [];
-
-      // Use file_picker for desktop/web, image_picker for mobile
-      if (kIsWeb ||
-          defaultTargetPlatform == TargetPlatform.macOS ||
-          defaultTargetPlatform == TargetPlatform.windows ||
-          defaultTargetPlatform == TargetPlatform.linux) {
-        // Desktop/Web: Use file_picker
-        print('Using file_picker for desktop/web platform...');
-        print('Platform: ${defaultTargetPlatform}, kIsWeb: $kIsWeb');
-        try {
-          print('Calling FilePicker.platform.pickFiles...');
-
-          // Small delay to ensure UI is ready
-          await Future.delayed(const Duration(milliseconds: 50));
-
-          final result = await FilePicker.platform.pickFiles(
-            type: FileType.image,
-            allowMultiple: true,
-            withData: true, // Always load data for cropping
-            dialogTitle: 'اختر الصور',
-          );
-
-          print(
-            'FilePicker returned, result is ${result != null ? "not null" : "null"}',
-          );
-
-          if (result == null) {
-            print('User canceled file picker or no files selected');
-            setState(() {
-              _uploadingImages[subItemId] = false;
-            });
-            return;
-          }
-
-          print('Number of files: ${result.files.length}');
-
-          if (result.files.isNotEmpty) {
-            for (var file in result.files) {
-              print(
-                'Processing file: ${file.name}, path: ${file.path}, has bytes: ${file.bytes != null}',
-              );
-
-              Uint8List? imageBytes;
-
-              if (file.bytes != null) {
-                imageBytes = file.bytes!;
-              } else if (file.path != null && !kIsWeb) {
-                // Desktop: read file to bytes
-                imageBytes = await File(file.path!).readAsBytes();
-              }
-
-              if (imageBytes != null && mounted) {
-                // Show crop dialog for each image
-                final croppedBytes = await ImageCropDialog.show(
-                  context,
-                  imageBytes,
-                  fileName: file.name,
-                );
-
-                if (croppedBytes != null) {
-                  croppedImages.add(MapEntry(file.name, croppedBytes));
-                  print(
-                    'Cropped image: ${file.name} (${croppedBytes.length} bytes)',
-                  );
-                } else {
-                  print('User cancelled cropping for: ${file.name}');
-                }
-              }
-            }
-            print('Cropped ${croppedImages.length} images');
-          } else {
-            print('No files in result');
-          }
-        } catch (e, stackTrace) {
-          print('file_picker failed with error: $e');
-          print('Stack trace: $stackTrace');
-          if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text('فشل فتح نافذة اختيار الملفات: $e'),
-                duration: const Duration(seconds: 4),
-              ),
-            );
-          }
-          setState(() {
-            _uploadingImages[subItemId] = false;
-          });
-          return;
-        }
-      } else {
-        // Mobile: Use image_picker
-        print('Using image_picker for mobile platform...');
-        List<XFile> pickedFiles = [];
-        try {
-          pickedFiles = await _imagePicker.pickMultiImage();
-          print('Picked ${pickedFiles.length} images using image_picker');
-        } catch (e) {
-          print('pickMultiImage failed: $e, trying single image pick...');
-          // Fallback to single image
-          try {
-            final singleFile = await _imagePicker.pickImage(
-              source: ImageSource.gallery,
-            );
-            if (singleFile != null) {
-              pickedFiles = [singleFile];
-              print('Picked single image: ${singleFile.path}');
-            }
-          } catch (e2) {
-            print('Single image pick also failed: $e2');
-            throw Exception('Failed to pick images: $e2');
-          }
-        }
-
-        // Crop each picked image
-        for (var file in pickedFiles) {
-          final imageBytes = await file.readAsBytes();
-          if (mounted) {
-            final croppedBytes = await ImageCropDialog.show(
-              context,
-              imageBytes,
-              fileName: file.name,
-            );
-
-            if (croppedBytes != null) {
-              croppedImages.add(MapEntry(file.name, croppedBytes));
-              print(
-                'Cropped image: ${file.name} (${croppedBytes.length} bytes)',
-              );
-            } else {
-              print('User cancelled cropping for: ${file.name}');
-            }
-          }
-        }
-      }
-
-      if (croppedImages.isEmpty) {
-        print('No images to upload after cropping');
-        setState(() {
-          _uploadingImages[subItemId] = false;
-        });
-        return;
-      }
-
-      // Convert to the format expected by the API
-      final imageBytesList = croppedImages
-          .map((e) => MapEntry(e.key, e.value.toList()))
-          .toList();
-
-      // Upload images
-      await _apiDataSource.uploadSubItemImages(
-        widget.projectId,
-        widget.version,
-        widget.item.id,
-        subItemId,
-        [], // No file paths, using bytes only
-        imageBytes: imageBytesList,
+      final pickedImages = await _pickImagesForPreview(
+        tryClipboardFirst: false,
+        forceFilePicker: true,
       );
 
-      // Refresh data to show new images
-      try {
-        final updatedVersion = await _apiDataSource.getPricingVersion(
-          widget.projectId,
-          widget.version,
-        );
-        final updatedItem = updatedVersion.items?.firstWhere(
-          (i) => i.id == widget.item.id,
-        );
-
-        if (updatedItem != null && mounted) {
-          widget.onItemChanged?.call(updatedItem);
-        }
-      } catch (e) {
-        // If refresh fails, still show success
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                'تم رفع الصور ولكن فشل تحديث البيانات: ${e.toString()}',
-              ),
-            ),
-          );
-        }
-        return;
-      }
+      if (pickedImages.isEmpty) return;
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('تم رفع الصور بنجاح'),
-            duration: Duration(seconds: 2),
-          ),
-        );
+        await _showUploadPreviewDialog(subItemId, pickedImages);
       }
     } catch (e, stackTrace) {
       if (mounted) {
-        String errorMessage = 'فشل رفع الصور: ${e.toString()}';
+        String errorMessage = 'فشل اختيار الصور: ${e.toString()}';
 
         // Provide more user-friendly error messages
         if (e.toString().contains('NotFoundException') ||
             e.toString().contains('NOT_FOUND')) {
           errorMessage =
-              'لا يمكن رفع الصور. يرجى التحقق من أن:\n'
+              'لا يمكن اختيار الصور حالياً. يرجى التحقق من أن:\n'
               '1. المشروع موجود\n'
               '2. إصدار التسعير في حالة "مسودة" (DRAFT)\n'
               '3. البند والبند الفرعية موجودة في هذا الإصدار';
@@ -794,7 +513,7 @@ class _PricingItemCardState extends State<PricingItemCard> {
         );
       }
       // Print error for debugging
-      print('Error uploading images: $e');
+      print('Error picking images: $e');
       print('Stack trace: $stackTrace');
     } finally {
       if (mounted) {
@@ -884,6 +603,286 @@ class _PricingItemCardState extends State<PricingItemCard> {
         });
       }
     }
+  }
+
+  Future<void> _uploadSelectedImages(
+    String subItemId,
+    List<MapEntry<String, Uint8List>> selectedImages,
+  ) async {
+    if (selectedImages.isEmpty) return;
+
+    try {
+      setState(() {
+        _uploadingImages[subItemId] = true;
+      });
+
+      final imageBytesList = selectedImages
+          .map((image) => MapEntry(image.key, image.value.toList()))
+          .toList();
+
+      await _apiDataSource.uploadSubItemImages(
+        widget.projectId,
+        widget.version,
+        widget.item.id,
+        subItemId,
+        [],
+        imageBytes: imageBytesList,
+      );
+
+      final updatedVersion = await _apiDataSource.getPricingVersion(
+        widget.projectId,
+        widget.version,
+      );
+
+      final updatedItem = updatedVersion.items?.firstWhere(
+        (i) => i.id == widget.item.id,
+      );
+
+      if (!mounted) return;
+
+      if (updatedItem != null) {
+        widget.onItemChanged?.call(updatedItem);
+      }
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('تم رفع الصور بنجاح'),
+          duration: Duration(seconds: 2),
+        ),
+      );
+    } catch (e, stackTrace) {
+      print('Upload pending images error: $e');
+      print(stackTrace);
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('فشل رفع الصور: $e'),
+            duration: const Duration(seconds: 5),
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _uploadingImages[subItemId] = false;
+        });
+      }
+    }
+  }
+
+  Future<void> _showUploadPreviewDialog(
+    String subItemId,
+    List<MapEntry<String, Uint8List>> initialImages,
+  ) async {
+    final stagedImages = List<MapEntry<String, Uint8List>>.from(initialImages);
+    int selectedIndex = 0;
+
+    await showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogContext) {
+        return StatefulBuilder(
+          builder: (dialogContext, setDialogState) {
+            final hasImages = stagedImages.isNotEmpty;
+            final safeIndex = hasImages
+                ? math.min(selectedIndex, stagedImages.length - 1)
+                : 0;
+            final currentImage = hasImages ? stagedImages[safeIndex] : null;
+
+            Future<void> cropCurrentImage() async {
+              if (currentImage == null) return;
+
+              final croppedBytes = await ImageCropDialog.show(
+                context,
+                currentImage.value,
+                fileName: currentImage.key,
+              );
+
+              if (croppedBytes == null) return;
+
+              setDialogState(() {
+                stagedImages[safeIndex] = MapEntry(
+                  currentImage.key,
+                  croppedBytes,
+                );
+              });
+            }
+
+            Future<void> uploadImages() async {
+              Navigator.of(dialogContext).pop();
+              await _uploadSelectedImages(subItemId, stagedImages);
+            }
+
+            void removeCurrentImage() {
+              if (currentImage == null) return;
+
+              setDialogState(() {
+                stagedImages.removeAt(safeIndex);
+                if (stagedImages.isEmpty) {
+                  selectedIndex = 0;
+                } else {
+                  selectedIndex = math.min(
+                    selectedIndex,
+                    stagedImages.length - 1,
+                  );
+                }
+              });
+            }
+
+            return Dialog(
+              backgroundColor: const Color(0xFF1A1D24),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Container(
+                width: MediaQuery.of(
+                  dialogContext,
+                ).size.width.clamp(480.0, 900.0),
+                height: MediaQuery.of(
+                  dialogContext,
+                ).size.height.clamp(420.0, 760.0),
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Text(
+                          'معاينة الصور قبل الرفع',
+                          style: AppTextStyles.h3.copyWith(
+                            color: AppColors.textPrimary,
+                            fontSize: 18,
+                          ),
+                        ),
+                        const Spacer(),
+                        Text(
+                          '${stagedImages.length} صورة',
+                          style: AppTextStyles.bodySmall.copyWith(
+                            color: AppColors.textSecondary,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    Expanded(
+                      child: Container(
+                        width: double.infinity,
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF11151C),
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(color: const Color(0xFF363C4A)),
+                        ),
+                        child: hasImages
+                            ? ClipRRect(
+                                borderRadius: BorderRadius.circular(10),
+                                child: Image.memory(
+                                  currentImage!.value,
+                                  fit: BoxFit.contain,
+                                ),
+                              )
+                            : const Center(
+                                child: Text(
+                                  'لا توجد صور محددة',
+                                  style: TextStyle(color: AppColors.textMuted),
+                                ),
+                              ),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    SizedBox(
+                      height: 68,
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: ListView.builder(
+                              scrollDirection: Axis.horizontal,
+                              itemCount: stagedImages.length,
+                              itemBuilder: (context, index) {
+                                final isSelected = index == safeIndex;
+                                return GestureDetector(
+                                  onTap: () {
+                                    setDialogState(() {
+                                      selectedIndex = index;
+                                    });
+                                  },
+                                  child: Container(
+                                    width: 56,
+                                    height: 56,
+                                    margin: const EdgeInsets.only(right: 8),
+                                    decoration: BoxDecoration(
+                                      borderRadius: BorderRadius.circular(8),
+                                      border: Border.all(
+                                        color: isSelected
+                                            ? AppColors.primary
+                                            : const Color(0xFF363C4A),
+                                        width: isSelected ? 2 : 1,
+                                      ),
+                                    ),
+                                    child: ClipRRect(
+                                      borderRadius: BorderRadius.circular(8),
+                                      child: Image.memory(
+                                        stagedImages[index].value,
+                                        fit: BoxFit.cover,
+                                      ),
+                                    ),
+                                  ),
+                                );
+                              },
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          IconButton(
+                            onPressed: hasImages ? cropCurrentImage : null,
+                            tooltip: 'قص',
+                            icon: const Icon(
+                              Icons.crop,
+                              color: AppColors.primary,
+                            ),
+                          ),
+                          IconButton(
+                            onPressed: hasImages ? removeCurrentImage : null,
+                            tooltip: 'حذف',
+                            icon: const Icon(
+                              Icons.delete_outline,
+                              color: AppColors.error,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        OutlinedButton(
+                          onPressed: () => Navigator.of(dialogContext).pop(),
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: AppColors.textSecondary,
+                            side: const BorderSide(color: Color(0xFF363C4A)),
+                          ),
+                          child: const Text('إلغاء'),
+                        ),
+                        const SizedBox(width: 12),
+                        ElevatedButton.icon(
+                          onPressed: hasImages ? uploadImages : null,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppColors.primary,
+                            foregroundColor: Colors.white,
+                          ),
+                          icon: const Icon(Icons.cloud_upload_outlined),
+                          label: const Text('رفع الصور'),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
   }
 
   Future<void> _showFullScreenImage(String subItemId, String imageUrl) async {
@@ -1134,7 +1133,7 @@ class _PricingItemCardState extends State<PricingItemCard> {
             ListTile(
               leading: const Icon(Icons.copy, color: AppColors.primary),
               title: const Text(
-                'نسخ العنصر',
+                'انشاء نسخة مطابقة',
                 style: TextStyle(color: AppColors.textPrimary),
               ),
               onTap: () => Navigator.pop(context, 'duplicate'),
@@ -1181,7 +1180,7 @@ class _PricingItemCardState extends State<PricingItemCard> {
             ListTile(
               leading: const Icon(Icons.copy, color: AppColors.primary),
               title: const Text(
-                'نسخ البند الفرعية',
+                'انشاء نسخة مطابقة',
                 style: TextStyle(color: AppColors.textPrimary),
               ),
               onTap: () => Navigator.pop(context, 'duplicate'),
@@ -1506,16 +1505,34 @@ class _PricingItemCardState extends State<PricingItemCard> {
   }
 
   Widget _buildImagePreview(PricingSubItemModel subItem) {
+    final imageCount = subItem.images.length;
+
+    if (imageCount == 0) {
+      return Container(
+        margin: const EdgeInsets.all(4),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: const Color(0xFF363C4A)),
+          color: const Color(0xFF161A22),
+        ),
+        child: const Center(
+          child: Text(
+            'لا توجد صور للمعاينة',
+            style: TextStyle(color: AppColors.textMuted),
+          ),
+        ),
+      );
+    }
+
     // Initialize selected index if not set
-    if (!_selectedImageIndex.containsKey(subItem.id) &&
-        subItem.images.isNotEmpty) {
+    if (!_selectedImageIndex.containsKey(subItem.id)) {
       _selectedImageIndex[subItem.id] = 0;
     }
 
     final currentIndex = _selectedImageIndex[subItem.id] ?? 0;
     // Ensure index is within bounds
-    final safeIndex = currentIndex >= subItem.images.length
-        ? (subItem.images.isEmpty ? 0 : subItem.images.length - 1)
+    final safeIndex = currentIndex >= imageCount
+        ? imageCount - 1
         : currentIndex;
     final currentImage = subItem.images[safeIndex];
     final isDeleting = _deletingImages[currentImage] == true;
@@ -1535,35 +1552,37 @@ class _PricingItemCardState extends State<PricingItemCard> {
               borderRadius: BorderRadius.circular(8),
               child: Stack(
                 children: [
-                  Image.network(
-                    currentImage,
-                    fit: BoxFit.cover,
-                    width: double.infinity,
-                    height: double.infinity,
-                    errorBuilder: (context, error, stackTrace) {
-                      return Container(
-                        color: const Color(0xFF2A313D),
-                        child: const Center(
-                          child: Icon(
-                            Icons.broken_image,
-                            size: 64,
-                            color: AppColors.textMuted,
+                  Positioned.fill(
+                    child: Image.network(
+                      currentImage,
+                      fit: BoxFit.cover,
+                      width: double.infinity,
+                      height: double.infinity,
+                      errorBuilder: (context, error, stackTrace) {
+                        return Container(
+                          color: const Color(0xFF2A313D),
+                          child: const Center(
+                            child: Icon(
+                              Icons.broken_image,
+                              size: 64,
+                              color: AppColors.textMuted,
+                            ),
                           ),
-                        ),
-                      );
-                    },
-                    loadingBuilder: (context, child, loadingProgress) {
-                      if (loadingProgress == null) return child;
-                      return Container(
-                        color: const Color(0xFF2A313D),
-                        child: const Center(
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: AppColors.primary,
+                        );
+                      },
+                      loadingBuilder: (context, child, loadingProgress) {
+                        if (loadingProgress == null) return child;
+                        return Container(
+                          color: const Color(0xFF2A313D),
+                          child: const Center(
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: AppColors.primary,
+                            ),
                           ),
-                        ),
-                      );
-                    },
+                        );
+                      },
+                    ),
                   ),
                   // Delete button
                   Positioned(
@@ -1631,9 +1650,8 @@ class _PricingItemCardState extends State<PricingItemCard> {
                       color: Colors.black54,
                       borderRadius: BorderRadius.circular(4),
                       child: InkWell(
-                        onTap: () => {
-                          _showFullScreenImage(subItem.id, currentImage),
-                        },
+                        onTap: () =>
+                            _showFullScreenImage(subItem.id, currentImage),
                         borderRadius: BorderRadius.circular(4),
                         child: Container(
                           padding: const EdgeInsets.all(8),
@@ -1661,9 +1679,8 @@ class _PricingItemCardState extends State<PricingItemCard> {
               Expanded(
                 child: ListView.builder(
                   scrollDirection: Axis.horizontal,
-                  itemCount: subItem.images.length,
+                  itemCount: imageCount,
                   itemBuilder: (context, index) {
-                    final imageUrl = subItem.images[index];
                     final isSelected = index == safeIndex;
                     return GestureDetector(
                       onTap: () {
@@ -1687,7 +1704,7 @@ class _PricingItemCardState extends State<PricingItemCard> {
                         child: ClipRRect(
                           borderRadius: BorderRadius.circular(8),
                           child: Image.network(
-                            imageUrl,
+                            subItem.images[index],
                             fit: BoxFit.cover,
                             errorBuilder: (context, error, stackTrace) {
                               return Container(
@@ -1706,6 +1723,7 @@ class _PricingItemCardState extends State<PricingItemCard> {
                 ),
               ),
               // Add Image Button
+              const SizedBox(width: 8),
               Container(
                 width: 40,
                 height: 40,
@@ -1726,7 +1744,7 @@ class _PricingItemCardState extends State<PricingItemCard> {
                             print(
                               'Upload button clicked for subItem: ${subItem.id}',
                             );
-                            _uploadImages(subItem.id);
+                            _pickImages(subItem.id);
                           },
                     onLongPress: _uploadingImages[subItem.id] == true
                         ? null
@@ -1734,7 +1752,7 @@ class _PricingItemCardState extends State<PricingItemCard> {
                             print(
                               'Upload button clicked for subItem: ${subItem.id}',
                             );
-                            _uploadImagesFilePicker(subItem.id);
+                            _pickImagesWithFilePicker(subItem.id);
                           },
                     borderRadius: BorderRadius.circular(8),
                     child: _uploadingImages[subItem.id] == true
@@ -2434,23 +2452,7 @@ class _PricingItemCardState extends State<PricingItemCard> {
                           builder: (context, _) {
                             return Material(
                               color: Colors.transparent,
-                              child: Container(
-                                decoration: BoxDecoration(
-                                  color: const Color(0xFF1C212B),
-                                  borderRadius: BorderRadius.circular(8),
-                                  border: Border.all(
-                                    color: const Color(0xFF363C4A),
-                                  ),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: Colors.black.withOpacity(0.25),
-                                      blurRadius: 12,
-                                      offset: const Offset(0, 6),
-                                    ),
-                                  ],
-                                ),
-                                child: child,
-                              ),
+                              child: child,
                             );
                           },
                         );
@@ -2464,6 +2466,7 @@ class _PricingItemCardState extends State<PricingItemCard> {
                         final subItem = entry.value;
                         final isSubItemExpanded =
                             _expandedSubItems[subItem.id] ?? false;
+                        final hasSubItemImages = subItem.images.isNotEmpty;
                         final allElements = _getAllElementsForSubItem(
                           subItem.id,
                         );
@@ -2533,6 +2536,57 @@ class _PricingItemCardState extends State<PricingItemCard> {
                                                       ),
                                                 ),
                                               ),
+                                              if (hasSubItemImages) ...[
+                                                Container(
+                                                  padding:
+                                                      const EdgeInsets.symmetric(
+                                                        horizontal: 8,
+                                                        vertical: 4,
+                                                      ),
+                                                  decoration: BoxDecoration(
+                                                    color: AppColors.primary
+                                                        .withValues(
+                                                          alpha: 0.12,
+                                                        ),
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                          999,
+                                                        ),
+                                                    border: Border.all(
+                                                      color: AppColors.primary
+                                                          .withValues(
+                                                            alpha: 0.35,
+                                                          ),
+                                                    ),
+                                                  ),
+                                                  child: Row(
+                                                    mainAxisSize:
+                                                        MainAxisSize.min,
+                                                    children: [
+                                                      const Icon(
+                                                        Icons.image_outlined,
+                                                        size: 14,
+                                                        color:
+                                                            AppColors.primary,
+                                                      ),
+                                                      const SizedBox(width: 4),
+                                                      Text(
+                                                        'صور',
+                                                        style: AppTextStyles
+                                                            .bodySmall
+                                                            .copyWith(
+                                                              color: AppColors
+                                                                  .primary,
+                                                              fontWeight:
+                                                                  FontWeight
+                                                                      .w600,
+                                                            ),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                ),
+                                                const SizedBox(width: 8),
+                                              ],
                                               Builder(
                                                 builder: (context) {
                                                   double total = 0;
@@ -2684,6 +2738,53 @@ class _PricingItemCardState extends State<PricingItemCard> {
                                                     ),
                                               ),
                                             ),
+                                            if (hasSubItemImages) ...[
+                                              Container(
+                                                padding:
+                                                    const EdgeInsets.symmetric(
+                                                      horizontal: 8,
+                                                      vertical: 4,
+                                                    ),
+                                                decoration: BoxDecoration(
+                                                  color: AppColors.primary
+                                                      .withValues(alpha: 0.12),
+                                                  borderRadius:
+                                                      BorderRadius.circular(
+                                                        999,
+                                                      ),
+                                                  border: Border.all(
+                                                    color: AppColors.primary
+                                                        .withValues(
+                                                          alpha: 0.35,
+                                                        ),
+                                                  ),
+                                                ),
+                                                child: Row(
+                                                  mainAxisSize:
+                                                      MainAxisSize.min,
+                                                  children: [
+                                                    const Icon(
+                                                      Icons.image_outlined,
+                                                      size: 14,
+                                                      color: AppColors.primary,
+                                                    ),
+                                                    const SizedBox(width: 4),
+                                                    Text(
+                                                      'صور',
+                                                      style: AppTextStyles
+                                                          .bodySmall
+                                                          .copyWith(
+                                                            color: AppColors
+                                                                .primary,
+                                                            fontWeight:
+                                                                FontWeight.w600,
+                                                          ),
+                                                    ),
+                                                  ],
+                                                ),
+                                              ),
+                                              const SizedBox(width: 8),
+                                            ],
                                             // Show cost/profit/percentage chips in APPROVED/PENDING_SIGNATURE
                                             if (widget.pricingStatus != null &&
                                                 widget.isAdminOrManager &&
@@ -2833,13 +2934,15 @@ class _PricingItemCardState extends State<PricingItemCard> {
                                             print(
                                               'Upload button clicked for subItem: ${subItem.id}',
                                             );
-                                            _uploadImages(subItem.id);
+                                            _pickImages(subItem.id);
                                           },
                                           onLongPress: () {
                                             print(
                                               'Upload button clicked for subItem: ${subItem.id}',
                                             );
-                                            _uploadImagesFilePicker(subItem.id);
+                                            _pickImagesWithFilePicker(
+                                              subItem.id,
+                                            );
                                           },
                                           borderRadius: BorderRadius.circular(
                                             8,
@@ -2901,7 +3004,7 @@ class _PricingItemCardState extends State<PricingItemCard> {
                                     maxLines: 3,
 
                                     decoration: InputDecoration(
-                                      hintText: 'ملاحظات البند الفرعية...',
+                                      hintText: 'وصف البند...',
                                       hintStyle: AppTextStyles.bodySmall
                                           .copyWith(
                                             color: AppColors.textMuted,
@@ -3389,7 +3492,7 @@ class _PricingItemCardState extends State<PricingItemCard> {
                                                         Text(
                                                           subItem.images.isEmpty
                                                               ? '0/0 Photos'
-                                                              : '${(_selectedImageIndex[subItem.id] ?? 0) + 1}/${subItem.images.length} Photos',
+                                                              : '${math.min(_selectedImageIndex[subItem.id] ?? 0, subItem.images.length - 1) + 1}/${subItem.images.length} Photos',
                                                           style: AppTextStyles
                                                               .bodyMedium
                                                               .copyWith(
@@ -3422,7 +3525,7 @@ class _PricingItemCardState extends State<PricingItemCard> {
                                                                 print(
                                                                   'Upload button clicked for subItem: ${subItem.id}',
                                                                 );
-                                                                _uploadImages(
+                                                                _pickImages(
                                                                   subItem.id,
                                                                 );
                                                               },
@@ -3430,7 +3533,7 @@ class _PricingItemCardState extends State<PricingItemCard> {
                                                                 print(
                                                                   'Upload button clicked for subItem: ${subItem.id}',
                                                                 );
-                                                                _uploadImagesFilePicker(
+                                                                _pickImagesWithFilePicker(
                                                                   subItem.id,
                                                                 );
                                                               },

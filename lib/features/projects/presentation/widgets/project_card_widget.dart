@@ -24,6 +24,8 @@ class ProjectCardWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final dateFormat = DateFormat('dd MMM yyyy', 'ar');
+    final clientName = project.clientName?.trim();
+    final hasClientName = clientName != null && clientName.isNotEmpty;
 
     return Card(
       color: AppColors.cardBackground,
@@ -44,11 +46,27 @@ class ProjectCardWidget extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Expanded(
-                    child: Text(
-                      project.name,
-                      style: AppTextStyles.h6,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          hasClientName ? clientName : project.name,
+                          style: AppTextStyles.h6,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        if (hasClientName) ...[
+                          const SizedBox(height: 4),
+                          Text(
+                            project.name,
+                            style: AppTextStyles.bodyMedium.copyWith(
+                              color: AppColors.textSecondary,
+                            ),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
+                      ],
                     ),
                   ),
                   PopupMenuButton<String>(

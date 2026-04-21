@@ -69,6 +69,14 @@ class PricingItemsList extends StatelessWidget {
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
           buildDefaultDragHandles: false,
+          proxyDecorator: (child, index, animation) {
+            return AnimatedBuilder(
+              animation: animation,
+              builder: (context, _) {
+                return Material(color: Colors.transparent, child: child);
+              },
+            );
+          },
           itemCount: items.length,
           onReorder: (oldIndex, newIndex) async {
             if (!canReorder || onReorderItems == null) return;
@@ -90,7 +98,7 @@ class PricingItemsList extends StatelessWidget {
                       item: item,
                       pricingStatus: pricingStatus,
                       isAdminOrManager: isAdminOrManager,
-                      initialIsExpanded: itemExpandedStates[item.id] ?? true,
+                      initialIsExpanded: itemExpandedStates[item.id] ?? false,
                       initialSubItemExpandedStates:
                           subItemExpandedStates[item.id] ?? {},
                       externalProfitMargins: subItemProfitMargins,

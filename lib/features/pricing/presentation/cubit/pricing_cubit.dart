@@ -65,7 +65,7 @@ class PricingCubit extends Cubit<PricingState> {
       if (pricingVersion.items != null) {
         for (var item in pricingVersion.items!) {
           // Restore or initialize item expanded state
-          itemExpandedStates[item.id] = preservedItemStates[item.id] ?? true;
+          itemExpandedStates[item.id] = preservedItemStates[item.id] ?? false;
 
           // Handle sub-items
           if (item.subItems != null) {
