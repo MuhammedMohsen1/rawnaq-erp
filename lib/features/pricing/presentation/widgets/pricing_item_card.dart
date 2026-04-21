@@ -2265,9 +2265,9 @@ class _PricingItemCardState extends State<PricingItemCard> {
         });
         widget.onExpandedChanged?.call(_isExpanded);
       },
-      onLongPress: () => _showItemContextMenu(),
       child: Container(
         height: 71,
+        clipBehavior: Clip.antiAlias,
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 21),
         decoration: const BoxDecoration(
           color: Color(0xFF232936),
@@ -2293,20 +2293,14 @@ class _PricingItemCardState extends State<PricingItemCard> {
             ),
             const SizedBox(width: 8),
             Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    widget.item.name,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: AppTextStyles.h4.copyWith(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                ],
+              child: Text(
+                widget.item.name,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: AppTextStyles.h4.copyWith(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w700,
+                ),
               ),
             ),
             const SizedBox(width: 16),
@@ -2363,6 +2357,18 @@ class _PricingItemCardState extends State<PricingItemCard> {
             ),
             const SizedBox(width: 16),
             IconButton(
+              onPressed: _showItemContextMenu,
+              icon: const Icon(
+                Icons.more_vert,
+                color: AppColors.textSecondary,
+                size: 20,
+              ),
+              padding: EdgeInsets.zero,
+              constraints: const BoxConstraints(),
+              splashRadius: 18,
+            ),
+            const SizedBox(width: 12),
+            IconButton(
               onPressed: () {
                 setState(() {
                   _isExpanded = !_isExpanded;
@@ -2382,6 +2388,8 @@ class _PricingItemCardState extends State<PricingItemCard> {
     );
 
     return Container(
+      clipBehavior: Clip.antiAlias,
+
       margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
         color: const Color(0xFF1C212B),
@@ -2420,6 +2428,33 @@ class _PricingItemCardState extends State<PricingItemCard> {
                     ReorderableListView(
                       shrinkWrap: true,
                       physics: const NeverScrollableScrollPhysics(),
+                      proxyDecorator: (child, index, animation) {
+                        return AnimatedBuilder(
+                          animation: animation,
+                          builder: (context, _) {
+                            return Material(
+                              color: Colors.transparent,
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFF1C212B),
+                                  borderRadius: BorderRadius.circular(8),
+                                  border: Border.all(
+                                    color: const Color(0xFF363C4A),
+                                  ),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.black.withOpacity(0.25),
+                                      blurRadius: 12,
+                                      offset: const Offset(0, 6),
+                                    ),
+                                  ],
+                                ),
+                                child: child,
+                              ),
+                            );
+                          },
+                        );
+                      },
                       buildDefaultDragHandles: false,
                       onReorder: _handleSubItemReorder,
                       children: widget.item.subItems!.asMap().entries.map((
@@ -2445,147 +2480,10 @@ class _PricingItemCardState extends State<PricingItemCard> {
                           child: Column(
                             children: [
                               // Sub-Item Header (Foldable)
-                              GestureDetector(
-                                onLongPress: () =>
-                                    _showSubItemContextMenu(subItem),
-                                child: widget.canReorderSubItems
-                                    ? ReorderableDelayedDragStartListener(
-                                        index: index,
-                                        child: InkWell(
-                                          onTap: () =>
-                                              _toggleSubItem(subItem.id),
-                                          child: Container(
-                                            padding: const EdgeInsets.symmetric(
-                                              horizontal: 12,
-                                              vertical: 12,
-                                            ),
-                                            decoration: BoxDecoration(
-                                              color: const Color(0xFF2A313D),
-                                              borderRadius: BorderRadius.only(
-                                                topLeft: Radius.circular(8),
-                                                topRight: Radius.circular(8),
-                                              ),
-                                            ),
-                                            child: Row(
-                                              children: [
-                                                Icon(
-                                                  isSubItemExpanded
-                                                      ? Icons.expand_less
-                                                      : Icons.expand_more,
-                                                  color:
-                                                      AppColors.textSecondary,
-                                                  size: 20,
-                                                ),
-                                                Checkbox(
-                                                  value: !subItem.isHidden,
-                                                  onChanged: (value) =>
-                                                      _toggleSubItemVisibility(
-                                                        subItem,
-                                                        value ?? false,
-                                                      ),
-                                                  activeColor:
-                                                      AppColors.primary,
-                                                  checkColor: AppColors.black,
-                                                  side: BorderSide(
-                                                    color: subItem.isHidden
-                                                        ? AppColors.lightGrey
-                                                        : AppColors.primary,
-                                                    width: 1.5,
-                                                  ),
-                                                ),
-                                                const SizedBox(width: 8),
-                                                Expanded(
-                                                  child: Text(
-                                                    subItem.name,
-                                                    style: AppTextStyles
-                                                        .bodyLarge
-                                                        .copyWith(
-                                                          fontWeight:
-                                                              FontWeight.w600,
-                                                        ),
-                                                  ),
-                                                ),
-                                                Builder(
-                                                  builder: (context) {
-                                                    double total = 0;
-                                                    if (widget
-                                                        .isAdminOrManager) {
-                                                      total =
-                                                          subItem.totalCost +
-                                                          subItem.profitAmount;
-                                                    } else {
-                                                      total = subItem.totalCost;
-                                                    }
-
-                                                    final totalStr = total
-                                                        .toStringAsFixed(3);
-                                                    final dotIndex = totalStr
-                                                        .indexOf('.');
-                                                    final intPart =
-                                                        dotIndex >= 0
-                                                        ? totalStr.substring(
-                                                            0,
-                                                            dotIndex,
-                                                          )
-                                                        : totalStr;
-                                                    final decimalPart =
-                                                        dotIndex >= 0
-                                                        ? totalStr.substring(
-                                                            dotIndex,
-                                                          )
-                                                        : '';
-                                                    return RichText(
-                                                      textDirection:
-                                                          TextDirection.ltr,
-                                                      text: TextSpan(
-                                                        children: [
-                                                          TextSpan(
-                                                            text: intPart,
-                                                            style: AppTextStyles
-                                                                .caption
-                                                                .copyWith(
-                                                                  color: AppColors
-                                                                      .textSecondary,
-                                                                ),
-                                                          ),
-                                                          if (decimalPart
-                                                              .isNotEmpty)
-                                                            TextSpan(
-                                                              text: decimalPart,
-                                                              style: AppTextStyles.caption.copyWith(
-                                                                color: AppColors
-                                                                    .textSecondary,
-                                                                fontSize:
-                                                                    AppTextStyles
-                                                                        .caption
-                                                                        .fontSize! *
-                                                                    0.75,
-                                                              ),
-                                                            ),
-                                                          TextSpan(
-                                                            text: ' KD',
-                                                            style: TextStyle(
-                                                              color: AppColors
-                                                                  .textSecondary,
-                                                              fontSize:
-                                                                  AppTextStyles
-                                                                      .caption
-                                                                      .fontSize! *
-                                                                  0.75,
-                                                            ),
-                                                          ),
-                                                        ],
-                                                      ),
-                                                    );
-                                                  },
-                                                ),
-                                                const SizedBox(width: 8),
-                                              ],
-                                            ),
-                                          ),
-                                        ),
-                                      )
-                                    : InkWell(
+                              widget.canReorderSubItems
+                                  ? ReorderableDelayedDragStartListener(
+                                      index: index,
+                                      child: InkWell(
                                         onTap: () => _toggleSubItem(subItem.id),
                                         child: Container(
                                           padding: const EdgeInsets.symmetric(
@@ -2615,16 +2513,12 @@ class _PricingItemCardState extends State<PricingItemCard> {
                                                       subItem,
                                                       value ?? false,
                                                     ),
-                                                activeColor: AppColors
-                                                    .primary, // background when checked
-                                                checkColor: AppColors
-                                                    .black, // the check mark itself
+                                                activeColor: AppColors.primary,
+                                                checkColor: AppColors.black,
                                                 side: BorderSide(
                                                   color: subItem.isHidden
-                                                      ? AppColors
-                                                            .lightGrey // border when hidden
-                                                      : AppColors
-                                                            .primary, // border when visible
+                                                      ? AppColors.lightGrey
+                                                      : AppColors.primary,
                                                   width: 1.5,
                                                 ),
                                               ),
@@ -2639,40 +2533,6 @@ class _PricingItemCardState extends State<PricingItemCard> {
                                                       ),
                                                 ),
                                               ),
-                                              // Show cost/profit/percentage chips in APPROVED/PENDING_SIGNATURE
-                                              if (widget.pricingStatus !=
-                                                      null &&
-                                                  widget.isAdminOrManager &&
-                                                  (widget.pricingStatus!
-                                                              .toUpperCase() ==
-                                                          'APPROVED' ||
-                                                      widget.pricingStatus!
-                                                              .toUpperCase() ==
-                                                          'PENDING_SIGNATURE')) ...[
-                                                _buildStatChip(
-                                                  subItem.totalCost,
-                                                  const Color.fromARGB(
-                                                    255,
-                                                    235,
-                                                    16,
-                                                    8,
-                                                  ),
-                                                ),
-                                                const SizedBox(width: 4),
-                                                _buildStatChip(
-                                                  subItem.profitAmount,
-                                                  const Color(0xFF10B981),
-                                                ),
-                                                const SizedBox(width: 4),
-                                                _buildStatChip(
-                                                  subItem.profitMargin,
-                                                  const Color(0xFFF59E0B),
-                                                  suffix: '%',
-                                                ),
-                                                const SizedBox(width: 8),
-                                              ],
-
-                                              // Show total cost in header only when NOT APPROVED/PENDING_SIGNATURE
                                               Builder(
                                                 builder: (context) {
                                                   double total = 0;
@@ -2718,15 +2578,17 @@ class _PricingItemCardState extends State<PricingItemCard> {
                                                             .isNotEmpty)
                                                           TextSpan(
                                                             text: decimalPart,
-                                                            style: AppTextStyles.caption.copyWith(
-                                                              color: AppColors
-                                                                  .textSecondary,
-                                                              fontSize:
-                                                                  AppTextStyles
-                                                                      .caption
-                                                                      .fontSize! *
-                                                                  0.75, // smaller
-                                                            ),
+                                                            style: AppTextStyles
+                                                                .caption
+                                                                .copyWith(
+                                                                  color: AppColors
+                                                                      .textSecondary,
+                                                                  fontSize:
+                                                                      AppTextStyles
+                                                                          .caption
+                                                                          .fontSize! *
+                                                                      0.75,
+                                                                ),
                                                           ),
                                                         TextSpan(
                                                           text: ' KD',
@@ -2737,7 +2599,7 @@ class _PricingItemCardState extends State<PricingItemCard> {
                                                                 AppTextStyles
                                                                     .caption
                                                                     .fontSize! *
-                                                                0.75, // smaller
+                                                                0.75,
                                                           ),
                                                         ),
                                                       ],
@@ -2746,11 +2608,210 @@ class _PricingItemCardState extends State<PricingItemCard> {
                                                 },
                                               ),
                                               const SizedBox(width: 8),
+                                              IconButton(
+                                                onPressed: () =>
+                                                    _showSubItemContextMenu(
+                                                      subItem,
+                                                    ),
+                                                icon: const Icon(
+                                                  Icons.more_vert,
+                                                  color:
+                                                      AppColors.textSecondary,
+                                                  size: 18,
+                                                ),
+                                                padding: EdgeInsets.zero,
+                                                constraints:
+                                                    const BoxConstraints(),
+                                                splashRadius: 18,
+                                              ),
+                                              const SizedBox(width: 8),
                                             ],
                                           ),
                                         ),
                                       ),
-                              ),
+                                    )
+                                  : InkWell(
+                                      onTap: () => _toggleSubItem(subItem.id),
+                                      child: Container(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 12,
+                                          vertical: 12,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          color: const Color(0xFF2A313D),
+                                          borderRadius: BorderRadius.only(
+                                            topLeft: Radius.circular(8),
+                                            topRight: Radius.circular(8),
+                                          ),
+                                        ),
+                                        child: Row(
+                                          children: [
+                                            Icon(
+                                              isSubItemExpanded
+                                                  ? Icons.expand_less
+                                                  : Icons.expand_more,
+                                              color: AppColors.textSecondary,
+                                              size: 20,
+                                            ),
+                                            Checkbox(
+                                              value: !subItem.isHidden,
+                                              onChanged: (value) =>
+                                                  _toggleSubItemVisibility(
+                                                    subItem,
+                                                    value ?? false,
+                                                  ),
+                                              activeColor: AppColors
+                                                  .primary, // background when checked
+                                              checkColor: AppColors
+                                                  .black, // the check mark itself
+                                              side: BorderSide(
+                                                color: subItem.isHidden
+                                                    ? AppColors
+                                                          .lightGrey // border when hidden
+                                                    : AppColors
+                                                          .primary, // border when visible
+                                                width: 1.5,
+                                              ),
+                                            ),
+                                            const SizedBox(width: 8),
+                                            Expanded(
+                                              child: Text(
+                                                subItem.name,
+                                                style: AppTextStyles.bodyLarge
+                                                    .copyWith(
+                                                      fontWeight:
+                                                          FontWeight.w600,
+                                                    ),
+                                              ),
+                                            ),
+                                            // Show cost/profit/percentage chips in APPROVED/PENDING_SIGNATURE
+                                            if (widget.pricingStatus != null &&
+                                                widget.isAdminOrManager &&
+                                                (widget.pricingStatus!
+                                                            .toUpperCase() ==
+                                                        'APPROVED' ||
+                                                    widget.pricingStatus!
+                                                            .toUpperCase() ==
+                                                        'PENDING_SIGNATURE')) ...[
+                                              _buildStatChip(
+                                                subItem.totalCost,
+                                                const Color.fromARGB(
+                                                  255,
+                                                  235,
+                                                  16,
+                                                  8,
+                                                ),
+                                              ),
+                                              const SizedBox(width: 4),
+                                              _buildStatChip(
+                                                subItem.profitAmount,
+                                                const Color(0xFF10B981),
+                                              ),
+                                              const SizedBox(width: 4),
+                                              _buildStatChip(
+                                                subItem.profitMargin,
+                                                const Color(0xFFF59E0B),
+                                                suffix: '%',
+                                              ),
+                                              const SizedBox(width: 8),
+                                            ],
+
+                                            // Show total cost in header only when NOT APPROVED/PENDING_SIGNATURE
+                                            Builder(
+                                              builder: (context) {
+                                                double total = 0;
+                                                if (widget.isAdminOrManager) {
+                                                  total =
+                                                      subItem.totalCost +
+                                                      subItem.profitAmount;
+                                                } else {
+                                                  total = subItem.totalCost;
+                                                }
+
+                                                final totalStr = total
+                                                    .toStringAsFixed(3);
+                                                final dotIndex = totalStr
+                                                    .indexOf('.');
+                                                final intPart = dotIndex >= 0
+                                                    ? totalStr.substring(
+                                                        0,
+                                                        dotIndex,
+                                                      )
+                                                    : totalStr;
+                                                final decimalPart =
+                                                    dotIndex >= 0
+                                                    ? totalStr.substring(
+                                                        dotIndex,
+                                                      )
+                                                    : '';
+                                                return RichText(
+                                                  textDirection:
+                                                      TextDirection.ltr,
+                                                  text: TextSpan(
+                                                    children: [
+                                                      TextSpan(
+                                                        text: intPart,
+                                                        style: AppTextStyles
+                                                            .caption
+                                                            .copyWith(
+                                                              color: AppColors
+                                                                  .textSecondary,
+                                                            ),
+                                                      ),
+                                                      if (decimalPart
+                                                          .isNotEmpty)
+                                                        TextSpan(
+                                                          text: decimalPart,
+                                                          style: AppTextStyles
+                                                              .caption
+                                                              .copyWith(
+                                                                color: AppColors
+                                                                    .textSecondary,
+                                                                fontSize:
+                                                                    AppTextStyles
+                                                                        .caption
+                                                                        .fontSize! *
+                                                                    0.75, // smaller
+                                                              ),
+                                                        ),
+                                                      TextSpan(
+                                                        text: ' KD',
+                                                        style: TextStyle(
+                                                          color: AppColors
+                                                              .textSecondary,
+                                                          fontSize:
+                                                              AppTextStyles
+                                                                  .caption
+                                                                  .fontSize! *
+                                                              0.75, // smaller
+                                                        ),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                );
+                                              },
+                                            ),
+                                            const SizedBox(width: 8),
+                                            IconButton(
+                                              onPressed: () =>
+                                                  _showSubItemContextMenu(
+                                                    subItem,
+                                                  ),
+                                              icon: const Icon(
+                                                Icons.more_vert,
+                                                color: AppColors.textSecondary,
+                                                size: 18,
+                                              ),
+                                              padding: EdgeInsets.zero,
+                                              constraints:
+                                                  const BoxConstraints(),
+                                              splashRadius: 18,
+                                            ),
+                                            const SizedBox(width: 8),
+                                          ],
+                                        ),
+                                      ),
+                                    ),
                               // Elements List (Expandable)
                               if (isSubItemExpanded) ...[
                                 // Add Image Button when no images - show above Elements table (top left)
