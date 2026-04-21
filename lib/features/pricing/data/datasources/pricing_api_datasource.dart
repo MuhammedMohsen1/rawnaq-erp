@@ -180,6 +180,21 @@ class PricingApiDataSource {
     );
   }
 
+  Future<PricingItemModel> duplicatePricingItem(
+    String projectId,
+    int version,
+    String itemId,
+  ) async {
+    final response = await _apiClient.post(
+      ApiEndpoints.duplicatePricingItem(projectId, version, itemId),
+    );
+
+    final responseData = response.data as Map<String, dynamic>;
+    return PricingItemModel.fromJson(
+      responseData['data'] as Map<String, dynamic>,
+    );
+  }
+
   Future<PricingSubItemModel> reorderPricingSubItem(
     String projectId,
     int version,
@@ -190,6 +205,27 @@ class PricingApiDataSource {
     final response = await _apiClient.patch(
       ApiEndpoints.reorderPricingSubItems(projectId, version, itemId),
       data: {'subItemId': subItemId, 'targetOrder': targetOrder},
+    );
+
+    final responseData = response.data as Map<String, dynamic>;
+    return PricingSubItemModel.fromJson(
+      responseData['data'] as Map<String, dynamic>,
+    );
+  }
+
+  Future<PricingSubItemModel> duplicatePricingSubItem(
+    String projectId,
+    int version,
+    String itemId,
+    String subItemId,
+  ) async {
+    final response = await _apiClient.post(
+      ApiEndpoints.duplicatePricingSubItem(
+        projectId,
+        version,
+        itemId,
+        subItemId,
+      ),
     );
 
     final responseData = response.data as Map<String, dynamic>;

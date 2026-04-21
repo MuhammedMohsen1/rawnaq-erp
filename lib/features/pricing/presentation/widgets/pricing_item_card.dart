@@ -1132,6 +1132,14 @@ class _PricingItemCardState extends State<PricingItemCard> {
               onTap: () => Navigator.pop(context, 'edit'),
             ),
             ListTile(
+              leading: const Icon(Icons.copy, color: AppColors.primary),
+              title: const Text(
+                'نسخ العنصر',
+                style: TextStyle(color: AppColors.textPrimary),
+              ),
+              onTap: () => Navigator.pop(context, 'duplicate'),
+            ),
+            ListTile(
               leading: const Icon(Icons.delete_outline, color: Colors.red),
               title: const Text('حذف', style: TextStyle(color: Colors.red)),
               onTap: () => Navigator.pop(context, 'delete'),
@@ -1144,6 +1152,8 @@ class _PricingItemCardState extends State<PricingItemCard> {
 
     if (result == 'edit') {
       await _showEditItemDialog();
+    } else if (result == 'duplicate') {
+      await _duplicateItem();
     } else if (result == 'delete') {
       await _showDeleteItemConfirmation();
     }
@@ -1169,6 +1179,14 @@ class _PricingItemCardState extends State<PricingItemCard> {
               onTap: () => Navigator.pop(context, 'edit'),
             ),
             ListTile(
+              leading: const Icon(Icons.copy, color: AppColors.primary),
+              title: const Text(
+                'نسخ البند الفرعية',
+                style: TextStyle(color: AppColors.textPrimary),
+              ),
+              onTap: () => Navigator.pop(context, 'duplicate'),
+            ),
+            ListTile(
               leading: const Icon(Icons.delete_outline, color: Colors.red),
               title: const Text('حذف', style: TextStyle(color: Colors.red)),
               onTap: () => Navigator.pop(context, 'delete'),
@@ -1181,8 +1199,74 @@ class _PricingItemCardState extends State<PricingItemCard> {
 
     if (result == 'edit') {
       await _showEditSubItemDialog(subItem);
+    } else if (result == 'duplicate') {
+      await _duplicateSubItem(subItem);
     } else if (result == 'delete') {
       await _showDeleteSubItemConfirmation(subItem.id, subItem.name);
+    }
+  }
+
+  Future<void> _duplicateItem() async {
+    try {
+      await _apiDataSource.duplicatePricingItem(
+        widget.projectId,
+        widget.version,
+        widget.item.id,
+      );
+
+      if (mounted) {
+        widget.onItemChanged?.call(widget.item);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('تم نسخ العنصر بنجاح'),
+            duration: Duration(seconds: 2),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('فشل نسخ العنصر: ${e.toString()}')),
+        );
+      }
+    }
+  }
+
+  Future<void> _duplicateSubItem(PricingSubItemModel subItem) async {
+    try {
+      await _apiDataSource.duplicatePricingSubItem(
+        widget.projectId,
+        widget.version,
+        widget.item.id,
+        subItem.id,
+      );
+
+      final updatedVersion = await _apiDataSource.getPricingVersion(
+        widget.projectId,
+        widget.version,
+      );
+      final updatedItem = updatedVersion.items?.firstWhere(
+        (i) => i.id == widget.item.id,
+      );
+
+      if (updatedItem != null && mounted) {
+        widget.onItemChanged?.call(updatedItem);
+      }
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('تم نسخ البند الفرعية بنجاح'),
+            duration: Duration(seconds: 2),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('فشل نسخ البند الفرعية: ${e.toString()}')),
+        );
+      }
     }
   }
 
