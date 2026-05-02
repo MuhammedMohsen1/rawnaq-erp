@@ -9,7 +9,9 @@ class PricingTableRow extends StatefulWidget {
   final PricingItem item;
   final VoidCallback? onDelete;
   final ValueChanged<PricingItem>? onChanged;
-  final VoidCallback? onFieldCompleted; // Called when user finishes editing (blur or submit)
+  final VoidCallback?
+  onFieldCompleted; // Called when user finishes editing (blur or submit)
+  final VoidCallback? onSubmitted; // Called only when user presses Enter/submit
   final bool isNewRow;
 
   const PricingTableRow({
@@ -18,6 +20,7 @@ class PricingTableRow extends StatefulWidget {
     this.onDelete,
     this.onChanged,
     this.onFieldCompleted,
+    this.onSubmitted,
     this.isNewRow = false,
   });
 
@@ -80,6 +83,7 @@ class _PricingTableRowState extends State<PricingTableRow> {
             quantity: quantity > 0 ? quantity : null,
             unitPrice: unitPrice > 0 ? unitPrice : null,
             total: total,
+            costType: 'UNIT_BASED',
           ),
         );
       }
@@ -95,6 +99,7 @@ class _PricingTableRowState extends State<PricingTableRow> {
             quantity: null,
             unitPrice: null,
             total: total,
+            costType: 'TOTAL',
           ),
         );
       }
@@ -151,6 +156,7 @@ class _PricingTableRowState extends State<PricingTableRow> {
               flex: 2,
               child: TextField(
                 controller: _descriptionController,
+                textInputAction: TextInputAction.done,
                 style: AppTextStyles.bodyMedium.copyWith(
                   color: AppColors.textPrimary,
                   fontSize: 14,
@@ -170,6 +176,12 @@ class _PricingTableRowState extends State<PricingTableRow> {
                     _updateTotal();
                   }
                 },
+                onEditingComplete: () {
+                  widget.onFieldCompleted?.call();
+                },
+                onSubmitted: (_) {
+                  widget.onSubmitted?.call();
+                },
               ),
             ),
             const SizedBox(width: 8),
@@ -183,6 +195,7 @@ class _PricingTableRowState extends State<PricingTableRow> {
                         Expanded(
                           child: TextField(
                             controller: _quantityController,
+                            textInputAction: TextInputAction.done,
                             keyboardType: const TextInputType.numberWithOptions(
                               decimal: true,
                             ),
@@ -218,7 +231,7 @@ class _PricingTableRowState extends State<PricingTableRow> {
                               widget.onFieldCompleted?.call();
                             },
                             onSubmitted: (_) {
-                              widget.onFieldCompleted?.call();
+                              widget.onSubmitted?.call();
                             },
                           ),
                         ),
@@ -235,6 +248,7 @@ class _PricingTableRowState extends State<PricingTableRow> {
                         Expanded(
                           child: TextField(
                             controller: _unitPriceController,
+                            textInputAction: TextInputAction.done,
                             keyboardType: const TextInputType.numberWithOptions(
                               decimal: true,
                             ),
@@ -264,7 +278,7 @@ class _PricingTableRowState extends State<PricingTableRow> {
                               widget.onFieldCompleted?.call();
                             },
                             onSubmitted: (_) {
-                              widget.onFieldCompleted?.call();
+                              widget.onSubmitted?.call();
                             },
                           ),
                         ),
@@ -326,6 +340,7 @@ class _PricingTableRowState extends State<PricingTableRow> {
                             onTap: _handleTripleTap,
                             child: TextField(
                               controller: _totalController,
+                              textInputAction: TextInputAction.done,
                               keyboardType:
                                   const TextInputType.numberWithOptions(
                                     decimal: true,
@@ -359,7 +374,7 @@ class _PricingTableRowState extends State<PricingTableRow> {
                                 widget.onFieldCompleted?.call();
                               },
                               onSubmitted: (_) {
-                                widget.onFieldCompleted?.call();
+                                widget.onSubmitted?.call();
                               },
                             ),
                           ),

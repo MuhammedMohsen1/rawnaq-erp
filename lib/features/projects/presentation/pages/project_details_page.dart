@@ -1,14 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:file_picker/file_picker.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/di/injection_container.dart';
 import '../../../../core/utils/responsive_layout.dart';
+import '../../../auth/presentation/bloc/auth_bloc.dart';
 import '../../../financial/data/models/transaction_model.dart';
 import '../../../financial/domain/entities/transaction_entity.dart' as tx;
+import '../../domain/entities/project_attachment_entity.dart';
+import '../../domain/enums/project_status.dart';
 import '../cubit/project_financial_cubit.dart';
 import '../cubit/project_financial_state.dart';
 import '../widgets/delete_transaction_dialog.dart';
 import '../widgets/financial_summary_cards_row.dart';
+import '../widgets/project_attachments_section.dart';
 import '../widgets/project_breadcrumb.dart';
 import '../widgets/project_header.dart';
 import '../widgets/transactions_table.dart';
@@ -18,16 +23,13 @@ import '../widgets/transactions_table.dart';
 class ProjectDetailsPage extends StatelessWidget {
   final String projectId;
 
-  const ProjectDetailsPage({
-    super.key,
-    required this.projectId,
-  });
+  const ProjectDetailsPage({super.key, required this.projectId});
 
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (context) => getIt<ProjectFinancialCubit>()
-        ..loadProjectFinancialData(projectId),
+      create: (context) =>
+          getIt<ProjectFinancialCubit>()..loadProjectFinancialData(projectId),
       child: _ProjectDetailsContent(projectId: projectId),
     );
   }
@@ -112,6 +114,17 @@ class _LoadedContent extends StatelessWidget {
         FinancialSummaryCardsRow(financialSummary: state.financialSummary),
         const SizedBox(height: 24),
 
+        ProjectAttachmentsSection(
+          attachments: state.attachments,
+          canDelete: _canDeleteAttachments(context, state.project.status),
+          isUploading: state.isUploadingAttachments,
+          isDeleting: state.isDeletingAttachment,
+          onUpload: () => _pickAndUploadAttachments(context),
+          onDelete: (attachment) =>
+              _confirmDeleteAttachment(context, attachment),
+        ),
+        const SizedBox(height: 24),
+
         // Transactions table
         TransactionsTable(
           transactions: state.transactions,
@@ -121,9 +134,9 @@ class _LoadedContent extends StatelessWidget {
             }
           },
           onUpdate: (transaction) {
-            context
-                .read<ProjectFinancialCubit>()
-                .updateTransaction(transaction);
+            context.read<ProjectFinancialCubit>().updateTransaction(
+              transaction,
+            );
           },
           onAddNew: () => _addNewExpense(context),
           onLoadMore: () {
@@ -136,6 +149,91 @@ class _LoadedContent extends StatelessWidget {
     );
   }
 
+  bool _canDeleteAttachments(BuildContext context, ProjectStatus status) {
+    final authState = context.watch<AuthBloc>().state;
+    final isAdmin = authState is AuthAuthenticated && authState.user.isAdmin;
+    final isUnlockedStatus =
+        status == ProjectStatus.draft || status == ProjectStatus.underPricing;
+
+    return isAdmin || isUnlockedStatus;
+  }
+
+  Future<void> _pickAndUploadAttachments(BuildContext context) async {
+    final result = await FilePicker.platform.pickFiles(
+      allowMultiple: true,
+      withData: true,
+    );
+
+    if (result == null || result.files.isEmpty) return;
+    if (!context.mounted) return;
+
+    final filePaths = <String>[];
+    final fileBytes = <MapEntry<String, List<int>>>[];
+
+    for (final file in result.files) {
+      if (file.path != null) {
+        filePaths.add(file.path!);
+      } else if (file.bytes != null) {
+        fileBytes.add(MapEntry(file.name, file.bytes!));
+      }
+    }
+
+    if (filePaths.isEmpty && fileBytes.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('تعذر قراءة الملفات المحددة')),
+      );
+      return;
+    }
+
+    await context.read<ProjectFinancialCubit>().uploadAttachments(
+      filePaths,
+      fileBytes: fileBytes,
+    );
+
+    if (!context.mounted) return;
+    final state = context.read<ProjectFinancialCubit>().state;
+    if (state is ProjectFinancialLoaded) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('تم رفع المرفقات بنجاح')));
+    }
+  }
+
+  Future<void> _confirmDeleteAttachment(
+    BuildContext context,
+    ProjectAttachmentEntity attachment,
+  ) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('حذف المرفق'),
+        content: Text('هل تريد حذف "${attachment.originalName}"؟'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('إلغاء'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text('حذف'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true || !context.mounted) return;
+
+    await context.read<ProjectFinancialCubit>().deleteAttachment(attachment.id);
+
+    if (!context.mounted) return;
+    final state = context.read<ProjectFinancialCubit>().state;
+    if (state is ProjectFinancialLoaded) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('تم حذف المرفق')));
+    }
+  }
+
   void _addNewExpense(BuildContext context) {
     final cubit = context.read<ProjectFinancialCubit>();
     final newTransaction = TransactionModel(
@@ -145,9 +243,7 @@ class _LoadedContent extends StatelessWidget {
       amount: 0.0,
       date: DateTime.now(),
       projectId: state.project.id,
-      metadata: const tx.TransactionMetadata(
-        isLocked: false,
-      ),
+      metadata: const tx.TransactionMetadata(isLocked: false),
     );
 
     cubit.addTransaction(newTransaction);
@@ -162,9 +258,9 @@ class _LoadedContent extends StatelessWidget {
       transaction: transaction,
       onConfirm: () {
         context.read<ProjectFinancialCubit>().deleteTransaction(transaction.id);
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('تم حذف المعاملة')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('تم حذف المعاملة')));
       },
     );
   }
@@ -182,11 +278,7 @@ class _ErrorView extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(
-            Icons.error_outline,
-            size: 64,
-            color: AppColors.error,
-          ),
+          const Icon(Icons.error_outline, size: 64, color: AppColors.error),
           const SizedBox(height: 16),
           Text(
             message,
@@ -209,11 +301,7 @@ class _NotFoundView extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(
-            Icons.search_off,
-            size: 64,
-            color: AppColors.textMuted,
-          ),
+          Icon(Icons.search_off, size: 64, color: AppColors.textMuted),
           SizedBox(height: 16),
           Text(
             'المشروع غير موجود',

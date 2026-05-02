@@ -1,10 +1,13 @@
 import 'package:dartz/dartz.dart';
+import '../../../../core/error/exceptions.dart' as app_exceptions;
 import '../../../../core/error/failures.dart';
+import '../../domain/entities/project_attachment_entity.dart';
 import '../../domain/entities/project_entity.dart';
 import '../../domain/entities/team_member_entity.dart';
 import '../../domain/enums/project_status.dart';
 import '../../domain/repositories/projects_repository.dart';
 import '../datasources/projects_api_datasource.dart';
+import '../models/project_attachment_model.dart';
 import '../models/project_model.dart';
 
 /// Implementation of ProjectsRepository using API
@@ -38,7 +41,8 @@ class ProjectsRepositoryImpl implements ProjectsRepository {
           .toList();
       final total = (response['total'] as num?)?.toInt() ?? projects.length;
       final currentPage = (response['page'] as num?)?.toInt() ?? (page ?? 1);
-      final currentLimit = (response['limit'] as num?)?.toInt() ?? (limit ?? 10);
+      final currentLimit =
+          (response['limit'] as num?)?.toInt() ?? (limit ?? 10);
 
       return Right(
         PaginatedProjectsResult(
@@ -49,7 +53,7 @@ class ProjectsRepositoryImpl implements ProjectsRepository {
         ),
       );
     } catch (e) {
-      return Left(ServerFailure(message: e.toString()));
+      return Left(_attachmentFailure(e));
     }
   }
 
@@ -60,7 +64,7 @@ class ProjectsRepositoryImpl implements ProjectsRepository {
       final project = ProjectModel.fromJson(response);
       return Right(project);
     } catch (e) {
-      return Left(ServerFailure(message: e.toString()));
+      return Left(_attachmentFailure(e));
     }
   }
 
@@ -76,7 +80,7 @@ class ProjectsRepositoryImpl implements ProjectsRepository {
         ServerFailure(message: 'Please use createProjectWithData instead'),
       );
     } catch (e) {
-      return Left(ServerFailure(message: e.toString()));
+      return Left(_attachmentFailure(e));
     }
   }
 
@@ -168,6 +172,62 @@ class ProjectsRepositoryImpl implements ProjectsRepository {
   Future<Either<Failure, void>> deleteProject(String id) async {
     try {
       await _dataSource.deleteProject(id);
+      return const Right(null);
+    } catch (e) {
+      return Left(ServerFailure(message: e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, List<ProjectAttachmentEntity>>> getProjectAttachments(
+    String projectId,
+  ) async {
+    try {
+      final response = await _dataSource.getProjectAttachments(projectId);
+      final attachments = response
+          .map(
+            (json) =>
+                ProjectAttachmentModel.fromJson(json as Map<String, dynamic>),
+          )
+          .toList();
+      return Right(attachments);
+    } catch (e) {
+      return Left(ServerFailure(message: e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, List<ProjectAttachmentEntity>>>
+  uploadProjectAttachments(
+    String projectId,
+    List<String> filePaths, {
+    List<MapEntry<String, List<int>>>? fileBytes,
+  }) async {
+    try {
+      final response = await _dataSource.uploadProjectAttachments(
+        projectId,
+        filePaths,
+        fileBytes: fileBytes,
+      );
+      final attachments = response
+          .map(
+            (json) =>
+                ProjectAttachmentModel.fromJson(json as Map<String, dynamic>),
+          )
+          .toList();
+      return Right(attachments);
+    } catch (e) {
+      return Left(ServerFailure(message: e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, void>> deleteProjectAttachment(
+    String projectId,
+    String attachmentId,
+  ) async {
+    try {
+      await _dataSource.deleteProjectAttachment(projectId, attachmentId);
       return const Right(null);
     } catch (e) {
       return Left(ServerFailure(message: e.toString()));
@@ -270,4 +330,26 @@ class ProjectsRepositoryImpl implements ProjectsRepository {
       return Left(ServerFailure(message: e.toString()));
     }
   }
+}
+
+Failure _attachmentFailure(Object error) {
+  if (error is app_exceptions.NotFoundException) {
+    final message = error.message.contains('/attachments')
+        ? 'خدمة مرفقات المشروع غير متاحة. تأكد من تشغيل آخر نسخة من الخادم وتطبيق migration.'
+        : error.message;
+    return NotFoundFailure(message: message, code: error.code);
+  }
+  if (error is app_exceptions.ValidationException) {
+    return ValidationFailure(message: error.message, code: error.code);
+  }
+  if (error is app_exceptions.UnauthorizedException) {
+    return UnauthorizedFailure(message: error.message, code: error.code);
+  }
+  if (error is app_exceptions.TimeoutException) {
+    return TimeoutFailure(message: error.message, code: error.code);
+  }
+  if (error is app_exceptions.ServerException) {
+    return ServerFailure(message: error.message, code: error.code);
+  }
+  return ServerFailure(message: error.toString());
 }

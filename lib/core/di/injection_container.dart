@@ -9,6 +9,7 @@ import '../../features/auth/presentation/bloc/auth_bloc.dart';
 import '../../features/projects/domain/repositories/projects_repository.dart';
 import '../../features/projects/data/repositories/projects_repository_impl.dart';
 import '../../features/projects/presentation/bloc/projects_bloc.dart';
+import '../../features/projects/presentation/cubit/project_attachments_cubit.dart';
 import '../../features/projects/presentation/cubit/project_financial_cubit.dart';
 import '../../features/financial/domain/repositories/transactions_repository.dart';
 import '../../features/financial/data/repositories/transactions_repository_impl.dart';
@@ -61,8 +62,10 @@ Future<void> setupDI() async {
   );
 
   // Projects BLoC
+  getIt.registerFactory(() => ProjectsBloc(repository: getIt()));
+
   getIt.registerFactory(
-    () => ProjectsBloc(repository: getIt()),
+    () => ProjectAttachmentsCubit(projectsRepository: getIt()),
   );
 
   // Transactions Repository
@@ -94,11 +97,7 @@ Future<void> setupDI() async {
   getIt.registerLazySingleton(() => ExecutionApiDataSource());
 
   // Execution Cubit
-  getIt.registerFactory(
-    () => ExecutionCubit(
-      apiDataSource: getIt(),
-    ),
-  );
+  getIt.registerFactory(() => ExecutionCubit(apiDataSource: getIt()));
 }
 
 Future<void> resetDI() async {

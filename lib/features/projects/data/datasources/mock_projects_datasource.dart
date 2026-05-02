@@ -6,7 +6,8 @@ import '../../domain/repositories/projects_repository.dart';
 /// Mock data source for projects during development
 class MockProjectsDataSource {
   // Singleton instance
-  static final MockProjectsDataSource _instance = MockProjectsDataSource._internal();
+  static final MockProjectsDataSource _instance =
+      MockProjectsDataSource._internal();
   factory MockProjectsDataSource() => _instance;
   MockProjectsDataSource._internal();
 
@@ -62,7 +63,8 @@ class MockProjectsDataSource {
       manager: _teamMembers[0],
       teamMemberIds: ['tm-1', 'tm-2', 'tm-3'],
       teamMembers: [_teamMembers[0], _teamMembers[1], _teamMembers[2]],
-      description: 'إعادة تصميم شاملة للموقع الإلكتروني مع تحسين تجربة المستخدم',
+      description:
+          'إعادة تصميم شاملة للموقع الإلكتروني مع تحسين تجربة المستخدم',
       createdAt: DateTime(2024, 5, 15),
       updatedAt: DateTime.now(),
     ),
@@ -174,7 +176,7 @@ class MockProjectsDataSource {
     ProjectEntity(
       id: 'proj-9',
       name: 'معرض السيارات',
-      status: ProjectStatus.profitPending,
+      status: ProjectStatus.pendingSignature,
       progress: 25,
       startDate: DateTime(2024, 6, 1),
       endDate: DateTime(2024, 8, 31),
@@ -233,9 +235,11 @@ class MockProjectsDataSource {
     if (searchQuery != null && searchQuery.isNotEmpty) {
       final query = searchQuery.toLowerCase();
       filteredProjects = filteredProjects
-          .where((p) =>
-              p.name.toLowerCase().contains(query) ||
-              (p.description?.toLowerCase().contains(query) ?? false))
+          .where(
+            (p) =>
+                p.name.toLowerCase().contains(query) ||
+                (p.description?.toLowerCase().contains(query) ?? false),
+          )
           .toList();
     }
 
@@ -288,15 +292,22 @@ class MockProjectsDataSource {
 
   /// Get project statistics
   ProjectStatistics getProjectStatistics() {
-    final execution = _projects.where((p) => p.status == ProjectStatus.execution).length;
-    final completed = _projects.where((p) => p.status == ProjectStatus.completed).length;
-    final onHold = _projects.where((p) => 
-      p.status == ProjectStatus.draft ||
-      p.status == ProjectStatus.underPricing ||
-      p.status == ProjectStatus.profitPending ||
-      p.status == ProjectStatus.pendingApproval
-    ).length;
-    
+    final execution = _projects
+        .where((p) => p.status == ProjectStatus.execution)
+        .length;
+    final completed = _projects
+        .where((p) => p.status == ProjectStatus.completed)
+        .length;
+    final onHold = _projects
+        .where(
+          (p) =>
+              p.status == ProjectStatus.draft ||
+              p.status == ProjectStatus.underPricing ||
+              p.status == ProjectStatus.pendingSignature ||
+              p.status == ProjectStatus.pendingApproval,
+        )
+        .length;
+
     return ProjectStatistics(
       total: _projects.length,
       active: execution, // Execution is the active state
@@ -306,4 +317,3 @@ class MockProjectsDataSource {
     );
   }
 }
-

@@ -236,6 +236,10 @@ abstract class ApiEndpoints {
   static const String projects = '/projects';
   static String projectById(String id) => '/projects/$id';
   static String updateProjectStatus(String id) => '/projects/$id/status';
+  static String projectAttachments(String projectId) =>
+      '/projects/$projectId/attachments';
+  static String projectAttachment(String projectId, String attachmentId) =>
+      '/projects/$projectId/attachments/$attachmentId';
 
   // Pricing Endpoints
   static String pricingVersions(String projectId) =>
@@ -354,6 +358,14 @@ abstract class ApiEndpoints {
     String subItemId,
   ) =>
       '/projects/$projectId/pricing/$version/items/$itemId/sub-items/$subItemId/visibility';
+  static String toggleElementVisibility(
+    String projectId,
+    int version,
+    String itemId,
+    String subItemId,
+    String elementId,
+  ) =>
+      '/projects/$projectId/pricing/$version/items/$itemId/sub-items/$subItemId/elements/$elementId/visibility';
 
   // Contract Endpoints
   static String contract(String projectId) => '/projects/$projectId/contract';

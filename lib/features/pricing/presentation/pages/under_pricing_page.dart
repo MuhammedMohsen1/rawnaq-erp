@@ -15,6 +15,8 @@ import '../../../../core/di/injection_container.dart';
 import '../../../../core/error/exceptions.dart';
 import '../../../../core/utils/responsive_layout.dart';
 import '../../../auth/presentation/bloc/auth_bloc.dart';
+import '../../../projects/domain/enums/project_status.dart';
+import '../../../projects/presentation/widgets/project_attachments_panel.dart';
 import '../../../contracts/data/datasources/contracts_api_datasource.dart';
 import '../cubit/pricing_cubit.dart';
 import '../cubit/pricing_state.dart';
@@ -137,6 +139,14 @@ class _PricingLayout extends StatelessWidget {
               ),
               const SizedBox(height: 24),
 
+              ProjectAttachmentsPanel(
+                projectId: projectId,
+                projectStatus: _projectStatusFromApi(
+                  state.pricingVersion.status,
+                ),
+              ),
+              const SizedBox(height: 24),
+
               // Items list
               PricingItemsList(
                 projectId: projectId,
@@ -199,6 +209,10 @@ class _PricingLayout extends StatelessWidget {
         );
       },
     );
+  }
+
+  ProjectStatus _projectStatusFromApi(String status) {
+    return ProjectStatusExtension.fromApiString(status);
   }
 
   Widget _buildSidebar(BuildContext context, PricingLoaded state) {

@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import '../../../../core/network/api_client.dart';
 import '../../../../core/constants/endpoints.dart';
 import '../../domain/enums/project_status.dart';
@@ -7,7 +8,7 @@ class ProjectsApiDataSource {
   final ApiClient _apiClient;
 
   ProjectsApiDataSource({ApiClient? apiClient})
-      : _apiClient = apiClient ?? ApiClient();
+    : _apiClient = apiClient ?? ApiClient();
 
   /// Get all projects with optional filters
   Future<Map<String, dynamic>> getProjects({
@@ -19,7 +20,7 @@ class ProjectsApiDataSource {
     int? limit,
   }) async {
     final queryParams = <String, dynamic>{};
-    
+
     if (status != null) {
       // Map frontend status to backend status
       queryParams['status'] = _mapStatusToBackend(status);
@@ -43,19 +44,21 @@ class ProjectsApiDataSource {
   /// Get a single project by ID
   Future<Map<String, dynamic>> getProjectById(String id) async {
     final response = await _apiClient.get(ApiEndpoints.projectById(id));
-    
+
     // Extract data from standard response format
     final responseData = response.data as Map<String, dynamic>;
     return responseData['data'] as Map<String, dynamic>;
   }
 
   /// Create a new project
-  Future<Map<String, dynamic>> createProject(Map<String, dynamic> projectData) async {
+  Future<Map<String, dynamic>> createProject(
+    Map<String, dynamic> projectData,
+  ) async {
     final response = await _apiClient.post(
       ApiEndpoints.projects,
       data: projectData,
     );
-    
+
     // Extract data from standard response format
     final responseData = response.data as Map<String, dynamic>;
     return responseData['data'] as Map<String, dynamic>;
@@ -70,7 +73,7 @@ class ProjectsApiDataSource {
       ApiEndpoints.projectById(id),
       data: projectData,
     );
-    
+
     // Extract data from standard response format
     final responseData = response.data as Map<String, dynamic>;
     return responseData['data'] as Map<String, dynamic>;
@@ -84,12 +87,9 @@ class ProjectsApiDataSource {
   ) async {
     final response = await _apiClient.patch(
       ApiEndpoints.updateProjectStatus(id),
-      data: {
-        'status': status,
-        if (notes != null) 'notes': notes,
-      },
+      data: {'status': status, if (notes != null) 'notes': notes},
     );
-    
+
     // Extract data from standard response format
     final responseData = response.data as Map<String, dynamic>;
     return responseData['data'] as Map<String, dynamic>;
@@ -100,10 +100,68 @@ class ProjectsApiDataSource {
     await _apiClient.delete(ApiEndpoints.projectById(id));
   }
 
+  Future<List<dynamic>> getProjectAttachments(String projectId) async {
+    final response = await _apiClient.get(
+      ApiEndpoints.projectAttachments(projectId),
+    );
+
+    final responseData = response.data as Map<String, dynamic>;
+    return responseData['data'] as List<dynamic>;
+  }
+
+  Future<List<dynamic>> uploadProjectAttachments(
+    String projectId,
+    List<String> filePaths, {
+    List<MapEntry<String, List<int>>>? fileBytes,
+  }) async {
+    if (filePaths.isEmpty && (fileBytes == null || fileBytes.isEmpty)) {
+      throw Exception('No files provided');
+    }
+
+    final formData = FormData();
+
+    for (final filePath in filePaths) {
+      final fileName = filePath.split('/').last;
+      formData.files.add(
+        MapEntry(
+          'files',
+          await MultipartFile.fromFile(filePath, filename: fileName),
+        ),
+      );
+    }
+
+    if (fileBytes != null) {
+      for (final entry in fileBytes) {
+        formData.files.add(
+          MapEntry(
+            'files',
+            MultipartFile.fromBytes(entry.value, filename: entry.key),
+          ),
+        );
+      }
+    }
+
+    final response = await _apiClient.uploadFile(
+      ApiEndpoints.projectAttachments(projectId),
+      formData: formData,
+    );
+
+    final responseData = response.data as Map<String, dynamic>;
+    return responseData['data'] as List<dynamic>;
+  }
+
+  Future<void> deleteProjectAttachment(
+    String projectId,
+    String attachmentId,
+  ) async {
+    await _apiClient.delete(
+      ApiEndpoints.projectAttachment(projectId, attachmentId),
+    );
+  }
+
   /// Map frontend ProjectStatus to backend ProjectStatus enum value
   String _mapStatusToBackend(ProjectStatus status) {
     // Use the extension method to convert to API string format
     return status.toApiString();
   }
 }
-

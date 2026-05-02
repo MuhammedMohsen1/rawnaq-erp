@@ -7,6 +7,8 @@ import '../../../../core/di/injection_container.dart';
 import '../../../../core/routing/app_router.dart';
 import '../../../../core/utils/responsive_layout.dart';
 import '../../../auth/presentation/bloc/auth_bloc.dart';
+import '../../../projects/domain/enums/project_status.dart';
+import '../../../projects/presentation/widgets/project_attachments_panel.dart';
 import '../../data/models/execution_models.dart';
 import '../cubit/execution_cubit.dart';
 import '../cubit/execution_state.dart';
@@ -128,6 +130,12 @@ class _ExecutionLayout extends StatelessWidget {
                 ExecutionHeader(
                   projectName: state.dashboard.projectName,
                   onOpenPastPricing: () => _handleOpenPastPricing(context),
+                ),
+                const SizedBox(height: 24),
+
+                ProjectAttachmentsPanel(
+                  projectId: projectId,
+                  projectStatus: ProjectStatus.execution,
                 ),
                 const SizedBox(height: 24),
 

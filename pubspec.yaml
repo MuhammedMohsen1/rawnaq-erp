@@ -35,6 +35,7 @@ dependencies:
   shimmer: ^3.0.0
   responsive_builder: ^0.7.0
   syncfusion_flutter_charts: ^30.1.37
+  syncfusion_flutter_pdfviewer: ^30.1.37
   gantt_chart: ^0.3.0
   image_picker: ^1.0.7
   file_picker: ^8.1.4

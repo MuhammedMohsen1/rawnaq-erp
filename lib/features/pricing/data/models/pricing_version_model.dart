@@ -433,6 +433,7 @@ class PricingElementModel {
   final double? unitCost;
   final double? quantity;
   final double calculatedCost;
+  final bool isHidden;
   final DateTime createdAt;
   final DateTime updatedAt;
 
@@ -446,6 +447,7 @@ class PricingElementModel {
     this.unitCost,
     this.quantity,
     required this.calculatedCost,
+    this.isHidden = false,
     required this.createdAt,
     required this.updatedAt,
   });
@@ -481,6 +483,7 @@ class PricingElementModel {
       unitCost: _toDouble(json['unitCost']),
       quantity: _toDouble(json['quantity']),
       calculatedCost: _toDoubleOrZero(json['calculatedCost']),
+      isHidden: json['isHidden'] as bool? ?? false,
       createdAt: DateTime.parse(json['createdAt'] as String),
       updatedAt: DateTime.parse(json['updatedAt'] as String),
     );
@@ -497,8 +500,39 @@ class PricingElementModel {
       'unitCost': unitCost,
       'quantity': quantity,
       'calculatedCost': calculatedCost,
+      'isHidden': isHidden,
       'createdAt': createdAt.toIso8601String(),
       'updatedAt': updatedAt.toIso8601String(),
     };
+  }
+
+  PricingElementModel copyWith({
+    String? id,
+    String? pricingSubItemId,
+    String? name,
+    String? description,
+    String? costType,
+    double? totalCost,
+    double? unitCost,
+    double? quantity,
+    double? calculatedCost,
+    bool? isHidden,
+    DateTime? createdAt,
+    DateTime? updatedAt,
+  }) {
+    return PricingElementModel(
+      id: id ?? this.id,
+      pricingSubItemId: pricingSubItemId ?? this.pricingSubItemId,
+      name: name ?? this.name,
+      description: description ?? this.description,
+      costType: costType ?? this.costType,
+      totalCost: totalCost ?? this.totalCost,
+      unitCost: unitCost ?? this.unitCost,
+      quantity: quantity ?? this.quantity,
+      calculatedCost: calculatedCost ?? this.calculatedCost,
+      isHidden: isHidden ?? this.isHidden,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+    );
   }
 }

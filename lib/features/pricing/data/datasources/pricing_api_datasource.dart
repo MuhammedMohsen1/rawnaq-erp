@@ -748,4 +748,30 @@ class PricingApiDataSource {
       responseData['data']['subItem'] as Map<String, dynamic>,
     );
   }
+
+  /// Toggle pricing element visibility
+  Future<PricingElementModel> toggleElementVisibility(
+    String projectId,
+    int version,
+    String itemId,
+    String subItemId,
+    String elementId,
+    bool isHidden,
+  ) async {
+    final response = await _apiClient.patch(
+      ApiEndpoints.toggleElementVisibility(
+        projectId,
+        version,
+        itemId,
+        subItemId,
+        elementId,
+      ),
+      data: {'isHidden': isHidden},
+    );
+
+    final responseData = response.data as Map<String, dynamic>;
+    return PricingElementModel.fromJson(
+      responseData['data']['element'] as Map<String, dynamic>,
+    );
+  }
 }

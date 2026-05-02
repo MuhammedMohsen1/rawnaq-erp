@@ -4,6 +4,7 @@ class PricingItem {
   final double? quantity;
   final double? unitPrice;
   final double total;
+  final String? costType;
 
   PricingItem({
     required this.id,
@@ -11,6 +12,7 @@ class PricingItem {
     this.quantity,
     this.unitPrice,
     required this.total,
+    this.costType,
   });
 
   PricingItem copyWith({
@@ -19,6 +21,7 @@ class PricingItem {
     double? quantity,
     double? unitPrice,
     double? total,
+    String? costType,
   }) {
     return PricingItem(
       id: id ?? this.id,
@@ -26,6 +29,7 @@ class PricingItem {
       quantity: quantity ?? this.quantity,
       unitPrice: unitPrice ?? this.unitPrice,
       total: total ?? this.total,
+      costType: costType ?? this.costType,
     );
   }
 
@@ -34,4 +38,3 @@ class PricingItem {
     return quantity! * unitPrice!;
   }
 }
-

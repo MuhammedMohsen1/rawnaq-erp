@@ -1,6 +1,7 @@
 import 'package:dartz/dartz.dart';
 import '../../../../core/error/failures.dart';
 import '../entities/project_entity.dart';
+import '../entities/project_attachment_entity.dart';
 import '../entities/team_member_entity.dart';
 import '../enums/project_status.dart';
 
@@ -27,6 +28,22 @@ abstract class ProjectsRepository {
 
   /// Delete a project
   Future<Either<Failure, void>> deleteProject(String id);
+
+  Future<Either<Failure, List<ProjectAttachmentEntity>>> getProjectAttachments(
+    String projectId,
+  );
+
+  Future<Either<Failure, List<ProjectAttachmentEntity>>>
+  uploadProjectAttachments(
+    String projectId,
+    List<String> filePaths, {
+    List<MapEntry<String, List<int>>>? fileBytes,
+  });
+
+  Future<Either<Failure, void>> deleteProjectAttachment(
+    String projectId,
+    String attachmentId,
+  );
 
   /// Get all team members
   Future<Either<Failure, List<TeamMemberEntity>>> getTeamMembers();

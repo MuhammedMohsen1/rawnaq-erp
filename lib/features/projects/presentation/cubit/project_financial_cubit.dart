@@ -24,12 +24,15 @@ class ProjectFinancialCubit extends Cubit<ProjectFinancialState> {
       final projectResult = await projectsRepository.getProjectById(projectId);
 
       // Load transactions
-      final transactionsResult =
-          await transactionsRepository.getTransactionsByProjectId(projectId);
+      final transactionsResult = await transactionsRepository
+          .getTransactionsByProjectId(projectId);
 
       // Load financial summary
-      final summaryResult =
-          await transactionsRepository.getProjectFinancialSummary(projectId);
+      final summaryResult = await transactionsRepository
+          .getProjectFinancialSummary(projectId);
+      final attachmentsResult = await projectsRepository.getProjectAttachments(
+        projectId,
+      );
 
       // Check if project exists
       final project = projectResult.fold(
@@ -43,34 +46,40 @@ class ProjectFinancialCubit extends Cubit<ProjectFinancialState> {
       }
 
       // Get transactions
-      final transactions = transactionsResult.fold(
-        (failure) {
-          emit(ProjectFinancialError(message: failure.message));
-          return <TransactionEntity>[];
-        },
-        (transactions) => transactions,
-      );
+      final transactions = transactionsResult.fold((failure) {
+        emit(ProjectFinancialError(message: failure.message));
+        return <TransactionEntity>[];
+      }, (transactions) => transactions);
 
       // Get financial summary
-      final summary = summaryResult.fold(
-        (failure) {
-          emit(ProjectFinancialError(message: failure.message));
-          return null;
-        },
-        (summary) => summary,
-      );
+      final summary = summaryResult.fold((failure) {
+        emit(ProjectFinancialError(message: failure.message));
+        return null;
+      }, (summary) => summary);
 
       if (summary != null) {
-        emit(ProjectFinancialLoaded(
-          project: project,
-          transactions: transactions,
-          financialSummary: summary,
-        ));
+        final attachments = attachmentsResult.fold((failure) {
+          emit(ProjectFinancialError(message: failure.message));
+          return null;
+        }, (attachments) => attachments);
+
+        if (attachments == null) return;
+
+        emit(
+          ProjectFinancialLoaded(
+            project: project,
+            transactions: transactions,
+            financialSummary: summary,
+            attachments: attachments,
+          ),
+        );
       }
     } catch (e) {
-      emit(ProjectFinancialError(
-        message: 'فشل تحميل البيانات المالية: ${e.toString()}',
-      ));
+      emit(
+        ProjectFinancialError(
+          message: 'فشل تحميل البيانات المالية: ${e.toString()}',
+        ),
+      );
     }
   }
 
@@ -82,10 +91,12 @@ class ProjectFinancialCubit extends Cubit<ProjectFinancialState> {
     final updatedTransactions = [transaction, ...currentState.transactions];
     final updatedSummary = _recalculateSummary(updatedTransactions);
 
-    emit(currentState.copyWith(
-      transactions: updatedTransactions,
-      financialSummary: updatedSummary,
-    ));
+    emit(
+      currentState.copyWith(
+        transactions: updatedTransactions,
+        financialSummary: updatedSummary,
+      ),
+    );
   }
 
   /// Update an existing transaction
@@ -99,10 +110,12 @@ class ProjectFinancialCubit extends Cubit<ProjectFinancialState> {
 
     final updatedSummary = _recalculateSummary(updatedTransactions);
 
-    emit(currentState.copyWith(
-      transactions: updatedTransactions,
-      financialSummary: updatedSummary,
-    ));
+    emit(
+      currentState.copyWith(
+        transactions: updatedTransactions,
+        financialSummary: updatedSummary,
+      ),
+    );
   }
 
   /// Delete a transaction
@@ -116,10 +129,72 @@ class ProjectFinancialCubit extends Cubit<ProjectFinancialState> {
 
     final updatedSummary = _recalculateSummary(updatedTransactions);
 
-    emit(currentState.copyWith(
-      transactions: updatedTransactions,
-      financialSummary: updatedSummary,
-    ));
+    emit(
+      currentState.copyWith(
+        transactions: updatedTransactions,
+        financialSummary: updatedSummary,
+      ),
+    );
+  }
+
+  Future<void> uploadAttachments(
+    List<String> filePaths, {
+    List<MapEntry<String, List<int>>>? fileBytes,
+  }) async {
+    final currentState = state;
+    if (currentState is! ProjectFinancialLoaded) return;
+
+    emit(currentState.copyWith(isUploadingAttachments: true));
+
+    final result = await projectsRepository.uploadProjectAttachments(
+      currentState.project.id,
+      filePaths,
+      fileBytes: fileBytes,
+    );
+
+    result.fold(
+      (failure) => emit(ProjectFinancialError(message: failure.message)),
+      (newAttachments) {
+        final latestState = state;
+        if (latestState is! ProjectFinancialLoaded) return;
+
+        emit(
+          latestState.copyWith(
+            attachments: [...newAttachments, ...latestState.attachments],
+            isUploadingAttachments: false,
+          ),
+        );
+      },
+    );
+  }
+
+  Future<void> deleteAttachment(String attachmentId) async {
+    final currentState = state;
+    if (currentState is! ProjectFinancialLoaded) return;
+
+    emit(currentState.copyWith(isDeletingAttachment: true));
+
+    final result = await projectsRepository.deleteProjectAttachment(
+      currentState.project.id,
+      attachmentId,
+    );
+
+    result.fold(
+      (failure) => emit(ProjectFinancialError(message: failure.message)),
+      (_) {
+        final latestState = state;
+        if (latestState is! ProjectFinancialLoaded) return;
+
+        emit(
+          latestState.copyWith(
+            attachments: latestState.attachments
+                .where((attachment) => attachment.id != attachmentId)
+                .toList(),
+            isDeletingAttachment: false,
+          ),
+        );
+      },
+    );
   }
 
   /// Recalculate financial summary based on transactions
@@ -142,8 +217,9 @@ class ProjectFinancialCubit extends Cubit<ProjectFinancialState> {
     // Calculate budget percentage (assuming a budget of 50,000)
     const double budget = 50000.0;
     final remainingBudget = budget - totalExpenses;
-    final budgetPercentage =
-        budget > 0 ? (remainingBudget / budget) * 100 : 0.0;
+    final budgetPercentage = budget > 0
+        ? (remainingBudget / budget) * 100
+        : 0.0;
 
     return ProjectFinancialSummary(
       totalReceived: totalReceived,

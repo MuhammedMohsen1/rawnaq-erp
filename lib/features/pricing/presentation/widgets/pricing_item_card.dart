@@ -35,7 +35,7 @@ class LocalElement {
     required this.subItemId,
     this.name = '',
     this.description,
-    this.costType = 'UNIT_BASED',
+    this.costType = 'TOTAL',
     this.totalCost,
     this.unitCost,
     this.quantity,
@@ -44,21 +44,7 @@ class LocalElement {
   });
 
   bool get hasRequiredData {
-    // Name must be non-empty and have at least 2 characters
-    if (name.trim().isEmpty || name.trim().length < 2) return false;
-
-    if (costType == 'UNIT_BASED') {
-      // Both unitCost and quantity must be valid positive numbers
-      return unitCost != null &&
-          quantity != null &&
-          unitCost! > 0 &&
-          quantity! > 0 &&
-          unitCost!.isFinite &&
-          quantity!.isFinite;
-    } else {
-      // Total cost must be valid positive number
-      return totalCost != null && totalCost! > 0 && totalCost!.isFinite;
-    }
+    return name.trim().isNotEmpty && name.trim().length >= 2;
   }
 }
 
@@ -2005,10 +1991,48 @@ class _PricingItemCardState extends State<PricingItemCard> {
     }
   }
 
+  Future<void> _completeElementEditing({
+    required PricingSubItemModel subItem,
+    required PricingElementModel element,
+    required bool isLocal,
+    required LocalElement? localElement,
+    required bool addNext,
+  }) async {
+    if (isLocal && localElement != null) {
+      if (localElement.hasRequiredData && !localElement.isCompleted) {
+        _saveTimers[element.id]?.cancel();
+        _saveTimers.remove(element.id);
+        await _saveElementToBackend(subItem.id, localElement);
+      }
+
+      if (addNext && localElement.hasRequiredData && mounted) {
+        _addLocalElement(subItem.id);
+      }
+      return;
+    }
+
+    _updateTimers[element.id]?.cancel();
+    _updateTimers.remove(element.id);
+    final pendingItem = _pendingUpdates.remove(element.id);
+    if (pendingItem != null) {
+      await _updateSavedElement(
+        subItem.id,
+        element.id,
+        pendingItem,
+        element.costType,
+      );
+    }
+
+    if (addNext && mounted) {
+      _addLocalElement(subItem.id);
+    }
+  }
+
   void _scheduleUpdateElement(
     String subItemId,
     String elementId,
     PricingItem updatedItem,
+    String currentCostType,
   ) {
     // Store the latest update values
     _pendingUpdates[elementId] = updatedItem;
@@ -2030,7 +2054,12 @@ class _PricingItemCardState extends State<PricingItemCard> {
         final pendingItem = _pendingUpdates[elementId];
         if (pendingItem != null) {
           _pendingUpdates.remove(elementId);
-          _updateSavedElement(subItemId, elementId, pendingItem);
+          _updateSavedElement(
+            subItemId,
+            elementId,
+            pendingItem,
+            currentCostType,
+          );
         }
       }
     });
@@ -2053,6 +2082,9 @@ class _PricingItemCardState extends State<PricingItemCard> {
 
       // Update local state
       setState(() {
+        final updatedElements = subItem.elements
+            ?.map((element) => element.copyWith(isHidden: newIsHidden))
+            .toList();
         final subItemIndex = widget.item.subItems?.indexWhere(
           (s) => s.id == subItem.id,
         );
@@ -2072,12 +2104,15 @@ class _PricingItemCardState extends State<PricingItemCard> {
             order: subItem.order,
             createdAt: subItem.createdAt,
             updatedAt: subItem.updatedAt,
-            elements: subItem.elements,
+            elements: updatedElements,
           );
         }
       });
 
       // Notify parent of the change
+      final updatedElements = subItem.elements
+          ?.map((element) => element.copyWith(isHidden: newIsHidden))
+          .toList();
       widget.onSubItemChanged?.call(
         PricingSubItemModel(
           id: subItem.id,
@@ -2094,13 +2129,72 @@ class _PricingItemCardState extends State<PricingItemCard> {
           order: subItem.order,
           createdAt: subItem.createdAt,
           updatedAt: subItem.updatedAt,
-          elements: subItem.elements,
+          elements: updatedElements,
         ),
       );
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('فشل تحديث حالة الظهور: ${e.toString()}')),
+        );
+      }
+    }
+  }
+
+  Future<void> _toggleElementVisibility(
+    PricingSubItemModel subItem,
+    PricingElementModel element,
+    bool isVisible,
+  ) async {
+    final newIsHidden = !isVisible;
+
+    try {
+      await _apiDataSource.toggleElementVisibility(
+        widget.projectId,
+        widget.version,
+        widget.item.id,
+        subItem.id,
+        element.id,
+        newIsHidden,
+      );
+
+      final updatedVersion = await _apiDataSource.getPricingVersion(
+        widget.projectId,
+        widget.version,
+      );
+      final updatedItem = (updatedVersion.items ?? []).firstWhere(
+        (item) => item.id == widget.item.id,
+        orElse: () => widget.item,
+      );
+      final updatedSubItem = updatedItem.subItems?.firstWhere(
+        (itemSubItem) => itemSubItem.id == subItem.id,
+        orElse: () => subItem.copyWith(
+          elements: (subItem.elements ?? [])
+              .map(
+                (e) =>
+                    e.id == element.id ? e.copyWith(isHidden: newIsHidden) : e,
+              )
+              .toList(),
+        ),
+      );
+
+      if (updatedSubItem != null) {
+        widget.onSubItemChanged?.call(updatedSubItem);
+      }
+      widget.onItemChanged?.call(updatedItem);
+
+      setState(() {
+        _expandedSubItems[subItem.id] = true;
+      });
+      widget.onSubItemExpandedChanged?.call(
+        Map<String, bool>.from(_expandedSubItems),
+      );
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('فشل تحديث حالة ظهور العنصر: ${e.toString()}'),
+          ),
         );
       }
     }
@@ -2121,6 +2215,16 @@ class _PricingItemCardState extends State<PricingItemCard> {
       // The parent component should handle updating the item list
 
       // Notify parent of the change
+      final updatedSubItems = widget.item.subItems
+          ?.map(
+            (subItem) => subItem.copyWith(
+              isHidden: newIsHidden,
+              elements: subItem.elements
+                  ?.map((element) => element.copyWith(isHidden: newIsHidden))
+                  .toList(),
+            ),
+          )
+          .toList();
       widget.onItemChanged?.call(
         PricingItemModel(
           id: widget.item.id,
@@ -2135,7 +2239,7 @@ class _PricingItemCardState extends State<PricingItemCard> {
           order: widget.item.order,
           createdAt: widget.item.createdAt,
           updatedAt: widget.item.updatedAt,
-          subItems: widget.item.subItems,
+          subItems: updatedSubItems,
         ),
       );
     } catch (e) {
@@ -2151,6 +2255,7 @@ class _PricingItemCardState extends State<PricingItemCard> {
     String subItemId,
     String elementId,
     PricingItem updatedItem,
+    String currentCostType,
   ) async {
     // Cancel the timer since we're updating now
     _updateTimers[elementId]?.cancel();
@@ -2161,15 +2266,7 @@ class _PricingItemCardState extends State<PricingItemCard> {
     });
 
     try {
-      // Determine cost type based on what's filled
-      String? newCostType;
-      if (updatedItem.quantity != null && updatedItem.unitPrice != null) {
-        newCostType = 'UNIT_BASED';
-      } else if (updatedItem.total > 0 &&
-          updatedItem.quantity == null &&
-          updatedItem.unitPrice == null) {
-        newCostType = 'TOTAL';
-      }
+      final newCostType = updatedItem.costType ?? currentCostType;
 
       await _apiDataSource.updatePricingElement(
         widget.projectId,
@@ -3249,15 +3346,18 @@ class _PricingItemCardState extends State<PricingItemCard> {
                                                             subItem.totalCost >
                                                                 0
                                                             ? subItem.totalCost
-                                                            : allElements.fold<
-                                                                double
-                                                              >(
-                                                                0,
-                                                                (sum, e) =>
-                                                                    sum +
-                                                                    e.calculatedCost
-                                                                        .toDouble(),
-                                                              );
+                                                            : allElements
+                                                                  .where(
+                                                                    (e) => !e
+                                                                        .isHidden,
+                                                                  )
+                                                                  .fold<double>(
+                                                                    0,
+                                                                    (sum, e) =>
+                                                                        sum +
+                                                                        e.calculatedCost
+                                                                            .toDouble(),
+                                                                  );
                                                         final profit =
                                                             cost *
                                                             (clampedMargin /
@@ -3697,6 +3797,7 @@ class _PricingItemCardState extends State<PricingItemCard> {
                                                       ? element.unitCost
                                                       : null,
                                                   total: element.calculatedCost,
+                                                  costType: element.costType,
                                                 );
 
                                                 return Stack(
@@ -3704,139 +3805,179 @@ class _PricingItemCardState extends State<PricingItemCard> {
                                                     'element-${subItem.id}-${element.id}-$index',
                                                   ),
                                                   children: [
-                                                    PricingTableRow(
-                                                      item: pricingItem,
-                                                      isNewRow:
-                                                          isLocal &&
-                                                          localElement !=
-                                                              null &&
-                                                          !localElement
-                                                              .hasRequiredData,
-                                                      onDelete: () =>
-                                                          _deleteElement(
-                                                            subItem.id,
-                                                            element.id,
-                                                            isLocal,
-                                                          ),
-                                                      onChanged: (updatedItem) {
-                                                        if (isLocal &&
-                                                            localElement !=
-                                                                null) {
-                                                          // Determine cost type based on what's filled
-                                                          String newCostType =
-                                                              localElement
-                                                                  .costType;
-                                                          if (updatedItem
-                                                                      .quantity !=
-                                                                  null &&
-                                                              updatedItem
-                                                                      .unitPrice !=
-                                                                  null) {
-                                                            newCostType =
-                                                                'UNIT_BASED';
-                                                          } else if (updatedItem
-                                                                      .total >
-                                                                  0 &&
-                                                              updatedItem
-                                                                      .quantity ==
-                                                                  null &&
-                                                              updatedItem
-                                                                      .unitPrice ==
-                                                                  null) {
-                                                            newCostType =
-                                                                'TOTAL';
-                                                          }
+                                                    Row(
+                                                      crossAxisAlignment:
+                                                          CrossAxisAlignment
+                                                              .center,
+                                                      children: [
+                                                        SizedBox(
+                                                          width: 36,
+                                                          height: 44,
+                                                          child: isLocal
+                                                              ? const SizedBox.shrink()
+                                                              : Tooltip(
+                                                                  message:
+                                                                      element
+                                                                          .isHidden
+                                                                      ? 'إظهار العنصر في التسعير و PDF'
+                                                                      : 'إخفاء العنصر من التسعير و PDF',
+                                                                  child: Checkbox(
+                                                                    value: !element
+                                                                        .isHidden,
+                                                                    onChanged:
+                                                                        (
+                                                                          value,
+                                                                        ) => _toggleElementVisibility(
+                                                                          subItem,
+                                                                          element,
+                                                                          value ??
+                                                                              false,
+                                                                        ),
+                                                                    activeColor:
+                                                                        AppColors
+                                                                            .background,
+                                                                    checkColor:
+                                                                        AppColors
+                                                                            .primary,
+                                                                    side: BorderSide(
+                                                                      color:
+                                                                          element
+                                                                              .isHidden
+                                                                          ? Colors.red
+                                                                          : AppColors.primary,
+                                                                    ),
+                                                                  ),
+                                                                ),
+                                                        ),
+                                                        Expanded(
+                                                          child: Opacity(
+                                                            opacity:
+                                                                element.isHidden
+                                                                ? 0.55
+                                                                : 1,
+                                                            child: PricingTableRow(
+                                                              item: pricingItem,
+                                                              isNewRow:
+                                                                  isLocal &&
+                                                                  localElement !=
+                                                                      null &&
+                                                                  !localElement
+                                                                      .hasRequiredData,
+                                                              onDelete: () =>
+                                                                  _deleteElement(
+                                                                    subItem.id,
+                                                                    element.id,
+                                                                    isLocal,
+                                                                  ),
+                                                              onChanged: (updatedItem) {
+                                                                if (isLocal &&
+                                                                    localElement !=
+                                                                        null) {
+                                                                  // Determine cost type based on what's filled
+                                                                  String
+                                                                  newCostType =
+                                                                      updatedItem
+                                                                          .costType ??
+                                                                      localElement
+                                                                          .costType;
+                                                                  if (updatedItem
+                                                                              .quantity !=
+                                                                          null &&
+                                                                      updatedItem
+                                                                              .unitPrice !=
+                                                                          null) {
+                                                                    newCostType =
+                                                                        'UNIT_BASED';
+                                                                  } else if (newCostType ==
+                                                                          'TOTAL' &&
+                                                                      updatedItem
+                                                                              .quantity ==
+                                                                          null &&
+                                                                      updatedItem
+                                                                              .unitPrice ==
+                                                                          null) {
+                                                                    newCostType =
+                                                                        'TOTAL';
+                                                                  }
 
-                                                          // Update local element - only update name if it's not empty
-                                                          final updated = LocalElement(
-                                                            tempId: localElement
-                                                                .tempId,
-                                                            subItemId:
-                                                                localElement
-                                                                    .subItemId,
-                                                            name: updatedItem
-                                                                .description
-                                                                .trim(),
-                                                            costType:
-                                                                newCostType,
-                                                            unitCost:
-                                                                updatedItem
-                                                                    .unitPrice,
-                                                            quantity:
-                                                                updatedItem
-                                                                    .quantity,
-                                                            totalCost:
-                                                                newCostType ==
-                                                                    'TOTAL'
-                                                                ? updatedItem
-                                                                      .total
-                                                                : null,
-                                                            isCompleted:
-                                                                localElement
-                                                                    .isCompleted,
-                                                          );
-                                                          _updateLocalElement(
-                                                            subItem.id,
-                                                            element.id,
-                                                            updated,
-                                                          );
-                                                        } else {
-                                                          // Store latest values and schedule update with debounce
-                                                          _pendingUpdates[element
-                                                                  .id] =
-                                                              updatedItem;
-                                                          _scheduleUpdateElement(
-                                                            subItem.id,
-                                                            element.id,
-                                                            updatedItem,
-                                                          );
-                                                        }
-                                                      },
-                                                      onFieldCompleted: () {
-                                                        // Trigger immediate save when user finishes editing field (blur or submit)
-                                                        if (isLocal &&
-                                                            localElement !=
-                                                                null &&
-                                                            localElement
-                                                                .hasRequiredData &&
-                                                            !localElement
-                                                                .isCompleted) {
-                                                          // Cancel debounce timer and save immediately
-                                                          _saveTimers[element
-                                                                  .id]
-                                                              ?.cancel();
-                                                          _saveTimers.remove(
-                                                            element.id,
-                                                          );
-                                                          _saveElementToBackend(
-                                                            subItem.id,
-                                                            localElement,
-                                                          );
-                                                        } else if (!isLocal) {
-                                                          // Cancel debounce timer and update immediately with latest values
-                                                          _updateTimers[element
-                                                                  .id]
-                                                              ?.cancel();
-                                                          _updateTimers.remove(
-                                                            element.id,
-                                                          );
-                                                          final pendingItem =
-                                                              _pendingUpdates[element
-                                                                  .id];
-                                                          if (pendingItem !=
-                                                              null) {
-                                                            _pendingUpdates
-                                                                .remove(
-                                                                  element.id,
+                                                                  // Update local element - only update name if it's not empty
+                                                                  final updated = LocalElement(
+                                                                    tempId: localElement
+                                                                        .tempId,
+                                                                    subItemId:
+                                                                        localElement
+                                                                            .subItemId,
+                                                                    name: updatedItem
+                                                                        .description
+                                                                        .trim(),
+                                                                    costType:
+                                                                        newCostType,
+                                                                    unitCost:
+                                                                        updatedItem
+                                                                            .unitPrice,
+                                                                    quantity:
+                                                                        updatedItem
+                                                                            .quantity,
+                                                                    totalCost:
+                                                                        newCostType ==
+                                                                            'TOTAL'
+                                                                        ? updatedItem
+                                                                              .total
+                                                                        : null,
+                                                                    isCompleted:
+                                                                        localElement
+                                                                            .isCompleted,
+                                                                  );
+                                                                  _updateLocalElement(
+                                                                    subItem.id,
+                                                                    element.id,
+                                                                    updated,
+                                                                  );
+                                                                } else {
+                                                                  // Store latest values and schedule update with debounce
+                                                                  _pendingUpdates[element
+                                                                          .id] =
+                                                                      updatedItem;
+                                                                  _scheduleUpdateElement(
+                                                                    subItem.id,
+                                                                    element.id,
+                                                                    updatedItem,
+                                                                    element
+                                                                        .costType,
+                                                                  );
+                                                                }
+                                                              },
+                                                              onFieldCompleted: () {
+                                                                _completeElementEditing(
+                                                                  subItem:
+                                                                      subItem,
+                                                                  element:
+                                                                      element,
+                                                                  isLocal:
+                                                                      isLocal,
+                                                                  localElement:
+                                                                      localElement,
+                                                                  addNext:
+                                                                      false,
                                                                 );
-                                                            _updateSavedElement(
-                                                              subItem.id,
-                                                              element.id,
-                                                              pendingItem,
-                                                            );
-                                                          }
-                                                        }
-                                                      },
+                                                              },
+                                                              onSubmitted: () {
+                                                                _completeElementEditing(
+                                                                  subItem:
+                                                                      subItem,
+                                                                  element:
+                                                                      element,
+                                                                  isLocal:
+                                                                      isLocal,
+                                                                  localElement:
+                                                                      localElement,
+                                                                  addNext: true,
+                                                                );
+                                                              },
+                                                            ),
+                                                          ),
+                                                        ),
+                                                      ],
                                                     ),
                                                     if (isSaving)
                                                       Positioned.fill(
