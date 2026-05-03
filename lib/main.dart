@@ -50,13 +50,17 @@ class MainApp extends StatelessWidget {
             },
             listener: (context, state) {
               final router = AppRouter.router;
-              
+
               // If user becomes authenticated, ensure we're not on auth pages
               if (state is AuthAuthenticated) {
                 // Small delay to ensure router is ready
                 Future.microtask(() {
-                  final currentLocation = router.routerDelegate.currentConfiguration.uri.toString();
-                  if (currentLocation == AppRoutes.login || 
+                  final currentLocation = router
+                      .routerDelegate
+                      .currentConfiguration
+                      .uri
+                      .toString();
+                  if (currentLocation == AppRoutes.login ||
                       currentLocation == AppRoutes.resetPassword) {
                     router.go(AppRoutes.dashboard);
                   }
@@ -65,8 +69,12 @@ class MainApp extends StatelessWidget {
               // If user becomes unauthenticated, navigate to login
               else if (state is AuthUnauthenticated) {
                 Future.microtask(() {
-                  final currentLocation = router.routerDelegate.currentConfiguration.uri.toString();
-                  if (currentLocation != AppRoutes.login && 
+                  final currentLocation = router
+                      .routerDelegate
+                      .currentConfiguration
+                      .uri
+                      .toString();
+                  if (currentLocation != AppRoutes.login &&
                       currentLocation != AppRoutes.resetPassword) {
                     router.go(AppRoutes.login);
                   }

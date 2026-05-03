@@ -99,6 +99,102 @@ class PricingItemCard extends StatefulWidget {
   State<PricingItemCard> createState() => _PricingItemCardState();
 }
 
+class _DuplicateOptions {
+  final int count;
+
+  const _DuplicateOptions({required this.count});
+}
+
+class _TrailingNumberName {
+  final String prefix;
+  final int number;
+  final int width;
+  final int zeroCodeUnit;
+  final bool hasTrailingNumber;
+
+  const _TrailingNumberName._({
+    required this.prefix,
+    required this.number,
+    required this.width,
+    required this.zeroCodeUnit,
+    required this.hasTrailingNumber,
+  });
+
+  factory _TrailingNumberName.parse(String name) {
+    final match = RegExp(
+      r'([0-9\u0660-\u0669\u06F0-\u06F9]+)\s*$',
+    ).firstMatch(name);
+
+    if (match == null) {
+      return _TrailingNumberName._(
+        prefix: name,
+        number: 0,
+        width: 0,
+        zeroCodeUnit: '0'.codeUnitAt(0),
+        hasTrailingNumber: false,
+      );
+    }
+
+    final digits = match.group(1)!;
+    final zeroCodeUnit = _zeroCodeUnitForDigit(digits.codeUnitAt(0));
+    var number = 0;
+    for (final digit in digits.codeUnits) {
+      number = (number * 10) + _digitValue(digit);
+    }
+
+    return _TrailingNumberName._(
+      prefix: name.substring(0, match.start),
+      number: number,
+      width: digits.length,
+      zeroCodeUnit: zeroCodeUnit,
+      hasTrailingNumber: true,
+    );
+  }
+
+  String duplicateNameAt(int duplicateIndex) {
+    if (!hasTrailingNumber) {
+      return prefix;
+    }
+
+    final nextNumber = number + duplicateIndex;
+    final nextDigits = _formatNumber(
+      nextNumber,
+      width: width,
+      zeroCodeUnit: zeroCodeUnit,
+    );
+    return '$prefix$nextDigits';
+  }
+
+  static int _zeroCodeUnitForDigit(int codeUnit) {
+    if (codeUnit >= 0x0660 && codeUnit <= 0x0669) return 0x0660;
+    if (codeUnit >= 0x06F0 && codeUnit <= 0x06F9) return 0x06F0;
+    return '0'.codeUnitAt(0);
+  }
+
+  static int _digitValue(int codeUnit) {
+    if (codeUnit >= 0x0660 && codeUnit <= 0x0669) return codeUnit - 0x0660;
+    if (codeUnit >= 0x06F0 && codeUnit <= 0x06F9) return codeUnit - 0x06F0;
+    return codeUnit - '0'.codeUnitAt(0);
+  }
+
+  static String _formatNumber(
+    int number, {
+    required int width,
+    required int zeroCodeUnit,
+  }) {
+    final westernDigits = number.toString().padLeft(width, '0');
+    if (zeroCodeUnit == '0'.codeUnitAt(0)) {
+      return westernDigits;
+    }
+
+    return String.fromCharCodes(
+      westernDigits.codeUnits.map(
+        (digit) => zeroCodeUnit + digit - '0'.codeUnitAt(0),
+      ),
+    );
+  }
+}
+
 class _PricingItemCardState extends State<PricingItemCard> {
   final _apiDataSource = PricingApiDataSource();
   final _imagePicker = ImagePicker();
@@ -1191,19 +1287,147 @@ class _PricingItemCardState extends State<PricingItemCard> {
     }
   }
 
+  Future<_DuplicateOptions?> _showDuplicateOptionsDialog(String title) async {
+    final countController = TextEditingController(text: '1');
+    String? errorText;
+
+    final result = await showDialog<_DuplicateOptions>(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setDialogState) => AlertDialog(
+          backgroundColor: const Color(0xFF1C212B),
+          title: Text(
+            title,
+            style: AppTextStyles.h4.copyWith(color: AppColors.textPrimary),
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'اكتب عدد النسخ المطلوبة. إذا كان الاسم ينتهي برقم سيتم زيادته تلقائياً.',
+                style: AppTextStyles.bodyMedium.copyWith(
+                  color: AppColors.textSecondary,
+                ),
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: countController,
+                autofocus: true,
+                keyboardType: TextInputType.number,
+                inputFormatters: [
+                  ArabicNumberInputFormatter(),
+                  FilteringTextInputFormatter.digitsOnly,
+                ],
+                style: const TextStyle(color: AppColors.textPrimary),
+                decoration: InputDecoration(
+                  labelText: 'عدد النسخ',
+                  errorText: errorText,
+                  labelStyle: const TextStyle(color: AppColors.textSecondary),
+                  enabledBorder: OutlineInputBorder(
+                    borderSide: const BorderSide(color: Color(0xFF363C4A)),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderSide: const BorderSide(color: AppColors.primary),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  errorBorder: OutlineInputBorder(
+                    borderSide: const BorderSide(color: AppColors.error),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  focusedErrorBorder: OutlineInputBorder(
+                    borderSide: const BorderSide(color: AppColors.error),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+                onSubmitted: (_) {
+                  final count = int.tryParse(countController.text.trim());
+                  if (count == null || count < 1) {
+                    setDialogState(() {
+                      errorText = 'ادخل رقم أكبر من صفر';
+                    });
+                    return;
+                  }
+
+                  Navigator.pop(context, _DuplicateOptions(count: count));
+                },
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text(
+                'إلغاء',
+                style: AppTextStyles.bodyMedium.copyWith(
+                  color: AppColors.textSecondary,
+                ),
+              ),
+            ),
+            TextButton(
+              onPressed: () {
+                final count = int.tryParse(countController.text.trim());
+                if (count == null || count < 1) {
+                  setDialogState(() {
+                    errorText = 'ادخل رقم أكبر من صفر';
+                  });
+                  return;
+                }
+
+                Navigator.pop(context, _DuplicateOptions(count: count));
+              },
+              child: Text(
+                'تكرار',
+                style: AppTextStyles.bodyMedium.copyWith(
+                  color: AppColors.primary,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+
+    countController.dispose();
+    return result;
+  }
+
   Future<void> _duplicateItem() async {
+    final options = await _showDuplicateOptionsDialog('تكرار العنصر');
+    if (options == null) return;
+
+    final namePattern = _TrailingNumberName.parse(widget.item.name);
+
     try {
-      await _apiDataSource.duplicatePricingItem(
-        widget.projectId,
-        widget.version,
-        widget.item.id,
-      );
+      for (var index = 1; index <= options.count; index++) {
+        final duplicatedItem = await _apiDataSource.duplicatePricingItem(
+          widget.projectId,
+          widget.version,
+          widget.item.id,
+        );
+        final duplicateName = namePattern.duplicateNameAt(index);
+
+        if (duplicatedItem.name != duplicateName) {
+          await _apiDataSource.updatePricingItem(
+            widget.projectId,
+            widget.version,
+            duplicatedItem.id,
+            name: duplicateName,
+          );
+        }
+      }
 
       if (mounted) {
         widget.onItemChanged?.call(widget.item);
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('تم نسخ العنصر بنجاح'),
+          SnackBar(
+            content: Text(
+              options.count == 1
+                  ? 'تم نسخ العنصر بنجاح'
+                  : 'تم إنشاء ${options.count} نسخ من العنصر بنجاح',
+            ),
             duration: Duration(seconds: 2),
           ),
         );
@@ -1218,13 +1442,31 @@ class _PricingItemCardState extends State<PricingItemCard> {
   }
 
   Future<void> _duplicateSubItem(PricingSubItemModel subItem) async {
+    final options = await _showDuplicateOptionsDialog('تكرار البند الفرعية');
+    if (options == null) return;
+
+    final namePattern = _TrailingNumberName.parse(subItem.name);
+
     try {
-      await _apiDataSource.duplicatePricingSubItem(
-        widget.projectId,
-        widget.version,
-        widget.item.id,
-        subItem.id,
-      );
+      for (var index = 1; index <= options.count; index++) {
+        final duplicatedSubItem = await _apiDataSource.duplicatePricingSubItem(
+          widget.projectId,
+          widget.version,
+          widget.item.id,
+          subItem.id,
+        );
+        final duplicateName = namePattern.duplicateNameAt(index);
+
+        if (duplicatedSubItem.name != duplicateName) {
+          await _apiDataSource.updatePricingSubItem(
+            widget.projectId,
+            widget.version,
+            widget.item.id,
+            duplicatedSubItem.id,
+            name: duplicateName,
+          );
+        }
+      }
 
       final updatedVersion = await _apiDataSource.getPricingVersion(
         widget.projectId,
@@ -1240,8 +1482,12 @@ class _PricingItemCardState extends State<PricingItemCard> {
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('تم نسخ البند الفرعية بنجاح'),
+          SnackBar(
+            content: Text(
+              options.count == 1
+                  ? 'تم نسخ البند الفرعية بنجاح'
+                  : 'تم إنشاء ${options.count} نسخ من البند الفرعية بنجاح',
+            ),
             duration: Duration(seconds: 2),
           ),
         );
