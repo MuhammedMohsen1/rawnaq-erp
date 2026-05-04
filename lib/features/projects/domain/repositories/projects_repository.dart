@@ -13,8 +13,16 @@ abstract class ProjectsRepository {
     String? managerId,
     String? teamMemberId,
     String? searchQuery,
+    bool archived = false,
     int? page,
     int? limit,
+  });
+
+  /// Update project status
+  Future<Either<Failure, ProjectEntity>> updateProjectStatus(
+    String id,
+    ProjectStatus status, {
+    String? notes,
   });
 
   /// Get a single project by ID
@@ -28,6 +36,9 @@ abstract class ProjectsRepository {
 
   /// Delete a project
   Future<Either<Failure, void>> deleteProject(String id);
+
+  /// Restore an archived project
+  Future<Either<Failure, ProjectEntity>> restoreProject(String id);
 
   Future<Either<Failure, List<ProjectAttachmentEntity>>> getProjectAttachments(
     String projectId,

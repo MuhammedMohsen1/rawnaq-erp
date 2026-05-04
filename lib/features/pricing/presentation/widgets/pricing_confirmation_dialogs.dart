@@ -15,9 +15,7 @@ class PricingConfirmationDialogs {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              'هل أنت متأكد من إرجاع التسعير إلى حالة التعديل؟ سيتم إلغاء عملية المراجعة الحالية.',
-            ),
+            const Text('هل أنت متأكد من إرجاع التسعير إلى حالة التعديل؟'),
             const SizedBox(height: 16),
           ],
         ),
@@ -37,34 +35,6 @@ class PricingConfirmationDialogs {
 
     final reason = reasonController.text.trim();
     return (confirmed ?? false, reason.isNotEmpty ? reason : null);
-  }
-
-  /// Show accept pricing confirmation dialog
-  static Future<bool> showAcceptPricingDialog(BuildContext context) async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('قبول التسعير'),
-        content: const Text(
-          'هل أنت متأكد من قبول هذا التسعير؟ سيتم اعتماد التسعير وستصبح الحالة "موافق عليه".',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('إلغاء'),
-          ),
-          ElevatedButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF10B981),
-            ),
-            child: const Text('قبول'),
-          ),
-        ],
-      ),
-    );
-
-    return confirmed ?? false;
   }
 
   /// Show confirm pricing dialog

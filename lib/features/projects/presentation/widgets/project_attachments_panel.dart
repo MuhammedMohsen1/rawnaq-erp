@@ -12,11 +12,13 @@ import 'project_attachments_section.dart';
 class ProjectAttachmentsPanel extends StatelessWidget {
   final String projectId;
   final ProjectStatus projectStatus;
+  final bool readOnly;
 
   const ProjectAttachmentsPanel({
     super.key,
     required this.projectId,
     required this.projectStatus,
+    this.readOnly = false,
   });
 
   @override
@@ -27,6 +29,7 @@ class ProjectAttachmentsPanel extends StatelessWidget {
       child: _ProjectAttachmentsPanelContent(
         projectId: projectId,
         projectStatus: projectStatus,
+        readOnly: readOnly,
       ),
     );
   }
@@ -35,10 +38,12 @@ class ProjectAttachmentsPanel extends StatelessWidget {
 class _ProjectAttachmentsPanelContent extends StatelessWidget {
   final String projectId;
   final ProjectStatus projectStatus;
+  final bool readOnly;
 
   const _ProjectAttachmentsPanelContent({
     required this.projectId,
     required this.projectStatus,
+    required this.readOnly,
   });
 
   @override
@@ -80,12 +85,14 @@ class _ProjectAttachmentsPanelContent extends StatelessWidget {
         final loaded = state as ProjectAttachmentsLoaded;
         return ProjectAttachmentsSection(
           attachments: loaded.attachments,
-          canDelete: _canDeleteAttachments(context),
+          canDelete: !readOnly && _canDeleteAttachments(context),
+          canUpload: !readOnly,
           isUploading: loaded.isUploading,
           isDeleting: loaded.isDeleting,
-          onUpload: () => _pickAndUploadAttachments(context),
-          onDelete: (attachment) =>
-              _confirmDeleteAttachment(context, attachment),
+          onUpload: readOnly ? () {} : () => _pickAndUploadAttachments(context),
+          onDelete: readOnly
+              ? (_) {}
+              : (attachment) => _confirmDeleteAttachment(context, attachment),
         );
       },
     );

@@ -15,7 +15,10 @@ class PricingCubit extends Cubit<PricingState> {
   }) : super(const PricingInitial());
 
   /// Load pricing data for a project
-  Future<void> loadPricingData(String projectId) async {
+  Future<void> loadPricingData(
+    String projectId, {
+    bool readOnly = false,
+  }) async {
     // Preserve existing state if reloading
     Map<String, bool> preservedItemStates = {};
     Map<String, Map<String, bool>> preservedSubItemStates = {};
@@ -44,6 +47,19 @@ class PricingCubit extends Cubit<PricingState> {
       PricingVersionModel pricingVersion;
 
       if (versions.isEmpty) {
+        if (readOnly) {
+          final projectMetadata = await pricingApiDataSource.getProjectMetadata(
+            projectId,
+          );
+          emit(
+            PricingEmptyReadOnly(
+              projectName: projectMetadata['name'] as String?,
+              clientName: projectMetadata['clientName'] as String?,
+            ),
+          );
+          return;
+        }
+
         // Create a new pricing version if none exists
         pricingVersion = await pricingApiDataSource.createPricingVersion(
           projectId,
@@ -56,6 +72,10 @@ class PricingCubit extends Cubit<PricingState> {
           latestVersion.version,
         );
       }
+
+      final projectMetadata = await pricingApiDataSource.getProjectMetadata(
+        projectId,
+      );
 
       // Initialize/restore expanded states and profit margins
       final itemExpandedStates = <String, bool>{};
@@ -90,11 +110,13 @@ class PricingCubit extends Cubit<PricingState> {
       emit(
         PricingLoaded(
           pricingVersion: pricingVersion,
-          projectName: null, // Can be set later if needed
+          projectName: projectMetadata['name'] as String?,
+          clientName: projectMetadata['clientName'] as String?,
           itemExpandedStates: itemExpandedStates,
           subItemExpandedStates: subItemExpandedStates,
           subItemProfitMargins: subItemProfitMargins,
           deductionAmount: pricingVersion.deductionAmount,
+          readOnly: readOnly,
         ),
       );
     } catch (e) {
@@ -359,9 +381,7 @@ class PricingCubit extends Cubit<PricingState> {
 
     // Check if status allows returning
     final status = currentState.pricingVersion.status;
-    if (status != 'PENDING_APPROVAL' &&
-        status != 'APPROVED' &&
-        status != 'PENDING_SIGNATURE') {
+    if (status != 'APPROVED' && status != 'PENDING_SIGNATURE') {
       throw Exception(
         'لا يمكن إرجاع التسعير. الحالة الحالية: "${currentState.getStatusText()}"',
       );
@@ -372,29 +392,6 @@ class PricingCubit extends Cubit<PricingState> {
         projectId,
         currentState.pricingVersion.version,
         reason: reason,
-      );
-
-      await loadPricingData(projectId);
-    } catch (e) {
-      rethrow;
-    }
-  }
-
-  /// Approve pricing
-  Future<void> approvePricing(String projectId) async {
-    final currentState = state;
-    if (currentState is! PricingLoaded) return;
-
-    if (currentState.pricingVersion.status != 'PENDING_APPROVAL') {
-      throw Exception(
-        'لا يمكن قبول التسعير. الحالة الحالية: "${currentState.getStatusText()}"',
-      );
-    }
-
-    try {
-      await pricingApiDataSource.approvePricing(
-        projectId,
-        currentState.pricingVersion.version,
       );
 
       await loadPricingData(projectId);

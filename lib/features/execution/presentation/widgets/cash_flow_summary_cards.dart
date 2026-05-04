@@ -224,7 +224,7 @@ class _NetCashFlowCard extends StatelessWidget {
               ),
               const SizedBox(width: 8),
               Text(
-                'صافي التدفق النقدي',
+                'سيولة',
                 overflow: TextOverflow.ellipsis,
                 style: AppTextStyles.bodySmall.copyWith(
                   color: AppColors.textSecondary,

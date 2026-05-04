@@ -80,10 +80,9 @@ class _SiteEngineerDashboardPageState extends State<SiteEngineerDashboardPage> {
   }
 
   bool _hasUnderPricingStatus(ProjectEntity project) {
-    // Show projects with status: Draft, Under Pricing, Pending Approval (Approved), or Pending Signature
+    // Show projects with status: Draft, Under Pricing, or Pending Signature
     return project.status == ProjectStatus.draft ||
         project.status == ProjectStatus.underPricing ||
-        project.status == ProjectStatus.pendingApproval ||
         project.status == ProjectStatus.pendingSignature;
   }
 
@@ -95,8 +94,6 @@ class _SiteEngineerDashboardPageState extends State<SiteEngineerDashboardPage> {
         return 'مسودة';
       case 'PENDING_SIGNATURE':
         return 'في انتظار التوقيع';
-      case 'PENDING_APPROVAL':
-        return 'في انتظار الموافقة';
       case 'APPROVED':
         return 'موافق عليه';
       case 'REJECTED':
@@ -113,8 +110,6 @@ class _SiteEngineerDashboardPageState extends State<SiteEngineerDashboardPage> {
       case 'DRAFT':
         return AppColors.textMuted;
       case 'PENDING_SIGNATURE':
-        return AppColors.warning;
-      case 'PENDING_APPROVAL':
         return AppColors.warning;
       case 'APPROVED':
         return AppColors.statusCompleted;
@@ -166,7 +161,7 @@ class _SiteEngineerDashboardPageState extends State<SiteEngineerDashboardPage> {
           }
 
           // Filter projects based on project status
-          // Under pricing projects: Draft, Under Pricing, Pending Approval (Approved), or Pending Signature
+          // Under pricing projects: Draft, Under Pricing, or Pending Signature
           final underPricingProjects = state.projects
               .where((p) => _hasUnderPricingStatus(p))
               .toList();
@@ -555,10 +550,6 @@ class _SiteEngineerDashboardPageState extends State<SiteEngineerDashboardPage> {
           prefixIcon = const Icon(Icons.edit, size: 15, weight: 700);
           break;
         case 'PENDING_SIGNATURE':
-          actionButton = 'عرض التسعير';
-          prefixIcon = const Icon(Icons.visibility, size: 15, weight: 700);
-          break;
-        case 'PENDING_APPROVAL':
           actionButton = 'عرض التسعير';
           prefixIcon = const Icon(Icons.visibility, size: 15, weight: 700);
           break;

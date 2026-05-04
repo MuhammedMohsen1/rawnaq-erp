@@ -676,30 +676,6 @@ class _AddExpenseRowState extends State<_AddExpenseRow> {
           ],
         ),
         const SizedBox(height: 12),
-        TextField(
-          controller: _nameController,
-          decoration: const InputDecoration(
-            hintText: 'اسم المصروف',
-            isDense: true,
-            contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-          ),
-        ),
-        const SizedBox(height: 8),
-        DropdownButtonFormField<CostType>(
-          value: _costType,
-          decoration: const InputDecoration(
-            isDense: true,
-            contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-          ),
-          items: const [
-            DropdownMenuItem(value: CostType.total, child: Text('إجمالي')),
-            DropdownMenuItem(value: CostType.unitBased, child: Text('وحدة')),
-          ],
-          onChanged: (value) {
-            if (value != null) setState(() => _costType = value);
-          },
-        ),
-        const SizedBox(height: 8),
         if (_costType == CostType.total)
           TextField(
             controller: _amountController,
@@ -756,6 +732,31 @@ class _AddExpenseRowState extends State<_AddExpenseRow> {
               ),
             ],
           ),
+        const SizedBox(height: 8),
+
+        TextField(
+          controller: _nameController,
+          decoration: const InputDecoration(
+            hintText: 'اسم المصروف',
+            isDense: true,
+            contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          ),
+        ),
+        // DropdownButtonFormField<CostType>(
+        //   value: _costType,
+        //   decoration: const InputDecoration(
+        //     isDense: true,
+        //     contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        //   ),
+        //   items: const [
+        //     DropdownMenuItem(value: CostType.total, child: Text('إجمالي')),
+        //     DropdownMenuItem(value: CostType.unitBased, child: Text('وحدة')),
+        //   ],
+        //   onChanged: (value) {
+        //     if (value != null) setState(() => _costType = value);
+        //   },
+        // ),
+        // const SizedBox(height: 8),
         const SizedBox(height: 12),
         Row(
           mainAxisAlignment: MainAxisAlignment.end,
@@ -815,25 +816,25 @@ class _AddExpenseRowState extends State<_AddExpenseRow> {
           ),
         ),
         const SizedBox(width: 8),
-        // Cost type dropdown
-        SizedBox(
-          width: 120,
-          child: DropdownButtonFormField<CostType>(
-            value: _costType,
-            decoration: const InputDecoration(
-              isDense: true,
-              contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            ),
-            items: const [
-              DropdownMenuItem(value: CostType.total, child: Text('إجمالي')),
-              DropdownMenuItem(value: CostType.unitBased, child: Text('وحدة')),
-            ],
-            onChanged: (value) {
-              if (value != null) setState(() => _costType = value);
-            },
-          ),
-        ),
-        const SizedBox(width: 8),
+        // // Cost type dropdown
+        // SizedBox(
+        //   width: 120,
+        //   child: DropdownButtonFormField<CostType>(
+        //     value: _costType,
+        //     decoration: const InputDecoration(
+        //       isDense: true,
+        //       contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        //     ),
+        //     items: const [
+        //       DropdownMenuItem(value: CostType.total, child: Text('إجمالي')),
+        //       DropdownMenuItem(value: CostType.unitBased, child: Text('وحدة')),
+        //     ],
+        //     onChanged: (value) {
+        //       if (value != null) setState(() => _costType = value);
+        //     },
+        //   ),
+        // ),
+        // const SizedBox(width: 8),
         // Amount or Unit cost + Quantity
         if (_costType == CostType.total)
           SizedBox(
@@ -1233,25 +1234,25 @@ class _EditableExpenseRowState extends State<_EditableExpenseRow> {
           ),
         ),
         const SizedBox(width: 8),
-        // Cost type dropdown
-        SizedBox(
-          width: 120,
-          child: DropdownButtonFormField<CostType>(
-            value: _costType,
-            decoration: const InputDecoration(
-              isDense: true,
-              contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            ),
-            items: const [
-              DropdownMenuItem(value: CostType.total, child: Text('إجمالي')),
-              DropdownMenuItem(value: CostType.unitBased, child: Text('وحدة')),
-            ],
-            onChanged: (value) {
-              if (value != null) setState(() => _costType = value);
-            },
-          ),
-        ),
-        const SizedBox(width: 8),
+        // // Cost type dropdown
+        // SizedBox(
+        //   width: 120,
+        //   child: DropdownButtonFormField<CostType>(
+        //     value: _costType,
+        //     decoration: const InputDecoration(
+        //       isDense: true,
+        //       contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        //     ),
+        //     items: const [
+        //       DropdownMenuItem(value: CostType.total, child: Text('إجمالي')),
+        //       DropdownMenuItem(value: CostType.unitBased, child: Text('وحدة')),
+        //     ],
+        //     onChanged: (value) {
+        //       if (value != null) setState(() => _costType = value);
+        //     },
+        //   ),
+        // ),
+        // const SizedBox(width: 8),
         // Amount or Unit cost + Quantity
         if (_costType == CostType.total)
           SizedBox(
@@ -1453,8 +1454,8 @@ class _EditableInstallmentRowState extends State<_EditableInstallmentRow> {
       text: widget.transaction.amount.abs().toString(),
     );
     if (widget.transaction.originalAmount != null) {
-      _originalAmountController.text =
-          widget.transaction.originalAmount!.toString();
+      _originalAmountController.text = widget.transaction.originalAmount!
+          .toString();
     }
   }
 
@@ -1652,10 +1653,8 @@ class _EditableInstallmentRowState extends State<_EditableInstallmentRow> {
     final originalAmount = _parseNumber(_originalAmountController.text);
     final requestedAmount = _parseNumber(_requestedAmountController.text);
 
-    final hasOriginal =
-        originalAmount != null && originalAmount > 0;
-    final hasRequested =
-        requestedAmount != null && requestedAmount > 0;
+    final hasOriginal = originalAmount != null && originalAmount > 0;
+    final hasRequested = requestedAmount != null && requestedAmount > 0;
 
     if (name.isEmpty && !hasOriginal && !hasRequested) {
       ScaffoldMessenger.of(context).showSnackBar(

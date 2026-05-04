@@ -16,6 +16,7 @@ class LoadProjects extends ProjectsEvent {
   final String? managerId;
   final String? teamMemberId;
   final String? searchQuery;
+  final bool archived;
   final int? page;
   final int? limit;
 
@@ -24,19 +25,25 @@ class LoadProjects extends ProjectsEvent {
     this.managerId,
     this.teamMemberId,
     this.searchQuery,
+    this.archived = false,
     this.page,
     this.limit,
   });
 
   @override
   List<Object?> get props => [
-        status,
-        managerId,
-        teamMemberId,
-        searchQuery,
-        page,
-        limit,
-      ];
+    status,
+    managerId,
+    teamMemberId,
+    searchQuery,
+    archived,
+    page,
+    limit,
+  ];
+}
+
+class LoadMoreProjects extends ProjectsEvent {
+  const LoadMoreProjects();
 }
 
 /// Refresh projects list
@@ -129,18 +136,18 @@ class CreateProjectWithData extends ProjectsEvent {
 
   @override
   List<Object?> get props => [
-        name,
-        description,
-        type,
-        primaryDepartmentId,
-        clientName,
-        clientPhone,
-        clientEmail,
-        startDate,
-        endDate,
-        deadline,
-        progress,
-      ];
+    name,
+    description,
+    type,
+    primaryDepartmentId,
+    clientName,
+    clientPhone,
+    clientEmail,
+    startDate,
+    endDate,
+    deadline,
+    progress,
+  ];
 }
 
 /// Update an existing project
@@ -163,6 +170,32 @@ class DeleteProject extends ProjectsEvent {
   List<Object?> get props => [projectId];
 }
 
+/// Restore an archived project
+class RestoreProject extends ProjectsEvent {
+  final String projectId;
+
+  const RestoreProject(this.projectId);
+
+  @override
+  List<Object?> get props => [projectId];
+}
+
+/// Update project status
+class UpdateProjectStatus extends ProjectsEvent {
+  final String projectId;
+  final ProjectStatus status;
+  final String? notes;
+
+  const UpdateProjectStatus({
+    required this.projectId,
+    required this.status,
+    this.notes,
+  });
+
+  @override
+  List<Object?> get props => [projectId, status, notes];
+}
+
 /// Load team members
 class LoadTeamMembers extends ProjectsEvent {
   const LoadTeamMembers();
@@ -182,4 +215,3 @@ class ChangeViewMode extends ProjectsEvent {
   @override
   List<Object?> get props => [isTableView];
 }
-

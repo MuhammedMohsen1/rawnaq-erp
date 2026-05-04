@@ -8,6 +8,7 @@ import '../../features/projects/presentation/pages/projects_list_page.dart';
 import '../../features/projects/presentation/bloc/projects_bloc.dart';
 import '../../features/projects/presentation/bloc/projects_event.dart';
 import '../../features/projects/data/repositories/projects_repository_impl.dart';
+import '../../features/projects/domain/enums/project_status.dart';
 import '../../features/gantt/presentation/pages/gantt_chart_page.dart';
 import '../../features/settings/presentation/pages/settings_page.dart';
 import '../../features/notifications/presentation/pages/notifications_page.dart';
@@ -31,6 +32,8 @@ class AppRoutes {
 
   // Projects
   static const String projects = '/projects';
+  static const String archivedProjects = '/projects/archived';
+  static const String completedProjects = '/projects/completed';
 
   // Gantt Chart
   static const String gantt = '/gantt';
@@ -51,7 +54,8 @@ class AppRoutes {
   static const String reminders = '/reminders';
 
   // Pricing
-  static String pricing(String projectId) => '/pricing/$projectId';
+  static String pricing(String projectId, {bool readOnly = false}) =>
+      readOnly ? '/pricing/$projectId?readOnly=true' : '/pricing/$projectId';
 
   // Execution
   static String execution(String projectId) => '/execution/$projectId';
@@ -136,6 +140,45 @@ class AppRouter {
                 ),
               );
             },
+          ),
+
+          // Project Details (must come before /projects to avoid route conflict)
+          GoRoute(
+            path: AppRoutes.archivedProjects,
+            pageBuilder: (context, state) => FadePageTransition(
+              key: state.pageKey,
+              child: BlocProvider(
+                create: (context) =>
+                    ProjectsBloc(repository: ProjectsRepositoryImpl())
+                      ..add(const LoadProjects(archived: true)),
+                child: const ProjectsListPage(
+                  title: 'الأرشيف',
+                  emptyMessage: 'لا توجد مشاريع مؤرشفة',
+                  showCreateButton: false,
+                  showArchiveActions: false,
+                  showRestoreActions: true,
+                  showStatusActions: false,
+                  enableNavigation: true,
+                ),
+              ),
+            ),
+          ),
+
+          GoRoute(
+            path: AppRoutes.completedProjects,
+            pageBuilder: (context, state) => FadePageTransition(
+              key: state.pageKey,
+              child: BlocProvider(
+                create: (context) => ProjectsBloc(
+                  repository: ProjectsRepositoryImpl(),
+                )..add(const LoadProjects(status: ProjectStatus.completed)),
+                child: const ProjectsListPage(
+                  title: 'المشاريع المكتملة',
+                  emptyMessage: 'لا توجد مشاريع مكتملة',
+                  showCreateButton: false,
+                ),
+              ),
+            ),
           ),
 
           // Project Details (must come before /projects to avoid route conflict)
@@ -242,7 +285,10 @@ class AppRouter {
               final projectId = state.pathParameters['projectId'] ?? '';
               return FadePageTransition(
                 key: state.pageKey,
-                child: UnderPricingPage(projectId: projectId),
+                child: UnderPricingPage(
+                  projectId: projectId,
+                  readOnly: state.uri.queryParameters['readOnly'] == 'true',
+                ),
               );
             },
           ),

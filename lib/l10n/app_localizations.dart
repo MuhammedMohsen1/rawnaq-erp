@@ -368,12 +368,6 @@ abstract class AppLocalizations {
   /// **'Advertisement Management'**
   String get advertisementManagement;
 
-  /// Pending approval tab label
-  ///
-  /// In en, this message translates to:
-  /// **'Pending Approval'**
-  String get pendingApproval;
-
   /// Pricing tiers tab label
   ///
   /// In en, this message translates to:

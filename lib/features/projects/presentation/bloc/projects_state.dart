@@ -32,11 +32,14 @@ class ProjectsLoaded extends ProjectsState {
   final String? managerFilter;
   final String? teamMemberFilter;
   final String? searchQuery;
+  final bool archived;
   final bool isTableView;
   final int currentPage;
   final int totalPages;
   final int totalItems;
   final int pageSize;
+  final bool hasMore;
+  final bool isLoadingMore;
 
   const ProjectsLoaded({
     required this.projects,
@@ -47,11 +50,14 @@ class ProjectsLoaded extends ProjectsState {
     this.managerFilter,
     this.teamMemberFilter,
     this.searchQuery,
+    this.archived = false,
     this.isTableView = true,
     this.currentPage = 1,
     this.totalPages = 1,
     this.totalItems = 0,
     this.pageSize = 10,
+    this.hasMore = false,
+    this.isLoadingMore = false,
   });
 
   @override
@@ -64,11 +70,14 @@ class ProjectsLoaded extends ProjectsState {
     managerFilter,
     teamMemberFilter,
     searchQuery,
+    archived,
     isTableView,
     currentPage,
     totalPages,
     totalItems,
     pageSize,
+    hasMore,
+    isLoadingMore,
   ];
 
   /// Create a copy with updated fields
@@ -81,11 +90,14 @@ class ProjectsLoaded extends ProjectsState {
     String? managerFilter,
     String? teamMemberFilter,
     String? searchQuery,
+    bool? archived,
     bool? isTableView,
     int? currentPage,
     int? totalPages,
     int? totalItems,
     int? pageSize,
+    bool? hasMore,
+    bool? isLoadingMore,
     bool clearStatusFilter = false,
     bool clearManagerFilter = false,
     bool clearTeamMemberFilter = false,
@@ -106,11 +118,14 @@ class ProjectsLoaded extends ProjectsState {
           ? null
           : (teamMemberFilter ?? this.teamMemberFilter),
       searchQuery: clearSearchQuery ? null : (searchQuery ?? this.searchQuery),
+      archived: archived ?? this.archived,
       isTableView: isTableView ?? this.isTableView,
       currentPage: currentPage ?? this.currentPage,
       totalPages: totalPages ?? this.totalPages,
       totalItems: totalItems ?? this.totalItems,
       pageSize: pageSize ?? this.pageSize,
+      hasMore: hasMore ?? this.hasMore,
+      isLoadingMore: isLoadingMore ?? this.isLoadingMore,
     );
   }
 }

@@ -3,8 +3,7 @@ class PricingVersionModel {
   final String id;
   final String projectId;
   final int version;
-  final String
-  status; // DRAFT, PENDING_SIGNATURE, PENDING_APPROVAL, APPROVED, REJECTED
+  final String status; // DRAFT, PENDING_SIGNATURE, APPROVED, REJECTED
   final double totalCost;
   final double totalProfit;
   final double totalPrice;

@@ -52,8 +52,7 @@ class PricingItemCard extends StatefulWidget {
   final String projectId;
   final int version;
   final PricingItemModel item;
-  final String?
-  pricingStatus; // DRAFT, PENDING_APPROVAL, APPROVED, PENDING_SIGNATURE, etc.
+  final String? pricingStatus; // DRAFT, APPROVED, PENDING_SIGNATURE, etc.
   final ValueChanged<PricingItemModel>? onItemChanged;
   final ValueChanged<PricingSubItemModel>?
   onSubItemChanged; // For profit margin updates
@@ -533,7 +532,7 @@ class _PricingItemCardState extends State<PricingItemCard> {
       if (pickedImages.isEmpty) return;
 
       if (mounted) {
-        await _showUploadPreviewDialog(subItemId, pickedImages);
+        await _cropPickedImagesThenUpload(subItemId, pickedImages);
       }
     } catch (e, stackTrace) {
       print('Image selection error: $e');
@@ -571,7 +570,7 @@ class _PricingItemCardState extends State<PricingItemCard> {
       if (pickedImages.isEmpty) return;
 
       if (mounted) {
-        await _showUploadPreviewDialog(subItemId, pickedImages);
+        await _cropPickedImagesThenUpload(subItemId, pickedImages);
       }
     } catch (e, stackTrace) {
       if (mounted) {
@@ -753,219 +752,220 @@ class _PricingItemCardState extends State<PricingItemCard> {
     }
   }
 
-  Future<void> _showUploadPreviewDialog(
-    String subItemId,
-    List<MapEntry<String, Uint8List>> initialImages,
-  ) async {
-    final stagedImages = List<MapEntry<String, Uint8List>>.from(initialImages);
-    int selectedIndex = 0;
+  // Future<void> _showUploadPreviewDialog(
+  //   String subItemId,
+  //   List<MapEntry<String, Uint8List>> initialImages,
+  // ) async {
+  //   final stagedImages = List<MapEntry<String, Uint8List>>.from(initialImages);
+  //   int selectedIndex = 0;
 
-    await showDialog<void>(
-      context: context,
-      barrierDismissible: false,
-      builder: (dialogContext) {
-        return StatefulBuilder(
-          builder: (dialogContext, setDialogState) {
-            final hasImages = stagedImages.isNotEmpty;
-            final safeIndex = hasImages
-                ? math.min(selectedIndex, stagedImages.length - 1)
-                : 0;
-            final currentImage = hasImages ? stagedImages[safeIndex] : null;
+  //   await showDialog<void>(
+  //     context: context,
+  //     barrierDismissible: false,
+  //     builder: (dialogContext) {
+  //       return StatefulBuilder(
+  //         builder: (dialogContext, setDialogState) {
+  //           final hasImages = stagedImages.isNotEmpty;
+  //           final safeIndex = hasImages
+  //               ? math.min(selectedIndex, stagedImages.length - 1)
+  //               : 0;
+  //           final currentImage = hasImages ? stagedImages[safeIndex] : null;
 
-            Future<void> cropCurrentImage() async {
-              if (currentImage == null) return;
+  //           Future<void> cropCurrentImage() async {
+  //             if (currentImage == null) return;
 
-              final croppedBytes = await ImageCropDialog.show(
-                context,
-                currentImage.value,
-                fileName: currentImage.key,
-              );
+  //             final croppedBytes = await ImageCropDialog.show(
+  //               context,
+  //               currentImage.value,
+  //               fileName: currentImage.key,
+  //             );
 
-              if (croppedBytes == null) return;
+  //             if (croppedBytes == null) return;
 
-              setDialogState(() {
-                stagedImages[safeIndex] = MapEntry(
-                  currentImage.key,
-                  croppedBytes,
-                );
-              });
-            }
+  //             setDialogState(() {
+  //               stagedImages[safeIndex] = MapEntry(
+  //                 currentImage.key,
+  //                 croppedBytes,
+  //               );
+  //             });
+  //           }
 
-            Future<void> uploadImages() async {
-              Navigator.of(dialogContext).pop();
-              await _uploadSelectedImages(subItemId, stagedImages);
-            }
+  //           Future<void> uploadImages() async {
+  //             Navigator.of(dialogContext).pop();
+  //             await _uploadSelectedImages(subItemId, stagedImages);
+  //           }
 
-            void removeCurrentImage() {
-              if (currentImage == null) return;
+  //           void removeCurrentImage() {
+  //             if (currentImage == null) return;
 
-              setDialogState(() {
-                stagedImages.removeAt(safeIndex);
-                if (stagedImages.isEmpty) {
-                  selectedIndex = 0;
-                } else {
-                  selectedIndex = math.min(
-                    selectedIndex,
-                    stagedImages.length - 1,
-                  );
-                }
-              });
-            }
+  //             setDialogState(() {
+  //               stagedImages.removeAt(safeIndex);
+  //               if (stagedImages.isEmpty) {
+  //                 selectedIndex = 0;
+  //               } else {
+  //                 selectedIndex = math.min(
+  //                   selectedIndex,
+  //                   stagedImages.length - 1,
+  //                 );
+  //               }
+  //             });
+  //           }
 
-            return Dialog(
-              backgroundColor: const Color(0xFF1A1D24),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Container(
-                width: MediaQuery.of(
-                  dialogContext,
-                ).size.width.clamp(480.0, 900.0),
-                height: MediaQuery.of(
-                  dialogContext,
-                ).size.height.clamp(420.0, 760.0),
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Text(
-                          'معاينة الصور قبل الرفع',
-                          style: AppTextStyles.h3.copyWith(
-                            color: AppColors.textPrimary,
-                            fontSize: 18,
-                          ),
-                        ),
-                        const Spacer(),
-                        Text(
-                          '${stagedImages.length} صورة',
-                          style: AppTextStyles.bodySmall.copyWith(
-                            color: AppColors.textSecondary,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 16),
-                    Expanded(
-                      child: Container(
-                        width: double.infinity,
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF11151C),
-                          borderRadius: BorderRadius.circular(10),
-                          border: Border.all(color: const Color(0xFF363C4A)),
-                        ),
-                        child: hasImages
-                            ? ClipRRect(
-                                borderRadius: BorderRadius.circular(10),
-                                child: Image.memory(
-                                  currentImage!.value,
-                                  fit: BoxFit.contain,
-                                ),
-                              )
-                            : const Center(
-                                child: Text(
-                                  'لا توجد صور محددة',
-                                  style: TextStyle(color: AppColors.textMuted),
-                                ),
-                              ),
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    SizedBox(
-                      height: 68,
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: ListView.builder(
-                              scrollDirection: Axis.horizontal,
-                              itemCount: stagedImages.length,
-                              itemBuilder: (context, index) {
-                                final isSelected = index == safeIndex;
-                                return GestureDetector(
-                                  onTap: () {
-                                    setDialogState(() {
-                                      selectedIndex = index;
-                                    });
-                                  },
-                                  child: Container(
-                                    width: 56,
-                                    height: 56,
-                                    margin: const EdgeInsets.only(right: 8),
-                                    decoration: BoxDecoration(
-                                      borderRadius: BorderRadius.circular(8),
-                                      border: Border.all(
-                                        color: isSelected
-                                            ? AppColors.primary
-                                            : const Color(0xFF363C4A),
-                                        width: isSelected ? 2 : 1,
-                                      ),
-                                    ),
-                                    child: ClipRRect(
-                                      borderRadius: BorderRadius.circular(8),
-                                      child: Image.memory(
-                                        stagedImages[index].value,
-                                        fit: BoxFit.cover,
-                                      ),
-                                    ),
-                                  ),
-                                );
-                              },
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          IconButton(
-                            onPressed: hasImages ? cropCurrentImage : null,
-                            tooltip: 'قص',
-                            icon: const Icon(
-                              Icons.crop,
-                              color: AppColors.primary,
-                            ),
-                          ),
-                          IconButton(
-                            onPressed: hasImages ? removeCurrentImage : null,
-                            tooltip: 'حذف',
-                            icon: const Icon(
-                              Icons.delete_outline,
-                              color: AppColors.error,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.end,
-                      children: [
-                        OutlinedButton(
-                          onPressed: () => Navigator.of(dialogContext).pop(),
-                          style: OutlinedButton.styleFrom(
-                            foregroundColor: AppColors.textSecondary,
-                            side: const BorderSide(color: Color(0xFF363C4A)),
-                          ),
-                          child: const Text('إلغاء'),
-                        ),
-                        const SizedBox(width: 12),
-                        ElevatedButton.icon(
-                          onPressed: hasImages ? uploadImages : null,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: AppColors.primary,
-                            foregroundColor: Colors.white,
-                          ),
-                          icon: const Icon(Icons.cloud_upload_outlined),
-                          label: const Text('رفع الصور'),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            );
-          },
-        );
-      },
-    );
-  }
+  //           return Dialog(
+  //             backgroundColor: const Color(0xFF1A1D24),
+  //             shape: RoundedRectangleBorder(
+  //               borderRadius: BorderRadius.circular(12),
+  //             ),
+  //             child: Container(
+  //               width: MediaQuery.of(
+  //                 dialogContext,
+  //               ).size.width.clamp(480.0, 900.0),
+  //               height: MediaQuery.of(
+  //                 dialogContext,
+  //               ).size.height.clamp(420.0, 760.0),
+  //               padding: const EdgeInsets.all(16),
+  //               child: Column(
+  //                 crossAxisAlignment: CrossAxisAlignment.start,
+  //                 children: [
+  //                   Row(
+  //                     children: [
+  //                       Text(
+  //                         'معاينة الصور قبل الرفع',
+  //                         style: AppTextStyles.h3.copyWith(
+  //                           color: AppColors.textPrimary,
+  //                           fontSize: 18,
+  //                         ),
+  //                       ),
+  //                       const Spacer(),
+  //                       Text(
+  //                         '${stagedImages.length} صورة',
+  //                         style: AppTextStyles.bodySmall.copyWith(
+  //                           color: AppColors.textSecondary,
+  //                         ),
+  //                       ),
+  //                     ],
+  //                   ),
+  //                   const SizedBox(height: 16),
+  //                   Expanded(
+  //                     child: Container(
+  //                       width: double.infinity,
+  //                       decoration: BoxDecoration(
+  //                         color: const Color(0xFF11151C),
+  //                         borderRadius: BorderRadius.circular(10),
+  //                         border: Border.all(color: const Color(0xFF363C4A)),
+  //                       ),
+  //                       child: hasImages
+  //                           ? ClipRRect(
+  //                               borderRadius: BorderRadius.circular(10),
+  //                               child: Image.memory(
+  //                                 currentImage!.value,
+  //                                 fit: BoxFit.contain,
+  //                               ),
+  //                             )
+  //                           : const Center(
+  //                               child: Text(
+  //                                 'لا توجد صور محددة',
+  //                                 style: TextStyle(color: AppColors.textMuted),
+  //                               ),
+  //                             ),
+  //                     ),
+  //                   ),
+  //                   const SizedBox(height: 12),
+  //                   SizedBox(
+  //                     height: 68,
+  //                     child: Row(
+  //                       children: [
+  //                         Expanded(
+  //                           child: ListView.builder(
+  //                             scrollDirection: Axis.horizontal,
+  //                             itemCount: stagedImages.length,
+  //                             itemBuilder: (context, index) {
+  //                               final isSelected = index == safeIndex;
+  //                               return GestureDetector(
+  //                                 onTap: () {
+  //                                   setDialogState(() {
+  //                                     selectedIndex = index;
+  //                                   });
+  //                                 },
+  //                                 child: Container(
+  //                                   width: 56,
+  //                                   height: 56,
+  //                                   margin: const EdgeInsets.only(right: 8),
+  //                                   decoration: BoxDecoration(
+  //                                     borderRadius: BorderRadius.circular(8),
+  //                                     border: Border.all(
+  //                                       color: isSelected
+  //                                           ? AppColors.primary
+  //                                           : const Color(0xFF363C4A),
+  //                                       width: isSelected ? 2 : 1,
+  //                                     ),
+  //                                   ),
+  //                                   child: ClipRRect(
+  //                                     borderRadius: BorderRadius.circular(8),
+  //                                     child: Image.memory(
+  //                                       stagedImages[index].value,
+  //                                       fit: BoxFit.cover,
+  //                                     ),
+  //                                   ),
+  //                                 ),
+  //                               );
+  //                             },
+  //                           ),
+  //                         ),
+  //                         const SizedBox(width: 12),
+  //                         IconButton(
+  //                           onPressed: hasImages ? cropCurrentImage : null,
+  //                           tooltip: 'قص',
+  //                           icon: const Icon(
+  //                             Icons.crop,
+  //                             color: AppColors.primary,
+  //                           ),
+  //                         ),
+  //                         IconButton(
+  //                           onPressed: hasImages ? removeCurrentImage : null,
+  //                           tooltip: 'حذف',
+  //                           icon: const Icon(
+  //                             Icons.delete_outline,
+  //                             color: AppColors.error,
+  //                           ),
+  //                         ),
+  //                       ],
+  //                     ),
+  //                   ),
+  //                   const SizedBox(height: 16),
+  //                   Row(
+  //                     mainAxisAlignment: MainAxisAlignment.end,
+  //                     children: [
+  //                       OutlinedButton.icon(
+  //                         onPressed: () => Navigator.of(dialogContext).pop(),
+  //                         style: OutlinedButton.styleFrom(
+  //                           foregroundColor: AppColors.textSecondary,
+  //                           side: const BorderSide(color: Color(0xFF363C4A)),
+  //                         ),
+  //                         icon: const Icon(Icons.cancel),
+  //                         label: const Text('إلغاء'),
+  //                       ),
+  //                       const SizedBox(width: 12),
+  //                       ElevatedButton.icon(
+  //                         onPressed: hasImages ? uploadImages : null,
+  //                         style: ElevatedButton.styleFrom(
+  //                           backgroundColor: AppColors.background,
+  //                           foregroundColor: Colors.white,
+  //                         ),
+  //                         icon: const Icon(Icons.cloud_upload_outlined),
+  //                         label: const Text('رفع الصور'),
+  //                       ),
+  //                     ],
+  //                   ),
+  //                 ],
+  //               ),
+  //             ),
+  //           );
+  //         },
+  //       );
+  //     },
+  //   );
+  // }
 
   Future<void> _showFullScreenImage(String subItemId, String imageUrl) async {
     showDialog(
@@ -1073,6 +1073,50 @@ class _PricingItemCardState extends State<PricingItemCard> {
         });
       }
     }
+  }
+
+  Future<void> _cropPickedImagesThenUpload(
+    String subItemId,
+    List<MapEntry<String, Uint8List>> pickedImages,
+  ) async {
+    if (pickedImages.isEmpty) return;
+
+    final croppedImages = <MapEntry<String, Uint8List>>[];
+
+    for (final image in pickedImages) {
+      if (!mounted) return;
+
+      final croppedBytes = await ImageCropDialog.show(
+        context,
+        image.value,
+        fileName: image.key,
+      );
+
+      // User cancelled crop dialog.
+      // Do not upload anything if crop was cancelled.
+      if (croppedBytes == null) {
+        return;
+      }
+
+      croppedImages.add(MapEntry(_croppedFileName(image.key), croppedBytes));
+    }
+
+    if (croppedImages.isEmpty) return;
+
+    await _uploadSelectedImages(subItemId, croppedImages);
+  }
+
+  String _croppedFileName(String originalName) {
+    final dotIndex = originalName.lastIndexOf('.');
+
+    if (dotIndex <= 0 || dotIndex == originalName.length - 1) {
+      return 'cropped_${DateTime.now().millisecondsSinceEpoch}.jpg';
+    }
+
+    final name = originalName.substring(0, dotIndex);
+    final extension = originalName.substring(dotIndex);
+
+    return '${name}_cropped$extension';
   }
 
   Future<void> _showDeleteItemConfirmation() async {

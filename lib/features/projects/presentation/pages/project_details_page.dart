@@ -116,12 +116,18 @@ class _LoadedContent extends StatelessWidget {
 
         ProjectAttachmentsSection(
           attachments: state.attachments,
-          canDelete: _canDeleteAttachments(context, state.project.status),
+          canDelete:
+              !state.project.archived &&
+              _canDeleteAttachments(context, state.project.status),
+          canUpload: !state.project.archived,
           isUploading: state.isUploadingAttachments,
           isDeleting: state.isDeletingAttachment,
-          onUpload: () => _pickAndUploadAttachments(context),
-          onDelete: (attachment) =>
-              _confirmDeleteAttachment(context, attachment),
+          onUpload: state.project.archived
+              ? () {}
+              : () => _pickAndUploadAttachments(context),
+          onDelete: state.project.archived
+              ? (_) {}
+              : (attachment) => _confirmDeleteAttachment(context, attachment),
         ),
         const SizedBox(height: 24),
 
@@ -129,16 +135,19 @@ class _LoadedContent extends StatelessWidget {
         TransactionsTable(
           transactions: state.transactions,
           onDelete: (transaction) {
-            if (transaction.canDelete) {
+            if (!state.project.archived && transaction.canDelete) {
               _showDeleteConfirmation(context, transaction);
             }
           },
           onUpdate: (transaction) {
+            if (state.project.archived) return;
             context.read<ProjectFinancialCubit>().updateTransaction(
               transaction,
             );
           },
-          onAddNew: () => _addNewExpense(context),
+          onAddNew: state.project.archived
+              ? null
+              : () => _addNewExpense(context),
           onLoadMore: () {
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(content: Text('تحميل المزيد - قريباً')),

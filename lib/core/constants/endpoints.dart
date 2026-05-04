@@ -2,8 +2,8 @@ abstract class ApiEndpoints {
   // Base URL - Backend is running on port 3001
   // Using 127.0.0.1 instead of localhost to avoid macOS permission issues
   // static const String baseUrl = 'http://localhost:3001/api/v1';
-  //   static const String baseUrl = 'http://localhost:3001/api/v1';
-  static const String baseUrl = 'https://api.beenedeek.com/api/v1';
+  static const String baseUrl = 'http://localhost:3001/api/v1';
+  // static const String baseUrl = 'https://api.beenedeek.com/api/v1';
   // static const String baseUrl =
   //     'http://10.0.2.2:3001/api/v1'; // For Android emulator
 
@@ -236,6 +236,7 @@ abstract class ApiEndpoints {
   static const String projects = '/projects';
   static String projectById(String id) => '/projects/$id';
   static String updateProjectStatus(String id) => '/projects/$id/status';
+  static String restoreProject(String id) => '/projects/$id/restore';
   static String projectAttachments(String projectId) =>
       '/projects/$projectId/attachments';
   static String projectAttachment(String projectId, String attachmentId) =>

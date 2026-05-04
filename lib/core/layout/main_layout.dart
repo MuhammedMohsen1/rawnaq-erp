@@ -81,6 +81,8 @@ class MainLayout extends StatelessWidget {
   ) {
     if (currentPath == AppRoutes.dashboard) return 'نظرة عامة';
     if (currentPath == AppRoutes.projects) return 'المشاريع';
+    if (currentPath == AppRoutes.archivedProjects) return 'الأرشيف';
+    if (currentPath == AppRoutes.completedProjects) return 'المشاريع المكتملة';
     if (currentPath == AppRoutes.gantt) return 'مخطط جانت';
     if (currentPath == AppRoutes.settings) return 'الإعدادات';
     if (currentPath == AppRoutes.notifications) return 'الإشعارات';
@@ -233,6 +235,8 @@ class _SidebarState extends State<_Sidebar> {
               final isSiteEngineer =
                   authState is AuthAuthenticated &&
                   authState.user.isSiteEngineer;
+              final isAdmin =
+                  authState is AuthAuthenticated && authState.user.isAdmin;
 
               if (isSiteEngineer) {
                 return Column(
@@ -250,6 +254,22 @@ class _SidebarState extends State<_Sidebar> {
                       activeIcon: Icons.notifications_active,
                       path: AppRoutes.reminders,
                       isActive: widget.currentPath == AppRoutes.reminders,
+                    ),
+                    _buildCollapsedNavItem(
+                      context: context,
+                      icon: Icons.archive_outlined,
+                      activeIcon: Icons.archive,
+                      path: AppRoutes.archivedProjects,
+                      isActive:
+                          widget.currentPath == AppRoutes.archivedProjects,
+                    ),
+                    _buildCollapsedNavItem(
+                      context: context,
+                      icon: Icons.verified_outlined,
+                      activeIcon: Icons.verified,
+                      path: AppRoutes.completedProjects,
+                      isActive:
+                          widget.currentPath == AppRoutes.completedProjects,
                     ),
                   ],
                 );
@@ -270,6 +290,24 @@ class _SidebarState extends State<_Sidebar> {
                       path: AppRoutes.projects,
                       isActive: widget.currentPath == AppRoutes.projects,
                     ),
+                    if (isAdmin) ...[
+                      _buildCollapsedNavItem(
+                        context: context,
+                        icon: Icons.archive_outlined,
+                        activeIcon: Icons.archive,
+                        path: AppRoutes.archivedProjects,
+                        isActive:
+                            widget.currentPath == AppRoutes.archivedProjects,
+                      ),
+                      _buildCollapsedNavItem(
+                        context: context,
+                        icon: Icons.verified_outlined,
+                        activeIcon: Icons.verified,
+                        path: AppRoutes.completedProjects,
+                        isActive:
+                            widget.currentPath == AppRoutes.completedProjects,
+                      ),
+                    ],
                     _buildCollapsedNavItem(
                       context: context,
                       icon: Icons.bar_chart_outlined,
@@ -377,6 +415,8 @@ class _SidebarState extends State<_Sidebar> {
               final isSiteEngineer =
                   authState is AuthAuthenticated &&
                   authState.user.isSiteEngineer;
+              final isAdmin =
+                  authState is AuthAuthenticated && authState.user.isAdmin;
 
               if (isSiteEngineer) {
                 // Site Engineer menu items
@@ -398,6 +438,26 @@ class _SidebarState extends State<_Sidebar> {
                       path: AppRoutes.reminders,
                       isActive: widget.currentPath == AppRoutes.reminders,
                     ),
+                    if (isAdmin) ...[
+                      _buildNavItem(
+                        context: context,
+                        icon: Icons.archive_outlined,
+                        activeIcon: Icons.archive,
+                        label: 'الأرشيف',
+                        path: AppRoutes.archivedProjects,
+                        isActive:
+                            widget.currentPath == AppRoutes.archivedProjects,
+                      ),
+                      _buildNavItem(
+                        context: context,
+                        icon: Icons.verified_outlined,
+                        activeIcon: Icons.verified,
+                        label: 'المكتملة',
+                        path: AppRoutes.completedProjects,
+                        isActive:
+                            widget.currentPath == AppRoutes.completedProjects,
+                      ),
+                    ],
                   ],
                 );
               } else {
@@ -419,6 +479,24 @@ class _SidebarState extends State<_Sidebar> {
                       label: 'المشاريع',
                       path: AppRoutes.projects,
                       isActive: widget.currentPath == AppRoutes.projects,
+                    ),
+                    _buildNavItem(
+                      context: context,
+                      icon: Icons.archive_outlined,
+                      activeIcon: Icons.archive,
+                      label: 'الأرشيف',
+                      path: AppRoutes.archivedProjects,
+                      isActive:
+                          widget.currentPath == AppRoutes.archivedProjects,
+                    ),
+                    _buildNavItem(
+                      context: context,
+                      icon: Icons.verified_outlined,
+                      activeIcon: Icons.verified,
+                      label: 'المكتملة',
+                      path: AppRoutes.completedProjects,
+                      isActive:
+                          widget.currentPath == AppRoutes.completedProjects,
                     ),
                     _buildNavItem(
                       context: context,
@@ -636,6 +714,8 @@ class _SidebarState extends State<_Sidebar> {
   String _getNavItemLabel(String path) {
     if (path == AppRoutes.dashboard) return 'لوحة التحكم';
     if (path == AppRoutes.projects) return 'المشاريع';
+    if (path == AppRoutes.archivedProjects) return 'الأرشيف';
+    if (path == AppRoutes.completedProjects) return 'المكتملة';
     if (path == AppRoutes.gantt) return 'مخطط جانت';
     if (path == AppRoutes.settings) return 'الإعدادات';
     if (path == AppRoutes.notifications) return 'الإشعارات';

@@ -1,34 +1,32 @@
 import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
 import 'package:crop_your_image/crop_your_image.dart';
+
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_text_styles.dart';
 
-/// Dialog for cropping images before upload
-/// Supports square (1:1) and free aspect ratio modes
+/// Dialog for cropping images before upload.
+/// Default:
+/// - Freeform crop.
+/// - Initial crop rect covers the full displayed image.
+/// - Confirm returns cropped bytes.
 class ImageCropDialog extends StatefulWidget {
   final Uint8List imageBytes;
   final String? fileName;
 
-  const ImageCropDialog({
-    super.key,
-    required this.imageBytes,
-    this.fileName,
-  });
+  const ImageCropDialog({super.key, required this.imageBytes, this.fileName});
 
-  /// Shows the crop dialog and returns the cropped image bytes or null if cancelled
   static Future<Uint8List?> show(
     BuildContext context,
     Uint8List imageBytes, {
     String? fileName,
-  }) async {
+  }) {
     return showDialog<Uint8List?>(
       context: context,
       barrierDismissible: false,
-      builder: (context) => ImageCropDialog(
-        imageBytes: imageBytes,
-        fileName: fileName,
-      ),
+      builder: (_) =>
+          ImageCropDialog(imageBytes: imageBytes, fileName: fileName),
     );
   }
 
@@ -38,25 +36,34 @@ class ImageCropDialog extends StatefulWidget {
 
 class _ImageCropDialogState extends State<ImageCropDialog> {
   final CropController _cropController = CropController();
-  bool _isSquareMode = true;
+
   bool _isCropping = false;
 
   void _onCrop() {
+    if (_isCropping) return;
+
     setState(() {
       _isCropping = true;
     });
+
     _cropController.crop();
   }
 
   void _onCropped(CropResult result) {
+    if (!mounted) return;
+
     if (result is CropSuccess) {
       Navigator.of(context).pop(result.croppedImage);
-    } else if (result is CropFailure) {
+      return;
+    }
+
+    if (result is CropFailure) {
       setState(() {
         _isCropping = false;
       });
+
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
+        const SnackBar(
           content: Text('فشل في قص الصورة'),
           backgroundColor: AppColors.error,
         ),
@@ -64,227 +71,245 @@ class _ImageCropDialogState extends State<ImageCropDialog> {
     }
   }
 
+  void _close() {
+    if (_isCropping) return;
+    Navigator.of(context).pop(null);
+  }
+
   @override
   Widget build(BuildContext context) {
     final screenSize = MediaQuery.of(context).size;
-    final dialogWidth = screenSize.width * 0.8;
-    final dialogHeight = screenSize.height * 0.85;
 
     return Dialog(
       backgroundColor: const Color(0xFF1A1D24),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
+      insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
       child: Container(
-        width: dialogWidth.clamp(400.0, 800.0),
-        height: dialogHeight.clamp(500.0, 700.0),
+        width: (screenSize.width * 0.9).clamp(360.0, 920.0),
+        height: (screenSize.height * 0.9).clamp(520.0, 820.0),
         padding: const EdgeInsets.all(16),
         child: Column(
           children: [
-            // Header
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  'قص الصورة',
-                  style: AppTextStyles.h3.copyWith(
-                    color: AppColors.textPrimary,
-                    fontSize: 18,
-                  ),
-                ),
-                if (widget.fileName != null)
-                  Text(
-                    widget.fileName!,
-                    style: AppTextStyles.bodySmall.copyWith(
-                      color: AppColors.textSecondary,
-                    ),
-                  ),
-              ],
-            ),
+            _buildHeader(),
             const SizedBox(height: 12),
-
-            // Aspect ratio toggle
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              decoration: BoxDecoration(
-                color: const Color(0xFF0F1217),
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: const Color(0xFF363C4A)),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  _buildModeButton(
-                    label: 'مربع 1:1',
-                    icon: Icons.crop_square,
-                    isSelected: _isSquareMode,
-                    onTap: () {
-                      if (!_isSquareMode) {
-                        setState(() {
-                          _isSquareMode = true;
-                        });
-                        _cropController.aspectRatio = 1.0;
-                      }
-                    },
-                  ),
-                  const SizedBox(width: 8),
-                  _buildModeButton(
-                    label: 'حر',
-                    icon: Icons.crop_free,
-                    isSelected: !_isSquareMode,
-                    onTap: () {
-                      if (_isSquareMode) {
-                        setState(() {
-                          _isSquareMode = false;
-                        });
-                        _cropController.aspectRatio = null;
-                      }
-                    },
-                  ),
-                ],
-              ),
-            ),
+            _buildHint(),
             const SizedBox(height: 12),
-
-            // Crop area
-            Expanded(
-              child: Container(
-                decoration: BoxDecoration(
-                  color: Colors.black,
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: const Color(0xFF363C4A)),
-                ),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(7),
-                  child: Crop(
-                    key: ValueKey(_isSquareMode), // Force rebuild when mode changes
-                    image: widget.imageBytes,
-                    controller: _cropController,
-                    onCropped: _onCropped,
-                    aspectRatio: _isSquareMode ? 1.0 : null,
-                    initialRectBuilder: InitialRectBuilder.withSizeAndRatio(
-                      size: 0.8,
-                      aspectRatio: _isSquareMode ? 1.0 : null,
-                    ),
-                    maskColor: Colors.black.withValues(alpha: 0.7),
-                    baseColor: Colors.black,
-                    cornerDotBuilder: (size, edgeAlignment) => Container(
-                      width: size,
-                      height: size,
-                      decoration: BoxDecoration(
-                        color: AppColors.primary,
-                        shape: BoxShape.circle,
-                        border: Border.all(
-                          color: Colors.white,
-                          width: 2,
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ),
+            Expanded(child: _buildCropArea()),
             const SizedBox(height: 16),
-
-            // Action buttons
-            Row(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                // Cancel button
-                OutlinedButton(
-                  onPressed: _isCropping ? null : () => Navigator.of(context).pop(null),
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: AppColors.textSecondary,
-                    side: const BorderSide(color: Color(0xFF363C4A)),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                  ),
-                  child: Text(
-                    'إلغاء',
-                    style: AppTextStyles.buttonLarge.copyWith(fontSize: 14),
-                  ),
-                ),
-                const SizedBox(width: 12),
-
-                // Crop button
-                ElevatedButton(
-                  onPressed: _isCropping ? null : _onCrop,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.primary,
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                  ),
-                  child: _isCropping
-                      ? const SizedBox(
-                          width: 20,
-                          height: 20,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                          ),
-                        )
-                      : Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            const Icon(Icons.crop, size: 18),
-                            const SizedBox(width: 8),
-                            Text(
-                              'قص',
-                              style: AppTextStyles.buttonLarge.copyWith(fontSize: 14),
-                            ),
-                          ],
-                        ),
-                ),
-              ],
-            ),
+            _buildActions(),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildModeButton({
-    required String label,
-    required IconData icon,
-    required bool isSelected,
-    required VoidCallback onTap,
-  }) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(6),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-        decoration: BoxDecoration(
-          color: isSelected ? AppColors.primary.withValues(alpha: 0.2) : Colors.transparent,
-          borderRadius: BorderRadius.circular(6),
-          border: Border.all(
-            color: isSelected ? AppColors.primary : Colors.transparent,
+  Widget _buildHeader() {
+    return Row(
+      children: [
+        Container(
+          width: 38,
+          height: 38,
+          decoration: BoxDecoration(
+            color: AppColors.primary.withValues(alpha: 0.14),
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(
+              color: AppColors.primary.withValues(alpha: 0.35),
+            ),
+          ),
+          child: const Icon(
+            Icons.crop_free,
+            color: AppColors.primary,
+            size: 22,
           ),
         ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              icon,
-              size: 18,
-              color: isSelected ? AppColors.primary : AppColors.textSecondary,
-            ),
-            const SizedBox(width: 6),
-            Text(
-              label,
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'قص ورفع الصورة',
+                style: AppTextStyles.h3.copyWith(
+                  color: AppColors.textPrimary,
+                  fontSize: 18,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              const SizedBox(height: 3),
+              Text(
+                widget.fileName?.trim().isNotEmpty == true
+                    ? widget.fileName!
+                    : 'Freeform - الحجم الكامل للصورة',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: AppTextStyles.bodySmall.copyWith(
+                  color: AppColors.textSecondary,
+                  fontSize: 12,
+                ),
+              ),
+            ],
+          ),
+        ),
+        IconButton(
+          onPressed: _isCropping ? null : _close,
+          tooltip: 'إغلاق',
+          icon: const Icon(Icons.close, color: AppColors.textSecondary),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildHint() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: BoxDecoration(
+        color: const Color(0xFF0F1217),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: const Color(0xFF363C4A)),
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.info_outline, size: 18, color: AppColors.primary),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              'الصورة تبدأ بالحجم الكامل. حرّك الزوايا فقط إذا كنت تريد قص جزء معين.',
               style: AppTextStyles.bodySmall.copyWith(
-                color: isSelected ? AppColors.primary : AppColors.textSecondary,
-                fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                color: AppColors.textSecondary,
+                fontSize: 12,
+                height: 1.4,
               ),
             ),
-          ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCropArea() {
+    return Container(
+      width: double.infinity,
+      decoration: BoxDecoration(
+        color: Colors.black,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: const Color(0xFF363C4A)),
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(11),
+        child: Crop(
+          key: ValueKey(widget.imageBytes.hashCode),
+          image: widget.imageBytes,
+          controller: _cropController,
+          onCropped: _onCropped,
+
+          // Critical:
+          // null = freeform. Do not set this to 1.0.
+          aspectRatio: null,
+
+          // Critical for crop_your_image 2.x:
+          // This replaces old initialSize.
+          // It starts the crop rect as the full displayed image, not square.
+          initialRectBuilder: InitialRectBuilder.withBuilder((
+            viewportRect,
+            imageRect,
+          ) {
+            return imageRect;
+          }),
+
+          withCircleUi: false,
+          interactive: false,
+          baseColor: Colors.black,
+          maskColor: Colors.black.withValues(alpha: 0.62),
+          radius: 0,
+
+          progressIndicator: const Center(
+            child: CircularProgressIndicator(
+              strokeWidth: 2,
+              color: AppColors.primary,
+            ),
+          ),
+
+          cornerDotBuilder: (size, edgeAlignment) {
+            return Container(
+              width: size,
+              height: size,
+              decoration: BoxDecoration(
+                color: AppColors.primary,
+                shape: BoxShape.circle,
+                border: Border.all(color: Colors.white, width: 2),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.35),
+                    blurRadius: 6,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+            );
+          },
         ),
       ),
+    );
+  }
+
+  Widget _buildActions() {
+    return Row(
+      children: [
+        Expanded(
+          child: Text(
+            'عند التأكيد سيتم استخدام الصورة الحالية ورفعها مباشرة.',
+            style: AppTextStyles.bodySmall.copyWith(
+              color: AppColors.textSecondary,
+              fontSize: 12,
+            ),
+          ),
+        ),
+        const SizedBox(width: 12),
+        OutlinedButton.icon(
+          onPressed: _isCropping ? null : _close,
+          style: OutlinedButton.styleFrom(
+            foregroundColor: AppColors.textSecondary,
+            side: const BorderSide(color: Color(0xFF363C4A)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
+            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 13),
+          ),
+          icon: const Icon(Icons.close, size: 18),
+          label: Text(
+            'إلغاء',
+            style: AppTextStyles.buttonLarge.copyWith(fontSize: 14),
+          ),
+        ),
+        const SizedBox(width: 10),
+        OutlinedButton.icon(
+          onPressed: _isCropping ? null : _onCrop,
+          style: OutlinedButton.styleFrom(
+            backgroundColor: AppColors.background,
+            foregroundColor: Colors.white,
+            disabledBackgroundColor: AppColors.primary.withValues(alpha: 0.45),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
+            padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 13),
+          ),
+          icon: _isCropping
+              ? const SizedBox(
+                  width: 18,
+                  height: 18,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                  ),
+                )
+              : const Icon(Icons.cloud_upload_outlined, size: 18),
+          label: Text(
+            _isCropping ? 'جاري التجهيز...' : 'قص ورفع',
+            style: AppTextStyles.buttonLarge.copyWith(fontSize: 14),
+          ),
+        ),
+      ],
     );
   }
 }

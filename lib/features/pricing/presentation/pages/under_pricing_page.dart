@@ -15,6 +15,7 @@ import '../../../../core/di/injection_container.dart';
 import '../../../../core/error/exceptions.dart';
 import '../../../../core/utils/responsive_layout.dart';
 import '../../../auth/presentation/bloc/auth_bloc.dart';
+import '../../../projects/data/datasources/projects_api_datasource.dart';
 import '../../../projects/domain/enums/project_status.dart';
 import '../../../projects/presentation/widgets/project_attachments_panel.dart';
 import '../../../contracts/data/datasources/contracts_api_datasource.dart';
@@ -32,14 +33,20 @@ import '../widgets/pricing_summary_sidebar.dart';
 /// Under pricing page - refactored with Cubit and extracted widgets
 class UnderPricingPage extends StatelessWidget {
   final String projectId;
+  final bool readOnly;
 
-  const UnderPricingPage({super.key, required this.projectId});
+  const UnderPricingPage({
+    super.key,
+    required this.projectId,
+    this.readOnly = false,
+  });
 
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (context) => getIt<PricingCubit>()..loadPricingData(projectId),
-      child: _UnderPricingContent(projectId: projectId),
+      create: (context) =>
+          getIt<PricingCubit>()..loadPricingData(projectId, readOnly: readOnly),
+      child: _UnderPricingContent(projectId: projectId, readOnly: readOnly),
     );
   }
 }
@@ -47,8 +54,9 @@ class UnderPricingPage extends StatelessWidget {
 /// Internal content widget with access to Cubit
 class _UnderPricingContent extends StatelessWidget {
   final String projectId;
+  final bool readOnly;
 
-  const _UnderPricingContent({required this.projectId});
+  const _UnderPricingContent({required this.projectId, required this.readOnly});
 
   @override
   Widget build(BuildContext context) {
@@ -78,13 +86,50 @@ class _UnderPricingContent extends StatelessWidget {
         if (state is PricingError) {
           return _ErrorView(
             message: state.message,
-            onRetry: () =>
-                context.read<PricingCubit>().loadPricingData(projectId),
+            onRetry: () => context.read<PricingCubit>().loadPricingData(
+              projectId,
+              readOnly: readOnly,
+            ),
           );
         }
 
         if (state is PricingLoaded) {
           return _LoadedContent(projectId: projectId, state: state);
+        }
+
+        if (state is PricingEmptyReadOnly) {
+          return Scaffold(
+            backgroundColor: AppColors.scaffoldBackground,
+            body: Center(
+              child: Padding(
+                padding: const EdgeInsets.all(32),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(
+                      Icons.lock_outline_rounded,
+                      size: 54,
+                      color: AppColors.textMuted,
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      'لا توجد بيانات تسعير لهذا المشروع المؤرشف',
+                      style: AppTextStyles.bodyLarge.copyWith(
+                        color: AppColors.textPrimary,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'استعد المشروع أولاً لإضافة إصدار تسعير جديد.',
+                      style: AppTextStyles.bodyMedium.copyWith(
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          );
         }
 
         return const SizedBox.shrink();
@@ -144,6 +189,7 @@ class _PricingLayout extends StatelessWidget {
                 projectStatus: _projectStatusFromApi(
                   state.pricingVersion.status,
                 ),
+                readOnly: state.readOnly,
               ),
               const SizedBox(height: 24),
 
@@ -169,38 +215,54 @@ class _PricingLayout extends StatelessWidget {
                   }
                 },
                 onDataChanged: () {
-                  context.read<PricingCubit>().loadPricingData(projectId);
+                  context.read<PricingCubit>().loadPricingData(
+                    projectId,
+                    readOnly: state.readOnly,
+                  );
                 },
                 onSubItemProfitMarginChanged: (subItemId, profitMargin) async {
-                  await context.read<PricingCubit>().loadPricingData(projectId);
+                  if (state.readOnly) return;
+                  await context.read<PricingCubit>().loadPricingData(
+                    projectId,
+                    readOnly: state.readOnly,
+                  );
                   await context.read<PricingCubit>().updateSubItemProfitMargin(
                     subItemId,
                     profitMargin,
                     projectId,
                   );
                 },
-                onAddSubItem: (itemId) => _handleAddSubItem(context, itemId),
-                onReorderItems: (oldIndex, newIndex) async {
-                  await context.read<PricingCubit>().reorderItems(
-                    projectId,
-                    oldIndex,
-                    newIndex,
-                  );
-                },
-                onReorderSubItems: (itemId, oldIndex, newIndex) async {
-                  await context.read<PricingCubit>().reorderSubItems(
-                    projectId,
-                    itemId,
-                    oldIndex,
-                    newIndex,
-                  );
-                },
+                onAddSubItem: state.readOnly
+                    ? (_) {}
+                    : (itemId) => _handleAddSubItem(context, itemId),
+                onReorderItems: state.readOnly
+                    ? null
+                    : (oldIndex, newIndex) async {
+                        await context.read<PricingCubit>().reorderItems(
+                          projectId,
+                          oldIndex,
+                          newIndex,
+                        );
+                      },
+                onReorderSubItems: state.readOnly
+                    ? null
+                    : (itemId, oldIndex, newIndex) async {
+                        await context.read<PricingCubit>().reorderSubItems(
+                          projectId,
+                          itemId,
+                          oldIndex,
+                          newIndex,
+                        );
+                      },
+                readOnly: state.readOnly,
               ),
               const SizedBox(height: 24),
 
               // Add item button
-              AddPricingItemButton(onTap: () => _handleAddItem(context)),
-              const SizedBox(height: 24),
+              if (!state.readOnly) ...[
+                AddPricingItemButton(onTap: () => _handleAddItem(context)),
+                const SizedBox(height: 24),
+              ],
 
               // Sidebar with summary and actions
               _buildSidebar(context, state),
@@ -220,19 +282,16 @@ class _PricingLayout extends StatelessWidget {
     final isAuthenticated = authState is AuthAuthenticated;
 
     bool isAdminOrManager = false;
-    if (isAuthenticated) {
-      final user = (authState as AuthAuthenticated).user;
+    if (authState is AuthAuthenticated) {
+      final user = authState.user;
       isAdminOrManager = user.isAdmin || user.isManager;
     }
 
     final currentStatus = state.pricingVersion.status.toUpperCase();
     final showReturnButton =
         isAuthenticated &&
-        (currentStatus == 'PENDING_APPROVAL' ||
-            currentStatus == 'APPROVED' ||
-            currentStatus == 'PENDING_SIGNATURE');
+        (currentStatus == 'APPROVED' || currentStatus == 'PENDING_SIGNATURE');
 
-    final isPendingApproval = currentStatus == 'PENDING_APPROVAL';
     final isApproved = currentStatus == 'APPROVED';
     final isProfitPending = currentStatus == 'PENDING_SIGNATURE';
 
@@ -252,46 +311,51 @@ class _PricingLayout extends StatelessWidget {
         lastSaveTime: PricingStatusUtils.formatLastSaveTime(
           state.pricingVersion.updatedAt,
         ),
-        showReturnToPricing: showReturnButton,
-        onReturnToPricing: showReturnButton
+        showReturnToPricing: showReturnButton && !state.readOnly,
+        onReturnToPricing: showReturnButton && !state.readOnly
             ? () => _handleReturnToPricing(context)
             : null,
-        isAdminOrManager: isAdminOrManager,
-        isPendingApproval: isPendingApproval,
-        onAcceptPricing: isAdminOrManager && isPendingApproval
-            ? () => _handleAcceptPricing(context)
-            : null,
+        isAdminOrManager: isAdminOrManager && !state.readOnly,
+        isPendingApproval: false,
+        onAcceptPricing: null,
         isApproved: isApproved,
         isProfitPending: isProfitPending,
-        onMakeProfit: isAdminOrManager && isApproved
+        onMakeProfit: isAdminOrManager && !state.readOnly && isApproved
             ? () => _handleMakeProfit(context)
             : null,
-        onConfirmPricing: isProfitPending
+        onConfirmPricing: isProfitPending && !state.readOnly
             ? () => _handleConfirmPricing(context)
             : null,
-        onExportPdf: (isAdminOrManager && isApproved)
+        onExportPdf: (isAdminOrManager)
             ? () => _handleExportPdf(context)
             : null,
         onExportContractPdf: isProfitPending
             ? () => _handleExportContractPdf(context)
             : null,
-        onConfirmContract: isProfitPending
+        onConfirmContract: isProfitPending && !state.readOnly
             ? () => _handleConfirmContract(context)
             : null,
-        onReturnContractToPricing: isProfitPending
+        onReturnContractToPricing: isProfitPending && !state.readOnly
             ? () => _handleReturnContractToPricing(context)
             : null,
-        onExportImages: (isAdminOrManager && isApproved)
+        onArchiveProject: isAuthenticated && !state.readOnly
+            ? () => _handleArchiveProject(context)
+            : null,
+        onExportImages: (isAdminOrManager)
             ? () => _handleExportImages(context)
             : null,
         onDeductionAmountChanged:
-            isAdminOrManager && (isApproved || isProfitPending)
+            isAdminOrManager &&
+                !state.readOnly &&
+                (isApproved || isProfitPending)
             ? (value) {
                 context.read<PricingCubit>().updateDeductionAmount(value);
               }
             : null,
         onDeductionAmountApplied:
-            isAdminOrManager && (isApproved || isProfitPending)
+            isAdminOrManager &&
+                !state.readOnly &&
+                (isApproved || isProfitPending)
             ? (value) async {
                 final cubit = context.read<PricingCubit>();
                 final currentState = cubit.state;
@@ -315,20 +379,24 @@ class _PricingLayout extends StatelessWidget {
               }
             : null,
         pricingVersionNotes: state.pricingVersion.notes,
-        onUpdateNotes: isAdminOrManager
+        onUpdateNotes: isAdminOrManager && !state.readOnly
             ? (notes) => _handleUpdateNotes(context, notes)
             : null,
-        onSubmit: () => _handleSubmit(context),
-        onSaveDraft: () {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(const SnackBar(content: Text('تم حفظ المسودة')));
-        },
+        onSubmit: state.readOnly ? null : () => _handleSubmit(context),
+        onSaveDraft: state.readOnly
+            ? null
+            : () {
+                ScaffoldMessenger.of(
+                  context,
+                ).showSnackBar(const SnackBar(content: Text('تم حفظ المسودة')));
+              },
         isDraft: currentStatus == 'DRAFT',
         isUnderPricing: currentStatus == 'UNDER_PRICING',
         isPendingSignature: currentStatus == 'PENDING_SIGNATURE',
         onBulkProfitMarginUpdate:
-            isAdminOrManager && (isApproved || isProfitPending)
+            isAdminOrManager &&
+                !state.readOnly &&
+                (isApproved || isProfitPending)
             ? (profitMargin) {
                 context.read<PricingCubit>().updateAllSubItemProfitMargins(
                   projectId,
@@ -341,6 +409,43 @@ class _PricingLayout extends StatelessWidget {
   }
 
   // Action handlers
+
+  Future<void> _handleArchiveProject(BuildContext context) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('أرشفة المشروع'),
+        content: const Text(
+          'هل تريد أرشفة هذا المشروع؟ سيتم إخفاء المشروع والتسعير المرتبط به من القوائم النشطة.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('إلغاء'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text('أرشفة'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true) return;
+
+    try {
+      await ProjectsApiDataSource().deleteProject(projectId);
+      if (!context.mounted) return;
+      context.go(AppRoutes.archivedProjects);
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('تمت أرشفة المشروع')));
+    } catch (e) {
+      if (context.mounted) {
+        _showErrorMessage(context, 'فشل أرشفة المشروع', e);
+      }
+    }
+  }
 
   Future<void> _handleAddItem(BuildContext context) async {
     final name = await AddItemDialog.showAddItemDialog(context);
@@ -403,30 +508,6 @@ class _PricingLayout extends StatelessWidget {
       } catch (e) {
         if (context.mounted) {
           _showErrorMessage(context, 'فشل إرجاع التسعير', e);
-        }
-      }
-    }
-  }
-
-  Future<void> _handleAcceptPricing(BuildContext context) async {
-    final confirmed = await PricingConfirmationDialogs.showAcceptPricingDialog(
-      context,
-    );
-
-    if (confirmed) {
-      try {
-        await context.read<PricingCubit>().approvePricing(projectId);
-        if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('تم قبول التسعير بنجاح'),
-              duration: Duration(seconds: 3),
-            ),
-          );
-        }
-      } catch (e) {
-        if (context.mounted) {
-          _showErrorMessage(context, 'فشل قبول التسعير', e);
         }
       }
     }
@@ -581,13 +662,13 @@ class _PricingLayout extends StatelessWidget {
       await context.read<PricingCubit>().submitForApproval(projectId);
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('تم إرسال التسعير للمراجعة')),
+          const SnackBar(content: Text('تم إرسال التسعير للتوقيع')),
         );
       }
     } catch (e) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('فشل إرسال التسعير: ${e.toString()}')),
+          SnackBar(content: Text('فشل إرسال التسعير للتوقيع: ${e.toString()}')),
         );
       }
     }
@@ -618,7 +699,7 @@ class _PricingLayout extends StatelessWidget {
       }
 
       // Save file
-      await _savePdfFile(context, pdfBytes, 'pricing');
+      await _savePdfFile(context, pdfBytes);
     } catch (e) {
       if (dialogContext != null && context.mounted) {
         try {
@@ -635,7 +716,7 @@ class _PricingLayout extends StatelessWidget {
     final state = context.read<PricingCubit>().state;
     if (state is! PricingLoaded) return;
 
-    final result = await showDialog<bool>(
+    await showDialog<bool>(
       context: context,
       builder: (context) => ContractExportDialog(
         projectId: projectId,
@@ -691,17 +772,11 @@ class _PricingLayout extends StatelessWidget {
 
   // Helper methods for file operations
 
-  Future<void> _savePdfFile(
-    BuildContext context,
-    List<int> pdfBytes,
-    String baseName,
-  ) async {
+  Future<void> _savePdfFile(BuildContext context, List<int> pdfBytes) async {
     final state = context.read<PricingCubit>().state;
     if (state is! PricingLoaded) return;
 
-    final projectName = state.projectName ?? 'project';
-    final fileName =
-        '$baseName-$projectName-v${state.pricingVersion.version}-${DateFormat('yyyy-MM-dd').format(DateTime.now())}.pdf';
+    final fileName = _buildPricingPdfFileName(state);
 
     File savedFile;
 
@@ -750,6 +825,24 @@ class _PricingLayout extends StatelessWidget {
         ),
       );
     }
+  }
+
+  String _buildPricingPdfFileName(PricingLoaded state) {
+    final projectName = _sanitizeFileNamePart(state.projectName, 'المشروع');
+    final clientName = _sanitizeFileNamePart(state.clientName, 'العميل');
+    final dateStr = DateFormat('yyyy-MM-dd').format(DateTime.now());
+
+    return 'عرض سعر $projectName -$clientName - $dateStr.pdf';
+  }
+
+  String _sanitizeFileNamePart(String? value, String fallback) {
+    final sanitized =
+        (value?.trim().isNotEmpty == true ? value!.trim() : fallback)
+            .replaceAll(RegExp(r'[<>:"/\\|?*\x00-\x1F]'), ' ')
+            .replaceAll(RegExp(r'\s+'), ' ')
+            .trim();
+
+    return sanitized.isEmpty ? fallback : sanitized;
   }
 
   Future<void> _saveImageFile(

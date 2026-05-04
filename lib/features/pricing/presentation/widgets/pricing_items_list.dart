@@ -25,6 +25,7 @@ class PricingItemsList extends StatelessWidget {
   final Future<void> Function(int oldIndex, int newIndex)? onReorderItems;
   final Future<void> Function(String itemId, int oldIndex, int newIndex)?
   onReorderSubItems;
+  final bool readOnly;
 
   const PricingItemsList({
     super.key,
@@ -42,6 +43,7 @@ class PricingItemsList extends StatelessWidget {
     required this.onAddSubItem,
     this.onReorderItems,
     this.onReorderSubItems,
+    this.readOnly = false,
   });
 
   @override
@@ -61,9 +63,10 @@ class PricingItemsList extends StatelessWidget {
 
         final status = pricingStatus?.toUpperCase();
         final canReorder =
-            isAdminOrManager ||
-            status == 'DRAFT' ||
-            status == 'PENDING_SIGNATURE';
+            !readOnly &&
+            (isAdminOrManager ||
+                status == 'DRAFT' ||
+                status == 'PENDING_SIGNATURE');
 
         return ReorderableListView.builder(
           shrinkWrap: true,
@@ -97,7 +100,7 @@ class PricingItemsList extends StatelessWidget {
                       version: version,
                       item: item,
                       pricingStatus: pricingStatus,
-                      isAdminOrManager: isAdminOrManager,
+                      isAdminOrManager: isAdminOrManager && !readOnly,
                       initialIsExpanded: itemExpandedStates[item.id] ?? false,
                       initialSubItemExpandedStates:
                           subItemExpandedStates[item.id] ?? {},
@@ -106,16 +109,20 @@ class PricingItemsList extends StatelessWidget {
                           onItemExpandedChanged(item.id, isExpanded),
                       onSubItemExpandedChanged: (subItemStates) =>
                           onSubItemExpandedChanged(item.id, subItemStates),
-                      onItemDeleted: onDataChanged,
-                      onSubItemDeleted: (_) => onDataChanged(),
-                      onItemChanged: (_) => onDataChanged(),
+                      onItemDeleted: readOnly ? null : onDataChanged,
+                      onSubItemDeleted: readOnly
+                          ? null
+                          : (_) => onDataChanged(),
+                      onItemChanged: readOnly ? null : (_) => onDataChanged(),
                       onSubItemChanged: (updatedSubItem) {
                         onSubItemProfitMarginChanged(
                           updatedSubItem.id,
                           updatedSubItem.profitMargin,
                         );
                       },
-                      onAddSubItem: () => onAddSubItem(item.id),
+                      onAddSubItem: readOnly
+                          ? null
+                          : () => onAddSubItem(item.id),
                       canReorderItem: canReorder,
                       itemReorderIndex: index,
                       canReorderSubItems: canReorder,

@@ -43,6 +43,17 @@ class PricingApiDataSource {
     );
   }
 
+  Future<Map<String, dynamic>> getProjectMetadata(String projectId) async {
+    final response = await _apiClient.get(ApiEndpoints.projectById(projectId));
+    final responseData = response.data as Map<String, dynamic>;
+    final data = responseData['data'] as Map<String, dynamic>;
+
+    return {
+      'name': data['name'] as String?,
+      'clientName': data['clientName'] as String?,
+    };
+  }
+
   /// Create a new pricing version
   Future<PricingVersionModel> createPricingVersion(
     String projectId, {
@@ -559,7 +570,7 @@ class PricingApiDataSource {
     );
   }
 
-  /// Return pricing from PENDING_APPROVAL or PENDING_SIGNATURE to DRAFT for editing
+  /// Return pricing from APPROVED or PENDING_SIGNATURE to DRAFT for editing
   Future<PricingVersionModel> returnToPricing(
     String projectId,
     int version, {

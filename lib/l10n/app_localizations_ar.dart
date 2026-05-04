@@ -155,9 +155,6 @@ class AppLocalizationsAr extends AppLocalizations {
   String get advertisementManagement => 'إدارة الإعلانات';
 
   @override
-  String get pendingApproval => 'في انتظار الموافقة';
-
-  @override
   String get pricingTiers => 'طبقات التسعير';
 
   @override

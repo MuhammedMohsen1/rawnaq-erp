@@ -155,9 +155,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get advertisementManagement => 'Advertisement Management';
 
   @override
-  String get pendingApproval => 'Pending Approval';
-
-  @override
   String get pricingTiers => 'Pricing Tiers';
 
   @override

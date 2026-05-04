@@ -3,11 +3,7 @@ import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_text_styles.dart';
 
 /// Type of financial summary card
-enum FinancialSummaryCardType {
-  totalReceived,
-  totalExpenses,
-  netCashFlow,
-}
+enum FinancialSummaryCardType { totalReceived, totalExpenses, netCashFlow }
 
 /// Reusable card widget for financial metrics
 class FinancialSummaryCard extends StatelessWidget {
@@ -125,11 +121,7 @@ class FinancialSummaryCard extends StatelessWidget {
                 ),
               ),
               // Icon
-              Icon(
-                _getIcon(),
-                size: 48,
-                color: _getIconColor(),
-              ),
+              Icon(_getIcon(), size: 48, color: _getIconColor()),
             ],
           ),
         ],
@@ -144,7 +136,7 @@ class FinancialSummaryCard extends StatelessWidget {
       case FinancialSummaryCardType.totalExpenses:
         return 'إجمالي المصروفات';
       case FinancialSummaryCardType.netCashFlow:
-        return 'صافي التدفق النقدي';
+        return 'سيولة';
     }
   }
 
@@ -220,4 +212,3 @@ class FinancialSummaryCard extends StatelessWidget {
     );
   }
 }
-

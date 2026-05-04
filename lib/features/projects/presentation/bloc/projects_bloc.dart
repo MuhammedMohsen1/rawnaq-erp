@@ -9,9 +9,10 @@ class ProjectsBloc extends Bloc<ProjectsEvent, ProjectsState> {
   final ProjectsRepository _repository;
 
   ProjectsBloc({required ProjectsRepository repository})
-      : _repository = repository,
-        super(const ProjectsInitial()) {
+    : _repository = repository,
+      super(const ProjectsInitial()) {
     on<LoadProjects>(_onLoadProjects);
+    on<LoadMoreProjects>(_onLoadMoreProjects);
     on<RefreshProjects>(_onRefreshProjects);
     on<SearchProjects>(_onSearchProjects);
     on<FilterByStatus>(_onFilterByStatus);
@@ -22,6 +23,8 @@ class ProjectsBloc extends Bloc<ProjectsEvent, ProjectsState> {
     on<CreateProjectWithData>(_onCreateProjectWithData);
     on<UpdateProject>(_onUpdateProject);
     on<DeleteProject>(_onDeleteProject);
+    on<RestoreProject>(_onRestoreProject);
+    on<UpdateProjectStatus>(_onUpdateProjectStatus);
     on<LoadTeamMembers>(_onLoadTeamMembers);
     on<LoadStatistics>(_onLoadStatistics);
     on<ChangeViewMode>(_onChangeViewMode);
@@ -40,6 +43,7 @@ class ProjectsBloc extends Bloc<ProjectsEvent, ProjectsState> {
       managerId: event.managerId,
       teamMemberId: event.teamMemberId,
       searchQuery: event.searchQuery,
+      archived: event.archived,
       page: requestedPage,
       limit: requestedLimit,
     );
@@ -63,20 +67,84 @@ class ProjectsBloc extends Bloc<ProjectsEvent, ProjectsState> {
           (stats) => stats,
         );
 
-        emit(ProjectsLoaded(
-          projects: paginatedResult.projects,
-          filteredProjects: paginatedResult.projects,
-          teamMembers: teamMembers.cast(),
-          statistics: statistics,
-          statusFilter: event.status,
-          managerFilter: event.managerId,
-          teamMemberFilter: event.teamMemberId,
-          searchQuery: event.searchQuery,
-          currentPage: paginatedResult.page,
-          totalPages: paginatedResult.totalPages,
-          totalItems: paginatedResult.total,
-          pageSize: paginatedResult.limit,
-        ));
+        emit(
+          ProjectsLoaded(
+            projects: paginatedResult.projects,
+            filteredProjects: paginatedResult.projects,
+            teamMembers: teamMembers.cast(),
+            statistics: statistics,
+            statusFilter: event.status,
+            managerFilter: event.managerId,
+            teamMemberFilter: event.teamMemberId,
+            searchQuery: event.searchQuery,
+            archived: event.archived,
+            currentPage: paginatedResult.page,
+            totalPages: paginatedResult.totalPages,
+            totalItems: paginatedResult.total,
+            pageSize: paginatedResult.limit,
+            hasMore: paginatedResult.page < paginatedResult.totalPages,
+          ),
+        );
+      },
+    );
+  }
+
+  Future<void> _onLoadMoreProjects(
+    LoadMoreProjects event,
+    Emitter<ProjectsState> emit,
+  ) async {
+    if (state is! ProjectsLoaded) return;
+
+    final currentState = state as ProjectsLoaded;
+    if (currentState.isLoadingMore || !currentState.hasMore) return;
+
+    emit(currentState.copyWith(isLoadingMore: true));
+
+    final nextPage = currentState.currentPage + 1;
+    final result = await _repository.getProjects(
+      status: currentState.statusFilter,
+      managerId: currentState.managerFilter,
+      teamMemberId: currentState.teamMemberFilter,
+      searchQuery: currentState.searchQuery,
+      archived: currentState.archived,
+      page: nextPage,
+      limit: currentState.pageSize,
+    );
+
+    result.fold(
+      (failure) {
+        emit(
+          ProjectsError(message: failure.message, previousState: currentState),
+        );
+      },
+      (paginatedResult) {
+        final projects = [
+          ...currentState.projects,
+          ...paginatedResult.projects,
+        ];
+        final filteredProjects = currentState.searchQuery?.isNotEmpty == true
+            ? projects.where((project) {
+                final query = currentState.searchQuery!.toLowerCase();
+                return project.name.toLowerCase().contains(query) ||
+                    (project.description?.toLowerCase().contains(query) ??
+                        false) ||
+                    (project.clientName?.toLowerCase().contains(query) ??
+                        false);
+              }).toList()
+            : projects;
+
+        emit(
+          currentState.copyWith(
+            projects: projects,
+            filteredProjects: filteredProjects,
+            currentPage: paginatedResult.page,
+            totalPages: paginatedResult.totalPages,
+            totalItems: paginatedResult.total,
+            pageSize: paginatedResult.limit,
+            hasMore: paginatedResult.page < paginatedResult.totalPages,
+            isLoadingMore: false,
+          ),
+        );
       },
     );
   }
@@ -87,14 +155,17 @@ class ProjectsBloc extends Bloc<ProjectsEvent, ProjectsState> {
   ) async {
     if (state is ProjectsLoaded) {
       final currentState = state as ProjectsLoaded;
-      add(LoadProjects(
-        status: currentState.statusFilter,
-        managerId: currentState.managerFilter,
-        teamMemberId: currentState.teamMemberFilter,
-        searchQuery: currentState.searchQuery,
-        page: currentState.currentPage,
-        limit: currentState.pageSize,
-      ));
+      add(
+        LoadProjects(
+          status: currentState.statusFilter,
+          managerId: currentState.managerFilter,
+          teamMemberId: currentState.teamMemberFilter,
+          searchQuery: currentState.searchQuery,
+          archived: currentState.archived,
+          page: currentState.currentPage,
+          limit: currentState.pageSize,
+        ),
+      );
     } else {
       add(const LoadProjects());
     }
@@ -106,12 +177,14 @@ class ProjectsBloc extends Bloc<ProjectsEvent, ProjectsState> {
   ) async {
     if (state is ProjectsLoaded) {
       final currentState = state as ProjectsLoaded;
-      
+
       if (event.query.isEmpty) {
-        emit(currentState.copyWith(
-          filteredProjects: currentState.projects,
-          clearSearchQuery: true,
-        ));
+        emit(
+          currentState.copyWith(
+            filteredProjects: currentState.projects,
+            clearSearchQuery: true,
+          ),
+        );
       } else {
         final query = event.query.toLowerCase();
         final filtered = currentState.projects.where((project) {
@@ -119,10 +192,12 @@ class ProjectsBloc extends Bloc<ProjectsEvent, ProjectsState> {
               (project.description?.toLowerCase().contains(query) ?? false);
         }).toList();
 
-        emit(currentState.copyWith(
-          filteredProjects: filtered,
-          searchQuery: event.query,
-        ));
+        emit(
+          currentState.copyWith(
+            filteredProjects: filtered,
+            searchQuery: event.query,
+          ),
+        );
       }
     }
   }
@@ -133,15 +208,18 @@ class ProjectsBloc extends Bloc<ProjectsEvent, ProjectsState> {
   ) async {
     if (state is ProjectsLoaded) {
       final currentState = state as ProjectsLoaded;
-      
-      add(LoadProjects(
-        status: event.status,
-        managerId: currentState.managerFilter,
-        teamMemberId: currentState.teamMemberFilter,
-        searchQuery: currentState.searchQuery,
-        page: 1,
-        limit: currentState.pageSize,
-      ));
+
+      add(
+        LoadProjects(
+          status: event.status,
+          managerId: currentState.managerFilter,
+          teamMemberId: currentState.teamMemberFilter,
+          searchQuery: currentState.searchQuery,
+          archived: currentState.archived,
+          page: 1,
+          limit: currentState.pageSize,
+        ),
+      );
     }
   }
 
@@ -151,15 +229,18 @@ class ProjectsBloc extends Bloc<ProjectsEvent, ProjectsState> {
   ) async {
     if (state is ProjectsLoaded) {
       final currentState = state as ProjectsLoaded;
-      
-      add(LoadProjects(
-        status: currentState.statusFilter,
-        managerId: event.managerId,
-        teamMemberId: currentState.teamMemberFilter,
-        searchQuery: currentState.searchQuery,
-        page: 1,
-        limit: currentState.pageSize,
-      ));
+
+      add(
+        LoadProjects(
+          status: currentState.statusFilter,
+          managerId: event.managerId,
+          teamMemberId: currentState.teamMemberFilter,
+          searchQuery: currentState.searchQuery,
+          archived: currentState.archived,
+          page: 1,
+          limit: currentState.pageSize,
+        ),
+      );
     }
   }
 
@@ -169,15 +250,18 @@ class ProjectsBloc extends Bloc<ProjectsEvent, ProjectsState> {
   ) async {
     if (state is ProjectsLoaded) {
       final currentState = state as ProjectsLoaded;
-      
-      add(LoadProjects(
-        status: currentState.statusFilter,
-        managerId: currentState.managerFilter,
-        teamMemberId: event.teamMemberId,
-        searchQuery: currentState.searchQuery,
-        page: 1,
-        limit: currentState.pageSize,
-      ));
+
+      add(
+        LoadProjects(
+          status: currentState.statusFilter,
+          managerId: currentState.managerFilter,
+          teamMemberId: event.teamMemberId,
+          searchQuery: currentState.searchQuery,
+          archived: currentState.archived,
+          page: 1,
+          limit: currentState.pageSize,
+        ),
+      );
     }
   }
 
@@ -200,16 +284,15 @@ class ProjectsBloc extends Bloc<ProjectsEvent, ProjectsState> {
 
       result.fold(
         (failure) {
-          emit(ProjectsError(
-            message: failure.message,
-            previousState: currentState,
-          ));
+          emit(
+            ProjectsError(
+              message: failure.message,
+              previousState: currentState,
+            ),
+          );
         },
         (project) {
-          emit(ProjectCreated(
-            project: project,
-            previousState: currentState,
-          ));
+          emit(ProjectCreated(project: project, previousState: currentState));
           // Refresh the list
           add(const RefreshProjects());
         },
@@ -225,7 +308,7 @@ class ProjectsBloc extends Bloc<ProjectsEvent, ProjectsState> {
     if (state is! ProjectsLoaded) {
       emit(const ProjectsLoading());
       final loadResult = await _repository.getProjects();
-      
+
       await loadResult.fold(
         (failure) async {
           emit(ProjectsError(message: failure.message));
@@ -244,16 +327,19 @@ class ProjectsBloc extends Bloc<ProjectsEvent, ProjectsState> {
             (stats) => stats,
           );
 
-          emit(ProjectsLoaded(
-            projects: paginatedResult.projects,
-            filteredProjects: paginatedResult.projects,
-            teamMembers: teamMembers.cast(),
-            statistics: statistics,
-            currentPage: paginatedResult.page,
-            totalPages: paginatedResult.totalPages,
-            totalItems: paginatedResult.total,
-            pageSize: paginatedResult.limit,
-          ));
+          emit(
+            ProjectsLoaded(
+              projects: paginatedResult.projects,
+              filteredProjects: paginatedResult.projects,
+              teamMembers: teamMembers.cast(),
+              statistics: statistics,
+              archived: false,
+              currentPage: paginatedResult.page,
+              totalPages: paginatedResult.totalPages,
+              totalItems: paginatedResult.total,
+              pageSize: paginatedResult.limit,
+            ),
+          );
         },
       );
     }
@@ -280,16 +366,15 @@ class ProjectsBloc extends Bloc<ProjectsEvent, ProjectsState> {
 
       result.fold(
         (failure) {
-          emit(ProjectsError(
-            message: failure.message,
-            previousState: currentState,
-          ));
+          emit(
+            ProjectsError(
+              message: failure.message,
+              previousState: currentState,
+            ),
+          );
         },
         (project) {
-          emit(ProjectCreated(
-            project: project,
-            previousState: currentState,
-          ));
+          emit(ProjectCreated(project: project, previousState: currentState));
           // Refresh the list
           add(const RefreshProjects());
         },
@@ -309,16 +394,15 @@ class ProjectsBloc extends Bloc<ProjectsEvent, ProjectsState> {
 
       result.fold(
         (failure) {
-          emit(ProjectsError(
-            message: failure.message,
-            previousState: currentState,
-          ));
+          emit(
+            ProjectsError(
+              message: failure.message,
+              previousState: currentState,
+            ),
+          );
         },
         (project) {
-          emit(ProjectUpdated(
-            project: project,
-            previousState: currentState,
-          ));
+          emit(ProjectUpdated(project: project, previousState: currentState));
           // Refresh the list
           add(const RefreshProjects());
         },
@@ -338,18 +422,90 @@ class ProjectsBloc extends Bloc<ProjectsEvent, ProjectsState> {
 
       result.fold(
         (failure) {
-          emit(ProjectsError(
-            message: failure.message,
-            previousState: currentState,
-          ));
+          emit(
+            ProjectsError(
+              message: failure.message,
+              previousState: currentState,
+            ),
+          );
         },
         (_) {
-          emit(ProjectDeleted(
-            projectId: event.projectId,
-            previousState: currentState,
-          ));
+          emit(
+            ProjectDeleted(
+              projectId: event.projectId,
+              previousState: currentState,
+            ),
+          );
           // Refresh the list
           add(const RefreshProjects());
+        },
+      );
+    }
+  }
+
+  Future<void> _onRestoreProject(
+    RestoreProject event,
+    Emitter<ProjectsState> emit,
+  ) async {
+    if (state is ProjectsLoaded) {
+      final currentState = state as ProjectsLoaded;
+      emit(ProjectsOperationInProgress(currentState));
+
+      final result = await _repository.restoreProject(event.projectId);
+
+      result.fold(
+        (failure) {
+          emit(
+            ProjectsError(
+              message: failure.message,
+              previousState: currentState,
+            ),
+          );
+        },
+        (project) {
+          emit(ProjectUpdated(project: project, previousState: currentState));
+          add(const RefreshProjects());
+        },
+      );
+    }
+  }
+
+  Future<void> _onUpdateProjectStatus(
+    UpdateProjectStatus event,
+    Emitter<ProjectsState> emit,
+  ) async {
+    if (state is ProjectsLoaded) {
+      final currentState = state as ProjectsLoaded;
+      emit(ProjectsOperationInProgress(currentState));
+
+      final result = await _repository.updateProjectStatus(
+        event.projectId,
+        event.status,
+        notes: event.notes,
+      );
+
+      result.fold(
+        (failure) {
+          emit(
+            ProjectsError(
+              message: failure.message,
+              previousState: currentState,
+            ),
+          );
+        },
+        (project) {
+          emit(ProjectUpdated(project: project, previousState: currentState));
+          add(
+            LoadProjects(
+              status: currentState.statusFilter,
+              managerId: currentState.managerFilter,
+              teamMemberId: currentState.teamMemberFilter,
+              searchQuery: currentState.searchQuery,
+              archived: currentState.archived,
+              page: currentState.currentPage,
+              limit: currentState.pageSize,
+            ),
+          );
         },
       );
     }
@@ -361,9 +517,9 @@ class ProjectsBloc extends Bloc<ProjectsEvent, ProjectsState> {
   ) async {
     if (state is ProjectsLoaded) {
       final currentState = state as ProjectsLoaded;
-      
+
       final result = await _repository.getTeamMembers();
-      
+
       result.fold(
         (failure) {
           // Keep current state, just log error
@@ -381,9 +537,9 @@ class ProjectsBloc extends Bloc<ProjectsEvent, ProjectsState> {
   ) async {
     if (state is ProjectsLoaded) {
       final currentState = state as ProjectsLoaded;
-      
+
       final result = await _repository.getProjectStatistics();
-      
+
       result.fold(
         (failure) {
           // Keep current state, just log error
@@ -395,10 +551,7 @@ class ProjectsBloc extends Bloc<ProjectsEvent, ProjectsState> {
     }
   }
 
-  void _onChangeViewMode(
-    ChangeViewMode event,
-    Emitter<ProjectsState> emit,
-  ) {
+  void _onChangeViewMode(ChangeViewMode event, Emitter<ProjectsState> emit) {
     if (state is ProjectsLoaded) {
       final currentState = state as ProjectsLoaded;
       emit(currentState.copyWith(isTableView: event.isTableView));

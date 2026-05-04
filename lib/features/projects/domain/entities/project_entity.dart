@@ -20,6 +20,7 @@ class ProjectEntity extends Equatable {
   final DateTime? createdAt;
   final DateTime? updatedAt;
   final int? itemsCount;
+  final bool archived;
 
   const ProjectEntity({
     required this.id,
@@ -38,27 +39,29 @@ class ProjectEntity extends Equatable {
     this.createdAt,
     this.updatedAt,
     this.itemsCount,
+    this.archived = false,
   });
 
   @override
   List<Object?> get props => [
-        id,
-        name,
-        status,
-        progress,
-        startDate,
-        endDate,
-        managerId,
-        manager,
-        teamMemberIds,
-        teamMembers,
-        description,
-        clientName,
-        clientPhone,
-        createdAt,
-        updatedAt,
-        itemsCount,
-      ];
+    id,
+    name,
+    status,
+    progress,
+    startDate,
+    endDate,
+    managerId,
+    manager,
+    teamMemberIds,
+    teamMembers,
+    description,
+    clientName,
+    clientPhone,
+    createdAt,
+    updatedAt,
+    itemsCount,
+    archived,
+  ];
 
   /// Create a copy with updated fields
   ProjectEntity copyWith({
@@ -78,6 +81,7 @@ class ProjectEntity extends Equatable {
     DateTime? createdAt,
     DateTime? updatedAt,
     int? itemsCount,
+    bool? archived,
   }) {
     return ProjectEntity(
       id: id ?? this.id,
@@ -96,6 +100,7 @@ class ProjectEntity extends Equatable {
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       itemsCount: itemsCount ?? this.itemsCount,
+      archived: archived ?? this.archived,
     );
   }
 
@@ -122,4 +127,3 @@ class ProjectEntity extends Equatable {
     return now.difference(startDate).inDays;
   }
 }
-

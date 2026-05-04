@@ -131,7 +131,7 @@ class MockProjectsDataSource {
     ProjectEntity(
       id: 'proj-6',
       name: 'مكتب شركة التقنية',
-      status: ProjectStatus.pendingApproval,
+      status: ProjectStatus.pendingSignature,
       progress: 35,
       startDate: DateTime(2024, 5, 1),
       endDate: DateTime(2024, 11, 30),
@@ -303,8 +303,7 @@ class MockProjectsDataSource {
           (p) =>
               p.status == ProjectStatus.draft ||
               p.status == ProjectStatus.underPricing ||
-              p.status == ProjectStatus.pendingSignature ||
-              p.status == ProjectStatus.pendingApproval,
+              p.status == ProjectStatus.pendingSignature,
         )
         .length;
 

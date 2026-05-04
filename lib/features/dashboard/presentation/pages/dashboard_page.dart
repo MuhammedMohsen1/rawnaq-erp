@@ -89,7 +89,7 @@ class _DashboardPageState extends State<DashboardPage> {
           // Map new statuses to old statistics categories:
           // active = execution (projects in execution phase)
           // delayed = 0 (no longer tracked separately)
-          // onHold = draft + underPricing + profitPending + pendingApproval
+          // onHold = draft + underPricing + pendingSignature
           final execution = state.projects
               .where((p) => p.status == ProjectStatus.execution)
               .length;
@@ -101,13 +101,10 @@ class _DashboardPageState extends State<DashboardPage> {
           final profitPending = state.projects
               .where((p) => p.status == ProjectStatus.pendingSignature)
               .length;
-          final pendingApproval = state.projects
-              .where((p) => p.status == ProjectStatus.pendingApproval)
-              .length;
 
           activeCount = execution;
           delayedCount = 0; // No longer tracked separately
-          onHoldCount = draft + underPricing + profitPending + pendingApproval;
+          onHoldCount = draft + underPricing + profitPending;
         }
 
         return LayoutBuilder(

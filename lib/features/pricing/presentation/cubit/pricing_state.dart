@@ -23,47 +23,57 @@ class PricingLoading extends PricingState {
 class PricingLoaded extends PricingState {
   final PricingVersionModel pricingVersion;
   final String? projectName;
+  final String? clientName;
   final Map<String, bool> itemExpandedStates;
   final Map<String, Map<String, bool>> subItemExpandedStates;
   final Map<String, double> subItemProfitMargins;
   final double deductionAmount;
+  final bool readOnly;
 
   const PricingLoaded({
     required this.pricingVersion,
     this.projectName,
+    this.clientName,
     required this.itemExpandedStates,
     required this.subItemExpandedStates,
     required this.subItemProfitMargins,
     required this.deductionAmount,
+    this.readOnly = false,
   });
 
   @override
   List<Object?> get props => [
-        pricingVersion,
-        projectName,
-        itemExpandedStates,
-        subItemExpandedStates,
-        subItemProfitMargins,
-        deductionAmount,
-      ];
+    pricingVersion,
+    projectName,
+    clientName,
+    itemExpandedStates,
+    subItemExpandedStates,
+    subItemProfitMargins,
+    deductionAmount,
+    readOnly,
+  ];
 
   /// Create a copy with updated fields
   PricingLoaded copyWith({
     PricingVersionModel? pricingVersion,
     String? projectName,
+    String? clientName,
     Map<String, bool>? itemExpandedStates,
     Map<String, Map<String, bool>>? subItemExpandedStates,
     Map<String, double>? subItemProfitMargins,
     double? deductionAmount,
+    bool? readOnly,
   }) {
     return PricingLoaded(
       pricingVersion: pricingVersion ?? this.pricingVersion,
       projectName: projectName ?? this.projectName,
+      clientName: clientName ?? this.clientName,
       itemExpandedStates: itemExpandedStates ?? this.itemExpandedStates,
       subItemExpandedStates:
           subItemExpandedStates ?? this.subItemExpandedStates,
       subItemProfitMargins: subItemProfitMargins ?? this.subItemProfitMargins,
       deductionAmount: deductionAmount ?? this.deductionAmount,
+      readOnly: readOnly ?? this.readOnly,
     );
   }
 
@@ -74,8 +84,6 @@ class PricingLoaded extends PricingState {
         return 'مسودة';
       case 'PENDING_SIGNATURE':
         return 'في انتظار التوقيع';
-      case 'PENDING_APPROVAL':
-        return 'في انتظار الموافقة';
       case 'APPROVED':
         return 'موافق عليه';
       case 'REJECTED':
@@ -101,6 +109,16 @@ class PricingLoaded extends PricingState {
     }
     return totalCount;
   }
+}
+
+class PricingEmptyReadOnly extends PricingState {
+  final String? projectName;
+  final String? clientName;
+
+  const PricingEmptyReadOnly({this.projectName, this.clientName});
+
+  @override
+  List<Object?> get props => [projectName, clientName];
 }
 
 /// Error state

@@ -23,6 +23,7 @@ class ProjectsRepositoryImpl implements ProjectsRepository {
     String? managerId,
     String? teamMemberId,
     String? searchQuery,
+    bool archived = false,
     int? page,
     int? limit,
   }) async {
@@ -30,6 +31,7 @@ class ProjectsRepositoryImpl implements ProjectsRepository {
       final response = await _dataSource.getProjects(
         status: status,
         clientName: searchQuery, // Use clientName for search
+        archived: archived,
         page: page ?? 1,
         limit: limit ?? 10,
       );
@@ -54,6 +56,25 @@ class ProjectsRepositoryImpl implements ProjectsRepository {
       );
     } catch (e) {
       return Left(_attachmentFailure(e));
+    }
+  }
+
+  @override
+  Future<Either<Failure, ProjectEntity>> updateProjectStatus(
+    String id,
+    ProjectStatus status, {
+    String? notes,
+  }) async {
+    try {
+      final response = await _dataSource.updateProjectStatus(
+        id,
+        status.toApiString(),
+        notes,
+      );
+      final updatedProject = ProjectModel.fromJson(response);
+      return Right(updatedProject);
+    } catch (e) {
+      return Left(ServerFailure(message: e.toString()));
     }
   }
 
@@ -179,6 +200,17 @@ class ProjectsRepositoryImpl implements ProjectsRepository {
   }
 
   @override
+  Future<Either<Failure, ProjectEntity>> restoreProject(String id) async {
+    try {
+      final response = await _dataSource.restoreProject(id);
+      final restoredProject = ProjectModel.fromJson(response);
+      return Right(restoredProject);
+    } catch (e) {
+      return Left(ServerFailure(message: e.toString()));
+    }
+  }
+
+  @override
   Future<Either<Failure, List<ProjectAttachmentEntity>>> getProjectAttachments(
     String projectId,
   ) async {
@@ -287,9 +319,6 @@ class ProjectsRepositoryImpl implements ProjectsRepository {
       final profitPending = projects
           .where((p) => p.status == ProjectStatus.pendingSignature)
           .length;
-      final pendingApproval = projects
-          .where((p) => p.status == ProjectStatus.pendingApproval)
-          .length;
       final execution = projects
           .where((p) => p.status == ProjectStatus.execution)
           .length;
@@ -300,7 +329,7 @@ class ProjectsRepositoryImpl implements ProjectsRepository {
       // Map to old stats format for compatibility (if needed)
       final active = execution; // Execution is the active state
       final delayed = 0; // No longer tracked separately
-      final onHold = draft + underPricing + profitPending + pendingApproval;
+      final onHold = draft + underPricing + profitPending;
 
       return Right(
         ProjectStatistics(

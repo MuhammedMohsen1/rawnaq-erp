@@ -20,6 +20,7 @@ import '../../domain/entities/project_attachment_entity.dart';
 class ProjectAttachmentsSection extends StatelessWidget {
   final List<ProjectAttachmentEntity> attachments;
   final bool canDelete;
+  final bool canUpload;
   final bool isUploading;
   final bool isDeleting;
   final VoidCallback onUpload;
@@ -29,6 +30,7 @@ class ProjectAttachmentsSection extends StatelessWidget {
     super.key,
     required this.attachments,
     required this.canDelete,
+    this.canUpload = true,
     required this.isUploading,
     required this.isDeleting,
     required this.onUpload,
@@ -113,7 +115,8 @@ class ProjectAttachmentsSection extends StatelessWidget {
           trailing: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              _UploadButton(isUploading: isUploading, onUpload: onUpload),
+              if (canUpload)
+                _UploadButton(isUploading: isUploading, onUpload: onUpload),
               const SizedBox(width: 4),
               const Icon(
                 Icons.keyboard_arrow_down_rounded,

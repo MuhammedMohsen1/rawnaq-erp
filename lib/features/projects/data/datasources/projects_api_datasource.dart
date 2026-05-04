@@ -16,6 +16,7 @@ class ProjectsApiDataSource {
     String? type,
     String? departmentId,
     String? clientName,
+    bool archived = false,
     int? page,
     int? limit,
   }) async {
@@ -28,6 +29,7 @@ class ProjectsApiDataSource {
     if (type != null) queryParams['type'] = type;
     if (departmentId != null) queryParams['departmentId'] = departmentId;
     if (clientName != null) queryParams['clientName'] = clientName;
+    if (archived) queryParams['archived'] = 'true';
     if (page != null) queryParams['page'] = page;
     if (limit != null) queryParams['limit'] = limit;
 
@@ -98,6 +100,13 @@ class ProjectsApiDataSource {
   /// Delete a project
   Future<void> deleteProject(String id) async {
     await _apiClient.delete(ApiEndpoints.projectById(id));
+  }
+
+  Future<Map<String, dynamic>> restoreProject(String id) async {
+    final response = await _apiClient.patch(ApiEndpoints.restoreProject(id));
+
+    final responseData = response.data as Map<String, dynamic>;
+    return responseData['data'] as Map<String, dynamic>;
   }
 
   Future<List<dynamic>> getProjectAttachments(String projectId) async {

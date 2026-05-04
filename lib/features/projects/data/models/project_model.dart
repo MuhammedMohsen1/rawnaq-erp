@@ -21,6 +21,7 @@ class ProjectModel extends ProjectEntity {
     super.createdAt,
     super.updatedAt,
     super.itemsCount,
+    super.archived,
   });
 
   /// Create from JSON (backend format)
@@ -72,6 +73,7 @@ class ProjectModel extends ProjectEntity {
           ? DateTime.parse(json['updatedAt'] as String)
           : null,
       itemsCount: json['itemsCount'] as int?,
+      archived: json['archived'] as bool? ?? json['deletedAt'] != null,
     );
   }
 
@@ -95,6 +97,7 @@ class ProjectModel extends ProjectEntity {
       'description': description,
       'createdAt': createdAt?.toIso8601String(),
       'updatedAt': updatedAt?.toIso8601String(),
+      'archived': archived,
     };
   }
 
@@ -117,6 +120,7 @@ class ProjectModel extends ProjectEntity {
       createdAt: entity.createdAt,
       updatedAt: entity.updatedAt,
       itemsCount: entity.itemsCount,
+      archived: entity.archived,
     );
   }
 
@@ -139,6 +143,7 @@ class ProjectModel extends ProjectEntity {
       createdAt: createdAt,
       updatedAt: updatedAt,
       itemsCount: itemsCount,
+      archived: archived,
     );
   }
 }

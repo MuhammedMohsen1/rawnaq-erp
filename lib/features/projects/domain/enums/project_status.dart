@@ -1,14 +1,11 @@
 /// Status of a project in the system
-/// Matches the Prisma schema: DRAFT, UNDER_PRICING, PENDING_SIGNATURE, PENDING_APPROVAL, EXECUTION, COMPLETED, CANCELLED
+/// Matches the Prisma schema: DRAFT, UNDER_PRICING, PENDING_SIGNATURE, EXECUTION, COMPLETED, CANCELLED
 enum ProjectStatus {
   /// Project is in draft stage
   draft,
 
   /// Project is under pricing review
   underPricing,
-
-  /// Project is pending approval
-  pendingApproval,
 
   /// Project is  approved
   approved,
@@ -36,8 +33,6 @@ extension ProjectStatusExtension on ProjectStatus {
       case ProjectStatus.underPricing:
         return 'قيد التسعير';
 
-      case ProjectStatus.pendingApproval:
-        return 'في انتظار الموافقة';
       case ProjectStatus.approved:
         return 'موافق عليه';
       case ProjectStatus.pendingSignature:
@@ -60,8 +55,6 @@ extension ProjectStatusExtension on ProjectStatus {
         return 'Under Pricing';
       case ProjectStatus.pendingSignature:
         return 'Pending Signature';
-      case ProjectStatus.pendingApproval:
-        return 'Pending Approval';
       case ProjectStatus.approved:
         return 'Approved';
 
@@ -90,8 +83,6 @@ extension ProjectStatusExtension on ProjectStatus {
         return 'PENDING_SIGNATURE';
       case ProjectStatus.approved:
         return 'PENDING_SIGNATURE';
-      case ProjectStatus.pendingApproval:
-        return 'PENDING_APPROVAL';
       case ProjectStatus.execution:
         return 'EXECUTION';
       case ProjectStatus.completed:
@@ -111,8 +102,6 @@ extension ProjectStatusExtension on ProjectStatus {
         return ProjectStatus.underPricing;
       case 'PENDING_SIGNATURE':
         return ProjectStatus.pendingSignature;
-      case 'PENDING_APPROVAL':
-        return ProjectStatus.pendingApproval;
       case 'EXECUTION':
         return ProjectStatus.execution;
       case 'COMPLETED':

@@ -43,8 +43,6 @@ class StatusBadgeWidget extends StatelessWidget {
         return AppColors.info.withValues(alpha: 0.15);
       case ProjectStatus.pendingSignature:
         return AppColors.warning.withValues(alpha: 0.15);
-      case ProjectStatus.pendingApproval:
-        return AppColors.warning.withValues(alpha: 0.15);
       case ProjectStatus.approved:
         return AppColors.statusCompleted.withValues(alpha: 0.15);
 
@@ -64,8 +62,6 @@ class StatusBadgeWidget extends StatelessWidget {
       case ProjectStatus.underPricing:
         return AppColors.info;
       case ProjectStatus.pendingSignature:
-        return AppColors.warning;
-      case ProjectStatus.pendingApproval:
         return AppColors.warning;
       case ProjectStatus.approved:
         return AppColors.statusCompleted;

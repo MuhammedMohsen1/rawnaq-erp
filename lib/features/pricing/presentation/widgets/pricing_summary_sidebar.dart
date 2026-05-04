@@ -25,6 +25,7 @@ class PricingSummarySidebar extends StatefulWidget {
   final VoidCallback? onExportContractPdf;
   final VoidCallback? onConfirmContract;
   final VoidCallback? onReturnContractToPricing;
+  final VoidCallback? onArchiveProject;
   final bool showReturnToPricing;
   final bool isAdminOrManager;
   final bool isPendingApproval;
@@ -60,6 +61,7 @@ class PricingSummarySidebar extends StatefulWidget {
     this.onExportContractPdf,
     this.onConfirmContract,
     this.onReturnContractToPricing,
+    this.onArchiveProject,
     this.showReturnToPricing = false,
     this.isAdminOrManager = false,
     this.isPendingApproval = false,
@@ -461,20 +463,6 @@ class _PricingSummarySidebarState extends State<PricingSummarySidebar> {
       ),
       child: Row(
         children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text('الإجمالي قبل الخصم', style: textStyle),
-                const SizedBox(height: 4),
-                Text(
-                  '${_formatNumberWithDecimals(widget.originalTotalAmount)} KD',
-                  style: valueStyle,
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(width: 8),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -1305,136 +1293,109 @@ class _PricingSummarySidebarState extends State<PricingSummarySidebar> {
             // Collect all buttons
             final buttons = <Widget>[];
 
-            // Accept Pricing Button
-            if (widget.isAdminOrManager &&
-                widget.isPendingApproval &&
-                widget.onAcceptPricing != null) {
-              buttons.add(
-                buildButton(
-                  onPressed: widget.onAcceptPricing,
-                  backgroundColor: const Color(0xFF10B981),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(Icons.check_circle, size: iconSize),
-                      SizedBox(width: isMobile ? 6 : 8),
-                      Text(
-                        'قبول التسعير',
-                        style: AppTextStyles.buttonLarge.copyWith(
-                          fontSize: buttonFontSize,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              );
-            }
+            // // Export PDF Button
+            // if (widget.isAdminOrManager &&
+            //     widget.isProfitPending &&
+            //     widget.onExportPdf != null) {
+            //   buttons.add(
+            //     buildButton(
+            //       onPressed: widget.onExportPdf,
+            //       backgroundColor: const Color(0xFF6366F1),
+            //       child: Row(
+            //         mainAxisAlignment: MainAxisAlignment.center,
+            //         children: [
+            //           Icon(Icons.picture_as_pdf, size: iconSize),
+            //           SizedBox(width: isMobile ? 6 : 8),
+            //           Text(
+            //             'تصدير PDF',
+            //             style: AppTextStyles.buttonLarge.copyWith(
+            //               fontSize: buttonFontSize,
+            //               fontWeight: FontWeight.w700,
+            //             ),
+            //           ),
+            //         ],
+            //       ),
+            //     ),
+            //   );
+            // }
 
-            // Collect all buttons
-            // Export PDF Button
-            if (widget.isAdminOrManager &&
-                widget.isApproved &&
-                widget.onExportPdf != null) {
-              buttons.add(
-                buildButton(
-                  onPressed: widget.onExportPdf,
-                  backgroundColor: const Color(0xFF6366F1),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(Icons.picture_as_pdf, size: iconSize),
-                      SizedBox(width: isMobile ? 6 : 8),
-                      Text(
-                        'تصدير PDF',
-                        style: AppTextStyles.buttonLarge.copyWith(
-                          fontSize: buttonFontSize,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              );
-            }
+            // // Export Images Button
+            // if (widget.isAdminOrManager &&
+            //     widget.isProfitPending &&
+            //     widget.onExportImages != null) {
+            //   buttons.add(
+            //     buildButton(
+            //       onPressed: widget.onExportImages,
+            //       backgroundColor: const Color(0xFF10B981),
+            //       child: Row(
+            //         mainAxisAlignment: MainAxisAlignment.center,
+            //         children: [
+            //           Icon(Icons.image, size: iconSize),
+            //           SizedBox(width: isMobile ? 6 : 8),
+            //           Text(
+            //             'تصدير كصورة',
+            //             style: AppTextStyles.buttonLarge.copyWith(
+            //               fontSize: buttonFontSize,
+            //               fontWeight: FontWeight.w700,
+            //             ),
+            //           ),
+            //         ],
+            //       ),
+            //     ),
+            //   );
+            // }
 
-            // Export Images Button
-            if (widget.isAdminOrManager &&
-                widget.isApproved &&
-                widget.onExportImages != null) {
-              buttons.add(
-                buildButton(
-                  onPressed: widget.onExportImages,
-                  backgroundColor: const Color(0xFF10B981),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(Icons.image, size: iconSize),
-                      SizedBox(width: isMobile ? 6 : 8),
-                      Text(
-                        'تصدير كصورة',
-                        style: AppTextStyles.buttonLarge.copyWith(
-                          fontSize: buttonFontSize,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              );
-            }
-
-            // Move to Pending Signature Button
-            if (widget.isAdminOrManager &&
-                widget.isApproved &&
-                widget.onMakeProfit != null) {
-              buttons.add(
-                buildButton(
-                  onPressed: widget.onMakeProfit,
-                  backgroundColor: const Color(0xFF6366F1),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(Icons.description, size: iconSize),
-                      SizedBox(width: isMobile ? 6 : 8),
-                      Text(
-                        'إعداد العقد والتوقيع',
-                        style: AppTextStyles.buttonLarge.copyWith(
-                          fontSize: buttonFontSize,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              );
-            }
+            // // Move to Pending Signature Button
+            // if (widget.isAdminOrManager &&
+            //     widget.isApproved &&
+            //     widget.onMakeProfit != null) {
+            //   buttons.add(
+            //     buildButton(
+            //       onPressed: widget.onMakeProfit,
+            //       backgroundColor: const Color(0xFF6366F1),
+            //       child: Row(
+            //         mainAxisAlignment: MainAxisAlignment.center,
+            //         children: [
+            //           Icon(Icons.description, size: iconSize),
+            //           SizedBox(width: isMobile ? 6 : 8),
+            //           Text(
+            //             'إعداد العقد والتوقيع',
+            //             style: AppTextStyles.buttonLarge.copyWith(
+            //               fontSize: buttonFontSize,
+            //               fontWeight: FontWeight.w700,
+            //             ),
+            //           ),
+            //         ],
+            //       ),
+            //     ),
+            //   );
+            // }
 
             // Contract-specific buttons
             if (widget.isProfitPending) {
-              if (widget.onExportContractPdf != null &&
-                  widget.isAdminOrManager) {
-                buttons.add(
-                  buildButton(
-                    onPressed: widget.onExportContractPdf,
-                    backgroundColor: const Color(0xFF6366F1),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(Icons.picture_as_pdf, size: iconSize),
-                        SizedBox(width: isMobile ? 6 : 8),
-                        Text(
-                          'تصدير عقد PDF',
-                          style: AppTextStyles.buttonLarge.copyWith(
-                            fontSize: buttonFontSize,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                );
-              }
+              // if (widget.onExportContractPdf != null &&
+              //     widget.isAdminOrManager) {
+              //   buttons.add(
+              //     buildButton(
+              //       onPressed: widget.onExportContractPdf,
+              //       backgroundColor: const Color(0xFF6366F1),
+              //       child: Row(
+              //         mainAxisAlignment: MainAxisAlignment.center,
+              //         children: [
+              //           Icon(Icons.picture_as_pdf, size: iconSize),
+              //           SizedBox(width: isMobile ? 6 : 8),
+              //           Text(
+              //             'تصدير عقد PDF',
+              //             style: AppTextStyles.buttonLarge.copyWith(
+              //               fontSize: buttonFontSize,
+              //               fontWeight: FontWeight.w700,
+              //             ),
+              //           ),
+              //         ],
+              //       ),
+              //     ),
+              //   );
+              // }
 
               if (widget.onConfirmPricing != null && widget.isAdminOrManager) {
                 buttons.add(
@@ -1516,7 +1477,6 @@ class _PricingSummarySidebarState extends State<PricingSummarySidebar> {
 
             // Submit Button
             if (!widget.showReturnToPricing &&
-                !(widget.isAdminOrManager && widget.isPendingApproval) &&
                 !(widget.isAdminOrManager && widget.isApproved) &&
                 !widget.isProfitPending) {
               buttons.add(
@@ -1529,7 +1489,7 @@ class _PricingSummarySidebarState extends State<PricingSummarySidebar> {
                       Icon(Icons.send, size: iconSize),
                       SizedBox(width: isMobile ? 6 : 8),
                       Text(
-                        'إرسال التسعير للمراجعة',
+                        'إرسال التسعير للتوقيع',
                         style: AppTextStyles.buttonLarge.copyWith(
                           fontSize: buttonFontSize,
                           fontWeight: FontWeight.w700,
@@ -1544,8 +1504,7 @@ class _PricingSummarySidebarState extends State<PricingSummarySidebar> {
             // Return to Pricing Button
             if (widget.showReturnToPricing &&
                 widget.onReturnToPricing != null &&
-                (widget.isAdminOrManager ||
-                    (!widget.isAdminOrManager && widget.isPendingApproval))) {
+                widget.isAdminOrManager) {
               buttons.add(
                 buildButton(
                   onPressed: widget.onReturnToPricing,
@@ -1560,6 +1519,34 @@ class _PricingSummarySidebarState extends State<PricingSummarySidebar> {
                       SizedBox(width: isMobile ? 6 : 8),
                       Text(
                         'إرجاع للتسعير',
+                        style: AppTextStyles.buttonLarge.copyWith(
+                          fontSize: buttonFontSize,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.error,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            }
+
+            // Arrange buttons responsively
+            if (widget.onArchiveProject != null) {
+              buttons.add(
+                buildButton(
+                  onPressed: widget.onArchiveProject,
+                  backgroundColor: AppColors.error,
+                  isOutlined: true,
+                  borderColor: AppColors.error,
+                  height: buttonHeight - 6,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.archive_outlined, size: iconSize),
+                      SizedBox(width: isMobile ? 6 : 8),
+                      Text(
+                        'أرشفة المشروع',
                         style: AppTextStyles.buttonLarge.copyWith(
                           fontSize: buttonFontSize,
                           fontWeight: FontWeight.w600,

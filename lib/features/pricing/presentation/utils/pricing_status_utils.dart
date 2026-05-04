@@ -13,8 +13,6 @@ class PricingStatusUtils {
         return AppColors.textMuted;
       case 'PENDING_SIGNATURE':
         return AppColors.warning;
-      case 'PENDING_APPROVAL':
-        return AppColors.warning;
       case 'APPROVED':
         return AppColors.statusCompleted;
       case 'REJECTED':

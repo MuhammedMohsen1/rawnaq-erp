@@ -68,8 +68,6 @@ class ProgressIndicatorWidget extends StatelessWidget {
           return AppColors.warning;
         case ProjectStatus.approved:
           return AppColors.statusCompleted;
-        case ProjectStatus.pendingApproval:
-          return AppColors.warning;
         case ProjectStatus.execution:
           return AppColors.statusActive;
         case ProjectStatus.completed:
