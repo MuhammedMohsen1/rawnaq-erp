@@ -1,6 +1,11 @@
+import 'dart:async';
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart'; // Required for Clipboard
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:infinite_scroll_pagination/infinite_scroll_pagination.dart';
 
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_text_styles.dart';
@@ -12,61 +17,110 @@ import '../bloc/projects_event.dart';
 import '../bloc/projects_state.dart';
 import '../widgets/create_project_dialog.dart';
 import '../widgets/edit_project_dialog.dart';
+import '../widgets/project_contact_actions.dart';
 
-// ─── Status meta (uses AppColors exactly) ──────────────────────────────────────
+const int _pageSize = 12;
+const Duration _fastAnimation = Duration(milliseconds: 160);
+const Duration _normalAnimation = Duration(milliseconds: 220);
 
 class _StatusMeta {
   final String label;
-  final Color accent; // solid accent from AppColors
+  final String shortLabel;
+  final String groupLabel;
+  final String description;
+  final Color accent;
   final IconData icon;
 
   const _StatusMeta({
     required this.label,
+    required this.shortLabel,
+    required this.groupLabel,
+    required this.description,
     required this.accent,
     required this.icon,
   });
+  _StatusMeta copyWith({
+    String? label,
+    String? shortLabel,
+    String? groupLabel,
+    String? description,
+    Color? accent,
+    IconData? icon,
+  }) {
+    return _StatusMeta(
+      label: label ?? this.label,
+      shortLabel: shortLabel ?? this.shortLabel,
+      groupLabel: groupLabel ?? this.groupLabel,
+      description: description ?? this.description,
+      accent: accent ?? this.accent,
+      icon: icon ?? this.icon,
+    );
+  }
 }
 
-const _statusOrder = [
-  ProjectStatus.execution,
+const List<ProjectStatus> _statusOrder = [
   ProjectStatus.underPricing,
-  ProjectStatus.pendingSignature,
+  ProjectStatus.execution,
   ProjectStatus.completed,
 ];
 
-// Map each status → its AppColors accent
-const _metaMap = <ProjectStatus, _StatusMeta>{
-  ProjectStatus.execution: _StatusMeta(
-    label: 'قيد التنفيذ',
-    accent: AppColors.statusCompleted, // #22C55E green
-    icon: Icons.rocket_launch_rounded,
-  ),
-  ProjectStatus.underPricing: _StatusMeta(
-    label: 'قيد التسعير',
-    accent: AppColors.secondary, // #3B82F6 blue
-    icon: Icons.calculate_rounded,
-  ),
-  ProjectStatus.pendingSignature: _StatusMeta(
-    label: 'في انتظار التوقيع',
-    accent: AppColors.statusOnHold, // #F59E0B amber
-    icon: Icons.draw_rounded,
-  ),
-  ProjectStatus.completed: _StatusMeta(
-    label: 'مكتمل',
-    accent: AppColors.statusCompleted,
-    icon: Icons.verified_rounded,
-  ),
+const Set<ProjectStatus> _pricingPipelineStatuses = {
+  ProjectStatus.underPricing,
+  ProjectStatus.pendingSignature,
 };
 
-_StatusMeta _metaOf(ProjectStatus s) =>
-    _metaMap[s] ??
-    const _StatusMeta(
-      label: 'أخرى',
-      accent: AppColors.textMuted,
-      icon: Icons.folder_rounded,
-    );
+const Map<ProjectStatus, _StatusMeta> _statusMeta =
+    <ProjectStatus, _StatusMeta>{
+      ProjectStatus.underPricing: _StatusMeta(
+        label: 'التسعير والتوقيع',
+        shortLabel: 'تسعير',
+        groupLabel: 'العرض',
+        description: 'تجهيز العرض أو انتظار توقيع العميل',
+        accent: AppColors.primary,
+        icon: Icons.calculate_rounded,
+      ),
+      ProjectStatus.pendingSignature: _StatusMeta(
+        label: 'بانتظار التوقيع',
+        shortLabel: 'توقيع',
+        groupLabel: 'التعاقد',
+        description: 'العرض جاهز وينتظر اعتماد العميل',
+        accent: AppColors.statusOnHold,
+        icon: Icons.draw_rounded,
+      ),
+      ProjectStatus.execution: _StatusMeta(
+        label: 'قيد التنفيذ',
+        shortLabel: 'تنفيذ',
+        groupLabel: 'التنفيذ',
+        description: 'متابعة الأعمال والتوريدات والتسليمات',
+        accent: AppColors.secondary,
+        icon: Icons.rocket_launch_rounded,
+      ),
+      ProjectStatus.completed: _StatusMeta(
+        label: 'مكتمل',
+        shortLabel: 'مكتمل',
+        groupLabel: 'الإغلاق',
+        description: 'مشروع منتهي وجاهز للمراجعة',
+        accent: AppColors.statusCompleted,
+        icon: Icons.verified_rounded,
+      ),
+    };
 
-// ─── Page ──────────────────────────────────────────────────────────────────────
+_StatusMeta _metaOf(ProjectStatus status, DateTime? lastEditAt) {
+  int daysSinceEdit = lastEditAt != null
+      ? DateTime.now().difference(lastEditAt).inDays
+      : 0;
+  return _statusMeta[status]?.copyWith(
+        accent: daysSinceEdit > 20 ? Colors.red : null,
+      ) ??
+      const _StatusMeta(
+        label: 'أخرى',
+        shortLabel: 'أخرى',
+        groupLabel: 'غير مصنف',
+        description: 'مرحلة غير معرفة',
+        accent: AppColors.textMuted,
+        icon: Icons.folder_rounded,
+      );
+}
 
 class ProjectsListPage extends StatefulWidget {
   final String title;
@@ -87,74 +141,41 @@ class ProjectsListPage extends StatefulWidget {
     this.showStatusActions = true,
     this.enableNavigation = true,
   });
+
   @override
   State<ProjectsListPage> createState() => _ProjectsListPageState();
 }
 
 class _ProjectsListPageState extends State<ProjectsListPage> {
-  // All accordions start expanded
-  final Set<ProjectStatus> _open = {..._statusOrder};
-  late final ScrollController _scrollController;
+  ProjectStatus? _selectedStatus;
+  String _lastProjectsSignature = '';
 
-  @override
-  void initState() {
-    super.initState();
-    _scrollController = ScrollController()..addListener(_onScroll);
-  }
+  late final PagingController<int, ProjectEntity> _pagingController =
+      PagingController<int, ProjectEntity>(
+        getNextPageKey: (state) {
+          if (state.lastPageIsEmpty) return null;
+          return state.items?.length ?? 0;
+        },
+        fetchPage: _fetchPage,
+      );
 
   @override
   void dispose() {
-    _scrollController
-      ..removeListener(_onScroll)
-      ..dispose();
+    _pagingController.dispose();
     super.dispose();
   }
 
-  void _onScroll() {
-    if (!_scrollController.hasClients) return;
-    final position = _scrollController.position;
-    if (position.pixels >= position.maxScrollExtent - 360) {
-      context.read<ProjectsBloc>().add(const LoadMoreProjects());
-    }
-  }
-
-  Map<ProjectStatus, List<ProjectEntity>> _group(List<ProjectEntity> list) {
-    final map = <ProjectStatus, List<ProjectEntity>>{};
-    for (final s in _statusOrder) {
-      final items = list.where((p) => p.status == s).toList();
-      if (items.isNotEmpty) map[s] = items;
-    }
-    // Catch unlisted statuses
-    for (final p in list) {
-      if (!_statusOrder.contains(p.status)) (map[p.status] ??= []).add(p);
-    }
-    return map;
-  }
-
-  void _toggle(ProjectStatus s) =>
-      setState(() => _open.contains(s) ? _open.remove(s) : _open.add(s));
-
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<ProjectsBloc, ProjectsState>(
+    return BlocConsumer<ProjectsBloc, ProjectsState>(
+      listener: _onProjectsStateChanged,
       builder: (context, state) {
         return Scaffold(
           backgroundColor: AppColors.scaffoldBackground,
-          body: Padding(
-            padding: const EdgeInsets.fromLTRB(24, 24, 24, 0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _Header(
-                  title: widget.title,
-                  onCreateTap: widget.showCreateButton
-                      ? () => _showCreate(context)
-                      : null,
-                ),
-                const SizedBox(height: 24),
-                Expanded(child: _body(context, state)),
-                const SizedBox(height: 16),
-              ],
+          body: SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(24, 22, 24, 0),
+              child: Expanded(child: _buildBody(context, state)),
             ),
           ),
         );
@@ -162,498 +183,542 @@ class _ProjectsListPageState extends State<ProjectsListPage> {
     );
   }
 
-  // ── Content ──────────────────────────────────────────────────────────────────
+  void _onProjectsStateChanged(BuildContext context, ProjectsState state) {
+    if (state is! ProjectsLoaded) return;
 
-  Widget _body(BuildContext context, ProjectsState state) {
+    final signature = _signatureOf(state.filteredProjects);
+    if (signature == _lastProjectsSignature) return;
+
+    _lastProjectsSignature = signature;
+
+    if (!_pagingController.isLoading) {
+      _pagingController.refresh();
+    }
+  }
+
+  Widget _buildBody(BuildContext context, ProjectsState state) {
     if (state is ProjectsLoading) {
-      return const Center(
-        child: CircularProgressIndicator(
-          color: AppColors.secondary,
-          strokeWidth: 2,
-        ),
-      );
+      return const _CenteredLoader();
     }
 
     if (state is ProjectsError) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Icon(
-              Icons.error_outline_rounded,
-              size: 52,
-              color: AppColors.error,
-            ),
-            const SizedBox(height: 14),
-            Text(
-              state.message,
-              style: AppTextStyles.bodyMedium.copyWith(
-                color: AppColors.textSecondary,
-              ),
-            ),
-            const SizedBox(height: 18),
-            _GhostButton(
-              label: 'إعادة المحاولة',
-              accent: AppColors.secondary,
-              onTap: () =>
-                  context.read<ProjectsBloc>().add(const LoadProjects()),
-            ),
-          ],
-        ),
-      );
-    }
-
-    if (state is ProjectsLoaded) {
-      final grouped = _group(state.filteredProjects);
-      if (grouped.isEmpty) {
-        return Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Icon(
-                Icons.folder_open_rounded,
-                size: 64,
-                color: AppColors.textDisabled,
-              ),
-              const SizedBox(height: 16),
-              Text(
-                widget.emptyMessage,
-                style: AppTextStyles.bodyLarge.copyWith(
-                  color: AppColors.textSecondary,
-                ),
-              ),
-            ],
-          ),
-        );
-      }
-
-      return ListView.separated(
-        controller: _scrollController,
-        itemCount: grouped.length + (state.isLoadingMore ? 1 : 0),
-        separatorBuilder: (_, __) => const SizedBox(height: 8),
-        itemBuilder: (ctx, i) {
-          if (i >= grouped.length) {
-            return const Padding(
-              padding: EdgeInsets.symmetric(vertical: 20),
-              child: Center(
-                child: CircularProgressIndicator(
-                  color: AppColors.secondary,
-                  strokeWidth: 2,
-                ),
-              ),
-            );
-          }
-          final status = grouped.keys.elementAt(i);
-          final projects = grouped[status]!;
-          final meta = _metaOf(status);
-          return _Accordion(
-            meta: meta,
-            count: projects.length,
-            isOpen: _open.contains(status),
-            onToggle: () => _toggle(status),
-            child: _CardGrid(
-              projects: projects,
-              meta: meta,
-              onTap: (p) {
-                if (widget.enableNavigation) _navigate(context, p);
-              },
-              onEdit: (p) => _showEdit(context, p),
-              onArchive: widget.showArchiveActions
-                  ? (p) => _showArchive(context, p.id, p.name)
-                  : null,
-              onRestore: widget.showRestoreActions
-                  ? (p) => _showRestore(context, p.id, p.name)
-                  : null,
-              onMoveToExecution: widget.showStatusActions
-                  ? (p) => _showMoveToExecution(context, p)
-                  : null,
-            ),
-          );
+      return _ErrorState(
+        message: state.message,
+        onRetry: () {
+          context.read<ProjectsBloc>().add(const LoadProjects());
+          _pagingController.refresh();
         },
       );
     }
 
-    return const SizedBox.shrink();
-  }
-
-  // ── Helpers ──────────────────────────────────────────────────────────────────
-
-  void _navigate(BuildContext context, ProjectEntity p) {
-    if (p.status == ProjectStatus.underPricing ||
-        p.status == ProjectStatus.pendingSignature) {
-      context.go(AppRoutes.pricing(p.id, readOnly: p.archived));
-    } else if (p.status == ProjectStatus.execution) {
-      if (p.archived) {
-        context.go(AppRoutes.projectDetails(p.id));
-      } else {
-        context.go(AppRoutes.execution(p.id));
-      }
-    } else {
-      context.go(AppRoutes.projectDetails(p.id));
+    if (state is! ProjectsLoaded) {
+      return const SizedBox.shrink();
     }
-  }
 
-  void _showCreate(BuildContext context) {
-    final bloc = context.read<ProjectsBloc>();
-    showDialog(
-      context: context,
-      builder: (_) =>
-          BlocProvider.value(value: bloc, child: const CreateProjectDialog()),
-    );
-  }
+    final allProjects = state.filteredProjects;
 
-  void _showEdit(BuildContext context, ProjectEntity p) {
-    final bloc = context.read<ProjectsBloc>();
-    showDialog(
-      context: context,
-      builder: (_) => BlocProvider.value(
-        value: bloc,
-        child: EditProjectDialog(project: p),
-      ),
-    );
-  }
+    if (allProjects.isEmpty) {
+      return _EmptyState(message: widget.emptyMessage);
+    }
 
-  void _showArchive(BuildContext context, String id, String name) {
-    showDialog(
-      context: context,
-      builder: (_) => _ConfirmActionDialog(
-        icon: Icons.archive_outlined,
-        iconColor: AppColors.error,
-        title: 'تأكيد الأرشفة',
-        message:
-            'هل تريد أرشفة "$name"؟ سيتم إخفاء المشروع والتسعير المرتبط به من القوائم النشطة.',
-        confirmLabel: 'أرشفة',
-        onConfirm: () => context.read<ProjectsBloc>().add(DeleteProject(id)),
-      ),
-    );
-  }
+    final counts = _countByStatus(allProjects);
 
-  void _showRestore(BuildContext context, String id, String name) {
-    showDialog(
-      context: context,
-      builder: (_) => _ConfirmActionDialog(
-        icon: Icons.unarchive_outlined,
-        iconColor: AppColors.statusCompleted,
-        title: 'استعادة المشروع',
-        message: 'هل تريد استعادة "$name" وإعادته إلى قوائم المشاريع النشطة؟',
-        confirmLabel: 'استعادة',
-        onConfirm: () => context.read<ProjectsBloc>().add(RestoreProject(id)),
-      ),
-    );
-  }
-
-  void _showMoveToExecution(BuildContext context, ProjectEntity project) {
-    showDialog(
-      context: context,
-      builder: (_) => _ConfirmActionDialog(
-        icon: Icons.play_circle_outline_rounded,
-        iconColor: AppColors.statusCompleted,
-        title: 'بدء التنفيذ',
-        message: 'هل تريد نقل "${project.name}" إلى مرحلة التنفيذ؟',
-        confirmLabel: 'بدء التنفيذ',
-        onConfirm: () => context.read<ProjectsBloc>().add(
-          UpdateProjectStatus(
-            projectId: project.id,
-            status: ProjectStatus.execution,
-            notes: 'Started execution from pending signature',
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-// ─── Header ────────────────────────────────────────────────────────────────────
-
-class _Header extends StatelessWidget {
-  final String title;
-  final VoidCallback? onCreateTap;
-  const _Header({required this.title, this.onCreateTap});
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.center,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Page title
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(title, style: AppTextStyles.pageTitle),
-            const SizedBox(height: 3),
-            Text(
-              'مُصنَّفة حسب الحالة',
-              style: AppTextStyles.bodySmall.copyWith(
-                color: AppColors.textMuted,
-              ),
-            ),
-          ],
+        _StatusFilterBar(
+          selectedStatus: _selectedStatus,
+          totalCount: allProjects.length,
+          counts: counts,
+          onSelected: _selectStatus,
+          onCreateTap: widget.showCreateButton
+              ? () => _showCreateDialog(context)
+              : null,
         ),
-
-        const Spacer(),
-
-        // Create button
-        if (onCreateTap != null)
-          ElevatedButton.icon(
-            onPressed: onCreateTap,
-            icon: const Icon(Icons.add_rounded, size: 17),
-            label: const Text('إنشاء مشروع جديد'),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.secondary,
-              foregroundColor: AppColors.white,
-              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
-              ),
-              textStyle: const TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.w600,
-              ),
-              elevation: 0,
-            ),
-          ),
+        const SizedBox(height: 16),
+        Expanded(child: _buildPagedGrid()),
       ],
     );
   }
+
+  Widget _buildPagedGrid() {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isCompact = constraints.maxWidth < 680;
+        final maxExtent = isCompact ? constraints.maxWidth : 390.0;
+        final cardHeight = isCompact ? 226.0 : 218.0;
+
+        return PagingListener<int, ProjectEntity>(
+          controller: _pagingController,
+          builder: (context, pagingState, fetchNextPage) {
+            return RefreshIndicator(
+              color: AppColors.secondary,
+              backgroundColor: AppColors.cardBackground,
+              onRefresh: () async {
+                context.read<ProjectsBloc>().add(const LoadProjects());
+                _pagingController.refresh();
+              },
+              child: PagedGridView<int, ProjectEntity>(
+                clipBehavior: Clip.none,
+                state: pagingState,
+                fetchNextPage: fetchNextPage,
+                padding: const EdgeInsets.only(bottom: 28),
+                gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
+                  maxCrossAxisExtent: maxExtent,
+                  mainAxisExtent: cardHeight,
+                  crossAxisSpacing: 14,
+                  mainAxisSpacing: 14,
+                ),
+                builderDelegate: PagedChildBuilderDelegate<ProjectEntity>(
+                  invisibleItemsThreshold: 4,
+                  firstPageProgressIndicatorBuilder: (_) =>
+                      const _CenteredLoader(),
+                  newPageProgressIndicatorBuilder: (_) => const _BottomLoader(),
+                  firstPageErrorIndicatorBuilder: (_) => _ErrorState(
+                    message: 'تعذر تحميل المشاريع',
+                    onRetry: _pagingController.refresh,
+                  ),
+                  newPageErrorIndicatorBuilder: (_) =>
+                      _LoadMoreError(onRetry: fetchNextPage),
+                  noItemsFoundIndicatorBuilder: (_) =>
+                      _EmptyFilteredState(onClear: () => _selectStatus(null)),
+                  noMoreItemsIndicatorBuilder: (_) => const _NoMoreProjects(),
+                  itemBuilder: (context, project, index) {
+                    return _ProjectCard(
+                      project: project,
+                      onTap: () {
+                        if (widget.enableNavigation) {
+                          _navigate(context, project);
+                        }
+                      },
+                      onEdit: () => _showEditDialog(context, project),
+                      onArchive: widget.showArchiveActions
+                          ? () => _showArchiveDialog(
+                              context,
+                              project.id,
+                              project.name,
+                            )
+                          : null,
+                      onRestore: widget.showRestoreActions
+                          ? () => _showRestoreDialog(
+                              context,
+                              project.id,
+                              project.name,
+                            )
+                          : null,
+                      onMoveToExecution:
+                          widget.showStatusActions &&
+                              project.status == ProjectStatus.pendingSignature
+                          ? () => _showMoveToExecutionDialog(context, project)
+                          : null,
+                    );
+                  },
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  List<ProjectEntity> _currentFilteredProjects() {
+    final state = context.read<ProjectsBloc>().state;
+    if (state is! ProjectsLoaded) return const <ProjectEntity>[];
+    return _applyStatusFilter(state.filteredProjects);
+  }
+
+  List<ProjectEntity> _applyStatusFilter(List<ProjectEntity> projects) {
+    final selectedStatus = _selectedStatus;
+    if (selectedStatus == null) return projects;
+
+    if (selectedStatus == ProjectStatus.underPricing) {
+      return projects
+          .where((project) => _pricingPipelineStatuses.contains(project.status))
+          .toList();
+    }
+
+    return projects
+        .where((project) => project.status == selectedStatus)
+        .toList();
+  }
+
+  Future<List<ProjectEntity>> _fetchPage(int offset) async {
+    var projects = _currentFilteredProjects();
+
+    if (offset < projects.length) {
+      return _slicePage(projects, offset);
+    }
+
+    final bloc = context.read<ProjectsBloc>();
+    final beforeCount = projects.length;
+    final currentState = bloc.state;
+
+    if (currentState is ProjectsLoaded && !currentState.isLoadingMore) {
+      bloc.add(const LoadMoreProjects());
+    }
+
+    try {
+      final loadedState = await bloc.stream
+          .where((state) => state is ProjectsLoaded)
+          .map((state) => state as ProjectsLoaded)
+          .firstWhere((state) {
+            final updatedCount = _applyStatusFilter(
+              state.filteredProjects,
+            ).length;
+            return updatedCount > beforeCount || !state.isLoadingMore;
+          })
+          .timeout(const Duration(seconds: 1));
+
+      projects = _applyStatusFilter(loadedState.filteredProjects);
+    } on TimeoutException {
+      projects = _currentFilteredProjects();
+    }
+
+    if (offset >= projects.length) {
+      return const <ProjectEntity>[];
+    }
+
+    return _slicePage(projects, offset);
+  }
+
+  List<ProjectEntity> _slicePage(List<ProjectEntity> projects, int offset) {
+    final end = math.min(offset + _pageSize, projects.length);
+    return projects.sublist(offset, end);
+  }
+
+  Map<ProjectStatus, int> _countByStatus(List<ProjectEntity> projects) {
+    final counts = <ProjectStatus, int>{
+      for (final status in _statusOrder) status: 0,
+    };
+
+    for (final project in projects) {
+      if (_pricingPipelineStatuses.contains(project.status)) {
+        counts[ProjectStatus.underPricing] =
+            (counts[ProjectStatus.underPricing] ?? 0) + 1;
+        continue;
+      }
+
+      counts[project.status] = (counts[project.status] ?? 0) + 1;
+    }
+
+    return counts;
+  }
+
+  String _signatureOf(List<ProjectEntity> projects) {
+    return projects
+        .map(
+          (project) =>
+              '${project.id}:${project.name}:${project.status.name}:${project.archived}:${project.clientName ?? ''}:${project.clientContacts.length}:${project.googleMapLink ?? ''}:${project.lastEditAt?.toIso8601String() ?? ''}:${project.teamMembers?.length ?? 0}',
+        )
+        .join('|');
+  }
+
+  void _selectStatus(ProjectStatus? status) {
+    if (_selectedStatus == status) return;
+
+    setState(() {
+      _selectedStatus = status;
+    });
+
+    _pagingController.refresh();
+  }
+
+  void _navigate(BuildContext context, ProjectEntity project) {
+    if (project.status == ProjectStatus.underPricing ||
+        project.status == ProjectStatus.pendingSignature) {
+      context.go(AppRoutes.pricing(project.id, readOnly: project.archived));
+      return;
+    }
+
+    if (project.status == ProjectStatus.execution) {
+      if (project.archived) {
+        context.go(AppRoutes.projectDetails(project.id));
+      } else {
+        context.go(AppRoutes.execution(project.id));
+      }
+      return;
+    }
+
+    context.go(AppRoutes.projectDetails(project.id));
+  }
+
+  void _showCreateDialog(BuildContext context) {
+    final bloc = context.read<ProjectsBloc>();
+
+    showDialog(
+      context: context,
+      builder: (_) {
+        return BlocProvider.value(
+          value: bloc,
+          child: const CreateProjectDialog(),
+        );
+      },
+    );
+  }
+
+  void _showEditDialog(BuildContext context, ProjectEntity project) {
+    final bloc = context.read<ProjectsBloc>();
+
+    showDialog(
+      context: context,
+      builder: (_) {
+        return BlocProvider.value(
+          value: bloc,
+          child: EditProjectDialog(project: project),
+        );
+      },
+    );
+  }
+
+  void _showArchiveDialog(BuildContext context, String id, String name) {
+    showDialog(
+      context: context,
+      builder: (_) {
+        return _ConfirmActionDialog(
+          icon: Icons.archive_outlined,
+          iconColor: AppColors.error,
+          title: 'تأكيد الأرشفة',
+          message:
+              'هل تريد أرشفة "$name"؟ سيتم إخفاء المشروع والتسعير المرتبط به من القوائم النشطة.',
+          confirmLabel: 'أرشفة',
+          onConfirm: () => context.read<ProjectsBloc>().add(DeleteProject(id)),
+        );
+      },
+    );
+  }
+
+  void _showRestoreDialog(BuildContext context, String id, String name) {
+    showDialog(
+      context: context,
+      builder: (_) {
+        return _ConfirmActionDialog(
+          icon: Icons.unarchive_outlined,
+          iconColor: AppColors.statusCompleted,
+          title: 'استعادة المشروع',
+          message: 'هل تريد استعادة "$name" وإعادته إلى قوائم المشاريع النشطة؟',
+          confirmLabel: 'استعادة',
+          onConfirm: () => context.read<ProjectsBloc>().add(RestoreProject(id)),
+        );
+      },
+    );
+  }
+
+  void _showMoveToExecutionDialog(BuildContext context, ProjectEntity project) {
+    showDialog(
+      context: context,
+      builder: (_) {
+        return _ConfirmActionDialog(
+          icon: Icons.play_circle_outline_rounded,
+          iconColor: AppColors.statusCompleted,
+          title: 'بدء التنفيذ',
+          message: 'هل تريد نقل "${project.name}" إلى مرحلة التنفيذ؟',
+          confirmLabel: 'بدء التنفيذ',
+          onConfirm: () {
+            context.read<ProjectsBloc>().add(
+              UpdateProjectStatus(
+                projectId: project.id,
+                status: ProjectStatus.execution,
+                notes: 'Started execution from pending signature',
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
 }
 
-// ─── Accordion ─────────────────────────────────────────────────────────────────
-
-class _Accordion extends StatefulWidget {
-  final _StatusMeta meta;
-  final int count;
-  final bool isOpen;
-  final VoidCallback onToggle;
-  final Widget child;
-
-  const _Accordion({
-    required this.meta,
-    required this.count,
-    required this.isOpen,
-    required this.onToggle,
-    required this.child,
+class _StatusFilterBar extends StatelessWidget {
+  final ProjectStatus? selectedStatus;
+  final int totalCount;
+  final Map<ProjectStatus, int> counts;
+  final ValueChanged<ProjectStatus?> onSelected;
+  final VoidCallback? onCreateTap;
+  const _StatusFilterBar({
+    required this.selectedStatus,
+    required this.totalCount,
+    required this.counts,
+    required this.onSelected,
+    this.onCreateTap,
   });
 
   @override
-  State<_Accordion> createState() => _AccordionState();
-}
-
-class _AccordionState extends State<_Accordion>
-    with SingleTickerProviderStateMixin {
-  late final AnimationController _ctrl;
-  late final Animation<double> _expand;
-  late final Animation<double> _chevron;
-
-  @override
-  void initState() {
-    super.initState();
-    _ctrl = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 240),
-      value: widget.isOpen ? 1.0 : 0.0,
-    );
-    _expand = CurvedAnimation(parent: _ctrl, curve: Curves.easeInOut);
-    _chevron = Tween(
-      begin: 0.0,
-      end: 0.5,
-    ).animate(CurvedAnimation(parent: _ctrl, curve: Curves.easeInOut));
-  }
-
-  @override
-  void didUpdateWidget(_Accordion old) {
-    super.didUpdateWidget(old);
-    if (widget.isOpen != old.isOpen) {
-      widget.isOpen ? _ctrl.forward() : _ctrl.reverse();
-    }
-  }
-
-  @override
-  void dispose() {
-    _ctrl.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: AppColors.cardBackground,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.border),
-      ),
-      child: Column(
+    final extraStatuses = counts.keys
+        .where(
+          (status) =>
+              !_statusOrder.contains(status) &&
+              !_pricingPipelineStatuses.contains(status),
+        )
+        .toList(growable: false);
+
+    return SizedBox(
+      height: 42, // Slightly tighter height for a cleaner look
+      child: Row(
         children: [
-          // ── Accordion header ──────────────────────────────────────────
-          GestureDetector(
-            onTap: widget.onToggle,
-            behavior: HitTestBehavior.opaque,
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 13),
-              child: Row(
-                children: [
-                  // Glowing status dot
-                  Container(
-                    width: 8,
-                    height: 8,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: widget.meta.accent,
-                      boxShadow: [
-                        BoxShadow(
-                          color: widget.meta.accent.withOpacity(0.5),
-                          blurRadius: 6,
-                          spreadRadius: 1,
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(width: 11),
+          // 1. Expanded allows the list to take up available space without breaking the Row
+          Expanded(
+            child: ListView.separated(
+              scrollDirection: Axis.horizontal,
+              // Adding padding so the glow/shadow isn't clipped
+              padding: const EdgeInsets.symmetric(horizontal: 4),
+              itemCount: 1 + _statusOrder.length + extraStatuses.length,
+              separatorBuilder: (_, __) => const SizedBox(width: 8),
+              itemBuilder: (_, index) {
+                if (index == 0) {
+                  return _StatusFilterChip(
+                    label: 'الكل',
+                    count: totalCount,
+                    icon: Icons.grid_view_rounded,
+                    accent: AppColors.primary,
+                    selected: selectedStatus == null,
+                    onTap: () => onSelected(null),
+                  );
+                }
 
-                  // Icon
-                  Icon(widget.meta.icon, size: 15, color: widget.meta.accent),
-                  const SizedBox(width: 8),
+                final statusIndex = index - 1;
+                final status = statusIndex < _statusOrder.length
+                    ? _statusOrder[statusIndex]
+                    : extraStatuses[statusIndex - _statusOrder.length];
+                final meta = _metaOf(status, null);
 
-                  // Label
-                  Text(
-                    widget.meta.label,
-                    style: const TextStyle(
-                      color: AppColors.textPrimary,
-                      fontSize: 13.5,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-
-                  // Count pill
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 2,
-                    ),
-                    decoration: BoxDecoration(
-                      color: widget.meta.accent.withOpacity(0.12),
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(
-                        color: widget.meta.accent.withOpacity(0.22),
-                        width: 1,
-                      ),
-                    ),
-                    child: Text(
-                      '${widget.count}',
-                      style: TextStyle(
-                        color: widget.meta.accent,
-                        fontSize: 10.5,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                  ),
-
-                  const Spacer(),
-
-                  // Animated chevron
-                  RotationTransition(
-                    turns: _chevron,
-                    child: const Icon(
-                      Icons.keyboard_arrow_down_rounded,
-                      size: 20,
-                      color: AppColors.textMuted,
-                    ),
-                  ),
-                ],
-              ),
+                return _StatusFilterChip(
+                  label: meta.label,
+                  count: counts[status] ?? 0,
+                  icon: meta.icon,
+                  accent: meta.accent,
+                  selected: selectedStatus == status,
+                  onTap: () => onSelected(status),
+                );
+              },
             ),
           ),
 
-          // Divider (only visible when expanded)
-          AnimatedBuilder(
-            animation: _expand,
-            builder: (_, __) => _expand.value > 0.05
-                ? const Divider(
-                    height: 1,
-                    thickness: 1,
-                    color: AppColors.border,
-                  )
-                : const SizedBox.shrink(),
-          ),
-
-          // ── Expandable content ────────────────────────────────────────
-          SizeTransition(
-            sizeFactor: _expand,
-            child: FadeTransition(
-              opacity: _expand,
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(12, 12, 12, 12),
-                child: widget.child,
-              ),
+          // 2. Space between list and action button
+          if (onCreateTap != null) ...[
+            const SizedBox(width: 12),
+            _PrimaryGlowButton(
+              label: 'مشروع جديد', // Shorter text for better UX
+              icon: Icons.add_rounded,
+              onTap: onCreateTap!, // Fixed: Logic now checks if NOT null
             ),
-          ),
+          ],
         ],
       ),
     );
   }
 }
 
-// ─── Card grid ─────────────────────────────────────────────────────────────────
+class _StatusFilterChip extends StatelessWidget {
+  final String label;
+  final int count;
+  final IconData icon;
+  final Color accent;
+  final bool selected;
+  final VoidCallback onTap;
 
-class _CardGrid extends StatelessWidget {
-  final List<ProjectEntity> projects;
-  final _StatusMeta meta;
-  final void Function(ProjectEntity) onTap;
-  final void Function(ProjectEntity) onEdit;
-  final void Function(ProjectEntity)? onArchive;
-  final void Function(ProjectEntity)? onRestore;
-  final void Function(ProjectEntity)? onMoveToExecution;
-
-  const _CardGrid({
-    required this.projects,
-    required this.meta,
+  const _StatusFilterChip({
+    required this.label,
+    required this.count,
+    required this.icon,
+    required this.accent,
+    required this.selected,
     required this.onTap,
-    required this.onEdit,
-    this.onArchive,
-    this.onRestore,
-    this.onMoveToExecution,
   });
 
   @override
   Widget build(BuildContext context) {
-    return GridView.builder(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-        maxCrossAxisExtent: 340,
-        childAspectRatio: 1.6,
-        crossAxisSpacing: 10,
-        mainAxisSpacing: 10,
-      ),
-      itemCount: projects.length,
-      itemBuilder: (_, i) => _ProjectCard(
-        project: projects[i],
-        meta: meta,
-        onTap: () => onTap(projects[i]),
-        onEdit: () => onEdit(projects[i]),
-        onArchive: onArchive == null ? null : () => onArchive!(projects[i]),
-        onRestore: onRestore == null ? null : () => onRestore!(projects[i]),
-        onMoveToExecution:
-            onMoveToExecution == null ||
-                projects[i].status != ProjectStatus.pendingSignature
-            ? null
-            : () => onMoveToExecution!(projects[i]),
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(999),
+        child: AnimatedContainer(
+          duration: _fastAnimation,
+          curve: Curves.easeOut,
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
+          decoration: BoxDecoration(
+            color: selected
+                ? accent.withOpacity(0.12)
+                : AppColors.cardBackground,
+            borderRadius: BorderRadius.circular(999),
+            border: Border.all(
+              color: selected ? accent.withOpacity(0.40) : AppColors.border,
+            ),
+            boxShadow: selected
+                ? [
+                    BoxShadow(
+                      color: accent.withOpacity(0.12),
+                      blurRadius: 18,
+                      spreadRadius: 1,
+                    ),
+                  ]
+                : null,
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                icon,
+                size: 15,
+                color: selected ? accent : AppColors.textMuted,
+              ),
+              const SizedBox(width: 7),
+              Text(
+                label,
+                style: AppTextStyles.labelSmall.copyWith(
+                  color: selected ? accent : AppColors.textSecondary,
+                  fontWeight: selected ? FontWeight.w800 : FontWeight.w600,
+                ),
+              ),
+              const SizedBox(width: 8),
+              _CountBubble(count: count, color: accent, active: selected),
+            ],
+          ),
+        ),
       ),
     );
   }
 }
 
-// ─── Project card ──────────────────────────────────────────────────────────────
-//
-//  The gradient lives IN the card background:
-//    top-left corner → accent @ 10% opacity
-//    fading into AppColors.surfaceColor by bottom-right
-//
-// ──────────────────────────────────────────────────────────────────────────────
+class _CountBubble extends StatelessWidget {
+  final int count;
+  final Color color;
+  final bool active;
+
+  const _CountBubble({
+    required this.count,
+    required this.color,
+    required this.active,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+      decoration: BoxDecoration(
+        color: active ? color.withOpacity(0.16) : AppColors.surfaceColor,
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(
+          color: active ? color.withOpacity(0.25) : AppColors.border,
+        ),
+      ),
+      child: Text(
+        '$count',
+        style: TextStyle(
+          color: active ? color : AppColors.textMuted,
+          fontSize: 10.5,
+          fontWeight: FontWeight.w800,
+          height: 1.1,
+        ),
+      ),
+    );
+  }
+}
 
 class _ProjectCard extends StatefulWidget {
   final ProjectEntity project;
-  final _StatusMeta meta;
   final VoidCallback onTap;
   final VoidCallback onEdit;
   final VoidCallback? onArchive;
@@ -662,7 +727,6 @@ class _ProjectCard extends StatefulWidget {
 
   const _ProjectCard({
     required this.project,
-    required this.meta,
     required this.onTap,
     required this.onEdit,
     this.onArchive,
@@ -677,149 +741,143 @@ class _ProjectCard extends StatefulWidget {
 class _ProjectCardState extends State<_ProjectCard> {
   bool _hovered = false;
 
+  // Helper for copying to clipboard
+  void _copy(String text, String message) {
+    Clipboard.setData(ClipboardData(text: text));
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(message), duration: const Duration(seconds: 1)),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    final accent = widget.meta.accent;
+    final meta = _metaOf(widget.project.status, widget.project.lastEditAt);
+    final action = _resolveAction(widget.project);
+    // Assuming progress is a double between 0.0 and 1.0
+    final double progress = 0.5;
+    // final double progress = widget.project.progress ?? 0.0;
 
     return MouseRegion(
       cursor: SystemMouseCursors.click,
       onEnter: (_) => setState(() => _hovered = true),
       onExit: (_) => setState(() => _hovered = false),
-      child: GestureDetector(
-        onTap: widget.onTap,
+      child: AnimatedScale(
+        duration: const Duration(milliseconds: 200),
+        curve: Curves.easeOutCubic,
+        scale: _hovered ? 1.012 : 1,
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 200),
-          curve: Curves.easeOut,
+          curve: Curves.easeOutCubic,
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(10),
-            border: Border.all(
-              color: _hovered ? accent.withOpacity(0.35) : AppColors.border,
-              width: 1,
-            ),
-            // ── Gradient IS the background of the card ─────────────────
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [
-                // accent tint bleeds in from top-left
-                accent.withOpacity(_hovered ? 0.13 : 0.08),
-                // settles back to the app's surface color
-                AppColors.surfaceColor,
-              ],
-              stops: const [0.0, 0.65],
-            ),
-            // ─────────────────────────────────────────────────────────────
-            boxShadow: _hovered
-                ? [
-                    BoxShadow(
-                      color: accent.withOpacity(0.10),
-                      blurRadius: 16,
-                      offset: const Offset(0, 4),
-                    ),
-                  ]
-                : [],
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(color: AppColors.border),
           ),
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(14, 14, 10, 12),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(18),
+            child: Stack(
               children: [
-                // ── Title row + overflow menu ───────────────────────────
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Expanded(
-                      child: Text(
-                        widget.project.name,
-                        style: AppTextStyles.bodyLarge.copyWith(
-                          color: AppColors.textPrimary,
-                          fontWeight: FontWeight.w600,
-                          fontSize: 13.5,
-                          height: 1.35,
-                        ),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                    const SizedBox(width: 4),
-                    _CardMenu(
-                      onEdit: widget.onEdit,
-                      onArchive: widget.onArchive,
-                      onRestore: widget.onRestore,
-                      onMoveToExecution: widget.onMoveToExecution,
-                    ),
-                  ],
+                const Positioned.fill(child: _CardBaseGradient()),
+
+                // Top Glow (Using 3-step logic)
+                Positioned(
+                  top: -70,
+                  right: -55,
+                  child: _GlowOrb(
+                    color: meta.accent,
+                    size: 100,
+                    opacity: _hovered ? 0.34 : 0.22,
+                  ),
                 ),
 
-                const Spacer(),
-
-                // ── Manager ────────────────────────────────────────────
-                if (widget.project.clientName != null) ...[
-                  Row(
-                    children: [
-                      const Icon(
-                        Icons.person_outline_rounded,
-                        size: 11,
-                        color: AppColors.textMuted,
-                      ),
-                      const SizedBox(width: 5),
-                      Expanded(
-                        child: Text(
-                          widget.project.clientName!,
-                          style: AppTextStyles.bodySmall.copyWith(
-                            color: AppColors.textSecondary,
+                Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    onTap: widget.onTap,
+                    borderRadius: BorderRadius.circular(18),
+                    splashColor: meta.accent.withOpacity(0.05),
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(15, 14, 11, 13),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              _StatusIconBox(meta: meta, hovered: _hovered),
+                              const SizedBox(width: 11),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    _PipelineLabel(meta: meta),
+                                    const SizedBox(height: 5),
+                                    Text(
+                                      widget.project.name,
+                                      style: AppTextStyles.bodyLarge.copyWith(
+                                        color: AppColors.textPrimary,
+                                        fontWeight: FontWeight.w800,
+                                        fontSize: 14.5,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              _CardMenu(
+                                onEdit: widget.onEdit,
+                                onArchive: widget.onArchive,
+                                onMoveToExecution: widget.onMoveToExecution,
+                                onRestore: widget.onRestore,
+                              ),
+                            ],
                           ),
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                ],
 
-                // ── Team count + status badge ──────────────────────────
-                Row(
-                  children: [
-                    if (widget.project.teamMembers?.length != null) ...[
-                      const Icon(
-                        Icons.group_outlined,
-                        size: 11,
-                        color: AppColors.textMuted,
-                      ),
-                      const SizedBox(width: 4),
-                      Text(
-                        '${widget.project.teamMembers!.length} أعضاء',
-                        style: AppTextStyles.bodySmall.copyWith(
-                          color: AppColors.textMuted,
-                          fontSize: 10.5,
-                        ),
-                      ),
-                    ],
-                    const Spacer(),
-                    // Status badge
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 3,
-                      ),
-                      decoration: BoxDecoration(
-                        color: accent.withOpacity(0.10),
-                        borderRadius: BorderRadius.circular(20),
-                        border: Border.all(
-                          color: accent.withOpacity(0.22),
-                          width: 1,
-                        ),
-                      ),
-                      child: Text(
-                        widget.meta.label,
-                        style: TextStyle(
-                          color: accent,
-                          fontSize: 9.5,
-                          fontWeight: FontWeight.w600,
-                        ),
+                          const SizedBox(height: 12),
+
+                          // Client & Contact Section
+                          _InteractiveContactRow(
+                            clientName: widget.project.clientName ?? ' --- ',
+                            contacts: widget.project.clientContacts,
+                            fallbackPhone: widget.project.clientPhone,
+                            mapUrl: widget.project.googleMapLink,
+                            onCopy: (String phone, String message) {
+                              _copy(phone, message);
+                            }, // Placeholder, will be overridden in ProjectContactActions
+                          ),
+
+                          const SizedBox(height: 8),
+
+                          // Progress Section
+                          _ProgressSection(
+                            progress: progress,
+                            accentColor: meta.accent,
+                          ),
+
+                          const Spacer(),
+                          Divider(
+                            height: 24,
+                            color: AppColors.border.withOpacity(0.5),
+                          ),
+
+                          Row(
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  meta.description,
+                                  style: AppTextStyles.bodySmall.copyWith(
+                                    color: AppColors.textMuted,
+                                    fontSize: 11,
+                                  ),
+                                ),
+                              ),
+                              _ActionHint(action: action, color: meta.accent),
+                            ],
+                          ),
+                        ],
                       ),
                     ),
-                  ],
+                  ),
                 ),
               ],
             ),
@@ -830,13 +888,455 @@ class _ProjectCardState extends State<_ProjectCard> {
   }
 }
 
-// ─── Card overflow menu ─────────────────────────────────────────────────────────
+String _resolveAction(ProjectEntity project) {
+  if (project.status == ProjectStatus.underPricing) {
+    return 'فتح التسعير';
+  }
+
+  if (project.status == ProjectStatus.pendingSignature) {
+    return 'مراجعة التوقيع';
+  }
+
+  if (project.status == ProjectStatus.execution) {
+    return project.archived ? 'عرض التفاصيل' : 'فتح التنفيذ';
+  }
+
+  return 'عرض التفاصيل';
+}
+
+class _InteractiveContactRow extends StatelessWidget {
+  final String clientName;
+  final List<ProjectPhoneContact> contacts;
+  final String? fallbackPhone;
+  final String? mapUrl;
+  final Function(String, String) onCopy;
+
+  const _InteractiveContactRow({
+    required this.clientName,
+    this.contacts = const [],
+    this.fallbackPhone,
+    this.mapUrl,
+    required this.onCopy,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final phones = contacts.isNotEmpty
+        ? contacts
+        : [
+            if ((fallbackPhone ?? '').trim().isNotEmpty)
+              ProjectPhoneContact(name: clientName, phone: fallbackPhone!),
+          ];
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Icon(Icons.person_outline, size: 14, color: AppColors.textMuted),
+            const SizedBox(width: 6),
+            Expanded(
+              child: Text(
+                clientName,
+                style: AppTextStyles.bodyMedium.copyWith(
+                  color: AppColors.textSecondary,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+            ProjectContactActions(
+              contacts: phones,
+              fallbackPhone: fallbackPhone,
+              fallbackName: clientName,
+              googleMapLink: mapUrl,
+              onCopy: (phone, message) => onCopy(phone, message),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+}
+
+class _ProgressSection extends StatelessWidget {
+  final double progress;
+  final Color accentColor;
+
+  const _ProgressSection({required this.progress, required this.accentColor});
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              "الإنجاز",
+              style: AppTextStyles.bodySmall.copyWith(
+                color: AppColors.textMuted,
+                fontSize: 10,
+              ),
+            ),
+            Text(
+              "${(progress * 100).toInt()}%",
+              style: AppTextStyles.bodySmall.copyWith(
+                color: accentColor,
+                fontWeight: FontWeight.bold,
+                fontSize: 10,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 6),
+        ClipRRect(
+          borderRadius: BorderRadius.circular(10),
+          child: LinearProgressIndicator(
+            value: progress,
+            minHeight: 6,
+            backgroundColor: AppColors.border.withOpacity(0.4),
+            valueColor: AlwaysStoppedAnimation<Color>(accentColor),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _CardBaseGradient extends StatelessWidget {
+  const _CardBaseGradient();
+
+  @override
+  Widget build(BuildContext context) {
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topRight,
+          end: Alignment.bottomLeft,
+          colors: [
+            AppColors.surfaceColor,
+            AppColors.cardBackground,
+            AppColors.scaffoldBackground,
+          ],
+          stops: const [0, 0.52, 1],
+        ),
+      ),
+    );
+  }
+}
+
+class _GlowOrb extends StatelessWidget {
+  final Color color;
+  final double size;
+  final double opacity;
+
+  const _GlowOrb({
+    required this.color,
+    required this.size,
+    required this.opacity,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return IgnorePointer(
+      child: Container(
+        width: size,
+        height: size,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          gradient: RadialGradient(
+            colors: [
+              color.withOpacity(opacity),
+              color.withOpacity(opacity * 0.26),
+              color.withOpacity(0),
+            ],
+            stops: const [0, 0.45, 1],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _StatusSideGlow extends StatelessWidget {
+  final Color color;
+  final bool active;
+
+  const _StatusSideGlow({required this.color, required this.active});
+
+  @override
+  Widget build(BuildContext context) {
+    return IgnorePointer(
+      child: AnimatedContainer(
+        duration: _normalAnimation,
+        width: active ? 4 : 3,
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              color.withOpacity(0),
+              color.withOpacity(active ? 0.72 : 0.44),
+              color.withOpacity(0),
+            ],
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: color.withOpacity(active ? 0.44 : 0.22),
+              blurRadius: active ? 16 : 10,
+              spreadRadius: active ? 2 : 1,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _StatusIconBox extends StatelessWidget {
+  final _StatusMeta meta;
+  final bool hovered;
+
+  const _StatusIconBox({required this.meta, required this.hovered});
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedContainer(
+      duration: _normalAnimation,
+      width: 38,
+      height: 38,
+      decoration: BoxDecoration(
+        color: meta.accent.withOpacity(hovered ? 0.16 : 0.11),
+        borderRadius: BorderRadius.circular(13),
+        border: Border.all(
+          color: meta.accent.withOpacity(hovered ? 0.34 : 0.20),
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: meta.accent.withOpacity(hovered ? 0.18 : 0.10),
+            blurRadius: hovered ? 22 : 14,
+            spreadRadius: hovered ? 1 : 0,
+          ),
+        ],
+      ),
+      child: Icon(meta.icon, size: 18, color: meta.accent),
+    );
+  }
+}
+
+class _PipelineLabel extends StatelessWidget {
+  final _StatusMeta meta;
+
+  const _PipelineLabel({required this.meta});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+      decoration: BoxDecoration(
+        color: AppColors.black.withOpacity(0.14),
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: AppColors.border.withOpacity(0.80)),
+      ),
+      child: Text(
+        meta.groupLabel,
+        style: AppTextStyles.overline.copyWith(
+          color: meta.accent,
+          fontSize: 9.2,
+          letterSpacing: 0,
+          height: 1.1,
+          fontWeight: FontWeight.w800,
+        ),
+      ),
+    );
+  }
+}
+
+class _ArchivedLabel extends StatelessWidget {
+  const _ArchivedLabel();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+      decoration: BoxDecoration(
+        color: AppColors.textMuted.withOpacity(0.10),
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: AppColors.textMuted.withOpacity(0.16)),
+      ),
+      child: Text(
+        'مؤرشف',
+        style: AppTextStyles.overline.copyWith(
+          color: AppColors.textMuted,
+          fontSize: 9.2,
+          letterSpacing: 0,
+          height: 1.1,
+          fontWeight: FontWeight.w800,
+        ),
+      ),
+    );
+  }
+}
+
+class _ClientLine extends StatelessWidget {
+  final ProjectEntity project;
+
+  const _ClientLine({required this.project});
+
+  @override
+  Widget build(BuildContext context) {
+    final clientName = project.clientName?.trim();
+    final hasClient = clientName != null && clientName.isNotEmpty;
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+      decoration: BoxDecoration(
+        color: AppColors.black.withOpacity(0.12),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppColors.border.withOpacity(0.76)),
+      ),
+      child: Row(
+        children: [
+          Icon(
+            Icons.person_outline_rounded,
+            size: 14,
+            color: hasClient ? AppColors.textMuted : AppColors.textDisabled,
+          ),
+          const SizedBox(width: 7),
+          Expanded(
+            child: Text(
+              hasClient ? clientName : 'لا يوجد عميل محدد',
+              style: AppTextStyles.bodySmall.copyWith(
+                color: hasClient
+                    ? AppColors.textSecondary
+                    : AppColors.textDisabled,
+                fontWeight: FontWeight.w600,
+                height: 1.2,
+              ),
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _StatusBadge extends StatelessWidget {
+  final _StatusMeta meta;
+
+  const _StatusBadge({required this.meta});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
+      decoration: BoxDecoration(
+        color: meta.accent.withOpacity(0.11),
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: meta.accent.withOpacity(0.24)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(meta.icon, size: 11, color: meta.accent),
+          const SizedBox(width: 5),
+          Text(
+            meta.shortLabel,
+            style: AppTextStyles.statusBadge.copyWith(
+              color: meta.accent,
+              fontSize: 10.5,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _SmallPill extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final Color color;
+
+  const _SmallPill({
+    required this.icon,
+    required this.label,
+    required this.color,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.08),
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: color.withOpacity(0.16)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 11, color: color),
+          const SizedBox(width: 4),
+          Text(
+            label,
+            style: TextStyle(
+              color: color,
+              fontSize: 10.5,
+              fontWeight: FontWeight.w700,
+              height: 1.1,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ActionHint extends StatelessWidget {
+  final String action;
+  final Color color;
+
+  const _ActionHint({required this.action, required this.color});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 6),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.10),
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: color.withOpacity(0.22)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            action,
+            style: TextStyle(
+              color: color,
+              fontSize: 11.2,
+              fontWeight: FontWeight.w800,
+              height: 1.1,
+            ),
+          ),
+          const SizedBox(width: 5),
+          Icon(Icons.arrow_forward_rounded, size: 13, color: color),
+        ],
+      ),
+    );
+  }
+}
 
 class _CardMenu extends StatelessWidget {
   final VoidCallback onEdit;
   final VoidCallback? onArchive;
   final VoidCallback? onRestore;
   final VoidCallback? onMoveToExecution;
+
   const _CardMenu({
     required this.onEdit,
     this.onArchive,
@@ -847,112 +1347,362 @@ class _CardMenu extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return PopupMenuButton<String>(
+      tooltip: 'خيارات المشروع',
       padding: EdgeInsets.zero,
       icon: const Icon(
         Icons.more_horiz_rounded,
-        size: 17,
+        size: 19,
         color: AppColors.textMuted,
       ),
       color: AppColors.cardBackground,
-      elevation: 4,
+      elevation: 8,
+      shadowColor: AppColors.black.withOpacity(0.36),
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(12),
         side: const BorderSide(color: AppColors.border),
       ),
-      itemBuilder: (_) => [
-        if (onRestore == null)
-          PopupMenuItem(
+      itemBuilder: (_) {
+        return [
+          const PopupMenuItem(
             value: 'edit',
-            height: 36,
-            child: Row(
-              children: const [
-                Icon(
-                  Icons.edit_outlined,
-                  size: 13,
-                  color: AppColors.textSecondary,
-                ),
-                SizedBox(width: 8),
-                Text(
-                  'تعديل',
-                  style: TextStyle(
-                    color: AppColors.textSecondary,
-                    fontSize: 12.5,
-                  ),
-                ),
-              ],
+            height: 40,
+            child: _PopupMenuRow(
+              icon: Icons.edit_outlined,
+              label: 'تعديل',
+              color: AppColors.textSecondary,
             ),
           ),
-        if (onRestore != null)
-          PopupMenuItem(
-            value: 'restore',
-            height: 36,
-            child: Row(
-              children: const [
-                Icon(
-                  Icons.unarchive_outlined,
-                  size: 13,
-                  color: AppColors.statusCompleted,
-                ),
-                SizedBox(width: 8),
-                Text(
-                  'استعادة',
-                  style: TextStyle(
-                    color: AppColors.statusCompleted,
-                    fontSize: 12.5,
-                  ),
-                ),
-              ],
+          if (onRestore != null)
+            const PopupMenuItem(
+              value: 'restore',
+              height: 40,
+              child: _PopupMenuRow(
+                icon: Icons.unarchive_outlined,
+                label: 'استعادة',
+                color: AppColors.statusCompleted,
+              ),
             ),
-          ),
-        if (onMoveToExecution != null)
-          PopupMenuItem(
-            value: 'execution',
-            height: 36,
-            child: Row(
-              children: const [
-                Icon(
-                  Icons.play_circle_outline_rounded,
-                  size: 13,
-                  color: AppColors.statusCompleted,
-                ),
-                SizedBox(width: 8),
-                Text(
-                  'بدء التنفيذ',
-                  style: TextStyle(
-                    color: AppColors.statusCompleted,
-                    fontSize: 12.5,
-                  ),
-                ),
-              ],
+          if (onMoveToExecution != null)
+            const PopupMenuItem(
+              value: 'execution',
+              height: 40,
+              child: _PopupMenuRow(
+                icon: Icons.play_circle_outline_rounded,
+                label: 'بدء التنفيذ',
+                color: AppColors.statusCompleted,
+              ),
             ),
-          ),
-        if (onArchive != null)
-          PopupMenuItem(
-            value: 'archive',
-            height: 36,
-            child: Row(
-              children: const [
-                Icon(Icons.archive_outlined, size: 13, color: AppColors.error),
-                SizedBox(width: 8),
-                Text(
-                  'أرشفة',
-                  style: TextStyle(color: AppColors.error, fontSize: 12.5),
-                ),
-              ],
+          if (onArchive != null)
+            const PopupMenuItem(
+              value: 'archive',
+              height: 40,
+              child: _PopupMenuRow(
+                icon: Icons.archive_outlined,
+                label: 'أرشفة',
+                color: AppColors.error,
+              ),
             ),
-          ),
-      ],
-      onSelected: (v) {
-        if (v == 'edit') onEdit();
-        if (v == 'archive') onArchive?.call();
-        if (v == 'restore') onRestore?.call();
-        if (v == 'execution') onMoveToExecution?.call();
+        ];
+      },
+      onSelected: (value) {
+        switch (value) {
+          case 'edit':
+            onEdit();
+            break;
+          case 'archive':
+            onArchive?.call();
+            break;
+          case 'restore':
+            onRestore?.call();
+            break;
+          case 'execution':
+            onMoveToExecution?.call();
+            break;
+        }
       },
     );
   }
 }
 
-// ─── Delete confirmation dialog ─────────────────────────────────────────────────
+class _PopupMenuRow extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final Color color;
+
+  const _PopupMenuRow({
+    required this.icon,
+    required this.label,
+    required this.color,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Icon(icon, size: 15, color: color),
+        const SizedBox(width: 8),
+        Text(
+          label,
+          style: TextStyle(
+            color: color,
+            fontSize: 12.5,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _PrimaryGlowButton extends StatelessWidget {
+  final String label;
+  final IconData icon;
+  final VoidCallback onTap;
+
+  const _PrimaryGlowButton({
+    required this.label,
+    required this.icon,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.secondary.withOpacity(0.18),
+            blurRadius: 22,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
+      child: ElevatedButton.icon(
+        onPressed: onTap,
+        icon: Icon(icon, size: 17),
+        label: Text(label),
+        style: ElevatedButton.styleFrom(
+          backgroundColor: AppColors.secondary,
+          foregroundColor: AppColors.white,
+          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 13),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          textStyle: AppTextStyles.buttonSmall.copyWith(
+            fontSize: 13,
+            fontWeight: FontWeight.w800,
+          ),
+          elevation: 0,
+        ),
+      ),
+    );
+  }
+}
+
+class _CenteredLoader extends StatelessWidget {
+  const _CenteredLoader();
+
+  @override
+  Widget build(BuildContext context) {
+    return const Center(
+      child: CircularProgressIndicator(
+        color: AppColors.secondary,
+        strokeWidth: 2,
+      ),
+    );
+  }
+}
+
+class _BottomLoader extends StatelessWidget {
+  const _BottomLoader();
+
+  @override
+  Widget build(BuildContext context) {
+    return const Center(
+      child: Padding(
+        padding: EdgeInsets.all(18),
+        child: SizedBox(
+          width: 22,
+          height: 22,
+          child: CircularProgressIndicator(
+            color: AppColors.secondary,
+            strokeWidth: 2,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _NoMoreProjects extends StatelessWidget {
+  const _NoMoreProjects();
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox.shrink();
+  }
+}
+
+class _LoadMoreError extends StatelessWidget {
+  final VoidCallback onRetry;
+
+  const _LoadMoreError({required this.onRetry});
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(14),
+        child: OutlinedButton.icon(
+          onPressed: onRetry,
+          icon: const Icon(Icons.refresh_rounded, size: 16),
+          label: const Text('إعادة تحميل المزيد'),
+          style: OutlinedButton.styleFrom(
+            foregroundColor: AppColors.secondary,
+            side: BorderSide(color: AppColors.secondary.withOpacity(0.28)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _EmptyState extends StatelessWidget {
+  final String message;
+
+  const _EmptyState({required this.message});
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Container(
+        padding: const EdgeInsets.all(28),
+        decoration: BoxDecoration(
+          color: AppColors.cardBackground,
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(color: AppColors.border),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(
+              Icons.folder_open_rounded,
+              size: 58,
+              color: AppColors.textDisabled,
+            ),
+            const SizedBox(height: 14),
+            Text(
+              message,
+              style: AppTextStyles.bodyLarge.copyWith(
+                color: AppColors.textSecondary,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _EmptyFilteredState extends StatelessWidget {
+  final VoidCallback onClear;
+
+  const _EmptyFilteredState({required this.onClear});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 34),
+      decoration: BoxDecoration(
+        color: AppColors.cardBackground,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.border),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Icon(
+            Icons.filter_alt_off_outlined,
+            size: 42,
+            color: AppColors.textDisabled,
+          ),
+          const SizedBox(height: 12),
+          Text(
+            'لا توجد مشاريع في هذه المرحلة',
+            style: AppTextStyles.bodyMedium.copyWith(
+              color: AppColors.textSecondary,
+              fontWeight: FontWeight.w700,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 14),
+          OutlinedButton(
+            onPressed: onClear,
+            style: OutlinedButton.styleFrom(
+              foregroundColor: AppColors.secondary,
+              side: BorderSide(color: AppColors.secondary.withOpacity(0.28)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
+            ),
+            child: const Text('عرض كل المشاريع'),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ErrorState extends StatelessWidget {
+  final String message;
+  final VoidCallback onRetry;
+
+  const _ErrorState({required this.message, required this.onRetry});
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Container(
+        padding: const EdgeInsets.all(26),
+        decoration: BoxDecoration(
+          color: AppColors.cardBackground,
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(color: AppColors.border),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(
+              Icons.error_outline_rounded,
+              size: 50,
+              color: AppColors.error,
+            ),
+            const SizedBox(height: 14),
+            Text(
+              message,
+              style: AppTextStyles.bodyMedium.copyWith(
+                color: AppColors.textSecondary,
+                fontWeight: FontWeight.w600,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 18),
+            _GhostButton(
+              label: 'إعادة المحاولة',
+              accent: AppColors.secondary,
+              onTap: onRetry,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
 
 class _ConfirmActionDialog extends StatelessWidget {
   final IconData icon;
@@ -961,6 +1711,7 @@ class _ConfirmActionDialog extends StatelessWidget {
   final String message;
   final String confirmLabel;
   final VoidCallback onConfirm;
+
   const _ConfirmActionDialog({
     required this.icon,
     required this.iconColor,
@@ -975,101 +1726,104 @@ class _ConfirmActionDialog extends StatelessWidget {
     return Dialog(
       backgroundColor: AppColors.cardBackground,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(14),
         side: const BorderSide(color: AppColors.border),
       ),
-      child: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Icon + title
-            Row(
-              children: [
-                Container(
-                  width: 34,
-                  height: 34,
-                  decoration: BoxDecoration(
-                    color: iconColor.withOpacity(0.10),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Icon(icon, color: iconColor, size: 17),
-                ),
-                const SizedBox(width: 12),
-                Text(
-                  title,
-                  style: AppTextStyles.bodyLarge.copyWith(
-                    color: AppColors.textPrimary,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 14),
-            Text(
-              message,
-              style: AppTextStyles.bodyMedium.copyWith(
-                color: AppColors.textSecondary,
-                height: 1.5,
-              ),
-            ),
-            const SizedBox(height: 22),
-            // Actions
-            Row(
-              children: [
-                Expanded(
-                  child: OutlinedButton(
-                    onPressed: () => Navigator.of(context).pop(),
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: AppColors.textSecondary,
-                      side: const BorderSide(color: AppColors.border),
-                      padding: const EdgeInsets.symmetric(vertical: 10),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 440),
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    width: 36,
+                    height: 36,
+                    decoration: BoxDecoration(
+                      color: iconColor.withOpacity(0.10),
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(color: iconColor.withOpacity(0.18)),
                     ),
-                    child: const Text('إلغاء'),
+                    child: Icon(icon, color: iconColor, size: 18),
                   ),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: ElevatedButton(
-                    onPressed: () {
-                      Navigator.of(context).pop();
-                      onConfirm();
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: iconColor.withOpacity(0.12),
-                      foregroundColor: iconColor,
-                      side: BorderSide(color: iconColor.withOpacity(0.30)),
-                      padding: const EdgeInsets.symmetric(vertical: 10),
-                      elevation: 0,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                    ),
+                  const SizedBox(width: 12),
+                  Expanded(
                     child: Text(
-                      confirmLabel,
-                      style: const TextStyle(fontWeight: FontWeight.w600),
+                      title,
+                      style: AppTextStyles.bodyLarge.copyWith(
+                        color: AppColors.textPrimary,
+                        fontWeight: FontWeight.w700,
+                      ),
                     ),
                   ),
+                ],
+              ),
+              const SizedBox(height: 14),
+              Text(
+                message,
+                style: AppTextStyles.bodyMedium.copyWith(
+                  color: AppColors.textSecondary,
+                  height: 1.55,
                 ),
-              ],
-            ),
-          ],
+              ),
+              const SizedBox(height: 22),
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () => Navigator.of(context).pop(),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: AppColors.textSecondary,
+                        side: const BorderSide(color: AppColors.border),
+                        padding: const EdgeInsets.symmetric(vertical: 11),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                      ),
+                      child: const Text('إلغاء'),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: () {
+                        Navigator.of(context).pop();
+                        onConfirm();
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: iconColor.withOpacity(0.12),
+                        foregroundColor: iconColor,
+                        side: BorderSide(color: iconColor.withOpacity(0.30)),
+                        padding: const EdgeInsets.symmetric(vertical: 11),
+                        elevation: 0,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                      ),
+                      child: Text(
+                        confirmLabel,
+                        style: const TextStyle(fontWeight: FontWeight.w700),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );
   }
 }
 
-// ─── Ghost button (error state retry) ─────────────────────────────────────────
-
 class _GhostButton extends StatelessWidget {
   final String label;
   final Color accent;
   final VoidCallback onTap;
+
   const _GhostButton({
     required this.label,
     required this.accent,
@@ -1078,21 +1832,25 @@ class _GhostButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-        decoration: BoxDecoration(
-          color: accent.withOpacity(0.08),
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: accent.withOpacity(0.25)),
-        ),
-        child: Text(
-          label,
-          style: TextStyle(
-            color: accent,
-            fontSize: 13,
-            fontWeight: FontWeight.w600,
+    return Material(
+      color: accent.withOpacity(0.08),
+      borderRadius: BorderRadius.circular(10),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(10),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(color: accent.withOpacity(0.25)),
+          ),
+          child: Text(
+            label,
+            style: TextStyle(
+              color: accent,
+              fontSize: 13,
+              fontWeight: FontWeight.w700,
+            ),
           ),
         ),
       ),

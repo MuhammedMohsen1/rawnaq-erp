@@ -12,10 +12,10 @@ import '../../../auth/presentation/bloc/auth_bloc.dart';
 import '../../../projects/data/datasources/projects_api_datasource.dart';
 import '../../../projects/domain/enums/project_status.dart';
 import '../../../projects/presentation/widgets/project_attachments_panel.dart';
+import '../../../projects/presentation/widgets/project_contact_actions.dart';
 import '../../data/models/execution_models.dart';
 import '../cubit/execution_cubit.dart';
 import '../cubit/execution_state.dart';
-import '../widgets/execution_header.dart';
 import '../widgets/cash_flow_summary_cards.dart';
 import '../widgets/transactions_table.dart';
 import '../widgets/pending_approvals_card.dart';
@@ -131,6 +131,7 @@ class _ExecutionLayout extends StatelessWidget {
                 // ── Header: icon-only buttons ──────────────────────────────
                 _CompactExecutionHeader(
                   projectName: state.dashboard.projectName,
+                  projectId: projectId,
                   onOpenPastPricing: () => _handleOpenPastPricing(context),
                   onMarkComplete: isAdminOrManager
                       ? () => _handleMarkComplete(context)
@@ -420,11 +421,13 @@ class _ExecutionLayout extends StatelessWidget {
 
 class _CompactExecutionHeader extends StatelessWidget {
   final String projectName;
+  final String projectId;
   final VoidCallback onOpenPastPricing;
   final VoidCallback? onMarkComplete;
 
   const _CompactExecutionHeader({
     required this.projectName,
+    required this.projectId,
     required this.onOpenPastPricing,
     this.onMarkComplete,
   });
@@ -442,6 +445,9 @@ class _CompactExecutionHeader extends StatelessWidget {
             maxLines: 1,
           ),
         ),
+
+        ProjectContactActionsLoader(projectId: projectId),
+        const SizedBox(width: 8),
 
         // Past-pricing icon button
         Tooltip(

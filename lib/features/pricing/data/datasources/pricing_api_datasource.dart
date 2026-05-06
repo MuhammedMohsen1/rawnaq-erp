@@ -636,7 +636,7 @@ class PricingApiDataSource {
   }) async {
     final response = await _apiClient.patch(
       ApiEndpoints.updatePricingVersion(projectId, version),
-      data: {if (notes != null) 'notes': notes},
+      data: {'notes': notes ?? ''},
     );
 
     final responseData = response.data as Map<String, dynamic>;

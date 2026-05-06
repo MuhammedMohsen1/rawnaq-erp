@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_text_styles.dart';
+import '../../domain/entities/project_entity.dart';
 import '../bloc/projects_bloc.dart';
 import '../bloc/projects_event.dart';
 
@@ -15,24 +16,40 @@ class CreateProjectDialog extends StatefulWidget {
 
 class _CreateProjectDialogState extends State<CreateProjectDialog> {
   int _currentStep = 0;
-  
+
   // Project type selection
   String? _selectedProjectType; // 'DESIGN' or 'EXECUTION'
-  
+
   // Form fields
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   final _descriptionController = TextEditingController();
   final _clientNameController = TextEditingController();
-  final _clientPhoneController = TextEditingController();
-  
+  final _googleMapLinkController = TextEditingController();
+  final List<TextEditingController> _contactNameControllers = [
+    TextEditingController(),
+  ];
+  final List<TextEditingController> _contactPhoneControllers = [
+    TextEditingController(),
+  ];
+
   // Department selection (for now, using mock data - should be fetched from API)
   String? _selectedDepartmentId;
   final List<Map<String, String>> _allDepartments = [
-    {'id': 'dept-1', 'name': 'قسم التنفيذ', 'nameEn': 'Execution', 'type': 'EXECUTION'},
-    {'id': 'dept-2', 'name': 'قسم التصميم الداخلي', 'nameEn': 'Interior Design', 'type': 'DESIGN'},
+    {
+      'id': 'dept-1',
+      'name': 'قسم التنفيذ',
+      'nameEn': 'Execution',
+      'type': 'EXECUTION',
+    },
+    {
+      'id': 'dept-2',
+      'name': 'قسم التصميم الداخلي',
+      'nameEn': 'Interior Design',
+      'type': 'DESIGN',
+    },
   ];
-  
+
   // Get filtered departments based on project type
   List<Map<String, String>> get _departments {
     if (_selectedProjectType == null) return [];
@@ -40,7 +57,7 @@ class _CreateProjectDialogState extends State<CreateProjectDialog> {
         .where((dept) => dept['type'] == _selectedProjectType)
         .toList();
   }
-  
+
   // No date or progress fields needed - will be set by backend
 
   @override
@@ -48,7 +65,13 @@ class _CreateProjectDialogState extends State<CreateProjectDialog> {
     _nameController.dispose();
     _descriptionController.dispose();
     _clientNameController.dispose();
-    _clientPhoneController.dispose();
+    _googleMapLinkController.dispose();
+    for (final controller in _contactNameControllers) {
+      controller.dispose();
+    }
+    for (final controller in _contactPhoneControllers) {
+      controller.dispose();
+    }
     super.dispose();
   }
 
@@ -69,7 +92,7 @@ class _CreateProjectDialogState extends State<CreateProjectDialog> {
           children: [
             // Header
             _buildHeader(),
-            
+
             // Content
             Expanded(
               child: SingleChildScrollView(
@@ -77,7 +100,7 @@ class _CreateProjectDialogState extends State<CreateProjectDialog> {
                 child: _buildStepContent(),
               ),
             ),
-            
+
             // Footer with navigation buttons
             _buildFooter(),
           ],
@@ -90,9 +113,7 @@ class _CreateProjectDialogState extends State<CreateProjectDialog> {
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        border: Border(
-          bottom: BorderSide(color: AppColors.border, width: 1),
-        ),
+        border: Border(bottom: BorderSide(color: AppColors.border, width: 1)),
       ),
       child: Row(
         children: [
@@ -148,7 +169,7 @@ class _CreateProjectDialogState extends State<CreateProjectDialog> {
           ),
         ),
         const SizedBox(height: 32),
-        
+
         // Design Project Option
         _buildProjectTypeCard(
           title: 'مشروع تصميم',
@@ -158,7 +179,7 @@ class _CreateProjectDialogState extends State<CreateProjectDialog> {
           color: const Color(0xFF3B82F6),
         ),
         const SizedBox(height: 16),
-        
+
         // Execution Project Option
         _buildProjectTypeCard(
           title: 'مشروع تنفيذ',
@@ -179,7 +200,7 @@ class _CreateProjectDialogState extends State<CreateProjectDialog> {
     required Color color,
   }) {
     final isSelected = _selectedProjectType == type;
-    
+
     return InkWell(
       onTap: () {
         setState(() {
@@ -231,12 +252,7 @@ class _CreateProjectDialogState extends State<CreateProjectDialog> {
                 ],
               ),
             ),
-            if (isSelected)
-              Icon(
-                Icons.check_circle,
-                color: color,
-                size: 24,
-              ),
+            if (isSelected) Icon(Icons.check_circle, color: color, size: 24),
           ],
         ),
       ),
@@ -257,7 +273,7 @@ class _CreateProjectDialogState extends State<CreateProjectDialog> {
             ),
           ),
           const SizedBox(height: 24),
-          
+
           // Project Name
           _buildTextField(
             controller: _nameController,
@@ -272,11 +288,11 @@ class _CreateProjectDialogState extends State<CreateProjectDialog> {
             },
           ),
           const SizedBox(height: 16),
-          
+
           // Department is auto-selected based on project type (read-only display)
           _buildDepartmentDisplay(),
           const SizedBox(height: 16),
-          
+
           // Description
           _buildTextField(
             controller: _descriptionController,
@@ -286,7 +302,7 @@ class _CreateProjectDialogState extends State<CreateProjectDialog> {
             maxLines: 3,
           ),
           const SizedBox(height: 24),
-          
+
           // Client Information Section
           Text(
             'معلومات العميل',
@@ -296,7 +312,7 @@ class _CreateProjectDialogState extends State<CreateProjectDialog> {
             ),
           ),
           const SizedBox(height: 16),
-          
+
           _buildTextField(
             controller: _clientNameController,
             label: 'اسم العميل',
@@ -304,16 +320,91 @@ class _CreateProjectDialogState extends State<CreateProjectDialog> {
             icon: Icons.person_outline,
           ),
           const SizedBox(height: 16),
-          
+
+          _buildContactsFields(),
+          const SizedBox(height: 16),
+
           _buildTextField(
-            controller: _clientPhoneController,
-            label: 'رقم الهاتف',
-            hint: 'رقم الهاتف (اختياري)',
-            icon: Icons.phone_outlined,
-            keyboardType: TextInputType.phone,
+            controller: _googleMapLinkController,
+            label: 'رابط خرائط جوجل',
+            hint: 'رابط الموقع على خرائط جوجل (اختياري)',
+            icon: Icons.map_outlined,
+            keyboardType: TextInputType.url,
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildContactsFields() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Expanded(
+              child: Text(
+                'أرقام الهاتف',
+                style: AppTextStyles.bodyMedium.copyWith(
+                  color: AppColors.textSecondary,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ),
+            TextButton.icon(
+              onPressed: () {
+                setState(() {
+                  _contactNameControllers.add(TextEditingController());
+                  _contactPhoneControllers.add(TextEditingController());
+                });
+              },
+              icon: const Icon(Icons.add, size: 18),
+              label: const Text('إضافة رقم'),
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        for (var i = 0; i < _contactPhoneControllers.length; i++) ...[
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: _buildTextField(
+                  controller: _contactNameControllers[i],
+                  label: 'الاسم',
+                  hint: 'مثال: العميل',
+                  icon: Icons.badge_outlined,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: _buildTextField(
+                  controller: _contactPhoneControllers[i],
+                  label: 'رقم الهاتف',
+                  hint: 'رقم الهاتف',
+                  icon: Icons.phone_outlined,
+                  keyboardType: TextInputType.phone,
+                ),
+              ),
+              if (_contactPhoneControllers.length > 1) ...[
+                const SizedBox(width: 8),
+                IconButton(
+                  onPressed: () {
+                    setState(() {
+                      _contactNameControllers.removeAt(i).dispose();
+                      _contactPhoneControllers.removeAt(i).dispose();
+                    });
+                  },
+                  icon: const Icon(Icons.delete_outline),
+                  color: AppColors.error,
+                ),
+              ],
+            ],
+          ),
+          if (i < _contactPhoneControllers.length - 1)
+            const SizedBox(height: 12),
+        ],
+      ],
     );
   }
 
@@ -363,7 +454,10 @@ class _CreateProjectDialogState extends State<CreateProjectDialog> {
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
-              borderSide: BorderSide(color: AppColors.inputFocusBorder, width: 2),
+              borderSide: BorderSide(
+                color: AppColors.inputFocusBorder,
+                width: 2,
+              ),
             ),
             errorBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
@@ -382,7 +476,7 @@ class _CreateProjectDialogState extends State<CreateProjectDialog> {
   Widget _buildDepartmentDisplay() {
     final department = _departments.isNotEmpty ? _departments.first : null;
     final departmentName = department?['name'] ?? '';
-    
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -424,14 +518,11 @@ class _CreateProjectDialogState extends State<CreateProjectDialog> {
     );
   }
 
-
   Widget _buildFooter() {
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        border: Border(
-          top: BorderSide(color: AppColors.border, width: 1),
-        ),
+        border: Border(top: BorderSide(color: AppColors.border, width: 1)),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -448,7 +539,7 @@ class _CreateProjectDialogState extends State<CreateProjectDialog> {
             )
           else
             const SizedBox.shrink(),
-          
+
           // Next/Submit button
           ElevatedButton(
             onPressed: _handleNextOrSubmit,
@@ -462,9 +553,7 @@ class _CreateProjectDialogState extends State<CreateProjectDialog> {
             ),
             child: Text(
               _currentStep == 0 ? 'التالي' : 'إنشاء المشروع',
-              style: const TextStyle(
-                fontWeight: FontWeight.w600,
-              ),
+              style: const TextStyle(fontWeight: FontWeight.w600),
             ),
           ),
         ],
@@ -484,12 +573,14 @@ class _CreateProjectDialogState extends State<CreateProjectDialog> {
         );
         return;
       }
-      
+
       // Move to next step and auto-select the matching department
       setState(() {
         _currentStep = 1;
         // Auto-select the department that matches the project type
-        final matchingDept = _departments.isNotEmpty ? _departments.first : null;
+        final matchingDept = _departments.isNotEmpty
+            ? _departments.first
+            : null;
         if (matchingDept != null) {
           _selectedDepartmentId = matchingDept['id'];
         }
@@ -499,7 +590,7 @@ class _CreateProjectDialogState extends State<CreateProjectDialog> {
       if (!_formKey.currentState!.validate()) {
         return;
       }
-      
+
       // Department is auto-selected, but verify it's set
       if (_selectedDepartmentId == null || _departments.isEmpty) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -510,11 +601,12 @@ class _CreateProjectDialogState extends State<CreateProjectDialog> {
         );
         return;
       }
-      
+
       // Dispatch create project event with all data
       // Start date will be current date (created date)
       final now = DateTime.now();
-      
+      final contacts = _collectContacts();
+
       context.read<ProjectsBloc>().add(
         CreateProjectWithData(
           name: _nameController.text.trim(),
@@ -526,20 +618,40 @@ class _CreateProjectDialogState extends State<CreateProjectDialog> {
           clientName: _clientNameController.text.trim().isEmpty
               ? null
               : _clientNameController.text.trim(),
-          clientPhone: _clientPhoneController.text.trim().isEmpty
-              ? null
-              : _clientPhoneController.text.trim(),
+          clientPhone: contacts.isEmpty ? null : contacts.first.phone,
+          clientContacts: contacts,
           clientEmail: null, // Email not needed
+          googleMapLink: _googleMapLinkController.text.trim().isEmpty
+              ? null
+              : _googleMapLinkController.text.trim(),
           startDate: now, // Start date is the created date
           endDate: null, // End date not required when creating
           deadline: null, // Deadline not needed
           progress: 0, // Progress starts at 0
         ),
       );
-      
+
       // Close dialog
       Navigator.of(context).pop();
     }
   }
-}
 
+  List<ProjectPhoneContact> _collectContacts() {
+    final contacts = <ProjectPhoneContact>[];
+
+    for (var i = 0; i < _contactPhoneControllers.length; i++) {
+      final name = _contactNameControllers[i].text.trim();
+      final phone = _contactPhoneControllers[i].text.trim();
+      if (name.isEmpty && phone.isEmpty) continue;
+
+      contacts.add(
+        ProjectPhoneContact(
+          name: name.isEmpty ? 'بدون اسم' : name,
+          phone: phone,
+        ),
+      );
+    }
+
+    return contacts;
+  }
+}

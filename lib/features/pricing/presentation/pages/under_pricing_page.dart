@@ -18,6 +18,7 @@ import '../../../auth/presentation/bloc/auth_bloc.dart';
 import '../../../projects/data/datasources/projects_api_datasource.dart';
 import '../../../projects/domain/enums/project_status.dart';
 import '../../../projects/presentation/widgets/project_attachments_panel.dart';
+import '../../../projects/presentation/widgets/project_contact_actions.dart';
 import '../../../contracts/data/datasources/contracts_api_datasource.dart';
 import '../cubit/pricing_cubit.dart';
 import '../cubit/pricing_state.dart';
@@ -177,13 +178,13 @@ class _PricingLayout extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Header with status badge
-              PricingHeader(
-                statusText: state.getStatusText(),
-                statusColor: statusColor,
-              ),
-              const SizedBox(height: 24),
-
+              // // Header with status badge
+              // PricingHeader(
+              //   statusText: state.getStatusText(),
+              //   statusColor: statusColor,
+              //   trailing: ProjectContactActionsLoader(projectId: projectId),
+              // ),
+              // const SizedBox(height: 24),
               ProjectAttachmentsPanel(
                 projectId: projectId,
                 projectStatus: _projectStatusFromApi(
@@ -643,7 +644,7 @@ class _PricingLayout extends StatelessWidget {
     try {
       await context.read<PricingCubit>().updatePricingVersionNotes(
         projectId,
-        notes.isEmpty ? null : notes,
+        notes,
       );
     } catch (e) {
       if (context.mounted) {

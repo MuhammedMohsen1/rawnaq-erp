@@ -2,6 +2,25 @@ import '../../domain/entities/project_entity.dart';
 import '../../domain/enums/project_status.dart';
 import 'team_member_model.dart';
 
+class ProjectPhoneContactModel extends ProjectPhoneContact {
+  const ProjectPhoneContactModel({required super.name, required super.phone});
+
+  factory ProjectPhoneContactModel.fromJson(Map<String, dynamic> json) {
+    return ProjectPhoneContactModel(
+      name: (json['name'] as String?) ?? '',
+      phone: (json['phone'] as String?) ?? '',
+    );
+  }
+
+  factory ProjectPhoneContactModel.fromEntity(ProjectPhoneContact entity) {
+    return ProjectPhoneContactModel(name: entity.name, phone: entity.phone);
+  }
+
+  Map<String, dynamic> toJson() {
+    return {'name': name, 'phone': phone};
+  }
+}
+
 /// Model class for Project with JSON serialization
 class ProjectModel extends ProjectEntity {
   const ProjectModel({
@@ -18,8 +37,11 @@ class ProjectModel extends ProjectEntity {
     super.description,
     super.clientName,
     super.clientPhone,
+    super.clientContacts,
+    super.googleMapLink,
     super.createdAt,
     super.updatedAt,
+    super.lastEditAt,
     super.itemsCount,
     super.archived,
   });
@@ -49,6 +71,19 @@ class ProjectModel extends ProjectEntity {
       endDate = startDate.add(const Duration(days: 30));
     }
 
+    final contactsJson = json['clientContacts'];
+    final clientContacts = contactsJson is List
+        ? contactsJson
+              .whereType<Map>()
+              .map(
+                (contact) => ProjectPhoneContactModel.fromJson(
+                  Map<String, dynamic>.from(contact),
+                ),
+              )
+              .where((contact) => contact.phone.trim().isNotEmpty)
+              .toList()
+        : <ProjectPhoneContactModel>[];
+
     return ProjectModel(
       id: json['id'] as String,
       name: json['name'] as String,
@@ -66,11 +101,16 @@ class ProjectModel extends ProjectEntity {
       description: json['description'] as String?,
       clientName: json['clientName'] as String?,
       clientPhone: json['clientPhone'] as String?,
+      clientContacts: clientContacts,
+      googleMapLink: json['googleMapLink'] as String?,
       createdAt: json['createdAt'] != null
           ? DateTime.parse(json['createdAt'] as String)
           : null,
       updatedAt: json['updatedAt'] != null
           ? DateTime.parse(json['updatedAt'] as String)
+          : null,
+      lastEditAt: json['lastEditAt'] != null
+          ? DateTime.parse(json['lastEditAt'] as String)
           : null,
       itemsCount: json['itemsCount'] as int?,
       archived: json['archived'] as bool? ?? json['deletedAt'] != null,
@@ -95,8 +135,15 @@ class ProjectModel extends ProjectEntity {
           ?.map((e) => TeamMemberModel.fromEntity(e).toJson())
           .toList(),
       'description': description,
+      'clientName': clientName,
+      'clientPhone': clientPhone,
+      'clientContacts': clientContacts
+          .map((e) => ProjectPhoneContactModel.fromEntity(e).toJson())
+          .toList(),
+      'googleMapLink': googleMapLink,
       'createdAt': createdAt?.toIso8601String(),
       'updatedAt': updatedAt?.toIso8601String(),
+      'lastEditAt': lastEditAt?.toIso8601String(),
       'archived': archived,
     };
   }
@@ -117,8 +164,11 @@ class ProjectModel extends ProjectEntity {
       description: entity.description,
       clientName: entity.clientName,
       clientPhone: entity.clientPhone,
+      clientContacts: entity.clientContacts,
+      googleMapLink: entity.googleMapLink,
       createdAt: entity.createdAt,
       updatedAt: entity.updatedAt,
+      lastEditAt: entity.lastEditAt,
       itemsCount: entity.itemsCount,
       archived: entity.archived,
     );
@@ -140,8 +190,11 @@ class ProjectModel extends ProjectEntity {
       description: description,
       clientName: clientName,
       clientPhone: clientPhone,
+      clientContacts: clientContacts,
+      googleMapLink: googleMapLink,
       createdAt: createdAt,
       updatedAt: updatedAt,
+      lastEditAt: lastEditAt,
       itemsCount: itemsCount,
       archived: archived,
     );

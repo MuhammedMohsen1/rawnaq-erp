@@ -293,8 +293,7 @@ class ProjectsBloc extends Bloc<ProjectsEvent, ProjectsState> {
         },
         (project) {
           emit(ProjectCreated(project: project, previousState: currentState));
-          // Refresh the list
-          add(const RefreshProjects());
+          add(_reloadFromState(currentState));
         },
       );
     }
@@ -357,7 +356,9 @@ class ProjectsBloc extends Bloc<ProjectsEvent, ProjectsState> {
         primaryDepartmentId: event.primaryDepartmentId,
         clientName: event.clientName,
         clientPhone: event.clientPhone,
+        clientContacts: event.clientContacts,
         clientEmail: event.clientEmail,
+        googleMapLink: event.googleMapLink,
         startDate: event.startDate,
         endDate: event.endDate,
         deadline: event.deadline,
@@ -403,8 +404,7 @@ class ProjectsBloc extends Bloc<ProjectsEvent, ProjectsState> {
         },
         (project) {
           emit(ProjectUpdated(project: project, previousState: currentState));
-          // Refresh the list
-          add(const RefreshProjects());
+          add(_reloadFromState(currentState));
         },
       );
     }
@@ -436,8 +436,7 @@ class ProjectsBloc extends Bloc<ProjectsEvent, ProjectsState> {
               previousState: currentState,
             ),
           );
-          // Refresh the list
-          add(const RefreshProjects());
+          add(_reloadFromState(currentState));
         },
       );
     }
@@ -464,7 +463,7 @@ class ProjectsBloc extends Bloc<ProjectsEvent, ProjectsState> {
         },
         (project) {
           emit(ProjectUpdated(project: project, previousState: currentState));
-          add(const RefreshProjects());
+          add(_reloadFromState(currentState));
         },
       );
     }
@@ -529,6 +528,18 @@ class ProjectsBloc extends Bloc<ProjectsEvent, ProjectsState> {
         },
       );
     }
+  }
+
+  LoadProjects _reloadFromState(ProjectsLoaded state) {
+    return LoadProjects(
+      status: state.statusFilter,
+      managerId: state.managerFilter,
+      teamMemberId: state.teamMemberFilter,
+      searchQuery: state.searchQuery,
+      archived: state.archived,
+      page: 1,
+      limit: state.pageSize,
+    );
   }
 
   Future<void> _onLoadStatistics(

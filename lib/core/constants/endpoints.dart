@@ -379,6 +379,7 @@ abstract class ApiEndpoints {
 
   // Settings Endpoints
   static const String contractTerms = '/settings/contract-terms';
+  static const String pricingNotes = '/settings/pricing-notes';
 
   // Execution Endpoints
   static String executionDashboard(String projectId) =>

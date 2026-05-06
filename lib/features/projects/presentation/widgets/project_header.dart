@@ -3,6 +3,7 @@ import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_text_styles.dart';
 import '../../domain/entities/project_entity.dart';
 import '../../domain/enums/project_status.dart';
+import 'project_contact_actions.dart';
 
 /// Header widget displaying project name and status
 class ProjectHeader extends StatelessWidget {
@@ -28,6 +29,14 @@ class ProjectHeader extends StatelessWidget {
                 ),
               ),
             ),
+            ProjectContactActions(
+              contacts: project.clientContacts,
+              fallbackPhone: project.clientPhone,
+              fallbackName: project.clientName,
+              googleMapLink: project.googleMapLink,
+              onCopy: (Sting, String) {},
+            ),
+            const SizedBox(width: 10),
             _StatusBadge(status: project.status),
           ],
         ),

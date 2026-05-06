@@ -43,7 +43,7 @@ dependencies:
   url_launcher: ^6.2.5
   crop_your_image: ^2.0.0
   image: ^4.1.7
-  
+  infinite_scroll_pagination: ^5.1.1
   # Audio
   audioplayers: ^6.0.0
   

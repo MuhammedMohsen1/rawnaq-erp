@@ -1,16 +1,17 @@
 import 'package:flutter/material.dart';
-import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_text_styles.dart';
 
 /// Header widget showing pricing status badge
 class PricingHeader extends StatelessWidget {
   final String statusText;
   final Color statusColor;
+  final Widget? trailing;
 
   const PricingHeader({
     super.key,
     required this.statusText,
     required this.statusColor,
+    this.trailing,
   });
 
   @override
@@ -21,10 +22,8 @@ class PricingHeader extends StatelessWidget {
         Row(
           children: [
             const Spacer(),
-            _StatusBadge(
-              statusText: statusText,
-              statusColor: statusColor,
-            ),
+            if (trailing != null) ...[trailing!, const SizedBox(width: 10)],
+            _StatusBadge(statusText: statusText, statusColor: statusColor),
           ],
         ),
       ],
@@ -37,10 +36,7 @@ class _StatusBadge extends StatelessWidget {
   final String statusText;
   final Color statusColor;
 
-  const _StatusBadge({
-    required this.statusText,
-    required this.statusColor,
-  });
+  const _StatusBadge({required this.statusText, required this.statusColor});
 
   @override
   Widget build(BuildContext context) {

@@ -114,7 +114,9 @@ class CreateProjectWithData extends ProjectsEvent {
   final String primaryDepartmentId;
   final String? clientName;
   final String? clientPhone;
+  final List<ProjectPhoneContact> clientContacts;
   final String? clientEmail;
+  final String? googleMapLink;
   final DateTime? startDate;
   final DateTime? endDate;
   final DateTime? deadline;
@@ -127,7 +129,9 @@ class CreateProjectWithData extends ProjectsEvent {
     required this.primaryDepartmentId,
     this.clientName,
     this.clientPhone,
+    this.clientContacts = const [],
     this.clientEmail,
+    this.googleMapLink,
     this.startDate,
     this.endDate,
     this.deadline,
@@ -142,7 +146,9 @@ class CreateProjectWithData extends ProjectsEvent {
     primaryDepartmentId,
     clientName,
     clientPhone,
+    clientContacts,
     clientEmail,
+    googleMapLink,
     startDate,
     endDate,
     deadline,

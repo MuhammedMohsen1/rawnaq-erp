@@ -10,10 +10,7 @@ import '../bloc/projects_event.dart';
 class EditProjectDialog extends StatefulWidget {
   final ProjectEntity project;
 
-  const EditProjectDialog({
-    super.key,
-    required this.project,
-  });
+  const EditProjectDialog({super.key, required this.project});
 
   @override
   State<EditProjectDialog> createState() => _EditProjectDialogState();
@@ -24,8 +21,10 @@ class _EditProjectDialogState extends State<EditProjectDialog> {
   final _nameController = TextEditingController();
   final _descriptionController = TextEditingController();
   final _clientNameController = TextEditingController();
-  final _clientPhoneController = TextEditingController();
-  
+  final _googleMapLinkController = TextEditingController();
+  final List<TextEditingController> _contactNameControllers = [];
+  final List<TextEditingController> _contactPhoneControllers = [];
+
   // End date
   DateTime? _endDate;
 
@@ -36,7 +35,27 @@ class _EditProjectDialogState extends State<EditProjectDialog> {
     _nameController.text = widget.project.name;
     _descriptionController.text = widget.project.description ?? '';
     _clientNameController.text = widget.project.clientName ?? '';
-    _clientPhoneController.text = widget.project.clientPhone ?? '';
+    _googleMapLinkController.text = widget.project.googleMapLink ?? '';
+    final contacts = widget.project.clientContacts.isNotEmpty
+        ? widget.project.clientContacts
+        : [
+            if ((widget.project.clientPhone ?? '').trim().isNotEmpty)
+              ProjectPhoneContact(
+                name: widget.project.clientName ?? 'بدون اسم',
+                phone: widget.project.clientPhone!,
+              ),
+          ];
+    if (contacts.isEmpty) {
+      _contactNameControllers.add(TextEditingController());
+      _contactPhoneControllers.add(TextEditingController());
+    } else {
+      for (final contact in contacts) {
+        _contactNameControllers.add(TextEditingController(text: contact.name));
+        _contactPhoneControllers.add(
+          TextEditingController(text: contact.phone),
+        );
+      }
+    }
     _endDate = widget.project.endDate;
   }
 
@@ -45,7 +64,13 @@ class _EditProjectDialogState extends State<EditProjectDialog> {
     _nameController.dispose();
     _descriptionController.dispose();
     _clientNameController.dispose();
-    _clientPhoneController.dispose();
+    _googleMapLinkController.dispose();
+    for (final controller in _contactNameControllers) {
+      controller.dispose();
+    }
+    for (final controller in _contactPhoneControllers) {
+      controller.dispose();
+    }
     super.dispose();
   }
 
@@ -66,7 +91,7 @@ class _EditProjectDialogState extends State<EditProjectDialog> {
           children: [
             // Header
             _buildHeader(),
-            
+
             // Content
             Expanded(
               child: SingleChildScrollView(
@@ -74,7 +99,7 @@ class _EditProjectDialogState extends State<EditProjectDialog> {
                 child: _buildForm(),
               ),
             ),
-            
+
             // Footer with action buttons
             _buildFooter(),
           ],
@@ -87,17 +112,11 @@ class _EditProjectDialogState extends State<EditProjectDialog> {
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        border: Border(
-          bottom: BorderSide(color: AppColors.border, width: 1),
-        ),
+        border: Border(bottom: BorderSide(color: AppColors.border, width: 1)),
       ),
       child: Row(
         children: [
-          const Icon(
-            Icons.edit_outlined,
-            color: AppColors.primary,
-            size: 28,
-          ),
+          const Icon(Icons.edit_outlined, color: AppColors.primary, size: 28),
           const SizedBox(width: 12),
           Expanded(
             child: Text(
@@ -131,7 +150,7 @@ class _EditProjectDialogState extends State<EditProjectDialog> {
             ),
           ),
           const SizedBox(height: 24),
-          
+
           // Project Name
           _buildTextField(
             controller: _nameController,
@@ -146,7 +165,7 @@ class _EditProjectDialogState extends State<EditProjectDialog> {
             },
           ),
           const SizedBox(height: 16),
-          
+
           // Description
           _buildTextField(
             controller: _descriptionController,
@@ -156,7 +175,7 @@ class _EditProjectDialogState extends State<EditProjectDialog> {
             maxLines: 3,
           ),
           const SizedBox(height: 24),
-          
+
           // Client Information Section
           Text(
             'معلومات العميل',
@@ -166,7 +185,7 @@ class _EditProjectDialogState extends State<EditProjectDialog> {
             ),
           ),
           const SizedBox(height: 16),
-          
+
           _buildTextField(
             controller: _clientNameController,
             label: 'اسم العميل',
@@ -174,16 +193,19 @@ class _EditProjectDialogState extends State<EditProjectDialog> {
             icon: Icons.person_outline,
           ),
           const SizedBox(height: 16),
-          
+
+          _buildContactsFields(),
+          const SizedBox(height: 16),
+
           _buildTextField(
-            controller: _clientPhoneController,
-            label: 'رقم الهاتف',
-            hint: 'رقم الهاتف (اختياري)',
-            icon: Icons.phone_outlined,
-            keyboardType: TextInputType.phone,
+            controller: _googleMapLinkController,
+            label: 'رابط خرائط جوجل',
+            hint: 'رابط الموقع على خرائط جوجل (اختياري)',
+            icon: Icons.map_outlined,
+            keyboardType: TextInputType.url,
           ),
           const SizedBox(height: 24),
-          
+
           // End Date Section
           Text(
             'تاريخ الانتهاء',
@@ -193,7 +215,7 @@ class _EditProjectDialogState extends State<EditProjectDialog> {
             ),
           ),
           const SizedBox(height: 16),
-          
+
           _buildDatePicker(
             label: 'تاريخ الانتهاء',
             date: _endDate,
@@ -205,6 +227,78 @@ class _EditProjectDialogState extends State<EditProjectDialog> {
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildContactsFields() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Expanded(
+              child: Text(
+                'أرقام الهاتف',
+                style: AppTextStyles.bodyMedium.copyWith(
+                  color: AppColors.textSecondary,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ),
+            TextButton.icon(
+              onPressed: () {
+                setState(() {
+                  _contactNameControllers.add(TextEditingController());
+                  _contactPhoneControllers.add(TextEditingController());
+                });
+              },
+              icon: const Icon(Icons.add, size: 18),
+              label: const Text('إضافة رقم'),
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        for (var i = 0; i < _contactPhoneControllers.length; i++) ...[
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: _buildTextField(
+                  controller: _contactNameControllers[i],
+                  label: 'الاسم',
+                  hint: 'مثال: العميل',
+                  icon: Icons.badge_outlined,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: _buildTextField(
+                  controller: _contactPhoneControllers[i],
+                  label: 'رقم الهاتف',
+                  hint: 'رقم الهاتف',
+                  icon: Icons.phone_outlined,
+                  keyboardType: TextInputType.phone,
+                ),
+              ),
+              if (_contactPhoneControllers.length > 1) ...[
+                const SizedBox(width: 8),
+                IconButton(
+                  onPressed: () {
+                    setState(() {
+                      _contactNameControllers.removeAt(i).dispose();
+                      _contactPhoneControllers.removeAt(i).dispose();
+                    });
+                  },
+                  icon: const Icon(Icons.delete_outline),
+                  color: AppColors.error,
+                ),
+              ],
+            ],
+          ),
+          if (i < _contactPhoneControllers.length - 1)
+            const SizedBox(height: 12),
+        ],
+      ],
     );
   }
 
@@ -254,7 +348,10 @@ class _EditProjectDialogState extends State<EditProjectDialog> {
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
-              borderSide: BorderSide(color: AppColors.inputFocusBorder, width: 2),
+              borderSide: BorderSide(
+                color: AppColors.inputFocusBorder,
+                width: 2,
+              ),
             ),
             errorBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
@@ -354,9 +451,7 @@ class _EditProjectDialogState extends State<EditProjectDialog> {
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        border: Border(
-          top: BorderSide(color: AppColors.border, width: 1),
-        ),
+        border: Border(top: BorderSide(color: AppColors.border, width: 1)),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.end,
@@ -378,9 +473,7 @@ class _EditProjectDialogState extends State<EditProjectDialog> {
             ),
             child: const Text(
               'حفظ التغييرات',
-              style: TextStyle(
-                fontWeight: FontWeight.w600,
-              ),
+              style: TextStyle(fontWeight: FontWeight.w600),
             ),
           ),
         ],
@@ -393,18 +486,16 @@ class _EditProjectDialogState extends State<EditProjectDialog> {
       return;
     }
 
+    final contacts = _collectContacts();
+
     // Create updated project entity
     final updatedProject = widget.project.copyWith(
       name: _nameController.text.trim(),
-      description: _descriptionController.text.trim().isEmpty
-          ? null
-          : _descriptionController.text.trim(),
-      clientName: _clientNameController.text.trim().isEmpty
-          ? null
-          : _clientNameController.text.trim(),
-      clientPhone: _clientPhoneController.text.trim().isEmpty
-          ? null
-          : _clientPhoneController.text.trim(),
+      description: _descriptionController.text.trim(),
+      clientName: _clientNameController.text.trim(),
+      clientPhone: contacts.isEmpty ? '' : contacts.first.phone,
+      clientContacts: contacts,
+      googleMapLink: _googleMapLinkController.text.trim(),
       endDate: _endDate ?? widget.project.endDate,
     );
 
@@ -414,5 +505,23 @@ class _EditProjectDialogState extends State<EditProjectDialog> {
     // Close dialog
     Navigator.of(context).pop();
   }
-}
 
+  List<ProjectPhoneContact> _collectContacts() {
+    final contacts = <ProjectPhoneContact>[];
+
+    for (var i = 0; i < _contactPhoneControllers.length; i++) {
+      final name = _contactNameControllers[i].text.trim();
+      final phone = _contactPhoneControllers[i].text.trim();
+      if (name.isEmpty && phone.isEmpty) continue;
+
+      contacts.add(
+        ProjectPhoneContact(
+          name: name.isEmpty ? 'بدون اسم' : name,
+          phone: phone,
+        ),
+      );
+    }
+
+    return contacts;
+  }
+}

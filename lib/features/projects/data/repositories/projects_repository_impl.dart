@@ -113,7 +113,9 @@ class ProjectsRepositoryImpl implements ProjectsRepository {
     required String primaryDepartmentId,
     String? clientName,
     String? clientPhone,
+    List<ProjectPhoneContact> clientContacts = const [],
     String? clientEmail,
+    String? googleMapLink,
     DateTime? startDate,
     DateTime? endDate,
     DateTime? deadline,
@@ -137,8 +139,16 @@ class ProjectsRepositoryImpl implements ProjectsRepository {
       if (clientPhone != null && clientPhone.isNotEmpty) {
         projectData['clientPhone'] = clientPhone;
       }
+      if (clientContacts.isNotEmpty) {
+        projectData['clientContacts'] = clientContacts
+            .map((contact) => {'name': contact.name, 'phone': contact.phone})
+            .toList();
+      }
       if (clientEmail != null && clientEmail.isNotEmpty) {
         projectData['clientEmail'] = clientEmail;
+      }
+      if (googleMapLink != null && googleMapLink.isNotEmpty) {
+        projectData['googleMapLink'] = googleMapLink;
       }
       if (startDate != null) {
         projectData['startDate'] = startDate.toIso8601String();
@@ -179,6 +189,12 @@ class ProjectsRepositoryImpl implements ProjectsRepository {
           : null;
       projectData['clientPhone'] = project.clientPhone?.isNotEmpty == true
           ? project.clientPhone
+          : null;
+      projectData['clientContacts'] = project.clientContacts
+          .map((contact) => {'name': contact.name, 'phone': contact.phone})
+          .toList();
+      projectData['googleMapLink'] = project.googleMapLink?.isNotEmpty == true
+          ? project.googleMapLink
           : null;
 
       final response = await _dataSource.updateProject(project.id, projectData);

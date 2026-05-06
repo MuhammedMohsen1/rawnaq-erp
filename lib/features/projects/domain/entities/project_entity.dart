@@ -2,6 +2,16 @@ import 'package:equatable/equatable.dart';
 import '../enums/project_status.dart';
 import 'team_member_entity.dart';
 
+class ProjectPhoneContact extends Equatable {
+  final String name;
+  final String phone;
+
+  const ProjectPhoneContact({required this.name, required this.phone});
+
+  @override
+  List<Object?> get props => [name, phone];
+}
+
 /// Represents a project in the system
 class ProjectEntity extends Equatable {
   final String id;
@@ -17,8 +27,11 @@ class ProjectEntity extends Equatable {
   final String? description;
   final String? clientName;
   final String? clientPhone;
+  final List<ProjectPhoneContact> clientContacts;
+  final String? googleMapLink;
   final DateTime? createdAt;
   final DateTime? updatedAt;
+  final DateTime? lastEditAt;
   final int? itemsCount;
   final bool archived;
 
@@ -36,8 +49,11 @@ class ProjectEntity extends Equatable {
     this.description,
     this.clientName,
     this.clientPhone,
+    this.clientContacts = const [],
+    this.googleMapLink,
     this.createdAt,
     this.updatedAt,
+    this.lastEditAt,
     this.itemsCount,
     this.archived = false,
   });
@@ -57,8 +73,11 @@ class ProjectEntity extends Equatable {
     description,
     clientName,
     clientPhone,
+    clientContacts,
+    googleMapLink,
     createdAt,
     updatedAt,
+    lastEditAt,
     itemsCount,
     archived,
   ];
@@ -78,8 +97,11 @@ class ProjectEntity extends Equatable {
     String? description,
     String? clientName,
     String? clientPhone,
+    List<ProjectPhoneContact>? clientContacts,
+    String? googleMapLink,
     DateTime? createdAt,
     DateTime? updatedAt,
+    DateTime? lastEditAt,
     int? itemsCount,
     bool? archived,
   }) {
@@ -97,8 +119,11 @@ class ProjectEntity extends Equatable {
       description: description ?? this.description,
       clientName: clientName ?? this.clientName,
       clientPhone: clientPhone ?? this.clientPhone,
+      clientContacts: clientContacts ?? this.clientContacts,
+      googleMapLink: googleMapLink ?? this.googleMapLink,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
+      lastEditAt: lastEditAt ?? this.lastEditAt,
       itemsCount: itemsCount ?? this.itemsCount,
       archived: archived ?? this.archived,
     );
