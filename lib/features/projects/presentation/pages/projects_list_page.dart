@@ -130,6 +130,7 @@ class ProjectsListPage extends StatefulWidget {
   final bool showRestoreActions;
   final bool showStatusActions;
   final bool enableNavigation;
+  final Set<ProjectStatus>? visibleStatuses;
 
   const ProjectsListPage({
     super.key,
@@ -140,6 +141,7 @@ class ProjectsListPage extends StatefulWidget {
     this.showRestoreActions = false,
     this.showStatusActions = true,
     this.enableNavigation = true,
+    this.visibleStatuses,
   });
 
   @override
@@ -175,7 +177,7 @@ class _ProjectsListPageState extends State<ProjectsListPage> {
           body: SafeArea(
             child: Padding(
               padding: const EdgeInsets.fromLTRB(24, 22, 24, 0),
-              child: Expanded(child: _buildBody(context, state)),
+              child: _buildBody(context, state),
             ),
           ),
         );
@@ -215,7 +217,7 @@ class _ProjectsListPageState extends State<ProjectsListPage> {
       return const SizedBox.shrink();
     }
 
-    final allProjects = state.filteredProjects;
+    final allProjects = _applyVisibleStatusFilter(state.filteredProjects);
 
     if (allProjects.isEmpty) {
       return _EmptyState(message: widget.emptyMessage);
@@ -226,16 +228,28 @@ class _ProjectsListPageState extends State<ProjectsListPage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        if (widget.title.isNotEmpty) ...[
+          Text(
+            widget.title,
+            style: AppTextStyles.h4.copyWith(
+              color: AppColors.textPrimary,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          const SizedBox(height: 14),
+        ],
         _StatusFilterBar(
           selectedStatus: _selectedStatus,
           totalCount: allProjects.length,
           counts: counts,
+          availableStatuses: _availableStatuses(counts),
           onSelected: _selectStatus,
           onCreateTap: widget.showCreateButton
               ? () => _showCreateDialog(context)
               : null,
         ),
         const SizedBox(height: 16),
+
         Expanded(child: _buildPagedGrid()),
       ],
     );
@@ -325,7 +339,18 @@ class _ProjectsListPageState extends State<ProjectsListPage> {
   List<ProjectEntity> _currentFilteredProjects() {
     final state = context.read<ProjectsBloc>().state;
     if (state is! ProjectsLoaded) return const <ProjectEntity>[];
-    return _applyStatusFilter(state.filteredProjects);
+    return _applyStatusFilter(
+      _applyVisibleStatusFilter(state.filteredProjects),
+    );
+  }
+
+  List<ProjectEntity> _applyVisibleStatusFilter(List<ProjectEntity> projects) {
+    final visibleStatuses = widget.visibleStatuses;
+    if (visibleStatuses == null || visibleStatuses.isEmpty) return projects;
+
+    return projects
+        .where((project) => visibleStatuses.contains(project.status))
+        .toList();
   }
 
   List<ProjectEntity> _applyStatusFilter(List<ProjectEntity> projects) {
@@ -364,13 +389,15 @@ class _ProjectsListPageState extends State<ProjectsListPage> {
           .map((state) => state as ProjectsLoaded)
           .firstWhere((state) {
             final updatedCount = _applyStatusFilter(
-              state.filteredProjects,
+              _applyVisibleStatusFilter(state.filteredProjects),
             ).length;
             return updatedCount > beforeCount || !state.isLoadingMore;
           })
           .timeout(const Duration(seconds: 1));
 
-      projects = _applyStatusFilter(loadedState.filteredProjects);
+      projects = _applyStatusFilter(
+        _applyVisibleStatusFilter(loadedState.filteredProjects),
+      );
     } on TimeoutException {
       projects = _currentFilteredProjects();
     }
@@ -403,6 +430,27 @@ class _ProjectsListPageState extends State<ProjectsListPage> {
     }
 
     return counts;
+  }
+
+  List<ProjectStatus> _availableStatuses(Map<ProjectStatus, int> counts) {
+    final allowed = widget.visibleStatuses;
+    final orderedStatuses = [
+      ..._statusOrder,
+      ...counts.keys.where((status) => !_statusOrder.contains(status)),
+    ];
+
+    return orderedStatuses
+        .where((status) {
+          if (allowed != null && allowed.isNotEmpty) {
+            if (status == ProjectStatus.underPricing) {
+              return allowed.any(_pricingPipelineStatuses.contains);
+            }
+            return allowed.contains(status);
+          }
+
+          return (counts[status] ?? 0) > 0 || _statusOrder.contains(status);
+        })
+        .toList(growable: false);
   }
 
   String _signatureOf(List<ProjectEntity> projects) {
@@ -533,26 +581,20 @@ class _StatusFilterBar extends StatelessWidget {
   final ProjectStatus? selectedStatus;
   final int totalCount;
   final Map<ProjectStatus, int> counts;
+  final List<ProjectStatus> availableStatuses;
   final ValueChanged<ProjectStatus?> onSelected;
   final VoidCallback? onCreateTap;
   const _StatusFilterBar({
     required this.selectedStatus,
     required this.totalCount,
     required this.counts,
+    required this.availableStatuses,
     required this.onSelected,
     this.onCreateTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    final extraStatuses = counts.keys
-        .where(
-          (status) =>
-              !_statusOrder.contains(status) &&
-              !_pricingPipelineStatuses.contains(status),
-        )
-        .toList(growable: false);
-
     return SizedBox(
       height: 42, // Slightly tighter height for a cleaner look
       child: Row(
@@ -563,7 +605,7 @@ class _StatusFilterBar extends StatelessWidget {
               scrollDirection: Axis.horizontal,
               // Adding padding so the glow/shadow isn't clipped
               padding: const EdgeInsets.symmetric(horizontal: 4),
-              itemCount: 1 + _statusOrder.length + extraStatuses.length,
+              itemCount: 1 + availableStatuses.length,
               separatorBuilder: (_, __) => const SizedBox(width: 8),
               itemBuilder: (_, index) {
                 if (index == 0) {
@@ -577,10 +619,7 @@ class _StatusFilterBar extends StatelessWidget {
                   );
                 }
 
-                final statusIndex = index - 1;
-                final status = statusIndex < _statusOrder.length
-                    ? _statusOrder[statusIndex]
-                    : extraStatuses[statusIndex - _statusOrder.length];
+                final status = availableStatuses[index - 1];
                 final meta = _metaOf(status, null);
 
                 return _StatusFilterChip(
@@ -815,6 +854,8 @@ class _ProjectCardState extends State<_ProjectCard> {
                                     const SizedBox(height: 5),
                                     Text(
                                       widget.project.name,
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
                                       style: AppTextStyles.bodyLarge.copyWith(
                                         color: AppColors.textPrimary,
                                         fontWeight: FontWeight.w800,

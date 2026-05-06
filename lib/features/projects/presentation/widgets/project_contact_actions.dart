@@ -39,6 +39,7 @@ class ProjectContactActions extends StatelessWidget {
                 : '${firstContact.name} - ${firstContact.phone}',
             child: IconButton(
               onPressed: () => _launchPhone(context, firstContact.phone),
+              iconSize: 16,
               onLongPress: () =>
                   onCopy(firstContact.phone, "تم نسخ أرقام الهاتف"),
               icon: const Icon(Icons.phone_android_rounded),
@@ -121,32 +122,24 @@ class ProjectContactActions extends StatelessWidget {
 }
 
 class ProjectContactActionsLoader extends StatelessWidget {
-  final String projectId;
+  final ProjectEntity project;
 
-  const ProjectContactActionsLoader({super.key, required this.projectId});
+  const ProjectContactActionsLoader({super.key, required this.project});
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder<Map<String, dynamic>>(
-      future: ProjectsApiDataSource().getProjectById(projectId),
-      builder: (context, snapshot) {
-        if (!snapshot.hasData) return const SizedBox.shrink();
-
-        final project = ProjectModel.fromJson(snapshot.data!);
-        return ProjectContactActions(
-          contacts: project.clientContacts,
-          fallbackPhone: project.clientPhone,
-          fallbackName: project.clientName,
-          googleMapLink: project.googleMapLink,
-          onCopy: (String phone, String message) {
-            Clipboard.setData(ClipboardData(text: phone));
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(message),
-                duration: const Duration(seconds: 1),
-              ),
-            );
-          },
+    return ProjectContactActions(
+      contacts: project.clientContacts,
+      fallbackPhone: project.clientPhone,
+      fallbackName: project.clientName,
+      googleMapLink: project.googleMapLink,
+      onCopy: (String phone, String message) {
+        Clipboard.setData(ClipboardData(text: phone));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(message),
+            duration: const Duration(seconds: 1),
+          ),
         );
       },
     );

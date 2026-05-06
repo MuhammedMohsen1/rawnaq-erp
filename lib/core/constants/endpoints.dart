@@ -241,6 +241,10 @@ abstract class ApiEndpoints {
       '/projects/$projectId/attachments';
   static String projectAttachment(String projectId, String attachmentId) =>
       '/projects/$projectId/attachments/$attachmentId';
+  static String replaceProjectAttachment(
+    String projectId,
+    String attachmentId,
+  ) => '/projects/$projectId/attachments/$attachmentId';
 
   // Pricing Endpoints
   static String pricingVersions(String projectId) =>

@@ -12,7 +12,6 @@ import '../../features/projects/domain/enums/project_status.dart';
 import '../../features/gantt/presentation/pages/gantt_chart_page.dart';
 import '../../features/settings/presentation/pages/settings_page.dart';
 import '../../features/notifications/presentation/pages/notifications_page.dart';
-import '../../features/projects/presentation/pages/site_engineer_dashboard_page.dart';
 import '../../features/projects/presentation/pages/project_details_page.dart';
 import '../../features/pricing/presentation/pages/under_pricing_page.dart';
 import '../../features/execution/presentation/pages/execution_page.dart';
@@ -32,6 +31,7 @@ class AppRoutes {
 
   // Projects
   static const String projects = '/projects';
+  static const String siteEngineerPricingProjects = '/projects/site-pricing';
   static const String archivedProjects = '/projects/archived';
   static const String completedProjects = '/projects/completed';
 
@@ -132,7 +132,14 @@ class AppRouter {
                         create: (context) =>
                             ProjectsBloc(repository: ProjectsRepositoryImpl())
                               ..add(const LoadProjects()),
-                        child: SiteEngineerDashboardPage(),
+                        child: const ProjectsListPage(
+                          title: 'مشاريع التنفيذ',
+                          emptyMessage: 'لا توجد مشاريع تنفيذ',
+                          showCreateButton: false,
+                          showArchiveActions: false,
+                          showStatusActions: false,
+                          visibleStatuses: {ProjectStatus.execution},
+                        ),
                       );
                     }
                     return const DashboardPage();
@@ -176,6 +183,29 @@ class AppRouter {
                   title: 'المشاريع المكتملة',
                   emptyMessage: 'لا توجد مشاريع مكتملة',
                   showCreateButton: false,
+                ),
+              ),
+            ),
+          ),
+
+          GoRoute(
+            path: AppRoutes.siteEngineerPricingProjects,
+            pageBuilder: (context, state) => FadePageTransition(
+              key: state.pageKey,
+              child: BlocProvider(
+                create: (context) =>
+                    ProjectsBloc(repository: ProjectsRepositoryImpl())
+                      ..add(const LoadProjects()),
+                child: const ProjectsListPage(
+                  title: 'قيد التسعير أو بانتظار التوقيع',
+                  emptyMessage: 'لا توجد مشاريع قيد التسعير أو بانتظار التوقيع',
+                  showCreateButton: false,
+                  showArchiveActions: false,
+                  showStatusActions: false,
+                  visibleStatuses: {
+                    ProjectStatus.underPricing,
+                    ProjectStatus.pendingSignature,
+                  },
                 ),
               ),
             ),

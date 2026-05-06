@@ -155,8 +155,7 @@ class PaymentPhaseModel {
       percentage: _toDoubleOrZero(json['percentage']),
       originalAmount: originalAmount,
       deductionAmount: deductionAmount,
-      amountAfterDeduction:
-          amountAfterDeduction < 0 ? 0 : amountAfterDeduction,
+      amountAfterDeduction: amountAfterDeduction < 0 ? 0 : amountAfterDeduction,
       costAmount: _toDoubleOrZero(json['costAmount']),
       isRequested: json['isRequested'] as bool? ?? false,
       isApproved: json['isApproved'] as bool? ?? false,
@@ -313,9 +312,8 @@ class ExecutionDashboardModel {
     final deductionAmount = json.containsKey('deductionAmount')
         ? _toDoubleOrZero(json['deductionAmount'])
         : 0.0;
-    final totalAmountAfterDeduction = json.containsKey(
-          'totalAmountAfterDeduction',
-        )
+    final totalAmountAfterDeduction =
+        json.containsKey('totalAmountAfterDeduction')
         ? _toDoubleOrZero(json['totalAmountAfterDeduction'])
         : (originalTotalAmount - deductionAmount);
 
@@ -335,8 +333,9 @@ class ExecutionDashboardModel {
       totalPrice: totalPrice,
       originalTotalAmount: originalTotalAmount,
       deductionAmount: deductionAmount,
-      totalAmountAfterDeduction:
-          totalAmountAfterDeduction < 0 ? 0 : totalAmountAfterDeduction,
+      totalAmountAfterDeduction: totalAmountAfterDeduction < 0
+          ? 0
+          : totalAmountAfterDeduction,
       totalProfit: _toDoubleOrZero(json['totalProfit']),
       remainingBudget: _toDoubleOrZero(json['remainingBudget']),
       budgetPercentage: _toDoubleOrZero(json['budgetPercentage']),
@@ -427,7 +426,7 @@ class ExecutionDashboardModel {
 class CreateExpenseDto {
   final String name;
   final String? description;
-  final String type; // 'DAILY' or 'TOTAL_COST'
+  final String type; // 'DAILY', 'TOTAL_COST', or 'RETURNED'
   final String costType; // 'TOTAL' or 'UNIT_BASED'
   final double? amount;
   final double? unitCost;

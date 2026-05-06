@@ -68,4 +68,39 @@ class ProjectAttachmentsCubit extends Cubit<ProjectAttachmentsState> {
       ),
     );
   }
+
+  Future<void> replaceAttachment(
+    String projectId,
+    String attachmentId, {
+    required List<int> fileBytes,
+    required String fileName,
+  }) async {
+    final currentState = state;
+    if (currentState is! ProjectAttachmentsLoaded) return;
+
+    emit(currentState.copyWith(isUploading: true));
+
+    final result = await projectsRepository.replaceProjectAttachment(
+      projectId,
+      attachmentId,
+      fileBytes: fileBytes,
+      fileName: fileName,
+    );
+
+    result.fold(
+      (failure) => emit(ProjectAttachmentsError(message: failure.message)),
+      (updatedAttachment) => emit(
+        currentState.copyWith(
+          attachments: currentState.attachments
+              .map(
+                (attachment) => attachment.id == updatedAttachment.id
+                    ? updatedAttachment
+                    : attachment,
+              )
+              .toList(),
+          isUploading: false,
+        ),
+      ),
+    );
+  }
 }

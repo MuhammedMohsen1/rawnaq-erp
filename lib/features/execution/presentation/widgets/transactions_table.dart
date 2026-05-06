@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_text_styles.dart';
+import '../../../projects/domain/entities/project_entity.dart';
 import '../../data/models/execution_models.dart';
 import '../../domain/enums/transaction_type.dart';
 import '../cubit/execution_cubit.dart';
@@ -28,8 +29,13 @@ double? _parseNumber(String text) {
 }
 
 class TransactionsTable extends StatelessWidget {
-  final String projectId;
+  final ProjectEntity project;
   final List<TransactionModel> transactions;
+  final double totalReceived;
+  final double totalExpenses;
+  final double netCashFlow;
+  final DateTime? startDate;
+  final DateTime? endDate;
   final bool isAddingExpense;
   final bool isAddingIncome;
   final Map<String, bool> editingTransactions;
@@ -49,8 +55,13 @@ class TransactionsTable extends StatelessWidget {
 
   const TransactionsTable({
     super.key,
-    required this.projectId,
+    required this.project,
     required this.transactions,
+    required this.totalReceived,
+    required this.totalExpenses,
+    required this.netCashFlow,
+    this.startDate,
+    this.endDate,
     required this.isAddingExpense,
     this.isAddingIncome = false,
     required this.editingTransactions,
@@ -80,10 +91,21 @@ class TransactionsTable extends StatelessWidget {
           ),
           child: Column(
             children: [
+              _ExpenseSummaryStrip(
+                totalReceived: totalReceived,
+                totalExpenses: totalExpenses,
+                netCashFlow: netCashFlow,
+                startDate: startDate,
+                endDate: endDate,
+                isCompact: isCompact,
+              ),
+              const Divider(height: 1, color: AppColors.border),
               // Header with actions
               _TableHeader(
-                onAddExpense: onAddExpense,
-                onAddIncome: onAddIncome,
+                onAddExpense: () => _showAddExpenseDialog(context, isCompact),
+                onAddIncome: onAddIncome == null
+                    ? null
+                    : () => _showAddIncomeDialog(context, isCompact),
                 onRequestInstallment: onRequestInstallment,
                 isSiteEngineer: isSiteEngineer,
                 isAdminOrManager: isAdminOrManager,
@@ -95,22 +117,6 @@ class TransactionsTable extends StatelessWidget {
                 _ColumnHeaders(),
                 const Divider(height: 1, color: AppColors.border),
               ],
-              // Add income row (if adding - Admin/Manager only)
-              if (isAddingIncome)
-                _AddIncomeRow(
-                  projectId: projectId,
-                  onCancel: () =>
-                      context.read<ExecutionCubit>().cancelAddingIncome(),
-                  isCompact: isCompact,
-                ),
-              // Add expense row (if adding)
-              if (isAddingExpense)
-                _AddExpenseRow(
-                  projectId: projectId,
-                  onCancel: () =>
-                      context.read<ExecutionCubit>().cancelAddingExpense(),
-                  isCompact: isCompact,
-                ),
               // Transaction rows
               ...transactions.map((transaction) {
                 final isEditing = editingTransactions[transaction.id] ?? false;
@@ -134,7 +140,7 @@ class TransactionsTable extends StatelessWidget {
                 requestId ??= pendingRequest?.id;
                 final installmentRequestId = requestId ?? transaction.id;
                 return _TransactionRow(
-                  projectId: projectId,
+                  projectId: project.id,
                   transaction: transaction,
                   isEditing: isEditing,
                   isCompact: isCompact,
@@ -152,6 +158,490 @@ class TransactionsTable extends StatelessWidget {
           ),
         );
       },
+    );
+  }
+
+  void _showAddExpenseDialog(BuildContext context, bool isCompact) {
+    final cubit = context.read<ExecutionCubit>();
+
+    showDialog<void>(
+      context: context,
+      builder: (dialogContext) => Dialog(
+        insetPadding: const EdgeInsets.all(16),
+        backgroundColor: AppColors.cardBackground,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 640),
+          child: _AddExpenseRow(
+            projectId: project.id,
+            onCancel: () => Navigator.of(dialogContext).pop(),
+            isCompact: true,
+            cubit: cubit,
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showAddIncomeDialog(BuildContext context, bool isCompact) {
+    final cubit = context.read<ExecutionCubit>();
+
+    showDialog<void>(
+      context: context,
+      builder: (dialogContext) => Dialog(
+        insetPadding: const EdgeInsets.all(16),
+        backgroundColor: AppColors.cardBackground,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 640),
+          child: _AddIncomeRow(
+            projectId: project.id,
+            onCancel: () => Navigator.of(dialogContext).pop(),
+            isCompact: true,
+            cubit: cubit,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _ExpenseSummaryStrip extends StatefulWidget {
+  final double totalReceived;
+  final double totalExpenses;
+  final double netCashFlow;
+  final DateTime? startDate;
+  final DateTime? endDate;
+  final bool isCompact;
+
+  const _ExpenseSummaryStrip({
+    required this.totalReceived,
+    required this.totalExpenses,
+    required this.netCashFlow,
+    this.startDate,
+    this.endDate,
+    required this.isCompact,
+  });
+
+  @override
+  State<_ExpenseSummaryStrip> createState() => _ExpenseSummaryStripState();
+}
+
+class _ExpenseSummaryStripState extends State<_ExpenseSummaryStrip> {
+  bool _isDetailsExpanded = false;
+
+  String _formatMoney(double value) => '${value.toStringAsFixed(3)} د.ك';
+
+  String get _deliveryValue {
+    if (widget.endDate == null) return 'غير متاح';
+    return DateFormat('d MMMM', 'ar').format(widget.endDate!);
+  }
+
+  String get _deliveryDetail {
+    if (widget.startDate == null ||
+        widget.endDate == null ||
+        widget.endDate!.isBefore(widget.startDate!)) {
+      return 'لا توجد بيانات كافية';
+    }
+
+    final today = _dateOnly(DateTime.now());
+    final deliveryDay = _dateOnly(widget.endDate!);
+    final daysLeft = deliveryDay.difference(today).inDays;
+    if (daysLeft < 0) return 'متأخر ${daysLeft.abs()} يوم';
+    if (daysLeft == 0) return 'اليوم';
+    return 'متبقي $daysLeft يوم';
+  }
+
+  Color get _netCashColor {
+    if (widget.netCashFlow < 0) return AppColors.error;
+    if (widget.netCashFlow == 0) return AppColors.warning;
+    return AppColors.primary;
+  }
+
+  Color get _deliveryColor {
+    if (widget.endDate == null) return AppColors.textSecondary;
+    return _dateOnly(widget.endDate!).isBefore(_dateOnly(DateTime.now()))
+        ? AppColors.warning
+        : AppColors.info;
+  }
+
+  double get _netCashProgress {
+    if (widget.totalReceived <= 0 || widget.netCashFlow <= 0) return 0;
+    return (widget.netCashFlow / widget.totalReceived).clamp(0.0, 1.0);
+  }
+
+  double get _deliveryProgress {
+    if (widget.startDate == null ||
+        widget.endDate == null ||
+        widget.endDate!.isBefore(widget.startDate!)) {
+      return 0;
+    }
+
+    final start = _dateOnly(widget.startDate!);
+    final end = _dateOnly(widget.endDate!);
+    final today = _dateOnly(DateTime.now());
+    final totalDays = end.difference(start).inDays;
+    if (totalDays <= 0) return 1;
+
+    final elapsedDays = today.difference(start).inDays.clamp(0, totalDays);
+    return (elapsedDays / totalDays).clamp(0.0, 1.0);
+  }
+
+  DateTime _dateOnly(DateTime value) {
+    return DateTime(value.year, value.month, value.day);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        children: [
+          LayoutBuilder(
+            builder: (context, constraints) {
+              return _CompactProgressStrip(
+                netCashValue: _formatMoney(widget.netCashFlow),
+                netCashProgress: _netCashProgress,
+                netCashColor: _netCashColor,
+                deliveryValue: _deliveryValue,
+                deliveryDetail: _deliveryDetail,
+                deliveryProgress: _deliveryProgress,
+                deliveryColor: _deliveryColor,
+                isExpanded: _isDetailsExpanded,
+                onToggleDetails: () {
+                  setState(() => _isDetailsExpanded = !_isDetailsExpanded);
+                },
+              );
+            },
+          ),
+          AnimatedCrossFade(
+            firstChild: const SizedBox.shrink(),
+            secondChild: Padding(
+              padding: const EdgeInsets.only(top: 8),
+              child: _StatsDetailsPanel(
+                totalReceived: widget.totalReceived,
+                totalExpenses: widget.totalExpenses,
+                netCashFlow: widget.netCashFlow,
+                deliveryValue: _deliveryValue,
+                deliveryDetail: _deliveryDetail,
+                netCashColor: _netCashColor,
+                deliveryColor: _deliveryColor,
+              ),
+            ),
+            crossFadeState: _isDetailsExpanded
+                ? CrossFadeState.showSecond
+                : CrossFadeState.showFirst,
+            duration: const Duration(milliseconds: 180),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _StatsDetailsPanel extends StatelessWidget {
+  final double totalReceived;
+  final double totalExpenses;
+  final double netCashFlow;
+  final String deliveryValue;
+  final String deliveryDetail;
+  final Color netCashColor;
+  final Color deliveryColor;
+
+  const _StatsDetailsPanel({
+    required this.totalReceived,
+    required this.totalExpenses,
+    required this.netCashFlow,
+    required this.deliveryValue,
+    required this.deliveryDetail,
+    required this.netCashColor,
+    required this.deliveryColor,
+  });
+
+  String _formatMoney(double value) => '${value.toStringAsFixed(3)} د.ك';
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: AppColors.surfaceColor,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: AppColors.border),
+      ),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final spacing = constraints.maxWidth < 520 ? 8.0 : 10.0;
+          final columns = constraints.maxWidth < 520 ? 1 : 2;
+          final width =
+              (constraints.maxWidth - spacing * (columns - 1)) / columns;
+          final items = [
+            _ExpenseSummaryTile(
+              title: 'إجمالي الدخل',
+              value: _formatMoney(totalReceived),
+              detail: 'All income',
+              icon: Icons.south_west_rounded,
+              color: AppColors.success,
+            ),
+            _ExpenseSummaryTile(
+              title: 'إجمالي المصروفات',
+              value: _formatMoney(totalExpenses),
+              detail: 'All outcome',
+              icon: Icons.north_east_rounded,
+              color: AppColors.error,
+            ),
+            _ExpenseSummaryTile(
+              title: 'السيولة',
+              value: _formatMoney(netCashFlow),
+              detail: 'Net Cash',
+              icon: Icons.account_balance_wallet_rounded,
+              color: netCashColor,
+            ),
+            _ExpenseSummaryTile(
+              title: 'يوم التسليم',
+              value: deliveryValue,
+              detail: deliveryDetail,
+              icon: Icons.event_available_rounded,
+              color: deliveryColor,
+            ),
+          ];
+
+          return Wrap(
+            spacing: spacing,
+            runSpacing: spacing,
+            children: [
+              for (final item in items) SizedBox(width: width, child: item),
+            ],
+          );
+        },
+      ),
+    );
+  }
+}
+
+class _CompactProgressStrip extends StatelessWidget {
+  final String netCashValue;
+  final double netCashProgress;
+  final Color netCashColor;
+  final String deliveryValue;
+  final String deliveryDetail;
+  final double deliveryProgress;
+  final Color deliveryColor;
+  final bool isExpanded;
+  final VoidCallback onToggleDetails;
+
+  const _CompactProgressStrip({
+    required this.netCashValue,
+    required this.netCashProgress,
+    required this.netCashColor,
+    required this.deliveryValue,
+    required this.deliveryDetail,
+    required this.deliveryProgress,
+    required this.deliveryColor,
+    required this.isExpanded,
+    required this.onToggleDetails,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: BoxDecoration(
+        color: AppColors.surfaceColor,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: AppColors.border),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: _ProgressSummaryCircle(
+              title: 'السيولة',
+              value: netCashValue,
+              progress: netCashProgress,
+              color: netCashColor,
+            ),
+          ),
+          Container(width: 1, height: 58, color: AppColors.border),
+          Expanded(
+            child: _ProgressSummaryCircle(
+              title: 'يوم التسليم',
+              value: deliveryValue,
+              detail: deliveryDetail,
+              progress: deliveryProgress,
+              color: deliveryColor,
+            ),
+          ),
+          const SizedBox(width: 4),
+          IconButton(
+            onPressed: onToggleDetails,
+            icon: Icon(
+              isExpanded
+                  ? Icons.keyboard_arrow_up_rounded
+                  : Icons.keyboard_arrow_down_rounded,
+            ),
+            color: AppColors.textSecondary,
+            tooltip: 'تفاصيل الإحصائيات',
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ProgressSummaryCircle extends StatelessWidget {
+  final String title;
+  final String value;
+  final String? detail;
+  final double progress;
+  final Color color;
+
+  const _ProgressSummaryCircle({
+    required this.title,
+    required this.value,
+    this.detail,
+    required this.progress,
+    required this.color,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final percent = (progress * 100).clamp(0, 100).toStringAsFixed(0);
+
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        SizedBox(
+          width: 54,
+          height: 54,
+          child: Stack(
+            alignment: Alignment.center,
+            children: [
+              SizedBox(
+                width: 54,
+                height: 54,
+                child: CircularProgressIndicator(
+                  value: progress,
+                  strokeWidth: 5,
+                  backgroundColor: AppColors.border,
+                  valueColor: AlwaysStoppedAnimation<Color>(color),
+                ),
+              ),
+              Text(
+                '$percent%',
+                style: AppTextStyles.caption.copyWith(
+                  color: AppColors.textPrimary,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(width: 10),
+        Flexible(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                title,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: AppTextStyles.labelSmall.copyWith(
+                  color: AppColors.textSecondary,
+                ),
+              ),
+              const SizedBox(height: 4),
+              FittedBox(
+                fit: BoxFit.scaleDown,
+                alignment: AlignmentDirectional.centerStart,
+                child: Text(
+                  value,
+                  maxLines: 1,
+                  style: AppTextStyles.tableCellBold.copyWith(color: color),
+                ),
+              ),
+              if (detail != null) ...[
+                const SizedBox(height: 2),
+                Text(
+                  detail!,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppTextStyles.caption,
+                ),
+              ],
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _ExpenseSummaryTile extends StatelessWidget {
+  final String title;
+  final String value;
+  final String detail;
+  final IconData icon;
+  final Color color;
+
+  const _ExpenseSummaryTile({
+    required this.title,
+    required this.value,
+    required this.detail,
+    required this.icon,
+    required this.color,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      constraints: const BoxConstraints(minHeight: 70),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: AppColors.surfaceColor,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: color.withValues(alpha: 0.28)),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 34,
+            height: 34,
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: 0.12),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(icon, color: color, size: 18),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppTextStyles.labelSmall.copyWith(
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                FittedBox(
+                  fit: BoxFit.scaleDown,
+                  alignment: AlignmentDirectional.centerStart,
+                  child: Text(
+                    value,
+                    maxLines: 1,
+                    style: AppTextStyles.h6.copyWith(color: color),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -338,106 +828,113 @@ class _TransactionRow extends StatelessWidget {
 
     if (isCompact) {
       return Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
         decoration: BoxDecoration(
           border: Border(
             bottom: BorderSide(color: AppColors.border.withValues(alpha: 0.5)),
           ),
         ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Container(
-                  width: 36,
-                  height: 36,
-                  decoration: BoxDecoration(
-                    color: isIncome
-                        ? AppColors.success.withValues(alpha: 0.1)
-                        : AppColors.error.withValues(alpha: 0.1),
-                    shape: BoxShape.circle,
-                  ),
-                  child: Icon(
-                    isIncome ? Icons.arrow_downward : Icons.arrow_upward,
-                    color: isIncome ? AppColors.success : AppColors.error,
-                    size: 18,
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        transaction.description,
-                        style: AppTextStyles.tableCellBold,
-                      ),
-                      if (transaction.subDescription != null)
-                        Text(
-                          transaction.subDescription!,
-                          style: AppTextStyles.bodySmall,
-                        ),
-                    ],
-                  ),
-                ),
-              ],
+            Container(
+              width: 28,
+              height: 28,
+              decoration: BoxDecoration(
+                color: isIncome
+                    ? AppColors.success.withValues(alpha: 0.1)
+                    : AppColors.error.withValues(alpha: 0.1),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                isIncome ? Icons.arrow_downward : Icons.arrow_upward,
+                color: isIncome ? AppColors.success : AppColors.error,
+                size: 14,
+              ),
             ),
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                Expanded(
-                  child: _CompactInfoItem(
-                    label: 'التاريخ',
-                    value: Text(
-                      dateFormat.format(transaction.date),
-                      style: AppTextStyles.tableCell,
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: _CompactInfoItem(
-                    label: 'المبلغ',
-                    value: Text(
-                      '${isIncome ? '+' : ''}${transaction.amount.toStringAsFixed(3)}',
-                      style: AppTextStyles.tableCellBold.copyWith(
-                        color: isIncome ? AppColors.success : AppColors.error,
-                      ),
-                      textAlign: TextAlign.end,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            if (canEdit) ...[
-              const SizedBox(height: 8),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.end,
+            const SizedBox(width: 8),
+            Expanded(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  IconButton(
-                    onPressed: () => context
-                        .read<ExecutionCubit>()
-                        .toggleEditing(transaction.id),
-                    icon: const Icon(Icons.edit, size: 18),
-                    tooltip: 'تعديل',
-                    color: AppColors.textSecondary,
+                  Text(
+                    transaction.description,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: AppTextStyles.tableCellBold.copyWith(fontSize: 13),
                   ),
-                  IconButton(
-                    onPressed: () => isInstallment
-                        ? _showDeleteInstallmentConfirmation(
-                            context,
-                            installmentRequestId,
-                          )
-                        : _showDeleteConfirmation(context, transaction.id),
-                    icon: const Icon(Icons.delete_outline, size: 18),
-                    tooltip: 'حذف',
-                    color: AppColors.error,
+                  if (transaction.subDescription != null)
+                    Text(
+                      transaction.subDescription!,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: AppTextStyles.caption,
+                    ),
+                  Text(
+                    dateFormat.format(transaction.date),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: AppTextStyles.caption,
                   ),
                 ],
               ),
-            ],
+            ),
+            const SizedBox(width: 8),
+            Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Text(
+                  '${isIncome ? '+' : ''}${transaction.amount.toStringAsFixed(3)}',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppTextStyles.tableCellBold.copyWith(
+                    color: isIncome ? AppColors.success : AppColors.error,
+                    fontSize: 13,
+                  ),
+                  textAlign: TextAlign.end,
+                ),
+                if (canEdit)
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      SizedBox(
+                        width: 28,
+                        height: 28,
+                        child: IconButton(
+                          padding: EdgeInsets.zero,
+                          onPressed: () => context
+                              .read<ExecutionCubit>()
+                              .toggleEditing(transaction.id),
+                          icon: const Icon(Icons.edit, size: 15),
+                          tooltip: 'تعديل',
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
+                      SizedBox(
+                        width: 28,
+                        height: 28,
+                        child: IconButton(
+                          padding: EdgeInsets.zero,
+                          onPressed: () => isInstallment
+                              ? _showDeleteInstallmentConfirmation(
+                                  context,
+                                  installmentRequestId,
+                                )
+                              : _showDeleteConfirmation(
+                                  context,
+                                  transaction.id,
+                                ),
+                          icon: const Icon(Icons.delete_outline, size: 15),
+                          tooltip: 'حذف',
+                          color: AppColors.error,
+                        ),
+                      ),
+                    ],
+                  ),
+              ],
+            ),
           ],
         ),
       );
@@ -614,11 +1111,13 @@ class _AddExpenseRow extends StatefulWidget {
   final String projectId;
   final VoidCallback onCancel;
   final bool isCompact;
+  final ExecutionCubit cubit;
 
   const _AddExpenseRow({
     required this.projectId,
     required this.onCancel,
     required this.isCompact,
+    required this.cubit,
   });
 
   @override
@@ -632,6 +1131,7 @@ class _AddExpenseRowState extends State<_AddExpenseRow> {
   final _quantityController = TextEditingController();
   CostType _costType = CostType.total;
   DateTime _selectedDate = DateTime.now();
+  bool _isReturnedExpense = false;
   bool _isSubmitting = false;
 
   @override
@@ -645,16 +1145,20 @@ class _AddExpenseRowState extends State<_AddExpenseRow> {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      color: AppColors.success.withValues(alpha: 0.05),
-      child: widget.isCompact ? _buildCompactForm() : _buildWideForm(),
+    return BlocProvider.value(
+      value: widget.cubit,
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        color: AppColors.background.withValues(alpha: 0.05),
+        child: widget.isCompact ? _buildCompactForm() : _buildWideForm(),
+      ),
     );
   }
 
   Widget _buildCompactForm() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
+      mainAxisSize: MainAxisSize.min,
       children: [
         Row(
           children: [
@@ -737,9 +1241,29 @@ class _AddExpenseRowState extends State<_AddExpenseRow> {
         TextField(
           controller: _nameController,
           decoration: const InputDecoration(
-            hintText: 'اسم المصروف',
+            hintText: 'اسم البند',
             isDense: true,
             contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          ),
+        ),
+        const SizedBox(height: 8),
+        CheckboxListTile(
+          value: _isReturnedExpense,
+          onChanged: (value) {
+            setState(() => _isReturnedExpense = value ?? false);
+          },
+          controlAffinity: ListTileControlAffinity.leading,
+          dense: true,
+          contentPadding: EdgeInsets.zero,
+          title: Text(
+            'مرتجع مصروف',
+            style: AppTextStyles.tableCellBold.copyWith(
+              color: AppColors.success,
+            ),
+          ),
+          subtitle: Text(
+            'استخدمها عند إرجاع بقايا خامات مثل الخشب',
+            style: AppTextStyles.caption,
           ),
         ),
         // DropdownButtonFormField<CostType>(
@@ -809,7 +1333,7 @@ class _AddExpenseRowState extends State<_AddExpenseRow> {
           child: TextField(
             controller: _nameController,
             decoration: const InputDecoration(
-              hintText: 'اسم المصروف',
+              hintText: 'اسم البند',
               isDense: true,
               contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             ),
@@ -898,6 +1422,23 @@ class _AddExpenseRowState extends State<_AddExpenseRow> {
           ),
         ],
         const SizedBox(width: 8),
+        SizedBox(
+          width: 128,
+          child: CheckboxListTile(
+            value: _isReturnedExpense,
+            onChanged: (value) {
+              setState(() => _isReturnedExpense = value ?? false);
+            },
+            controlAffinity: ListTileControlAffinity.leading,
+            dense: true,
+            contentPadding: EdgeInsets.zero,
+            title: Text(
+              'مرتجع',
+              style: AppTextStyles.caption.copyWith(color: AppColors.success),
+            ),
+          ),
+        ),
+        const SizedBox(width: 8),
         // Actions
         Row(
           mainAxisSize: MainAxisSize.min,
@@ -966,7 +1507,7 @@ class _AddExpenseRowState extends State<_AddExpenseRow> {
     try {
       final dto = CreateExpenseDto(
         name: name,
-        type: 'DAILY',
+        type: _isReturnedExpense ? 'RETURNED' : 'DAILY',
         costType: _costType == CostType.total ? 'TOTAL' : 'UNIT_BASED',
         amount: amount,
         unitCost: unitCost,
@@ -974,9 +1515,7 @@ class _AddExpenseRowState extends State<_AddExpenseRow> {
         date: _selectedDate,
       );
 
-      // Get cubit from context before async gap
-      final cubit = context.read<ExecutionCubit>();
-      await cubit.addExpense(widget.projectId, dto);
+      await widget.cubit.addExpense(widget.projectId, dto);
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -985,6 +1524,7 @@ class _AddExpenseRowState extends State<_AddExpenseRow> {
             backgroundColor: AppColors.success,
           ),
         );
+        widget.onCancel();
       }
     } catch (e) {
       if (mounted) {
@@ -1732,11 +2272,12 @@ class _AddIncomeRow extends StatefulWidget {
   final String projectId;
   final VoidCallback onCancel;
   final bool isCompact;
-
+  final ExecutionCubit cubit;
   const _AddIncomeRow({
     required this.projectId,
     required this.onCancel,
     required this.isCompact,
+    required this.cubit,
   });
 
   @override
@@ -1758,16 +2299,20 @@ class _AddIncomeRowState extends State<_AddIncomeRow> {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      color: AppColors.primary.withValues(alpha: 0.05),
-      child: widget.isCompact ? _buildCompactForm() : _buildWideForm(),
+    return BlocProvider.value(
+      value: widget.cubit,
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        color: AppColors.background.withValues(alpha: 0.05),
+        child: widget.isCompact ? _buildCompactForm() : _buildWideForm(),
+      ),
     );
   }
 
   Widget _buildCompactForm() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
+      mainAxisSize: MainAxisSize.min,
       children: [
         Row(
           children: [
@@ -1790,13 +2335,18 @@ class _AddIncomeRowState extends State<_AddIncomeRow> {
         ),
         const SizedBox(height: 12),
         TextField(
-          controller: _descriptionController,
+          controller: _amountController,
+          keyboardType: const TextInputType.numberWithOptions(
+            decimal: true,
+            signed: false,
+          ),
           decoration: const InputDecoration(
-            hintText: 'وصف الإيراد (مثال: دفعة العميل)',
+            hintText: 'المبلغ',
             isDense: true,
             contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
           ),
         ),
+
         const SizedBox(height: 8),
         InkWell(
           onTap: () async {
@@ -1829,14 +2379,11 @@ class _AddIncomeRowState extends State<_AddIncomeRow> {
           ),
         ),
         const SizedBox(height: 8),
+
         TextField(
-          controller: _amountController,
-          keyboardType: const TextInputType.numberWithOptions(
-            decimal: true,
-            signed: false,
-          ),
+          controller: _descriptionController,
           decoration: const InputDecoration(
-            hintText: 'المبلغ',
+            hintText: 'وصف الإيراد (مثال: دفعة العميل)',
             isDense: true,
             contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
           ),
@@ -2004,9 +2551,7 @@ class _AddIncomeRowState extends State<_AddIncomeRow> {
         date: _selectedDate,
       );
 
-      // Get cubit from context before async gap
-      final cubit = context.read<ExecutionCubit>();
-      await cubit.addIncome(widget.projectId, dto);
+      await widget.cubit.addIncome(widget.projectId, dto);
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -2015,6 +2560,7 @@ class _AddIncomeRowState extends State<_AddIncomeRow> {
             backgroundColor: AppColors.success,
           ),
         );
+        widget.onCancel();
       }
     } catch (e) {
       if (mounted) {
@@ -2030,29 +2576,5 @@ class _AddIncomeRowState extends State<_AddIncomeRow> {
         setState(() => _isSubmitting = false);
       }
     }
-  }
-}
-
-class _CompactInfoItem extends StatelessWidget {
-  final String label;
-  final Widget value;
-
-  const _CompactInfoItem({required this.label, required this.value});
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label,
-          style: AppTextStyles.bodySmall.copyWith(
-            color: AppColors.textSecondary,
-          ),
-        ),
-        const SizedBox(height: 4),
-        value,
-      ],
-    );
   }
 }

@@ -197,6 +197,45 @@ class ProjectFinancialCubit extends Cubit<ProjectFinancialState> {
     );
   }
 
+  Future<void> replaceAttachment(
+    String attachmentId, {
+    required List<int> fileBytes,
+    required String fileName,
+  }) async {
+    final currentState = state;
+    if (currentState is! ProjectFinancialLoaded) return;
+
+    emit(currentState.copyWith(isUploadingAttachments: true));
+
+    final result = await projectsRepository.replaceProjectAttachment(
+      currentState.project.id,
+      attachmentId,
+      fileBytes: fileBytes,
+      fileName: fileName,
+    );
+
+    result.fold(
+      (failure) => emit(ProjectFinancialError(message: failure.message)),
+      (updatedAttachment) {
+        final latestState = state;
+        if (latestState is! ProjectFinancialLoaded) return;
+
+        emit(
+          latestState.copyWith(
+            attachments: latestState.attachments
+                .map(
+                  (attachment) => attachment.id == updatedAttachment.id
+                      ? updatedAttachment
+                      : attachment,
+                )
+                .toList(),
+            isUploadingAttachments: false,
+          ),
+        );
+      },
+    );
+  }
+
   /// Recalculate financial summary based on transactions
   ProjectFinancialSummary _recalculateSummary(
     List<TransactionEntity> transactions,

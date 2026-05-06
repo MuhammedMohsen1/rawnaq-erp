@@ -1,23 +1,38 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../data/datasources/execution_api_datasource.dart';
 import '../../data/models/execution_models.dart';
+import '../../../projects/data/datasources/projects_api_datasource.dart';
+import '../../../projects/data/models/project_model.dart';
 import 'execution_state.dart';
 
 class ExecutionCubit extends Cubit<ExecutionState> {
   final ExecutionApiDataSource _apiDataSource;
+  final ProjectsApiDataSource _projectsApiDataSource;
 
-  ExecutionCubit({ExecutionApiDataSource? apiDataSource})
-      : _apiDataSource = apiDataSource ?? ExecutionApiDataSource(),
-        super(const ExecutionInitial());
+  ExecutionCubit({
+    ExecutionApiDataSource? apiDataSource,
+    ProjectsApiDataSource? projectsApiDataSource,
+  }) : _apiDataSource = apiDataSource ?? ExecutionApiDataSource(),
+       _projectsApiDataSource =
+           projectsApiDataSource ?? ProjectsApiDataSource(),
+       super(const ExecutionInitial());
 
   /// Load execution dashboard data
   Future<void> loadDashboard(String projectId) async {
     emit(const ExecutionLoading());
     try {
-      final dashboard = await _apiDataSource.getExecutionDashboard(projectId);
-      emit(ExecutionLoaded(dashboard: dashboard));
+      final results = await Future.wait([
+        _apiDataSource.getExecutionDashboard(projectId),
+        _projectsApiDataSource.getProjectById(projectId),
+      ]);
+      final dashboard = results[0] as ExecutionDashboardModel;
+      final projectJson = results[1] as Map<String, dynamic>;
+      final project = ProjectModel.fromJson(projectJson);
+      emit(ExecutionLoaded(project: project, dashboard: dashboard));
     } catch (e) {
-      emit(ExecutionError(message: 'فشل تحميل بيانات التنفيذ: ${e.toString()}'));
+      emit(
+        ExecutionError(message: 'فشل تحميل بيانات التنفيذ: ${e.toString()}'),
+      );
     }
   }
 
@@ -29,7 +44,11 @@ class ExecutionCubit extends Cubit<ExecutionState> {
       if (currentState is ExecutionLoaded) {
         emit(currentState.copyWith(dashboard: dashboard));
       } else {
-        emit(ExecutionLoaded(dashboard: dashboard));
+        final projectJson = await _projectsApiDataSource.getProjectById(
+          projectId,
+        );
+        final project = ProjectModel.fromJson(projectJson);
+        emit(ExecutionLoaded(project: project, dashboard: dashboard));
       }
     } catch (e) {
       // Keep current state on error during refresh
@@ -65,12 +84,16 @@ class ExecutionCubit extends Cubit<ExecutionState> {
     try {
       await _apiDataSource.updateExpense(projectId, expenseId, dto);
       // Clear editing state
-      final newEditingStates = Map<String, bool>.from(currentState.editingTransactions);
+      final newEditingStates = Map<String, bool>.from(
+        currentState.editingTransactions,
+      );
       newEditingStates.remove(expenseId);
-      emit(currentState.copyWith(
-        editingTransactions: newEditingStates,
-        clearEditingExpenseId: true,
-      ));
+      emit(
+        currentState.copyWith(
+          editingTransactions: newEditingStates,
+          clearEditingExpenseId: true,
+        ),
+      );
       await refreshDashboard(projectId);
     } catch (e) {
       rethrow;
@@ -101,13 +124,16 @@ class ExecutionCubit extends Cubit<ExecutionState> {
 
     try {
       await _apiDataSource.updateInstallment(projectId, installmentId, dto);
-      final newEditingStates =
-          Map<String, bool>.from(currentState.editingTransactions);
+      final newEditingStates = Map<String, bool>.from(
+        currentState.editingTransactions,
+      );
       newEditingStates.remove(installmentId);
-      emit(currentState.copyWith(
-        editingTransactions: newEditingStates,
-        clearEditingExpenseId: true,
-      ));
+      emit(
+        currentState.copyWith(
+          editingTransactions: newEditingStates,
+          clearEditingExpenseId: true,
+        ),
+      );
       await refreshDashboard(projectId);
     } catch (e) {
       rethrow;
@@ -115,10 +141,7 @@ class ExecutionCubit extends Cubit<ExecutionState> {
   }
 
   /// Delete installment
-  Future<void> deleteInstallment(
-    String projectId,
-    String installmentId,
-  ) async {
+  Future<void> deleteInstallment(String projectId, String installmentId) async {
     final currentState = state;
     if (currentState is! ExecutionLoaded) return;
 
@@ -209,14 +232,19 @@ class ExecutionCubit extends Cubit<ExecutionState> {
       );
 
       final updatedDashboard = currentState.dashboard.copyWith(
-        transactions: [...currentState.dashboard.transactions, ...moreTransactions],
+        transactions: [
+          ...currentState.dashboard.transactions,
+          ...moreTransactions,
+        ],
         hasMoreTransactions: moreTransactions.length >= 20,
       );
 
-      emit(currentState.copyWith(
-        dashboard: updatedDashboard,
-        isLoadingMore: false,
-      ));
+      emit(
+        currentState.copyWith(
+          dashboard: updatedDashboard,
+          isLoadingMore: false,
+        ),
+      );
     } catch (e) {
       emit(currentState.copyWith(isLoadingMore: false));
       rethrow;
@@ -270,24 +298,30 @@ class ExecutionCubit extends Cubit<ExecutionState> {
     final currentState = state;
     if (currentState is! ExecutionLoaded) return;
 
-    final newEditingStates = Map<String, bool>.from(currentState.editingTransactions);
+    final newEditingStates = Map<String, bool>.from(
+      currentState.editingTransactions,
+    );
     final isCurrentlyEditing = newEditingStates[transactionId] ?? false;
 
     if (isCurrentlyEditing) {
       newEditingStates.remove(transactionId);
-      emit(currentState.copyWith(
-        editingTransactions: newEditingStates,
-        clearEditingExpenseId: true,
-      ));
+      emit(
+        currentState.copyWith(
+          editingTransactions: newEditingStates,
+          clearEditingExpenseId: true,
+        ),
+      );
     } else {
       // Clear all other editing states and set this one
       newEditingStates.clear();
       newEditingStates[transactionId] = true;
-      emit(currentState.copyWith(
-        editingTransactions: newEditingStates,
-        editingExpenseId: transactionId,
-        isAddingExpense: false, // Close new expense row if open
-      ));
+      emit(
+        currentState.copyWith(
+          editingTransactions: newEditingStates,
+          editingExpenseId: transactionId,
+          isAddingExpense: false, // Close new expense row if open
+        ),
+      );
     }
   }
 
@@ -296,11 +330,15 @@ class ExecutionCubit extends Cubit<ExecutionState> {
     final currentState = state;
     if (currentState is! ExecutionLoaded) return;
 
-    final newEditingStates = Map<String, bool>.from(currentState.editingTransactions);
+    final newEditingStates = Map<String, bool>.from(
+      currentState.editingTransactions,
+    );
     newEditingStates.remove(transactionId);
-    emit(currentState.copyWith(
-      editingTransactions: newEditingStates,
-      clearEditingExpenseId: true,
-    ));
+    emit(
+      currentState.copyWith(
+        editingTransactions: newEditingStates,
+        clearEditingExpenseId: true,
+      ),
+    );
   }
 }

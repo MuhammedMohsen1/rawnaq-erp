@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-import 'package:rawnaq/features/execution/domain/enums/transaction_type.dart';
-import 'package:syncfusion_flutter_gauges/gauges.dart';
+import 'package:rawnaq/features/projects/domain/entities/project_entity.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_text_styles.dart';
 import '../../../../core/di/injection_container.dart';
@@ -16,7 +15,6 @@ import '../../../projects/presentation/widgets/project_contact_actions.dart';
 import '../../data/models/execution_models.dart';
 import '../cubit/execution_cubit.dart';
 import '../cubit/execution_state.dart';
-import '../widgets/cash_flow_summary_cards.dart';
 import '../widgets/transactions_table.dart';
 import '../widgets/pending_approvals_card.dart';
 import '../widgets/installments_section.dart';
@@ -74,7 +72,7 @@ class _ExecutionPageContent extends StatelessWidget {
         }
 
         if (state is ExecutionLoaded) {
-          return _LoadedContent(projectId: projectId, state: state);
+          return _LoadedContent(state: state);
         }
 
         return const SizedBox.shrink();
@@ -84,26 +82,25 @@ class _ExecutionPageContent extends StatelessWidget {
 }
 
 class _LoadedContent extends StatelessWidget {
-  final String projectId;
   final ExecutionLoaded state;
 
-  const _LoadedContent({required this.projectId, required this.state});
+  const _LoadedContent({required this.state});
 
   @override
   Widget build(BuildContext context) {
     return ResponsiveLayout(
-      mobile: _ExecutionLayout(projectId: projectId, padding: 16),
-      tablet: _ExecutionLayout(projectId: projectId, padding: 24),
-      desktop: _ExecutionLayout(projectId: projectId, padding: 32),
+      mobile: _ExecutionLayout(project: state.project, padding: 16),
+      tablet: _ExecutionLayout(project: state.project, padding: 24),
+      desktop: _ExecutionLayout(project: state.project, padding: 32),
     );
   }
 }
 
 class _ExecutionLayout extends StatelessWidget {
-  final String projectId;
+  final ProjectEntity project;
   final double padding;
 
-  const _ExecutionLayout({required this.projectId, required this.padding});
+  const _ExecutionLayout({required this.project, required this.padding});
 
   @override
   Widget build(BuildContext context) {
@@ -130,33 +127,13 @@ class _ExecutionLayout extends StatelessWidget {
               children: [
                 // ── Header: icon-only buttons ──────────────────────────────
                 _CompactExecutionHeader(
-                  projectName: state.dashboard.projectName,
-                  projectId: projectId,
+                  project: project,
                   onOpenPastPricing: () => _handleOpenPastPricing(context),
                   onMarkComplete: isAdminOrManager
                       ? () => _handleMarkComplete(context)
                       : null,
                 ),
-                const SizedBox(height: 16),
 
-                ProjectAttachmentsPanel(
-                  projectId: projectId,
-                  projectStatus: ProjectStatus.execution,
-                ),
-                const SizedBox(height: 16),
-
-                // ── Accordion: Circular progress + stat cards ──────────────
-                _CashFlowAccordion(
-                  totalReceived: state.dashboard.totalReceived,
-                  totalExpenses: state.dashboard.totalExpenses,
-                  netCashFlow: state.dashboard.netCashFlow,
-                  totalBudget: state.dashboard.totalBudget,
-                  totalPrice: state.dashboard.totalPrice,
-                  budgetPercentage: state.dashboard.budgetPercentage,
-                  budgetWarningLevel: state.dashboard.budgetWarningLevel,
-                  startDate: state.dashboard.startDate,
-                  endDate: state.dashboard.endDate,
-                ),
                 const SizedBox(height: 16),
 
                 // ── Installments ────────────────────────────────────────────
@@ -196,8 +173,13 @@ class _ExecutionLayout extends StatelessWidget {
 
                 // ── Transactions table ──────────────────────────────────────
                 TransactionsTable(
-                  projectId: projectId,
+                  project: project,
                   transactions: state.dashboard.transactions,
+                  totalReceived: state.dashboard.totalReceived,
+                  totalExpenses: state.dashboard.totalExpenses,
+                  netCashFlow: state.dashboard.netCashFlow,
+                  startDate: state.dashboard.startDate,
+                  endDate: state.dashboard.endDate,
                   isAddingExpense: state.isAddingExpense,
                   isAddingIncome: state.isAddingIncome,
                   editingTransactions: state.editingTransactions,
@@ -229,7 +211,7 @@ class _ExecutionLayout extends StatelessWidget {
   // ── handlers (unchanged) ──────────────────────────────────────────────────
 
   void _handleOpenPastPricing(BuildContext context) {
-    context.go(AppRoutes.pricing(projectId));
+    context.go(AppRoutes.pricing(project.id));
   }
 
   Future<void> _handleMarkComplete(BuildContext context) async {
@@ -255,7 +237,7 @@ class _ExecutionLayout extends StatelessWidget {
 
     try {
       await ProjectsApiDataSource().updateProjectStatus(
-        projectId,
+        project.id,
         ProjectStatus.completed.toApiString(),
         'Marked complete from execution',
       );
@@ -281,7 +263,7 @@ class _ExecutionLayout extends StatelessWidget {
     try {
       if (isCurrentlyCollected) {
         await context.read<ExecutionCubit>().uncollectInstallment(
-          projectId,
+          project.id,
           requestId,
         );
         if (context.mounted) {
@@ -291,7 +273,7 @@ class _ExecutionLayout extends StatelessWidget {
         }
       } else {
         await context.read<ExecutionCubit>().collectInstallment(
-          projectId,
+          project.id,
           requestId,
         );
         if (context.mounted) {
@@ -343,7 +325,7 @@ class _ExecutionLayout extends StatelessWidget {
     if (selectedPhase != null && context.mounted) {
       try {
         await context.read<ExecutionCubit>().requestInstallment(
-          projectId,
+          project.id,
           phaseIndex: selectedPhase.index,
           phaseName: selectedPhase.phaseName,
         );
@@ -368,7 +350,7 @@ class _ExecutionLayout extends StatelessWidget {
   ) async {
     try {
       await context.read<ExecutionCubit>().approveInstallment(
-        projectId,
+        project.id,
         requestId,
       );
       if (context.mounted) {
@@ -392,7 +374,7 @@ class _ExecutionLayout extends StatelessWidget {
   ) async {
     try {
       await context.read<ExecutionCubit>().rejectInstallment(
-        projectId,
+        project.id,
         requestId,
         reason: reason,
       );
@@ -411,7 +393,7 @@ class _ExecutionLayout extends StatelessWidget {
   }
 
   void _handleLoadMore(BuildContext context) {
-    context.read<ExecutionCubit>().loadMoreTransactions(projectId);
+    context.read<ExecutionCubit>().loadMoreTransactions(project.id);
   }
 }
 
@@ -420,14 +402,12 @@ class _ExecutionLayout extends StatelessWidget {
 // ══════════════════════════════════════════════════════════════════════════════
 
 class _CompactExecutionHeader extends StatelessWidget {
-  final String projectName;
-  final String projectId;
+  final ProjectEntity project;
   final VoidCallback onOpenPastPricing;
   final VoidCallback? onMarkComplete;
 
   const _CompactExecutionHeader({
-    required this.projectName,
-    required this.projectId,
+    required this.project,
     required this.onOpenPastPricing,
     this.onMarkComplete,
   });
@@ -439,14 +419,21 @@ class _CompactExecutionHeader extends StatelessWidget {
         // Project name — takes all available space
         Expanded(
           child: Text(
-            projectName,
+            project.name,
             style: AppTextStyles.h3,
             overflow: TextOverflow.ellipsis,
             maxLines: 1,
           ),
         ),
+        const SizedBox(width: 8),
 
-        ProjectContactActionsLoader(projectId: projectId),
+        _AttachmentsDialogButton(
+          projectId: project.id,
+          projectStatus: ProjectStatus.execution,
+        ),
+        const SizedBox(width: 8),
+
+        ProjectContactActionsLoader(project: project),
         const SizedBox(width: 8),
 
         // Past-pricing icon button
@@ -488,271 +475,75 @@ class _CompactExecutionHeader extends StatelessWidget {
   }
 }
 
-// ══════════════════════════════════════════════════════════════════════════════
-// CASH FLOW ACCORDION
-//   Header  → two Syncfusion circular progress rings (always visible)
-//   Body    → CashFlowSummaryCards (collapsed by default)
-// ══════════════════════════════════════════════════════════════════════════════
+class _AttachmentsDialogButton extends StatelessWidget {
+  final String projectId;
+  final ProjectStatus projectStatus;
 
-class _CashFlowAccordion extends StatefulWidget {
-  final double totalReceived;
-  final double totalExpenses;
-  final double netCashFlow;
-  final double totalBudget;
-  final double totalPrice;
-  final double budgetPercentage;
-  final BudgetWarningLevel budgetWarningLevel;
-  final DateTime? startDate;
-  final DateTime? endDate;
-
-  const _CashFlowAccordion({
-    required this.totalReceived,
-    required this.totalExpenses,
-    required this.netCashFlow,
-    required this.totalBudget,
-    required this.totalPrice,
-    required this.budgetPercentage,
-    required this.budgetWarningLevel,
-    this.startDate,
-    this.endDate,
+  const _AttachmentsDialogButton({
+    required this.projectId,
+    required this.projectStatus,
   });
 
   @override
-  State<_CashFlowAccordion> createState() => _CashFlowAccordionState();
-}
-
-class _CashFlowAccordionState extends State<_CashFlowAccordion>
-    with SingleTickerProviderStateMixin {
-  bool _isExpanded = false;
-  late AnimationController _arrowController;
-  late Animation<double> _arrowAnimation;
-
-  @override
-  void initState() {
-    super.initState();
-    _arrowController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 250),
-    );
-    _arrowAnimation = Tween<double>(
-      begin: 0,
-      end: 0.5,
-    ).animate(_arrowController);
-  }
-
-  @override
-  void dispose() {
-    _arrowController.dispose();
-    super.dispose();
-  }
-
-  void _toggle() {
-    setState(() => _isExpanded = !_isExpanded);
-    if (_isExpanded) {
-      _arrowController.forward();
-    } else {
-      _arrowController.reverse();
-    }
-  }
-
-  // ── progress helpers ──────────────────────────────────────────────────────
-
-  /// Budget used: totalExpenses / totalBudget  (clamped 0–100)
-  double get _cashProgress {
-    if (widget.totalBudget <= 0) return 0;
-    return (widget.totalExpenses / widget.totalBudget * 100).clamp(0.0, 100.0);
-  }
-
-  /// Time elapsed: (today - startDate) / (endDate - startDate)  (clamped 0–100)
-  double get _dateProgress {
-    final start = widget.startDate;
-    final end = widget.endDate;
-    if (start == null || end == null) return 0;
-    final totalDays = end.difference(start).inDays;
-    if (totalDays <= 0) return 100;
-    final elapsed = DateTime.now().difference(start).inDays;
-    return (elapsed / totalDays * 100).clamp(0.0, 100.0);
-  }
-
-  /// Returns color based on how close to 100 % the value is.
-  Color _progressColor(double value) {
-    if (value >= 90) return const Color(0xFFE53935); // red
-    if (value >= 70) return const Color(0xFFFB8C00); // orange
-    return const Color(0xFF43A047); // green
-  }
-
-  @override
   Widget build(BuildContext context) {
-    return Card(
-      elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      clipBehavior: Clip.antiAlias,
-      child: Column(
-        children: [
-          // ── Always-visible header with circular gauges ────────────────────
-          InkWell(
-            onTap: _toggle,
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              child: Row(
-                children: [
-                  // Cash progress gauge
-                  _CircularGauge(
-                    value: _cashProgress,
-                    color: _progressColor(_cashProgress),
-                    label: 'الميزانية',
-                    icon: Icons.account_balance_wallet_rounded,
-                  ),
-                  const SizedBox(width: 20),
-
-                  // Date progress gauge
-                  _CircularGauge(
-                    value: _dateProgress,
-                    color: _progressColor(_dateProgress),
-                    label: 'المدة',
-                    icon: Icons.calendar_today_rounded,
-                  ),
-
-                  const Spacer(),
-
-                  // Expand/collapse arrow
-                  Column(
+    return Align(
+      alignment: AlignmentDirectional.centerEnd,
+      child: Tooltip(
+        message: 'المرفقات',
+        child: IconButton(
+          onPressed: () => showDialog<void>(
+            context: context,
+            builder: (context) => Dialog(
+              insetPadding: const EdgeInsets.all(16),
+              backgroundColor: AppColors.cardBackground,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 720),
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      Text(
-                        'تفاصيل التدفق النقدي',
-                        style: AppTextStyles.bodySmall.copyWith(
-                          color: AppColors.textSecondary,
-                        ),
+                      Row(
+                        children: [
+                          Text('المرفقات', style: AppTextStyles.h5),
+                          const Spacer(),
+                          IconButton(
+                            onPressed: () => Navigator.of(context).pop(),
+                            icon: const Icon(Icons.close_rounded),
+                            color: AppColors.textSecondary,
+                            tooltip: 'إغلاق',
+                          ),
+                        ],
                       ),
-                      const SizedBox(height: 4),
-                      RotationTransition(
-                        turns: _arrowAnimation,
-                        child: const Icon(
-                          Icons.keyboard_arrow_down_rounded,
-                          color: AppColors.textSecondary,
+                      const SizedBox(height: 12),
+                      Flexible(
+                        child: SingleChildScrollView(
+                          child: ProjectAttachmentsPanel(
+                            projectId: projectId,
+                            projectStatus: projectStatus,
+                          ),
                         ),
                       ),
                     ],
                   ),
-                ],
-              ),
-            ),
-          ),
-
-          // ── Collapsible body: existing stat cards ─────────────────────────
-          AnimatedCrossFade(
-            firstChild: const SizedBox.shrink(),
-            secondChild: Padding(
-              padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-              child: CashFlowSummaryCards(
-                totalReceived: widget.totalReceived,
-                totalExpenses: widget.totalExpenses,
-                netCashFlow: widget.netCashFlow,
-                totalBudget: widget.totalBudget,
-                totalPrice: widget.totalPrice,
-                budgetPercentage: widget.budgetPercentage,
-                budgetWarningLevel: widget.budgetWarningLevel,
-                startDate: widget.startDate,
-                endDate: widget.endDate,
-              ),
-            ),
-            crossFadeState: _isExpanded
-                ? CrossFadeState.showSecond
-                : CrossFadeState.showFirst,
-            duration: const Duration(milliseconds: 280),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-// ══════════════════════════════════════════════════════════════════════════════
-// SYNCFUSION CIRCULAR GAUGE WIDGET
-// Requires: syncfusion_flutter_gauges in pubspec.yaml
-// ══════════════════════════════════════════════════════════════════════════════
-
-class _CircularGauge extends StatelessWidget {
-  final double value; // 0–100
-  final Color color;
-  final String label;
-  final IconData icon;
-
-  const _CircularGauge({
-    required this.value,
-    required this.color,
-    required this.label,
-    required this.icon,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        SizedBox(
-          width: 90,
-          height: 90,
-          child: SfRadialGauge(
-            axes: [
-              RadialAxis(
-                minimum: 0,
-                maximum: 100,
-                startAngle: 270,
-                endAngle: 270,
-                showTicks: false,
-                showLabels: false,
-                axisLineStyle: AxisLineStyle(
-                  thickness: 0.12,
-                  thicknessUnit: GaugeSizeUnit.factor,
-                  color: color.withOpacity(0.15),
                 ),
-                pointers: [
-                  RangePointer(
-                    value: value,
-                    width: 0.12,
-                    sizeUnit: GaugeSizeUnit.factor,
-                    color: color,
-                    enableAnimation: true,
-                    animationType: AnimationType.easeOutBack,
-                    animationDuration: 1200,
-                    cornerStyle: CornerStyle.bothCurve,
-                  ),
-                ],
-                annotations: [
-                  GaugeAnnotation(
-                    widget: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(icon, size: 16, color: color),
-                        const SizedBox(height: 2),
-                        Text(
-                          '${value.toStringAsFixed(0)}%',
-                          style: TextStyle(
-                            fontSize: 13,
-                            fontWeight: FontWeight.bold,
-                            color: color,
-                          ),
-                        ),
-                      ],
-                    ),
-                    angle: 90,
-                    positionFactor: 0.1,
-                  ),
-                ],
               ),
-            ],
+            ),
+          ),
+          icon: const Icon(Icons.attach_file_rounded),
+          color: AppColors.primary,
+          style: IconButton.styleFrom(
+            backgroundColor: AppColors.primary.withValues(alpha: 0.08),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
           ),
         ),
-        const SizedBox(height: 4),
-        Text(
-          label,
-          style: AppTextStyles.bodySmall.copyWith(
-            color: AppColors.textSecondary,
-            fontWeight: FontWeight.w500,
-          ),
-        ),
-      ],
+      ),
     );
   }
 }

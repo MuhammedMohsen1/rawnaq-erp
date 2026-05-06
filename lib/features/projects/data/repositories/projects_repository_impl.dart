@@ -283,6 +283,26 @@ class ProjectsRepositoryImpl implements ProjectsRepository {
   }
 
   @override
+  Future<Either<Failure, ProjectAttachmentEntity>> replaceProjectAttachment(
+    String projectId,
+    String attachmentId, {
+    required List<int> fileBytes,
+    required String fileName,
+  }) async {
+    try {
+      final response = await _dataSource.replaceProjectAttachment(
+        projectId,
+        attachmentId,
+        fileBytes: fileBytes,
+        fileName: fileName,
+      );
+      return Right(ProjectAttachmentModel.fromJson(response));
+    } catch (e) {
+      return Left(ServerFailure(message: e.toString()));
+    }
+  }
+
+  @override
   Future<Either<Failure, List<TeamMemberEntity>>> getTeamMembers() async {
     try {
       // TODO: Implement when team members endpoint is available

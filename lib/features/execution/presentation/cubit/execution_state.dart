@@ -1,5 +1,6 @@
 import 'package:equatable/equatable.dart';
 import '../../data/models/execution_models.dart';
+import '../../../projects/domain/entities/project_entity.dart';
 
 sealed class ExecutionState extends Equatable {
   const ExecutionState();
@@ -17,6 +18,7 @@ class ExecutionLoading extends ExecutionState {
 }
 
 class ExecutionLoaded extends ExecutionState {
+  final ProjectEntity project;
   final ExecutionDashboardModel dashboard;
   final bool isAddingExpense;
   final bool isAddingIncome;
@@ -25,6 +27,7 @@ class ExecutionLoaded extends ExecutionState {
   final String? editingExpenseId;
 
   const ExecutionLoaded({
+    required this.project,
     required this.dashboard,
     this.isAddingExpense = false,
     this.isAddingIncome = false,
@@ -35,15 +38,17 @@ class ExecutionLoaded extends ExecutionState {
 
   @override
   List<Object?> get props => [
-        dashboard,
-        isAddingExpense,
-        isAddingIncome,
-        editingTransactions,
-        isLoadingMore,
-        editingExpenseId,
-      ];
+    project,
+    dashboard,
+    isAddingExpense,
+    isAddingIncome,
+    editingTransactions,
+    isLoadingMore,
+    editingExpenseId,
+  ];
 
   ExecutionLoaded copyWith({
+    ProjectEntity? project,
     ExecutionDashboardModel? dashboard,
     bool? isAddingExpense,
     bool? isAddingIncome,
@@ -53,12 +58,15 @@ class ExecutionLoaded extends ExecutionState {
     bool clearEditingExpenseId = false,
   }) {
     return ExecutionLoaded(
+      project: project ?? this.project,
       dashboard: dashboard ?? this.dashboard,
       isAddingExpense: isAddingExpense ?? this.isAddingExpense,
       isAddingIncome: isAddingIncome ?? this.isAddingIncome,
       editingTransactions: editingTransactions ?? this.editingTransactions,
       isLoadingMore: isLoadingMore ?? this.isLoadingMore,
-      editingExpenseId: clearEditingExpenseId ? null : (editingExpenseId ?? this.editingExpenseId),
+      editingExpenseId: clearEditingExpenseId
+          ? null
+          : (editingExpenseId ?? this.editingExpenseId),
     );
   }
 }

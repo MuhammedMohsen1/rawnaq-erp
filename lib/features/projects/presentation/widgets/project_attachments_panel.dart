@@ -66,6 +66,7 @@ class _ProjectAttachmentsPanelContent extends StatelessWidget {
             isDeleting: false,
             onUpload: _noop,
             onDelete: _noopDelete,
+            onReplacePdf: _noopReplacePdf,
           );
         }
 
@@ -79,6 +80,7 @@ class _ProjectAttachmentsPanelContent extends StatelessWidget {
                 .read<ProjectAttachmentsCubit>()
                 .loadAttachments(projectId),
             onDelete: _noopDelete,
+            onReplacePdf: _noopReplacePdf,
           );
         }
 
@@ -93,6 +95,10 @@ class _ProjectAttachmentsPanelContent extends StatelessWidget {
           onDelete: readOnly
               ? (_) {}
               : (attachment) => _confirmDeleteAttachment(context, attachment),
+          onReplacePdf: readOnly
+              ? _noopReplacePdf
+              : (attachment, bytes) =>
+                    _replacePdfAttachment(context, attachment, bytes),
         );
       },
     );
@@ -186,8 +192,34 @@ class _ProjectAttachmentsPanelContent extends StatelessWidget {
       ).showSnackBar(const SnackBar(content: Text('تم حذف المرفق')));
     }
   }
+
+  Future<void> _replacePdfAttachment(
+    BuildContext context,
+    ProjectAttachmentEntity attachment,
+    List<int> bytes,
+  ) async {
+    await context.read<ProjectAttachmentsCubit>().replaceAttachment(
+      projectId,
+      attachment.id,
+      fileBytes: bytes,
+      fileName: attachment.originalName.endsWith('.pdf')
+          ? attachment.originalName
+          : '${attachment.originalName}.pdf',
+    );
+
+    if (!context.mounted) return;
+    final state = context.read<ProjectAttachmentsCubit>().state;
+    if (state is ProjectAttachmentsError) {
+      throw Exception(state.message);
+    }
+  }
 }
 
 void _noop() {}
 
 void _noopDelete(ProjectAttachmentEntity attachment) {}
+
+Future<void> _noopReplacePdf(
+  ProjectAttachmentEntity attachment,
+  List<int> bytes,
+) async {}

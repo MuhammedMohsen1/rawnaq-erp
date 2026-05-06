@@ -426,9 +426,19 @@ class _SidebarState extends State<_Sidebar> {
                       context: context,
                       icon: Icons.dashboard_outlined,
                       activeIcon: Icons.dashboard,
-                      label: 'لوحة التحكم',
+                      label: 'مشاريع التنفيذ',
                       path: AppRoutes.dashboard,
                       isActive: widget.currentPath == AppRoutes.dashboard,
+                    ),
+                    _buildNavItem(
+                      context: context,
+                      icon: Icons.edit_note_outlined,
+                      activeIcon: Icons.edit_note,
+                      label: 'التسعير والتوقيع',
+                      path: AppRoutes.siteEngineerPricingProjects,
+                      isActive:
+                          widget.currentPath ==
+                          AppRoutes.siteEngineerPricingProjects,
                     ),
                     _buildNavItem(
                       context: context,
@@ -439,24 +449,24 @@ class _SidebarState extends State<_Sidebar> {
                       isActive: widget.currentPath == AppRoutes.reminders,
                     ),
                     if (isAdmin) ...[
-                      _buildNavItem(
-                        context: context,
-                        icon: Icons.archive_outlined,
-                        activeIcon: Icons.archive,
-                        label: 'الأرشيف',
-                        path: AppRoutes.archivedProjects,
-                        isActive:
-                            widget.currentPath == AppRoutes.archivedProjects,
-                      ),
-                      _buildNavItem(
-                        context: context,
-                        icon: Icons.verified_outlined,
-                        activeIcon: Icons.verified,
-                        label: 'المكتملة',
-                        path: AppRoutes.completedProjects,
-                        isActive:
-                            widget.currentPath == AppRoutes.completedProjects,
-                      ),
+                      // _buildNavItem(
+                      //   context: context,
+                      //   icon: Icons.archive_outlined,
+                      //   activeIcon: Icons.archive,
+                      //   label: 'الأرشيف',
+                      //   path: AppRoutes.archivedProjects,
+                      //   isActive:
+                      //       widget.currentPath == AppRoutes.archivedProjects,
+                      // ),
+                      // _buildNavItem(
+                      //   context: context,
+                      //   icon: Icons.verified_outlined,
+                      //   activeIcon: Icons.verified,
+                      //   label: 'المكتملة',
+                      //   path: AppRoutes.completedProjects,
+                      //   isActive:
+                      //       widget.currentPath == AppRoutes.completedProjects,
+                      // ),
                     ],
                   ],
                 );
@@ -489,15 +499,15 @@ class _SidebarState extends State<_Sidebar> {
                       isActive:
                           widget.currentPath == AppRoutes.archivedProjects,
                     ),
-                    _buildNavItem(
-                      context: context,
-                      icon: Icons.verified_outlined,
-                      activeIcon: Icons.verified,
-                      label: 'المكتملة',
-                      path: AppRoutes.completedProjects,
-                      isActive:
-                          widget.currentPath == AppRoutes.completedProjects,
-                    ),
+                    // _buildNavItem(
+                    //   context: context,
+                    //   icon: Icons.verified_outlined,
+                    //   activeIcon: Icons.verified,
+                    //   label: 'المكتملة',
+                    //   path: AppRoutes.completedProjects,
+                    //   isActive:
+                    //       widget.currentPath == AppRoutes.completedProjects,
+                    // ),
                     _buildNavItem(
                       context: context,
                       icon: Icons.bar_chart_outlined,

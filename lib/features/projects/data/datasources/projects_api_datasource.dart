@@ -168,6 +168,25 @@ class ProjectsApiDataSource {
     );
   }
 
+  Future<Map<String, dynamic>> replaceProjectAttachment(
+    String projectId,
+    String attachmentId, {
+    required List<int> fileBytes,
+    required String fileName,
+  }) async {
+    final formData = FormData.fromMap({
+      'file': MultipartFile.fromBytes(fileBytes, filename: fileName),
+    });
+
+    final response = await _apiClient.put(
+      ApiEndpoints.replaceProjectAttachment(projectId, attachmentId),
+      data: formData,
+    );
+
+    final responseData = response.data as Map<String, dynamic>;
+    return responseData['data'] as Map<String, dynamic>;
+  }
+
   /// Map frontend ProjectStatus to backend ProjectStatus enum value
   String _mapStatusToBackend(ProjectStatus status) {
     // Use the extension method to convert to API string format

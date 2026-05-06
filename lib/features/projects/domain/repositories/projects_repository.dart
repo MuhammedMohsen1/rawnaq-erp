@@ -51,6 +51,13 @@ abstract class ProjectsRepository {
     List<MapEntry<String, List<int>>>? fileBytes,
   });
 
+  Future<Either<Failure, ProjectAttachmentEntity>> replaceProjectAttachment(
+    String projectId,
+    String attachmentId, {
+    required List<int> fileBytes,
+    required String fileName,
+  });
+
   Future<Either<Failure, void>> deleteProjectAttachment(
     String projectId,
     String attachmentId,

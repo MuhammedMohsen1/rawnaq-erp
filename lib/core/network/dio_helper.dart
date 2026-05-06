@@ -71,7 +71,7 @@ class DioHelper {
 
   static Future<Response> putData({
     required String url,
-    Map<String, dynamic>? data,
+    dynamic data,
     Map<String, dynamic>? queryParameters,
     Options? options,
   }) async {
@@ -151,7 +151,9 @@ class _AuthInterceptor extends Interceptor {
     if (err.response?.statusCode == 401) {
       // Check if the error is from a login or refresh request
       final isLoginRequest = err.requestOptions.path.contains('/login');
-      final isRefreshRequest = err.requestOptions.path.contains('/auth/refresh');
+      final isRefreshRequest = err.requestOptions.path.contains(
+        '/auth/refresh',
+      );
 
       if (isLoginRequest || isRefreshRequest) {
         // Don't try to refresh on login/refresh endpoints
@@ -171,10 +173,7 @@ class _AuthInterceptor extends Interceptor {
           // Attempt to refresh the token
           final refreshResponse = await DioHelper.dio.post(
             '/auth/refresh',
-            data: {
-              'refreshToken': refreshToken,
-              'sessionId': sessionId,
-            },
+            data: {'refreshToken': refreshToken, 'sessionId': sessionId},
           );
 
           if (refreshResponse.statusCode == 200) {
@@ -254,7 +253,9 @@ class _LoggingInterceptor extends Interceptor {
   @override
   void onResponse(Response response, ResponseInterceptorHandler handler) {
     if (kDebugMode) {
-      print('✅ [RESPONSE] ${response.statusCode} ${response.requestOptions.uri}');
+      print(
+        '✅ [RESPONSE] ${response.statusCode} ${response.requestOptions.uri}',
+      );
     }
     handler.next(response);
   }
@@ -302,7 +303,7 @@ class _ErrorInterceptor extends Interceptor {
           }
         }
       }
-      
+
       if (errorCode != null) {
         errorMessage = ResponseCodeTranslator.translate(errorCode);
       }

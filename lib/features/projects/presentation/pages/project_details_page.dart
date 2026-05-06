@@ -128,6 +128,10 @@ class _LoadedContent extends StatelessWidget {
           onDelete: state.project.archived
               ? (_) {}
               : (attachment) => _confirmDeleteAttachment(context, attachment),
+          onReplacePdf: state.project.archived
+              ? _noopReplacePdf
+              : (attachment, bytes) =>
+                    _replacePdfAttachment(context, attachment, bytes),
         ),
         const SizedBox(height: 24),
 
@@ -243,6 +247,26 @@ class _LoadedContent extends StatelessWidget {
     }
   }
 
+  Future<void> _replacePdfAttachment(
+    BuildContext context,
+    ProjectAttachmentEntity attachment,
+    List<int> bytes,
+  ) async {
+    await context.read<ProjectFinancialCubit>().replaceAttachment(
+      attachment.id,
+      fileBytes: bytes,
+      fileName: attachment.originalName.endsWith('.pdf')
+          ? attachment.originalName
+          : '${attachment.originalName}.pdf',
+    );
+
+    if (!context.mounted) return;
+    final state = context.read<ProjectFinancialCubit>().state;
+    if (state is ProjectFinancialError) {
+      throw Exception(state.message);
+    }
+  }
+
   void _addNewExpense(BuildContext context) {
     final cubit = context.read<ProjectFinancialCubit>();
     final newTransaction = TransactionModel(
@@ -321,3 +345,5 @@ class _NotFoundView extends StatelessWidget {
     );
   }
 }
+
+Future<void> _noopReplacePdf(_, __) async {}

@@ -8,6 +8,7 @@ import '../../features/auth/domain/usecases/auth_usecases.dart';
 import '../../features/auth/presentation/bloc/auth_bloc.dart';
 import '../../features/projects/domain/repositories/projects_repository.dart';
 import '../../features/projects/data/repositories/projects_repository_impl.dart';
+import '../../features/projects/data/datasources/projects_api_datasource.dart';
 import '../../features/projects/presentation/bloc/projects_bloc.dart';
 import '../../features/projects/presentation/cubit/project_attachments_cubit.dart';
 import '../../features/projects/presentation/cubit/project_financial_cubit.dart';
@@ -56,7 +57,8 @@ Future<void> setupDI() async {
     ),
   );
 
-  // Projects Repository
+  // Projects Data Sources / Repository
+  getIt.registerLazySingleton(() => ProjectsApiDataSource());
   getIt.registerLazySingleton<ProjectsRepository>(
     () => ProjectsRepositoryImpl(),
   );
@@ -97,7 +99,10 @@ Future<void> setupDI() async {
   getIt.registerLazySingleton(() => ExecutionApiDataSource());
 
   // Execution Cubit
-  getIt.registerFactory(() => ExecutionCubit(apiDataSource: getIt()));
+  getIt.registerFactory(
+    () =>
+        ExecutionCubit(apiDataSource: getIt(), projectsApiDataSource: getIt()),
+  );
 }
 
 Future<void> resetDI() async {
