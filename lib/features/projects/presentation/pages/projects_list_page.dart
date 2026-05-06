@@ -260,7 +260,7 @@ class _ProjectsListPageState extends State<ProjectsListPage> {
       builder: (context, constraints) {
         final isCompact = constraints.maxWidth < 680;
         final maxExtent = isCompact ? constraints.maxWidth : 390.0;
-        final cardHeight = isCompact ? 226.0 : 218.0;
+        final cardHeight = isCompact ? 226.0 : 190.0;
 
         return PagingListener<int, ProjectEntity>(
           controller: _pagingController,
@@ -457,7 +457,7 @@ class _ProjectsListPageState extends State<ProjectsListPage> {
     return projects
         .map(
           (project) =>
-              '${project.id}:${project.name}:${project.status.name}:${project.archived}:${project.clientName ?? ''}:${project.clientContacts.length}:${project.googleMapLink ?? ''}:${project.lastEditAt?.toIso8601String() ?? ''}:${project.teamMembers?.length ?? 0}',
+              '${project.id}:${project.name}:${project.status.name}:${project.archived}:${project.clientName ?? ''}:${project.clientContacts.length}:${project.googleMapLink ?? ''}:${project.startDate.toIso8601String()}:${project.endDate.toIso8601String()}:${project.hasEndDate}:${project.totalCost}:${project.totalReceived}:${project.lastEditAt?.toIso8601String() ?? ''}:${project.teamMembers?.length ?? 0}',
         )
         .join('|');
   }
@@ -794,9 +794,13 @@ class _ProjectCardState extends State<_ProjectCard> {
   Widget build(BuildContext context) {
     final meta = _metaOf(widget.project.status, widget.project.lastEditAt);
     final action = _resolveAction(widget.project);
-    // Assuming progress is a double between 0.0 and 1.0
-    final double progress = 0.5;
-    // final double progress = widget.project.progress ?? 0.0;
+    final dateProgress = _dateProgress(widget.project);
+    final receivedProgress = widget.project.totalCost > 0
+        ? (widget.project.totalReceived / widget.project.totalCost).clamp(
+            0.0,
+            1.0,
+          )
+        : null;
 
     return MouseRegion(
       cursor: SystemMouseCursors.click,
@@ -887,34 +891,36 @@ class _ProjectCardState extends State<_ProjectCard> {
                             }, // Placeholder, will be overridden in ProjectContactActions
                           ),
 
-                          const SizedBox(height: 8),
-
+                          const Spacer(),
                           // Progress Section
                           _ProgressSection(
-                            progress: progress,
+                            dateProgress: dateProgress,
+                            receivedProgress: receivedProgress,
                             accentColor: meta.accent,
+                            dateInDays: widget.project.deliveryInDays,
+                            restInCash: widget.project.restInCash,
                           ),
 
-                          const Spacer(),
-                          Divider(
-                            height: 24,
-                            color: AppColors.border.withOpacity(0.5),
-                          ),
+                          const SizedBox(height: 8),
+                          // Divider(
+                          //   height: 24,
+                          //   color: AppColors.border.withOpacity(0.5),
+                          // ),
 
-                          Row(
-                            children: [
-                              Expanded(
-                                child: Text(
-                                  meta.description,
-                                  style: AppTextStyles.bodySmall.copyWith(
-                                    color: AppColors.textMuted,
-                                    fontSize: 11,
-                                  ),
-                                ),
-                              ),
-                              _ActionHint(action: action, color: meta.accent),
-                            ],
-                          ),
+                          // Row(
+                          //   children: [
+                          //     Expanded(
+                          //       child: Text(
+                          //         meta.description,
+                          //         style: AppTextStyles.bodySmall.copyWith(
+                          //           color: AppColors.textMuted,
+                          //           fontSize: 11,
+                          //         ),
+                          //       ),
+                          //     ),
+                          //     _ActionHint(action: action, color: meta.accent),
+                          //   ],
+                          // ),
                         ],
                       ),
                     ),
@@ -943,6 +949,29 @@ String _resolveAction(ProjectEntity project) {
   }
 
   return 'عرض التفاصيل';
+}
+
+double? _dateProgress(ProjectEntity project) {
+  if (!project.hasEndDate) return null;
+
+  final start = DateTime(
+    project.startDate.year,
+    project.startDate.month,
+    project.startDate.day,
+  );
+  final end = DateTime(
+    project.endDate.year,
+    project.endDate.month,
+    project.endDate.day,
+  );
+  if (end.isBefore(start)) return null;
+
+  final now = DateTime.now();
+  final today = DateTime(now.year, now.month, now.day);
+  final totalDays = math.max(1, end.difference(start).inDays);
+  final elapsedDays = today.difference(start).inDays.clamp(0, totalDays);
+
+  return elapsedDays / totalDays;
 }
 
 class _InteractiveContactRow extends StatelessWidget {
@@ -1001,29 +1030,55 @@ class _InteractiveContactRow extends StatelessWidget {
 }
 
 class _ProgressSection extends StatelessWidget {
-  final double progress;
+  final double? dateProgress;
+  final double? receivedProgress;
+  final int? dateInDays;
+  final double? restInCash;
   final Color accentColor;
 
-  const _ProgressSection({required this.progress, required this.accentColor});
+  const _ProgressSection({
+    required this.dateProgress,
+    required this.receivedProgress,
+    required this.dateInDays,
+    required this.restInCash,
+    required this.accentColor,
+  });
 
   @override
   Widget build(BuildContext context) {
+    if (dateProgress == null && receivedProgress == null) {
+      return const SizedBox.shrink();
+    }
+
+    final safeDateProgress = dateProgress?.clamp(0.0, 1.0).toDouble();
+    final safeReceivedProgress = receivedProgress?.clamp(0.0, 1.0).toDouble();
+
     return Column(
       children: [
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text(
-              "الإنجاز",
-              style: AppTextStyles.bodySmall.copyWith(
-                color: AppColors.textMuted,
-                fontSize: 10,
-              ),
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (safeDateProgress != null)
+                  _ProgressLegend(label: 'الأيام', color: AppColors.secondary),
+                if (safeDateProgress != null && safeReceivedProgress != null)
+                  const SizedBox(width: 10),
+                if (safeReceivedProgress != null)
+                  const _ProgressLegend(
+                    label: 'التحصيل',
+                    color: Color(0xFF22C55E),
+                  ),
+              ],
             ),
             Text(
-              "${(progress * 100).toInt()}%",
+              [
+                if (safeDateProgress != null) '$dateInDays يوم',
+                if (safeReceivedProgress != null) 'باقي $restInCash\$',
+              ].join('  |  '),
               style: AppTextStyles.bodySmall.copyWith(
-                color: accentColor,
+                color: AppColors.textMuted,
                 fontWeight: FontWeight.bold,
                 fontSize: 10,
               ),
@@ -1031,18 +1086,124 @@ class _ProgressSection extends StatelessWidget {
           ],
         ),
         const SizedBox(height: 6),
-        ClipRRect(
-          borderRadius: BorderRadius.circular(10),
-          child: LinearProgressIndicator(
-            value: progress,
-            minHeight: 6,
-            backgroundColor: AppColors.border.withOpacity(0.4),
-            valueColor: AlwaysStoppedAnimation<Color>(accentColor),
+        _DualProgressTrack(
+          dateProgress: safeDateProgress,
+          receivedProgress: safeReceivedProgress,
+          dateColor: accentColor,
+        ),
+      ],
+    );
+  }
+}
+
+class _ProgressLegend extends StatelessWidget {
+  final String label;
+  final Color color;
+
+  const _ProgressLegend({required this.label, required this.color});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          width: 7,
+          height: 7,
+          decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+        ),
+        const SizedBox(width: 4),
+        Text(
+          label,
+          style: AppTextStyles.bodySmall.copyWith(
+            color: AppColors.textMuted,
+            fontSize: 10,
           ),
         ),
       ],
     );
   }
+}
+
+class _DualProgressTrack extends StatelessWidget {
+  final double? dateProgress;
+  final double? receivedProgress;
+  final Color dateColor;
+
+  const _DualProgressTrack({
+    required this.dateProgress,
+    required this.receivedProgress,
+    required this.dateColor,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final segments =
+        [
+            if (dateProgress != null)
+              _ProgressSegment(
+                progress: dateProgress!,
+                color: AppColors.secondary,
+              ),
+            if (receivedProgress != null)
+              const _ProgressSegment(
+                progress: null,
+                color: Color(0xFF22C55E),
+                usesReceivedProgress: true,
+              ),
+          ].map((segment) {
+            if (segment.usesReceivedProgress) {
+              return _ProgressSegment(
+                progress: receivedProgress!,
+                color: segment.color,
+              );
+            }
+            return segment;
+          }).toList()
+          ..sort((a, b) => b.progress.compareTo(a.progress));
+
+    return Container(
+      height: 8,
+      clipBehavior: Clip.antiAlias,
+      decoration: BoxDecoration(
+        color: AppColors.border.withOpacity(0.4),
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Stack(
+        children: [
+          for (var index = 0; index < segments.length; index++)
+            Align(
+              alignment: AlignmentDirectional.centerStart,
+              child: FractionallySizedBox(
+                widthFactor: segments[index].progress,
+                heightFactor: 1,
+                alignment: AlignmentDirectional.centerStart,
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    color: index == 0 && segments.length > 1
+                        ? segments[index].color.withOpacity(0.38)
+                        : segments[index].color,
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ProgressSegment {
+  final double progress;
+  final Color color;
+  final bool usesReceivedProgress;
+
+  const _ProgressSegment({
+    required double? progress,
+    required this.color,
+    this.usesReceivedProgress = false,
+  }) : progress = progress ?? 0;
 }
 
 class _CardBaseGradient extends StatelessWidget {

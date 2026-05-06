@@ -30,6 +30,9 @@ class ProjectModel extends ProjectEntity {
     required super.progress,
     required super.startDate,
     required super.endDate,
+    super.hasEndDate,
+    super.totalCost,
+    super.totalReceived,
     super.managerId,
     super.manager,
     super.teamMemberIds,
@@ -62,6 +65,7 @@ class ProjectModel extends ProjectEntity {
     }
 
     DateTime? endDate;
+    final hasEndDate = json['endDate'] != null || json['deadline'] != null;
     if (json['endDate'] != null) {
       endDate = DateTime.parse(json['endDate'] as String);
     } else if (json['deadline'] != null) {
@@ -91,6 +95,9 @@ class ProjectModel extends ProjectEntity {
       progress: (json['progress'] as int?) ?? 0,
       startDate: startDate,
       endDate: endDate,
+      hasEndDate: hasEndDate,
+      totalCost: _toDouble(json['totalCost']),
+      totalReceived: _toDouble(json['totalReceived']),
       managerId:
           json['createdById']
               as String?, // Use createdById as managerId for now
@@ -126,6 +133,9 @@ class ProjectModel extends ProjectEntity {
       'progress': progress,
       'startDate': startDate.toIso8601String(),
       'endDate': endDate.toIso8601String(),
+      'hasEndDate': hasEndDate,
+      'totalCost': totalCost,
+      'totalReceived': totalReceived,
       'managerId': managerId,
       'manager': manager != null
           ? TeamMemberModel.fromEntity(manager!).toJson()
@@ -157,6 +167,9 @@ class ProjectModel extends ProjectEntity {
       progress: entity.progress,
       startDate: entity.startDate,
       endDate: entity.endDate,
+      hasEndDate: entity.hasEndDate,
+      totalCost: entity.totalCost,
+      totalReceived: entity.totalReceived,
       managerId: entity.managerId,
       manager: entity.manager,
       teamMemberIds: entity.teamMemberIds,
@@ -183,6 +196,9 @@ class ProjectModel extends ProjectEntity {
       progress: progress,
       startDate: startDate,
       endDate: endDate,
+      hasEndDate: hasEndDate,
+      totalCost: totalCost,
+      totalReceived: totalReceived,
       managerId: managerId,
       manager: manager,
       teamMemberIds: teamMemberIds,
@@ -199,4 +215,10 @@ class ProjectModel extends ProjectEntity {
       archived: archived,
     );
   }
+}
+
+double _toDouble(dynamic value) {
+  if (value is num) return value.toDouble();
+  if (value is String) return double.tryParse(value) ?? 0;
+  return 0;
 }

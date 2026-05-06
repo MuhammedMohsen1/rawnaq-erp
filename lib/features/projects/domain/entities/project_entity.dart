@@ -20,6 +20,9 @@ class ProjectEntity extends Equatable {
   final int progress; // 0-100
   final DateTime startDate;
   final DateTime endDate;
+  final bool hasEndDate;
+  final double totalCost;
+  final double totalReceived;
   final String? managerId;
   final TeamMemberEntity? manager;
   final List<String> teamMemberIds;
@@ -42,6 +45,9 @@ class ProjectEntity extends Equatable {
     required this.progress,
     required this.startDate,
     required this.endDate,
+    this.hasEndDate = true,
+    this.totalCost = 0,
+    this.totalReceived = 0,
     this.managerId,
     this.manager,
     this.teamMemberIds = const [],
@@ -57,7 +63,9 @@ class ProjectEntity extends Equatable {
     this.itemsCount,
     this.archived = false,
   });
-
+  get deliveryInDays =>
+      hasEndDate ? endDate.difference(DateTime.now()).inDays : null;
+  get restInCash => totalCost - totalReceived;
   @override
   List<Object?> get props => [
     id,
@@ -66,6 +74,9 @@ class ProjectEntity extends Equatable {
     progress,
     startDate,
     endDate,
+    hasEndDate,
+    totalCost,
+    totalReceived,
     managerId,
     manager,
     teamMemberIds,
@@ -90,6 +101,9 @@ class ProjectEntity extends Equatable {
     int? progress,
     DateTime? startDate,
     DateTime? endDate,
+    bool? hasEndDate,
+    double? totalCost,
+    double? totalReceived,
     String? managerId,
     TeamMemberEntity? manager,
     List<String>? teamMemberIds,
@@ -112,6 +126,9 @@ class ProjectEntity extends Equatable {
       progress: progress ?? this.progress,
       startDate: startDate ?? this.startDate,
       endDate: endDate ?? this.endDate,
+      hasEndDate: hasEndDate ?? this.hasEndDate,
+      totalCost: totalCost ?? this.totalCost,
+      totalReceived: totalReceived ?? this.totalReceived,
       managerId: managerId ?? this.managerId,
       manager: manager ?? this.manager,
       teamMemberIds: teamMemberIds ?? this.teamMemberIds,
