@@ -8,6 +8,7 @@ import '../../../../features/contracts/data/datasources/contracts_api_datasource
 import '../../../../features/projects/data/datasources/projects_api_datasource.dart';
 import '../../../../core/error/exceptions.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/widgets/dialog_keyboard_actions.dart';
 
 class ContractExportDialog extends StatefulWidget {
   final String projectId;
@@ -410,133 +411,141 @@ class _ContractExportDialogState extends State<ContractExportDialog> {
 
   @override
   Widget build(BuildContext context) {
-    return Dialog(
-      child: Container(
-        width: 700,
-        height: 700,
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Title
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Text(
-                  'تصدير عقد PDF',
-                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                ),
-                IconButton(
-                  icon: const Icon(Icons.close),
-                  onPressed: _isExporting
-                      ? null
-                      : () => Navigator.of(context).pop(),
-                ),
-              ],
-            ),
-            const SizedBox(height: 24),
-
-            // Stepper
-            Expanded(
-              child: Stepper(
-                currentStep: _currentStep,
-                onStepContinue: _currentStep < 3 ? _goToNextStep : null,
-                onStepCancel: _currentStep > 0 ? _goToPreviousStep : null,
-                controlsBuilder: (context, details) {
-                  return const SizedBox.shrink();
-                },
-                steps: [
-                  // Step 1: Civil ID
-                  Step(
-                    title: const Text('الرقم المدني للعميل'),
-                    content: _buildStep1Content(),
-                    isActive: _currentStep >= 0,
-                    state: _currentStep > 0
-                        ? StepState.complete
-                        : StepState.indexed,
+    return DialogKeyboardActions(
+      enabled: !_isExporting,
+      onSubmit: _currentStep < 3 ? _goToNextStep : _exportPdf,
+      onClose: () => Navigator.of(context).pop(),
+      child: Dialog(
+        child: Container(
+          width: 700,
+          height: 700,
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Title
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text(
+                    'تصدير عقد PDF',
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                   ),
-                  // Step 2: Terms Approval
-                  Step(
-                    title: const Text('الموافقة على البنود'),
-                    content: _buildStep2Content(),
-                    isActive: _currentStep >= 1,
-                    state: _currentStep > 1
-                        ? StepState.complete
-                        : StepState.indexed,
-                  ),
-                  // Step 3: Payment Schedule
-                  Step(
-                    title: const Text('جدول الدفعات'),
-                    content: _buildStep3Content(),
-                    isActive: _currentStep >= 2,
-                    state: _currentStep > 2
-                        ? StepState.complete
-                        : StepState.indexed,
-                  ),
-                  // Step 4: Export
-                  Step(
-                    title: const Text('تصدير PDF'),
-                    content: _buildStep4Content(),
-                    isActive: _currentStep >= 3,
-                    state: StepState.complete,
+                  IconButton(
+                    icon: const Icon(Icons.close),
+                    onPressed: _isExporting
+                        ? null
+                        : () => Navigator.of(context).pop(),
                   ),
                 ],
               ),
-            ),
+              const SizedBox(height: 24),
 
-            // Error message
-            if (_errorMessage != null) ...[
-              const SizedBox(height: 8),
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: Colors.red[50],
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: Colors.red[300]!),
-                ),
-                child: Row(
-                  children: [
-                    Icon(Icons.error_outline, color: Colors.red[700]),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        _errorMessage!,
-                        style: TextStyle(color: Colors.red[700], fontSize: 12),
-                      ),
+              // Stepper
+              Expanded(
+                child: Stepper(
+                  currentStep: _currentStep,
+                  onStepContinue: _currentStep < 3 ? _goToNextStep : null,
+                  onStepCancel: _currentStep > 0 ? _goToPreviousStep : null,
+                  controlsBuilder: (context, details) {
+                    return const SizedBox.shrink();
+                  },
+                  steps: [
+                    // Step 1: Civil ID
+                    Step(
+                      title: const Text('الرقم المدني للعميل'),
+                      content: _buildStep1Content(),
+                      isActive: _currentStep >= 0,
+                      state: _currentStep > 0
+                          ? StepState.complete
+                          : StepState.indexed,
+                    ),
+                    // Step 2: Terms Approval
+                    Step(
+                      title: const Text('الموافقة على البنود'),
+                      content: _buildStep2Content(),
+                      isActive: _currentStep >= 1,
+                      state: _currentStep > 1
+                          ? StepState.complete
+                          : StepState.indexed,
+                    ),
+                    // Step 3: Payment Schedule
+                    Step(
+                      title: const Text('جدول الدفعات'),
+                      content: _buildStep3Content(),
+                      isActive: _currentStep >= 2,
+                      state: _currentStep > 2
+                          ? StepState.complete
+                          : StepState.indexed,
+                    ),
+                    // Step 4: Export
+                    Step(
+                      title: const Text('تصدير PDF'),
+                      content: _buildStep4Content(),
+                      isActive: _currentStep >= 3,
+                      state: StepState.complete,
                     ),
                   ],
                 ),
               ),
-            ],
 
-            // Action buttons
-            const SizedBox(height: 16),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                TextButton(
-                  onPressed: _isExporting
-                      ? null
-                      : () => Navigator.of(context).pop(),
-                  child: const Text('إلغاء'),
+              // Error message
+              if (_errorMessage != null) ...[
+                const SizedBox(height: 8),
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.red[50],
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: Colors.red[300]!),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(Icons.error_outline, color: Colors.red[700]),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          _errorMessage!,
+                          style: TextStyle(
+                            color: Colors.red[700],
+                            fontSize: 12,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-                if (_currentStep > 0) ...[
-                  const SizedBox(width: 8),
-                  TextButton(
-                    onPressed: _isExporting ? null : _goToPreviousStep,
-                    child: const Text('السابق'),
-                  ),
-                ],
-                if (_currentStep < 3) ...[
-                  const SizedBox(width: 8),
-                  ElevatedButton(
-                    onPressed: _isExporting ? null : _goToNextStep,
-                    child: const Text('التالي'),
-                  ),
-                ],
               ],
-            ),
-          ],
+
+              // Action buttons
+              const SizedBox(height: 16),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  TextButton(
+                    onPressed: _isExporting
+                        ? null
+                        : () => Navigator.of(context).pop(),
+                    child: const Text('إلغاء'),
+                  ),
+                  if (_currentStep > 0) ...[
+                    const SizedBox(width: 8),
+                    TextButton(
+                      onPressed: _isExporting ? null : _goToPreviousStep,
+                      child: const Text('السابق'),
+                    ),
+                  ],
+                  if (_currentStep < 3) ...[
+                    const SizedBox(width: 8),
+                    ElevatedButton(
+                      onPressed: _isExporting ? null : _goToNextStep,
+                      child: const Text('التالي'),
+                    ),
+                  ],
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );

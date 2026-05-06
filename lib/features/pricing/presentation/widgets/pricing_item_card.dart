@@ -11,6 +11,7 @@ import 'package:pasteboard/pasteboard.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_text_styles.dart';
 import '../../../../core/utils/arabic_number_input_formatter.dart';
+import '../../../../core/widgets/dialog_keyboard_actions.dart';
 import '../../data/datasources/pricing_api_datasource.dart';
 import '../../data/models/pricing_version_model.dart';
 import '../../domain/entities/pricing_item.dart';
@@ -1550,62 +1551,72 @@ class _PricingItemCardState extends State<PricingItemCard> {
 
     final result = await showDialog<Map<String, String>>(
       context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: const Color(0xFF1C212B),
-        title: Text(
-          'تعديل العنصر',
-          style: AppTextStyles.h4.copyWith(color: AppColors.textPrimary),
-        ),
-        content: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                controller: nameController,
-                autofocus: true,
-                style: const TextStyle(color: AppColors.textPrimary),
-                decoration: InputDecoration(
-                  labelText: 'اسم العنصر',
-                  labelStyle: const TextStyle(color: AppColors.textSecondary),
-                  enabledBorder: OutlineInputBorder(
-                    borderSide: const BorderSide(color: Color(0xFF363C4A)),
-                    borderRadius: BorderRadius.circular(8),
+      builder: (context) {
+        void submit() {
+          if (nameController.text.trim().isNotEmpty) {
+            Navigator.pop(context, {'name': nameController.text.trim()});
+          }
+        }
+
+        return DialogKeyboardActions(
+          onSubmit: submit,
+          onClose: () => Navigator.pop(context),
+          child: AlertDialog(
+            backgroundColor: const Color(0xFF1C212B),
+            title: Text(
+              'تعديل العنصر',
+              style: AppTextStyles.h4.copyWith(color: AppColors.textPrimary),
+            ),
+            content: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  TextField(
+                    controller: nameController,
+                    autofocus: true,
+                    style: const TextStyle(color: AppColors.textPrimary),
+                    decoration: InputDecoration(
+                      labelText: 'اسم العنصر',
+                      labelStyle: const TextStyle(
+                        color: AppColors.textSecondary,
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderSide: const BorderSide(color: Color(0xFF363C4A)),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderSide: const BorderSide(color: AppColors.primary),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
                   ),
-                  focusedBorder: OutlineInputBorder(
-                    borderSide: const BorderSide(color: AppColors.primary),
-                    borderRadius: BorderRadius.circular(8),
+                ],
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: Text(
+                  'إلغاء',
+                  style: AppTextStyles.bodyMedium.copyWith(
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+              ),
+              TextButton(
+                onPressed: submit,
+                child: Text(
+                  'حفظ',
+                  style: AppTextStyles.bodyMedium.copyWith(
+                    color: AppColors.primary,
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
               ),
             ],
           ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text(
-              'إلغاء',
-              style: AppTextStyles.bodyMedium.copyWith(
-                color: AppColors.textSecondary,
-              ),
-            ),
-          ),
-          TextButton(
-            onPressed: () {
-              if (nameController.text.trim().isNotEmpty) {
-                Navigator.pop(context, {'name': nameController.text.trim()});
-              }
-            },
-            child: Text(
-              'حفظ',
-              style: AppTextStyles.bodyMedium.copyWith(
-                color: AppColors.primary,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ),
-        ],
-      ),
+        );
+      },
     );
 
     if (result != null && result['name'] != null) {
@@ -1653,62 +1664,72 @@ class _PricingItemCardState extends State<PricingItemCard> {
 
     final result = await showDialog<Map<String, String>>(
       context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: const Color(0xFF1C212B),
-        title: Text(
-          'تعديل البند الفرعية',
-          style: AppTextStyles.h4.copyWith(color: AppColors.textPrimary),
-        ),
-        content: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                controller: nameController,
-                autofocus: true,
-                style: const TextStyle(color: AppColors.textPrimary),
-                decoration: InputDecoration(
-                  labelText: 'اسم البند الفرعية',
-                  labelStyle: const TextStyle(color: AppColors.textSecondary),
-                  enabledBorder: OutlineInputBorder(
-                    borderSide: const BorderSide(color: Color(0xFF363C4A)),
-                    borderRadius: BorderRadius.circular(8),
+      builder: (context) {
+        void submit() {
+          if (nameController.text.trim().isNotEmpty) {
+            Navigator.pop(context, {'name': nameController.text.trim()});
+          }
+        }
+
+        return DialogKeyboardActions(
+          onSubmit: submit,
+          onClose: () => Navigator.pop(context),
+          child: AlertDialog(
+            backgroundColor: const Color(0xFF1C212B),
+            title: Text(
+              'تعديل البند الفرعية',
+              style: AppTextStyles.h4.copyWith(color: AppColors.textPrimary),
+            ),
+            content: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  TextField(
+                    controller: nameController,
+                    autofocus: true,
+                    style: const TextStyle(color: AppColors.textPrimary),
+                    decoration: InputDecoration(
+                      labelText: 'اسم البند الفرعية',
+                      labelStyle: const TextStyle(
+                        color: AppColors.textSecondary,
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderSide: const BorderSide(color: Color(0xFF363C4A)),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderSide: const BorderSide(color: AppColors.primary),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
                   ),
-                  focusedBorder: OutlineInputBorder(
-                    borderSide: const BorderSide(color: AppColors.primary),
-                    borderRadius: BorderRadius.circular(8),
+                ],
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: Text(
+                  'إلغاء',
+                  style: AppTextStyles.bodyMedium.copyWith(
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+              ),
+              TextButton(
+                onPressed: submit,
+                child: Text(
+                  'حفظ',
+                  style: AppTextStyles.bodyMedium.copyWith(
+                    color: AppColors.primary,
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
               ),
             ],
           ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text(
-              'إلغاء',
-              style: AppTextStyles.bodyMedium.copyWith(
-                color: AppColors.textSecondary,
-              ),
-            ),
-          ),
-          TextButton(
-            onPressed: () {
-              if (nameController.text.trim().isNotEmpty) {
-                Navigator.pop(context, {'name': nameController.text.trim()});
-              }
-            },
-            child: Text(
-              'حفظ',
-              style: AppTextStyles.bodyMedium.copyWith(
-                color: AppColors.primary,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ),
-        ],
-      ),
+        );
+      },
     );
 
     if (result != null && result['name'] != null) {

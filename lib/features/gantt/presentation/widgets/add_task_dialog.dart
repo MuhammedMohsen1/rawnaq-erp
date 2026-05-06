@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_text_styles.dart';
+import '../../../../core/widgets/dialog_keyboard_actions.dart';
 import '../../../tasks/domain/enums/task_type.dart';
 import '../../../tasks/domain/enums/task_status.dart'
     show TaskStatus, TaskStatusExtension;
@@ -110,63 +111,67 @@ class _AddTaskDialogState extends State<AddTaskDialog>
 
   @override
   Widget build(BuildContext context) {
-    return Dialog(
-      backgroundColor: AppColors.cardBackground,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      child: Container(
-        width: 500,
-        constraints: const BoxConstraints(maxHeight: 650),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // Header
-            _buildHeader(),
+    return DialogKeyboardActions(
+      onSubmit: _submitForm,
+      onClose: () => Navigator.pop(context),
+      child: Dialog(
+        backgroundColor: AppColors.cardBackground,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        child: Container(
+          width: 500,
+          constraints: const BoxConstraints(maxHeight: 650),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Header
+              _buildHeader(),
 
-            // Task type tabs
-            _buildTaskTypeTabs(),
+              // Task type tabs
+              _buildTaskTypeTabs(),
 
-            // Form content
-            Flexible(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.all(24),
-                child: Form(
-                  key: _formKey,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Common fields
-                      _buildTaskNameField(),
-                      const SizedBox(height: 16),
-                      _buildAssigneeDropdown(),
-                      const SizedBox(height: 16),
-
-                      // Type-specific fields
-                      if (_currentTaskType == TaskType.workTask) ...[
-                        _buildProjectDropdown(),
-                        _buildTimePickerField(
-                          label: 'وقت المهمة',
-                          required: false,
-                        ),
+              // Form content
+              Flexible(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.all(24),
+                  child: Form(
+                    key: _formKey,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Common fields
+                        _buildTaskNameField(),
                         const SizedBox(height: 16),
-                      ],
-                      if (_currentTaskType == TaskType.appointment)
-                        _buildAppointmentFields(),
+                        _buildAssigneeDropdown(),
+                        const SizedBox(height: 16),
 
-                      const SizedBox(height: 16),
-                      _buildDateFields(),
-                      const SizedBox(height: 16),
-                      _buildStatusDropdown(),
-                      const SizedBox(height: 16),
-                      _buildNotesField(),
-                    ],
+                        // Type-specific fields
+                        if (_currentTaskType == TaskType.workTask) ...[
+                          _buildProjectDropdown(),
+                          _buildTimePickerField(
+                            label: 'وقت المهمة',
+                            required: false,
+                          ),
+                          const SizedBox(height: 16),
+                        ],
+                        if (_currentTaskType == TaskType.appointment)
+                          _buildAppointmentFields(),
+
+                        const SizedBox(height: 16),
+                        _buildDateFields(),
+                        const SizedBox(height: 16),
+                        _buildStatusDropdown(),
+                        const SizedBox(height: 16),
+                        _buildNotesField(),
+                      ],
+                    ),
                   ),
                 ),
               ),
-            ),
 
-            // Actions
-            _buildActions(),
-          ],
+              // Actions
+              _buildActions(),
+            ],
+          ),
         ),
       ),
     );

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../../../core/widgets/dialog_keyboard_actions.dart';
+
 /// Dialog for adding a new pricing item or sub-item
 class AddItemDialog extends StatelessWidget {
   final String title;
@@ -16,24 +18,31 @@ class AddItemDialog extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final nameController = TextEditingController();
+    void submit() {
+      final name = nameController.text.trim();
+      if (name.isNotEmpty) {
+        Navigator.pop(context, name);
+      }
+    }
 
-    return AlertDialog(
-      title: Text(title),
-      content: TextField(
-        controller: nameController,
-        decoration: InputDecoration(labelText: labelText, hintText: hintText),
-        autofocus: true,
+    return DialogKeyboardActions(
+      onSubmit: submit,
+      onClose: () => Navigator.pop(context),
+      child: AlertDialog(
+        title: Text(title),
+        content: TextField(
+          controller: nameController,
+          decoration: InputDecoration(labelText: labelText, hintText: hintText),
+          autofocus: true,
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('إلغاء'),
+          ),
+          TextButton(onPressed: submit, child: const Text('إضافة')),
+        ],
       ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: const Text('إلغاء'),
-        ),
-        TextButton(
-          onPressed: () => Navigator.pop(context, nameController.text),
-          child: const Text('إضافة'),
-        ),
-      ],
     );
   }
 

@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_text_styles.dart';
+import '../../../../core/widgets/dialog_keyboard_actions.dart';
 import '../../../projects/domain/entities/project_entity.dart';
 import '../../data/models/execution_models.dart';
 import '../../domain/enums/transaction_type.dart';
@@ -1145,12 +1146,17 @@ class _AddExpenseRowState extends State<_AddExpenseRow> {
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider.value(
-      value: widget.cubit,
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        color: AppColors.background.withValues(alpha: 0.05),
-        child: widget.isCompact ? _buildCompactForm() : _buildWideForm(),
+    return DialogKeyboardActions(
+      enabled: !_isSubmitting,
+      onSubmit: _submitExpense,
+      onClose: widget.onCancel,
+      child: BlocProvider.value(
+        value: widget.cubit,
+        child: Container(
+          padding: const EdgeInsets.all(16),
+          color: AppColors.background.withValues(alpha: 0.05),
+          child: widget.isCompact ? _buildCompactForm() : _buildWideForm(),
+        ),
       ),
     );
   }
@@ -1604,10 +1610,15 @@ class _EditableExpenseRowState extends State<_EditableExpenseRow> {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      color: AppColors.primary.withValues(alpha: 0.05),
-      child: widget.isCompact ? _buildCompactForm() : _buildWideForm(),
+    return DialogKeyboardActions(
+      enabled: !_isSubmitting,
+      onSubmit: _submitUpdate,
+      onClose: widget.onCancel,
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        color: AppColors.primary.withValues(alpha: 0.05),
+        child: widget.isCompact ? _buildCompactForm() : _buildWideForm(),
+      ),
     );
   }
 
@@ -2009,10 +2020,15 @@ class _EditableInstallmentRowState extends State<_EditableInstallmentRow> {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      color: AppColors.primary.withValues(alpha: 0.05),
-      child: widget.isCompact ? _buildCompactForm() : _buildWideForm(),
+    return DialogKeyboardActions(
+      enabled: !_isSubmitting,
+      onSubmit: _submitUpdate,
+      onClose: widget.onCancel,
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        color: AppColors.primary.withValues(alpha: 0.05),
+        child: widget.isCompact ? _buildCompactForm() : _buildWideForm(),
+      ),
     );
   }
 
@@ -2299,12 +2315,17 @@ class _AddIncomeRowState extends State<_AddIncomeRow> {
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider.value(
-      value: widget.cubit,
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        color: AppColors.background.withValues(alpha: 0.05),
-        child: widget.isCompact ? _buildCompactForm() : _buildWideForm(),
+    return DialogKeyboardActions(
+      enabled: !_isSubmitting,
+      onSubmit: _submitIncome,
+      onClose: widget.onCancel,
+      child: BlocProvider.value(
+        value: widget.cubit,
+        child: Container(
+          padding: const EdgeInsets.all(16),
+          color: AppColors.background.withValues(alpha: 0.05),
+          child: widget.isCompact ? _buildCompactForm() : _buildWideForm(),
+        ),
       ),
     );
   }

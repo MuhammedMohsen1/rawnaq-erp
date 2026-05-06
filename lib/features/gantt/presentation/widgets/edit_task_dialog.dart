@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_text_styles.dart';
+import '../../../../core/widgets/dialog_keyboard_actions.dart';
 import '../../../tasks/domain/entities/task_entity.dart';
 import '../../../tasks/domain/enums/task_status.dart';
 import '../../../tasks/domain/enums/task_type.dart';
@@ -49,65 +50,44 @@ class _EditTaskDialogState extends State<EditTaskDialog> {
   Widget build(BuildContext context) {
     final isAppointment = widget.task.taskType == TaskType.appointment;
 
-    return Dialog(
-      backgroundColor: AppColors.cardBackground,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      child: Container(
-        width: 480,
-        padding: const EdgeInsets.all(0),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            _buildHeader(),
-            Padding(
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Task info (read-only)
-                  _buildTaskInfo(),
-                  const SizedBox(height: 20),
+    return DialogKeyboardActions(
+      onSubmit: _saveChanges,
+      onClose: () => Navigator.pop(context),
+      child: Dialog(
+        backgroundColor: AppColors.cardBackground,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        child: Container(
+          width: 480,
+          padding: const EdgeInsets.all(0),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _buildHeader(),
+              Padding(
+                padding: const EdgeInsets.all(20),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Task info (read-only)
+                    _buildTaskInfo(),
+                    const SizedBox(height: 20),
 
-                  // Assignee dropdown
-                  _buildAssigneeDropdown(),
-                  const SizedBox(height: 16),
-
-                  // Status dropdown
-                  _buildStatusDropdown(),
-                  const SizedBox(height: 20),
-
-                  // Start Date & Time
-                  Text(
-                    isAppointment ? 'تاريخ ووقت الموعد' : 'تاريخ ووقت البداية',
-                    style: AppTextStyles.inputLabel.copyWith(fontWeight: FontWeight.w600),
-                  ),
-                  const SizedBox(height: 8),
-                  Row(
-                    children: [
-                      Expanded(
-                        flex: 3,
-                        child: _buildDateField(
-                          value: _startDate,
-                          onTap: () => _selectDate(true),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        flex: 2,
-                        child: _buildTimeField(
-                          value: _startTime,
-                          onTap: () => _selectTime(true),
-                        ),
-                      ),
-                    ],
-                  ),
-
-                  // End Date & Time (only for non-appointments)
-                  if (!isAppointment) ...[
+                    // Assignee dropdown
+                    _buildAssigneeDropdown(),
                     const SizedBox(height: 16),
+
+                    // Status dropdown
+                    _buildStatusDropdown(),
+                    const SizedBox(height: 20),
+
+                    // Start Date & Time
                     Text(
-                      'تاريخ ووقت النهاية',
-                      style: AppTextStyles.inputLabel.copyWith(fontWeight: FontWeight.w600),
+                      isAppointment
+                          ? 'تاريخ ووقت الموعد'
+                          : 'تاريخ ووقت البداية',
+                      style: AppTextStyles.inputLabel.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                     const SizedBox(height: 8),
                     Row(
@@ -115,26 +95,57 @@ class _EditTaskDialogState extends State<EditTaskDialog> {
                         Expanded(
                           flex: 3,
                           child: _buildDateField(
-                            value: _endDate,
-                            onTap: () => _selectDate(false),
+                            value: _startDate,
+                            onTap: () => _selectDate(true),
                           ),
                         ),
                         const SizedBox(width: 12),
                         Expanded(
                           flex: 2,
                           child: _buildTimeField(
-                            value: _endTime,
-                            onTap: () => _selectTime(false),
+                            value: _startTime,
+                            onTap: () => _selectTime(true),
                           ),
                         ),
                       ],
                     ),
+
+                    // End Date & Time (only for non-appointments)
+                    if (!isAppointment) ...[
+                      const SizedBox(height: 16),
+                      Text(
+                        'تاريخ ووقت النهاية',
+                        style: AppTextStyles.inputLabel.copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Row(
+                        children: [
+                          Expanded(
+                            flex: 3,
+                            child: _buildDateField(
+                              value: _endDate,
+                              onTap: () => _selectDate(false),
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            flex: 2,
+                            child: _buildTimeField(
+                              value: _endTime,
+                              onTap: () => _selectTime(false),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
                   ],
-                ],
+                ),
               ),
-            ),
-            _buildActions(),
-          ],
+              _buildActions(),
+            ],
+          ),
         ),
       ),
     );
@@ -166,10 +177,7 @@ class _EditTaskDialogState extends State<EditTaskDialog> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  'تعديل المهمة',
-                  style: AppTextStyles.h6,
-                ),
+                Text('تعديل المهمة', style: AppTextStyles.h6),
                 const SizedBox(height: 2),
                 Text(
                   widget.task.taskType.arabicName,
@@ -200,7 +208,9 @@ class _EditTaskDialogState extends State<EditTaskDialog> {
         children: [
           Text(
             widget.task.name,
-            style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.w600),
+            style: AppTextStyles.bodyMedium.copyWith(
+              fontWeight: FontWeight.w600,
+            ),
           ),
           if (widget.task.projectName != null) ...[
             const SizedBox(height: 6),
@@ -210,7 +220,9 @@ class _EditTaskDialogState extends State<EditTaskDialog> {
                 const SizedBox(width: 6),
                 Text(
                   widget.task.projectName!,
-                  style: AppTextStyles.caption.copyWith(color: AppColors.primary),
+                  style: AppTextStyles.caption.copyWith(
+                    color: AppColors.primary,
+                  ),
                 ),
               ],
             ),
@@ -219,12 +231,13 @@ class _EditTaskDialogState extends State<EditTaskDialog> {
             const SizedBox(height: 6),
             Row(
               children: [
-                Icon(Icons.person_outline, size: 14, color: AppColors.textMuted),
-                const SizedBox(width: 6),
-                Text(
-                  widget.task.customerName!,
-                  style: AppTextStyles.caption,
+                Icon(
+                  Icons.person_outline,
+                  size: 14,
+                  color: AppColors.textMuted,
                 ),
+                const SizedBox(width: 6),
+                Text(widget.task.customerName!, style: AppTextStyles.caption),
               ],
             ),
           ],
@@ -259,7 +272,9 @@ class _EditTaskDialogState extends State<EditTaskDialog> {
                     children: [
                       CircleAvatar(
                         radius: 12,
-                        backgroundColor: AppColors.primary.withValues(alpha: 0.2),
+                        backgroundColor: AppColors.primary.withValues(
+                          alpha: 0.2,
+                        ),
                         child: Text(
                           member.name.substring(0, 1),
                           style: TextStyle(
@@ -316,7 +331,10 @@ class _EditTaskDialogState extends State<EditTaskDialog> {
                         ),
                       ),
                       const SizedBox(width: 10),
-                      Text(status.arabicName, style: const TextStyle(fontSize: 13)),
+                      Text(
+                        status.arabicName,
+                        style: const TextStyle(fontSize: 13),
+                      ),
                     ],
                   ),
                 );

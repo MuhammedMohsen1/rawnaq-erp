@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_text_styles.dart';
+import '../../../../core/widgets/dialog_keyboard_actions.dart';
 import '../../../tasks/domain/enums/task_type.dart';
 import '../../../tasks/domain/enums/task_status.dart' show TaskStatus;
 import '../../../tasks/domain/entities/task_entity.dart';
@@ -86,47 +87,51 @@ class _AddTaskDialogSimpleState extends State<AddTaskDialogSimple>
 
   @override
   Widget build(BuildContext context) {
-    return Dialog(
-      backgroundColor: AppColors.cardBackground,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      child: Container(
-        width: 520,
-        constraints: const BoxConstraints(maxHeight: 650),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            _buildHeader(),
-            _buildTaskTypeTabs(),
-            Flexible(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.all(24),
-                child: Form(
-                  key: _formKey,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      _buildTaskNameField(),
-                      const SizedBox(height: 16),
-
-                      // Type-specific fields
-                      if (_currentTaskType == TaskType.workTask) ...[
-                        _buildProjectDropdown(),
+    return DialogKeyboardActions(
+      onSubmit: _submitForm,
+      onClose: () => Navigator.pop(context),
+      child: Dialog(
+        backgroundColor: AppColors.cardBackground,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        child: Container(
+          width: 520,
+          constraints: const BoxConstraints(maxHeight: 650),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _buildHeader(),
+              _buildTaskTypeTabs(),
+              Flexible(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.all(24),
+                  child: Form(
+                    key: _formKey,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _buildTaskNameField(),
                         const SizedBox(height: 16),
-                      ],
-                      if (_currentTaskType == TaskType.appointment)
-                        _buildAppointmentFields(),
 
-                      // Date and time fields
-                      _buildDateTimeFields(),
-                      const SizedBox(height: 16),
-                      _buildNotesField(),
-                    ],
+                        // Type-specific fields
+                        if (_currentTaskType == TaskType.workTask) ...[
+                          _buildProjectDropdown(),
+                          const SizedBox(height: 16),
+                        ],
+                        if (_currentTaskType == TaskType.appointment)
+                          _buildAppointmentFields(),
+
+                        // Date and time fields
+                        _buildDateTimeFields(),
+                        const SizedBox(height: 16),
+                        _buildNotesField(),
+                      ],
+                    ),
                   ),
                 ),
               ),
-            ),
-            _buildActions(),
-          ],
+              _buildActions(),
+            ],
+          ),
         ),
       ),
     );
