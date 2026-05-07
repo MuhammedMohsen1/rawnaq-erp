@@ -198,6 +198,26 @@ class _ProjectsListPageState extends State<ProjectsListPage> {
     }
   }
 
+  void _reloadCurrentList(BuildContext context) {
+    final state = context.read<ProjectsBloc>().state;
+    if (state is ProjectsLoaded) {
+      context.read<ProjectsBloc>().add(
+        LoadProjects(
+          status: state.statusFilter,
+          managerId: state.managerFilter,
+          teamMemberId: state.teamMemberFilter,
+          searchQuery: state.searchQuery,
+          archived: state.archived,
+          page: 1,
+          limit: state.pageSize,
+        ),
+      );
+      return;
+    }
+
+    context.read<ProjectsBloc>().add(const LoadProjects());
+  }
+
   Widget _buildBody(BuildContext context, ProjectsState state) {
     if (state is ProjectsLoading) {
       return const _CenteredLoader();
@@ -207,7 +227,7 @@ class _ProjectsListPageState extends State<ProjectsListPage> {
       return _ErrorState(
         message: state.message,
         onRetry: () {
-          context.read<ProjectsBloc>().add(const LoadProjects());
+          _reloadCurrentList(context);
           _pagingController.refresh();
         },
       );
@@ -269,7 +289,7 @@ class _ProjectsListPageState extends State<ProjectsListPage> {
               color: AppColors.secondary,
               backgroundColor: AppColors.cardBackground,
               onRefresh: () async {
-                context.read<ProjectsBloc>().add(const LoadProjects());
+                _reloadCurrentList(context);
                 _pagingController.refresh();
               },
               child: PagedGridView<int, ProjectEntity>(
@@ -475,21 +495,21 @@ class _ProjectsListPageState extends State<ProjectsListPage> {
   void _navigate(BuildContext context, ProjectEntity project) {
     if (project.status == ProjectStatus.underPricing ||
         project.status == ProjectStatus.pendingSignature) {
-      context.go(AppRoutes.pricing(project.id, readOnly: project.archived));
+      context.push(AppRoutes.pricing(project.id, readOnly: project.archived));
       return;
     }
 
     if (project.status == ProjectStatus.execution ||
         project.status == ProjectStatus.completed) {
       if (project.archived) {
-        context.go(AppRoutes.projectDetails(project.id));
+        context.push(AppRoutes.projectDetails(project.id));
       } else {
-        context.go(AppRoutes.execution(project.id));
+        context.push(AppRoutes.execution(project.id));
       }
       return;
     }
 
-    context.go(AppRoutes.projectDetails(project.id));
+    context.push(AppRoutes.projectDetails(project.id));
   }
 
   void _showCreateDialog(BuildContext context) {

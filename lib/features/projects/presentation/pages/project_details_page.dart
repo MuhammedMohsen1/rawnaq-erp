@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:file_picker/file_picker.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/di/injection_container.dart';
+import '../../../../core/layout/top_bar_title_controller.dart';
 import '../../../../core/utils/responsive_layout.dart';
 import '../../../auth/presentation/bloc/auth_bloc.dart';
 import '../../../financial/data/models/transaction_model.dart';
@@ -36,21 +37,41 @@ class ProjectDetailsPage extends StatelessWidget {
 }
 
 /// Internal content widget that has access to the Cubit
-class _ProjectDetailsContent extends StatelessWidget {
+class _ProjectDetailsContent extends StatefulWidget {
   final String projectId;
 
   const _ProjectDetailsContent({required this.projectId});
 
   @override
+  State<_ProjectDetailsContent> createState() => _ProjectDetailsContentState();
+}
+
+class _ProjectDetailsContentState extends State<_ProjectDetailsContent> {
+  @override
+  void dispose() {
+    TopBarTitleController.clearProjectDetailsTitle();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return BlocBuilder<ProjectFinancialCubit, ProjectFinancialState>(
-      builder: (context, state) {
-        return ResponsiveLayout(
-          mobile: _ProjectDetailsLayout(padding: 16),
-          tablet: _ProjectDetailsLayout(padding: 24),
-          desktop: _ProjectDetailsLayout(padding: 32),
-        );
+    return BlocListener<ProjectFinancialCubit, ProjectFinancialState>(
+      listener: (context, state) {
+        if (state is ProjectFinancialLoaded) {
+          TopBarTitleController.setProjectDetailsTitle(state.project.name);
+        } else {
+          TopBarTitleController.clearProjectDetailsTitle();
+        }
       },
+      child: BlocBuilder<ProjectFinancialCubit, ProjectFinancialState>(
+        builder: (context, state) {
+          return ResponsiveLayout(
+            mobile: _ProjectDetailsLayout(padding: 16),
+            tablet: _ProjectDetailsLayout(padding: 24),
+            desktop: _ProjectDetailsLayout(padding: 32),
+          );
+        },
+      ),
     );
   }
 }

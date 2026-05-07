@@ -406,9 +406,9 @@ class _SiteEngineerDashboardPageState extends State<SiteEngineerDashboardPage> {
                     onPressed: () {
                       // Route to execution page for projects in execution phase
                       if (project.status == ProjectStatus.execution) {
-                        context.go(AppRoutes.execution(project.id));
+                        context.push(AppRoutes.execution(project.id));
                       } else {
-                        context.go(AppRoutes.projectDetails(project.id));
+                        context.push(AppRoutes.projectDetails(project.id));
                       }
                     },
                     style: ElevatedButton.styleFrom(
@@ -561,7 +561,7 @@ class _SiteEngineerDashboardPageState extends State<SiteEngineerDashboardPage> {
 
     return InkWell(
       onTap: () {
-        context.go(AppRoutes.pricing(project.id));
+        context.push(AppRoutes.pricing(project.id));
       },
       borderRadius: BorderRadius.circular(12),
       child: Container(
@@ -732,7 +732,7 @@ class _SiteEngineerDashboardPageState extends State<SiteEngineerDashboardPage> {
               height: 44,
               child: ElevatedButton(
                 onPressed: () {
-                  context.go(AppRoutes.pricing(project.id));
+                  context.push(AppRoutes.pricing(project.id));
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.cardBackground,

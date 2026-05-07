@@ -6,9 +6,8 @@ import '../constants/app_text_styles.dart';
 import '../routing/app_router.dart';
 import '../widgets/bottom_nav_bar.dart';
 import '../widgets/top_bar.dart';
+import 'top_bar_title_controller.dart';
 import '../../features/auth/presentation/bloc/auth_bloc.dart';
-import '../../features/projects/presentation/bloc/projects_bloc.dart';
-import '../../features/projects/presentation/bloc/projects_state.dart';
 
 /// Main layout with responsive navigation
 /// - Desktop (>= 768px): Sidebar on the left
@@ -40,8 +39,28 @@ class MainLayout extends StatelessWidget {
                   child: Column(
                     mainAxisSize: MainAxisSize.max,
                     children: [
-                      TopBar(
-                        title: _getPageTitle(context, currentPath, routeState),
+                      ValueListenableBuilder<String?>(
+                        valueListenable:
+                            TopBarTitleController.projectDetailsTitle,
+                        builder: (context, projectDetailsTitle, _) {
+                          return ValueListenableBuilder<String?>(
+                            valueListenable: TopBarTitleController.pricingTitle,
+                            builder: (context, pricingTitle, _) {
+                              return TopBar(
+                                title: _getPageTitle(
+                                  currentPath,
+                                  routeState,
+                                  projectDetailsTitle,
+                                  pricingTitle,
+                                ),
+                                showBackButton: _shouldShowBackButton(
+                                  currentPath,
+                                ),
+                                onBackPressed: () => context.pop(),
+                              );
+                            },
+                          );
+                        },
                       ),
                       Expanded(
                         child: SizedBox(
@@ -75,9 +94,10 @@ class MainLayout extends StatelessWidget {
   }
 
   String _getPageTitle(
-    BuildContext context,
     String currentPath,
     GoRouterState routeState,
+    String? projectDetailsTitle,
+    String? pricingTitle,
   ) {
     if (currentPath == AppRoutes.dashboard) return 'نظرة عامة';
     if (currentPath == AppRoutes.projects) return 'المشاريع';
@@ -93,44 +113,25 @@ class MainLayout extends StatelessWidget {
     // Check if it's a project details page
     final projectId = routeState.pathParameters['projectId'];
     if (projectId != null && currentPath.startsWith('/projects/')) {
-      // Try to get project name from bloc
-      try {
-        final projectsState = context.read<ProjectsBloc>().state;
-        if (projectsState is ProjectsLoaded) {
-          final project = projectsState.projects.firstWhere(
-            (p) => p.id == projectId,
-            orElse: () => projectsState.projects.first,
-          );
-          if (project.id == projectId) {
-            return project.name;
-          }
-        }
-      } catch (e) {
-        // Fallback to generic title
-      }
-      return 'تفاصيل المشروع';
+      return projectDetailsTitle ?? 'تفاصيل المشروع';
     }
 
     // Check if it's a pricing page
     if (projectId != null && currentPath.startsWith('/pricing/')) {
-      try {
-        final projectsState = context.read<ProjectsBloc>().state;
-        if (projectsState is ProjectsLoaded) {
-          final project = projectsState.projects.firstWhere(
-            (p) => p.id == projectId,
-            orElse: () => projectsState.projects.first,
-          );
-          if (project.id == projectId) {
-            return '${project.name} - التسعير';
-          }
-        }
-      } catch (e) {
-        // Fallback to generic title
-      }
-      return 'التسعير';
+      return pricingTitle ?? 'التسعير';
     }
 
     return 'نظرة عامة';
+  }
+
+  bool _shouldShowBackButton(String currentPath) {
+    return currentPath != AppRoutes.dashboard &&
+        currentPath != AppRoutes.projects &&
+        currentPath != AppRoutes.archivedProjects &&
+        currentPath != AppRoutes.completedProjects &&
+        currentPath != AppRoutes.siteEngineerPricingProjects &&
+        currentPath != AppRoutes.gantt &&
+        currentPath != AppRoutes.settings;
   }
 }
 

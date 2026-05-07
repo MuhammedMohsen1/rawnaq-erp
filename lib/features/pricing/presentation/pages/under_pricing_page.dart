@@ -13,6 +13,7 @@ import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_text_styles.dart';
 import '../../../../core/di/injection_container.dart';
 import '../../../../core/error/exceptions.dart';
+import '../../../../core/layout/top_bar_title_controller.dart';
 import '../../../../core/utils/responsive_layout.dart';
 import '../../../auth/presentation/bloc/auth_bloc.dart';
 import '../../../projects/data/datasources/projects_api_datasource.dart';
@@ -53,16 +54,45 @@ class UnderPricingPage extends StatelessWidget {
 }
 
 /// Internal content widget with access to Cubit
-class _UnderPricingContent extends StatelessWidget {
+class _UnderPricingContent extends StatefulWidget {
   final String projectId;
   final bool readOnly;
 
   const _UnderPricingContent({required this.projectId, required this.readOnly});
 
   @override
+  State<_UnderPricingContent> createState() => _UnderPricingContentState();
+}
+
+class _UnderPricingContentState extends State<_UnderPricingContent> {
+  @override
+  void dispose() {
+    TopBarTitleController.clearPricingTitle();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return BlocConsumer<PricingCubit, PricingState>(
       listener: (context, state) {
+        if (state is PricingLoaded) {
+          final projectName = state.projectName?.trim();
+          if (projectName != null && projectName.isNotEmpty) {
+            TopBarTitleController.setPricingTitle('$projectName - التسعير');
+          } else {
+            TopBarTitleController.clearPricingTitle();
+          }
+        } else if (state is PricingEmptyReadOnly) {
+          final projectName = state.projectName?.trim();
+          if (projectName != null && projectName.isNotEmpty) {
+            TopBarTitleController.setPricingTitle('$projectName - التسعير');
+          } else {
+            TopBarTitleController.clearPricingTitle();
+          }
+        } else {
+          TopBarTitleController.clearPricingTitle();
+        }
+
         // Handle errors
         if (state is PricingError) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -88,14 +118,14 @@ class _UnderPricingContent extends StatelessWidget {
           return _ErrorView(
             message: state.message,
             onRetry: () => context.read<PricingCubit>().loadPricingData(
-              projectId,
-              readOnly: readOnly,
+              widget.projectId,
+              readOnly: widget.readOnly,
             ),
           );
         }
 
         if (state is PricingLoaded) {
-          return _LoadedContent(projectId: projectId, state: state);
+          return _LoadedContent(projectId: widget.projectId, state: state);
         }
 
         if (state is PricingEmptyReadOnly) {
@@ -328,7 +358,11 @@ class _PricingLayout extends StatelessWidget {
             ? () => _handleConfirmPricing(context)
             : null,
         onExportPdf: (isAdminOrManager)
-            ? () => _handleExportPdf(context)
+            ? (options) => _handleExportPdf(
+                context,
+                showDeductionBreakdown: options.showDeductionBreakdown,
+                showLineItemPrices: options.showLineItemPrices,
+              )
             : null,
         onExportContractPdf: isProfitPending
             ? () => _handleExportContractPdf(context)
@@ -343,7 +377,11 @@ class _PricingLayout extends StatelessWidget {
             ? () => _handleArchiveProject(context)
             : null,
         onExportImages: (isAdminOrManager)
-            ? () => _handleExportImages(context)
+            ? (options) => _handleExportImages(
+                context,
+                showDeductionBreakdown: options.showDeductionBreakdown,
+                showLineItemPrices: options.showLineItemPrices,
+              )
             : null,
         onDeductionAmountChanged:
             isAdminOrManager &&
@@ -675,7 +713,11 @@ class _PricingLayout extends StatelessWidget {
     }
   }
 
-  Future<void> _handleExportPdf(BuildContext context) async {
+  Future<void> _handleExportPdf(
+    BuildContext context, {
+    required bool showDeductionBreakdown,
+    required bool showLineItemPrices,
+  }) async {
     BuildContext? dialogContext;
     try {
       // Show loading
@@ -692,6 +734,8 @@ class _PricingLayout extends StatelessWidget {
 
       final pdfBytes = await context.read<PricingCubit>().exportPricingPdf(
         projectId,
+        showDeductionBreakdown: showDeductionBreakdown,
+        showLineItemPrices: showLineItemPrices,
       );
 
       // Close loading
@@ -729,7 +773,11 @@ class _PricingLayout extends StatelessWidget {
     // Dialog handles export itself
   }
 
-  Future<void> _handleExportImages(BuildContext context) async {
+  Future<void> _handleExportImages(
+    BuildContext context, {
+    required bool showDeductionBreakdown,
+    required bool showLineItemPrices,
+  }) async {
     BuildContext? dialogContext;
     try {
       // Show loading
@@ -746,6 +794,8 @@ class _PricingLayout extends StatelessWidget {
 
       final result = await context.read<PricingCubit>().exportPricingImages(
         projectId,
+        showDeductionBreakdown: showDeductionBreakdown,
+        showLineItemPrices: showLineItemPrices,
       );
 
       // Close loading

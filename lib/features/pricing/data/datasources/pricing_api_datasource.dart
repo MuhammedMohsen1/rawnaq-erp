@@ -670,9 +670,18 @@ class PricingApiDataSource {
   }
 
   /// Export pricing PDF
-  Future<Uint8List> exportPricingPdf(String projectId, int version) async {
+  Future<Uint8List> exportPricingPdf(
+    String projectId,
+    int version, {
+    bool showDeductionBreakdown = false,
+    bool showLineItemPrices = true,
+  }) async {
     final response = await _apiClient.get(
       ApiEndpoints.exportPricingPdf(projectId, version),
+      queryParameters: {
+        'showDeductionBreakdown': showDeductionBreakdown.toString(),
+        'showLineItemPrices': showLineItemPrices.toString(),
+      },
       options: Options(responseType: ResponseType.bytes),
     );
 
@@ -681,9 +690,18 @@ class PricingApiDataSource {
 
   /// Export pricing images
   /// Returns either a single image (Uint8List) or multiple images (Map with pageCount and images array)
-  Future<dynamic> exportPricingImages(String projectId, int version) async {
+  Future<dynamic> exportPricingImages(
+    String projectId,
+    int version, {
+    bool showDeductionBreakdown = false,
+    bool showLineItemPrices = true,
+  }) async {
     final response = await _apiClient.get(
       ApiEndpoints.exportPricingImages(projectId, version),
+      queryParameters: {
+        'showDeductionBreakdown': showDeductionBreakdown.toString(),
+        'showLineItemPrices': showLineItemPrices.toString(),
+      },
       options: Options(responseType: ResponseType.bytes),
     );
 

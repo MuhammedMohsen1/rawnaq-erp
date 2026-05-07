@@ -582,7 +582,11 @@ class PricingCubit extends Cubit<PricingState> {
   }
 
   /// Export pricing as PDF
-  Future<List<int>> exportPricingPdf(String projectId) async {
+  Future<List<int>> exportPricingPdf(
+    String projectId, {
+    bool showDeductionBreakdown = false,
+    bool showLineItemPrices = true,
+  }) async {
     final currentState = state;
     if (currentState is! PricingLoaded) return [];
 
@@ -598,6 +602,8 @@ class PricingCubit extends Cubit<PricingState> {
       return await pricingApiDataSource.exportPricingPdf(
         projectId,
         currentState.pricingVersion.version,
+        showDeductionBreakdown: showDeductionBreakdown,
+        showLineItemPrices: showLineItemPrices,
       );
     } catch (e) {
       rethrow;
@@ -605,7 +611,11 @@ class PricingCubit extends Cubit<PricingState> {
   }
 
   /// Export pricing as images
-  Future<dynamic> exportPricingImages(String projectId) async {
+  Future<dynamic> exportPricingImages(
+    String projectId, {
+    bool showDeductionBreakdown = false,
+    bool showLineItemPrices = true,
+  }) async {
     final currentState = state;
     if (currentState is! PricingLoaded) return null;
 
@@ -621,6 +631,8 @@ class PricingCubit extends Cubit<PricingState> {
       return await pricingApiDataSource.exportPricingImages(
         projectId,
         currentState.pricingVersion.version,
+        showDeductionBreakdown: showDeductionBreakdown,
+        showLineItemPrices: showLineItemPrices,
       );
     } catch (e) {
       rethrow;

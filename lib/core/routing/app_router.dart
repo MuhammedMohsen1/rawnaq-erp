@@ -179,7 +179,10 @@ class AppRouter {
                 create: (context) => ProjectsBloc(
                   repository: ProjectsRepositoryImpl(),
                 )..add(const LoadProjects(status: ProjectStatus.completed)),
-                child: const ProjectsListPage(
+                child: ProjectsListPage(
+                  key: ValueKey(
+                    'completed-projects-${state.uri.queryParameters['refresh'] ?? 'initial'}',
+                  ),
                   title: 'المشاريع المكتملة',
                   emptyMessage: 'لا توجد مشاريع مكتملة',
                   showCreateButton: false,
@@ -237,7 +240,11 @@ class AppRouter {
                 create: (context) =>
                     ProjectsBloc(repository: ProjectsRepositoryImpl())
                       ..add(const LoadProjects()),
-                child: const ProjectsListPage(),
+                child: ProjectsListPage(
+                  key: ValueKey(
+                    'projects-${state.uri.queryParameters['refresh'] ?? 'initial'}',
+                  ),
+                ),
               ),
             ),
           ),

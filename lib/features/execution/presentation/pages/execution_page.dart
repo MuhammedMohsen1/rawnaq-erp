@@ -221,7 +221,7 @@ class _ExecutionLayout extends StatelessWidget {
   // ── handlers (unchanged) ──────────────────────────────────────────────────
 
   void _handleOpenPastPricing(BuildContext context) {
-    context.go(AppRoutes.pricing(project.id));
+    context.push(AppRoutes.pricing(project.id));
   }
 
   Future<void> _handleMarkComplete(BuildContext context) async {
@@ -252,7 +252,8 @@ class _ExecutionLayout extends StatelessWidget {
         'Marked complete from execution',
       );
       if (!context.mounted) return;
-      context.go(AppRoutes.completedProjects);
+      final refreshToken = DateTime.now().millisecondsSinceEpoch;
+      context.go('${AppRoutes.projects}?refresh=$refreshToken');
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(const SnackBar(content: Text('تم تعليم المشروع كمكتمل')));

@@ -5,6 +5,16 @@ import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_text_styles.dart';
 import '../../../../core/utils/arabic_number_input_formatter.dart';
 
+class PricingExportOptions {
+  final bool showDeductionBreakdown;
+  final bool showLineItemPrices;
+
+  const PricingExportOptions({
+    required this.showDeductionBreakdown,
+    required this.showLineItemPrices,
+  });
+}
+
 class PricingSummarySidebar extends StatefulWidget {
   final double grandTotal;
   final double originalTotalAmount;
@@ -20,8 +30,8 @@ class PricingSummarySidebar extends StatefulWidget {
   final VoidCallback? onAcceptPricing;
   final VoidCallback? onMakeProfit;
   final VoidCallback? onConfirmPricing;
-  final VoidCallback? onExportPdf;
-  final VoidCallback? onExportImages;
+  final ValueChanged<PricingExportOptions>? onExportPdf;
+  final ValueChanged<PricingExportOptions>? onExportImages;
   final VoidCallback? onExportContractPdf;
   final VoidCallback? onConfirmContract;
   final VoidCallback? onReturnContractToPricing;
@@ -83,12 +93,15 @@ class PricingSummarySidebar extends StatefulWidget {
 
 class _PricingSummarySidebarState extends State<PricingSummarySidebar> {
   List<TextEditingController> _noteControllers = [];
+  List<FocusNode> _noteFocusNodes = [];
   Timer? _notesSaveTimer;
   final TextEditingController _bulkProfitController = TextEditingController();
   final TextEditingController _deductionController = TextEditingController();
   final FocusNode _deductionFocusNode = FocusNode();
   Timer? _deductionSaveTimer;
   bool _isNotesExpanded = false;
+  bool _showDeductionBreakdownInPdf = false;
+  bool _showLineItemPricesInPdf = true;
 
   @override
   void initState() {
@@ -101,6 +114,9 @@ class _PricingSummarySidebarState extends State<PricingSummarySidebar> {
     // Dispose existing controllers
     for (var controller in _noteControllers) {
       controller.dispose();
+    }
+    for (var focusNode in _noteFocusNodes) {
+      focusNode.dispose();
     }
 
     // Parse notes into list of items
@@ -120,6 +136,7 @@ class _PricingSummarySidebarState extends State<PricingSummarySidebar> {
     _noteControllers = noteItems
         .map((item) => TextEditingController(text: item))
         .toList();
+    _noteFocusNodes = noteItems.map((_) => FocusNode()).toList();
 
     // Add listeners to all controllers
     for (var controller in _noteControllers) {
@@ -131,7 +148,10 @@ class _PricingSummarySidebarState extends State<PricingSummarySidebar> {
   void didUpdateWidget(PricingSummarySidebar oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (widget.pricingVersionNotes != oldWidget.pricingVersionNotes) {
-      _initializeNoteControllers();
+      final isEditingNotes = _noteFocusNodes.any((node) => node.hasFocus);
+      if (!isEditingNotes) {
+        _initializeNoteControllers();
+      }
     }
     if (widget.deductionAmount != oldWidget.deductionAmount) {
       if (!_deductionFocusNode.hasFocus) {
@@ -150,6 +170,9 @@ class _PricingSummarySidebarState extends State<PricingSummarySidebar> {
     for (var controller in _noteControllers) {
       controller.removeListener(_onNoteItemChanged);
       controller.dispose();
+    }
+    for (var focusNode in _noteFocusNodes) {
+      focusNode.dispose();
     }
     super.dispose();
   }
@@ -179,6 +202,7 @@ class _PricingSummarySidebarState extends State<PricingSummarySidebar> {
       final newController = TextEditingController();
       newController.addListener(_onNoteItemChanged);
       _noteControllers.add(newController);
+      _noteFocusNodes.add(FocusNode());
     });
   }
 
@@ -188,9 +212,54 @@ class _PricingSummarySidebarState extends State<PricingSummarySidebar> {
         _noteControllers[index].removeListener(_onNoteItemChanged);
         _noteControllers[index].dispose();
         _noteControllers.removeAt(index);
+        _noteFocusNodes[index].dispose();
+        _noteFocusNodes.removeAt(index);
         _saveNotes();
       });
     }
+  }
+
+  PricingExportOptions get _exportOptions => PricingExportOptions(
+    showDeductionBreakdown: _showDeductionBreakdownInPdf,
+    showLineItemPrices: _showLineItemPricesInPdf,
+  );
+
+  Widget _buildPdfOptionCheckbox({
+    required bool value,
+    required ValueChanged<bool> onChanged,
+    required String label,
+    required bool isMobile,
+  }) {
+    return InkWell(
+      borderRadius: BorderRadius.circular(4),
+      onTap: () => onChanged(!value),
+      child: Row(
+        children: [
+          SizedBox(
+            width: isMobile ? 18 : 20,
+            height: isMobile ? 18 : 20,
+            child: Checkbox(
+              value: value,
+              onChanged: (nextValue) => onChanged(nextValue ?? false),
+              activeColor: AppColors.background,
+              materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              visualDensity: VisualDensity.compact,
+            ),
+          ),
+          SizedBox(width: isMobile ? 6 : 8),
+          Expanded(
+            child: Text(
+              label,
+              overflow: TextOverflow.ellipsis,
+              style: AppTextStyles.caption.copyWith(
+                fontSize: isMobile ? 10 : 11,
+                color: AppColors.textSecondary,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   String _formatNumberWithDecimals(double value) {
@@ -986,6 +1055,28 @@ class _PricingSummarySidebarState extends State<PricingSummarySidebar> {
                   ),
                 ),
                 SizedBox(height: isMobile ? 4 : 6),
+                _buildPdfOptionCheckbox(
+                  value: _showLineItemPricesInPdf,
+                  onChanged: (value) {
+                    setState(() {
+                      _showLineItemPricesInPdf = value;
+                    });
+                  },
+                  label: 'إظهار سعر كل بند في PDF',
+                  isMobile: isMobile,
+                ),
+                // SizedBox(height: isMobile ? 4 : 6),
+                // _buildPdfOptionCheckbox(
+                //   value: _showDeductionBreakdownInPdf,
+                //   onChanged: (value) {
+                //     setState(() {
+                //       _showDeductionBreakdownInPdf = value;
+                //     });
+                //   },
+                //   label: 'إظهار الخصم في PDF',
+                //   isMobile: isMobile,
+                // ),
+                SizedBox(height: isMobile ? 4 : 6),
                 TextField(
                   controller: _deductionController,
                   focusNode: _deductionFocusNode,
@@ -1170,6 +1261,7 @@ class _PricingSummarySidebarState extends State<PricingSummarySidebar> {
                           Expanded(
                             child: TextField(
                               controller: _noteControllers[index],
+                              focusNode: _noteFocusNodes[index],
                               decoration: InputDecoration(
                                 hintText: 'الملاحظة',
                                 hintStyle: AppTextStyles.bodySmall.copyWith(
@@ -1423,7 +1515,7 @@ class _PricingSummarySidebarState extends State<PricingSummarySidebar> {
               if (widget.onExportPdf != null) {
                 buttons.add(
                   buildButton(
-                    onPressed: widget.onExportPdf,
+                    onPressed: () => widget.onExportPdf!(_exportOptions),
                     backgroundColor: const Color(0xFF6366F1),
                     isOutlined: true,
                     borderColor: const Color(0xFF6366F1),
@@ -1450,7 +1542,7 @@ class _PricingSummarySidebarState extends State<PricingSummarySidebar> {
               if (widget.onExportImages != null) {
                 buttons.add(
                   buildButton(
-                    onPressed: widget.onExportImages,
+                    onPressed: () => widget.onExportImages!(_exportOptions),
                     backgroundColor: const Color(0xFF10B981),
                     isOutlined: true,
                     borderColor: const Color(0xFF10B981),

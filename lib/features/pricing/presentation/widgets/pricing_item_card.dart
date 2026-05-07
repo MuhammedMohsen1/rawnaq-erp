@@ -218,6 +218,8 @@ class _PricingItemCardState extends State<PricingItemCard> {
       {}; // subItemId -> TextEditingController for profit margin input
   final Map<String, TextEditingController> _notesControllers =
       {}; // subItemId -> TextEditingController for notes input
+  final Map<String, FocusNode> _notesFocusNodes =
+      {}; // subItemId -> FocusNode for notes input
   final Map<String, Timer?> _notesTimers =
       {}; // subItemId -> debounce timer for notes saving
   final Map<String, int> _selectedImageIndex =
@@ -246,6 +248,7 @@ class _PricingItemCardState extends State<PricingItemCard> {
         _notesControllers[subItem.id] = TextEditingController(
           text: subItem.description,
         );
+        _notesFocusNodes[subItem.id] = FocusNode();
       }
       setState(() {});
     }
@@ -281,10 +284,14 @@ class _PricingItemCardState extends State<PricingItemCard> {
         // Sync notes controller with latest data (only if no pending save)
         final newNotes = subItem.description ?? '';
         final existingController = _notesControllers[subItem.id];
+        final notesFocusNode = _notesFocusNodes[subItem.id];
         final hasPendingNoteSave = _notesTimers[subItem.id]?.isActive ?? false;
         if (existingController == null) {
           _notesControllers[subItem.id] = TextEditingController(text: newNotes);
-        } else if (existingController.text != newNotes && !hasPendingNoteSave) {
+          _notesFocusNodes[subItem.id] = FocusNode();
+        } else if (existingController.text != newNotes &&
+            !hasPendingNoteSave &&
+            !(notesFocusNode?.hasFocus ?? false)) {
           // Only sync if there's no pending save (user isn't actively editing)
           final selection = existingController.selection;
           existingController.text = newNotes;
@@ -342,6 +349,11 @@ class _PricingItemCardState extends State<PricingItemCard> {
       controller.dispose();
     }
     _notesControllers.clear();
+    // Dispose notes focus nodes
+    for (var focusNode in _notesFocusNodes.values) {
+      focusNode.dispose();
+    }
+    _notesFocusNodes.clear();
     // Cancel notes timers
     for (var timer in _notesTimers.values) {
       timer?.cancel();
@@ -413,6 +425,57 @@ class _PricingItemCardState extends State<PricingItemCard> {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildSubItemStatCards(PricingSubItemModel subItem) {
+    if (!widget.isAdminOrManager) {
+      return const SizedBox.shrink();
+    }
+
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        _buildStatCard('تكلفة', subItem.totalCost, AppColors.delete),
+        const SizedBox(width: 4),
+        _buildStatCard(
+          'إيرادات',
+          subItem.profitAmount,
+          const Color(0xFF10B981),
+        ),
+        const SizedBox(width: 4),
+        _buildStatCard('سعر', subItem.totalPrice, AppColors.warning),
+      ],
+    );
+  }
+
+  Widget _buildStatCard(String label, double value, Color color) {
+    return Tooltip(
+      message: 'Total $label',
+      child: Container(
+        constraints: const BoxConstraints(minWidth: 66),
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        decoration: BoxDecoration(
+          color: color.withValues(alpha: 0.1),
+          borderRadius: BorderRadius.circular(6),
+          border: Border.all(color: color.withValues(alpha: 0.28)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              '${value.toStringAsFixed(2)} KD',
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: AppTextStyles.bodySmall.copyWith(
+                fontSize: 10,
+                color: color,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -2995,6 +3058,9 @@ class _PricingItemCardState extends State<PricingItemCard> {
                                                 ),
                                                 const SizedBox(width: 8),
                                               ],
+                                              _buildSubItemStatCards(subItem),
+                                              if (widget.isAdminOrManager)
+                                                const SizedBox(width: 8),
                                               Builder(
                                                 builder: (context) {
                                                   double total = 0;
@@ -3193,37 +3259,9 @@ class _PricingItemCardState extends State<PricingItemCard> {
                                               ),
                                               const SizedBox(width: 8),
                                             ],
-                                            // Show cost/profit/percentage chips in APPROVED/PENDING_SIGNATURE
-                                            if (widget.pricingStatus != null &&
-                                                widget.isAdminOrManager &&
-                                                (widget.pricingStatus!
-                                                            .toUpperCase() ==
-                                                        'APPROVED' ||
-                                                    widget.pricingStatus!
-                                                            .toUpperCase() ==
-                                                        'PENDING_SIGNATURE')) ...[
-                                              _buildStatChip(
-                                                subItem.totalCost,
-                                                const Color.fromARGB(
-                                                  255,
-                                                  235,
-                                                  16,
-                                                  8,
-                                                ),
-                                              ),
-                                              const SizedBox(width: 4),
-                                              _buildStatChip(
-                                                subItem.profitAmount,
-                                                const Color(0xFF10B981),
-                                              ),
-                                              const SizedBox(width: 4),
-                                              _buildStatChip(
-                                                subItem.profitMargin,
-                                                const Color(0xFFF59E0B),
-                                                suffix: '%',
-                                              ),
+                                            _buildSubItemStatCards(subItem),
+                                            if (widget.isAdminOrManager)
                                               const SizedBox(width: 8),
-                                            ],
 
                                             // Show total cost in header only when NOT APPROVED/PENDING_SIGNATURE
                                             Builder(
@@ -3409,6 +3447,7 @@ class _PricingItemCardState extends State<PricingItemCard> {
                                   ),
                                   child: TextField(
                                     controller: _notesControllers[subItem.id],
+                                    focusNode: _notesFocusNodes[subItem.id],
                                     maxLines: 3,
 
                                     decoration: InputDecoration(
