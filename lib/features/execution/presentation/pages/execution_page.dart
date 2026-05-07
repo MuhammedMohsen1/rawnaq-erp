@@ -19,7 +19,7 @@ import '../widgets/transactions_table.dart';
 import '../widgets/pending_approvals_card.dart';
 import '../widgets/installments_section.dart';
 
-/// Execution page for projects in EXECUTION status
+/// Execution page for projects in EXECUTION or COMPLETED status
 class ExecutionPage extends StatelessWidget {
   final String projectId;
 
@@ -117,6 +117,8 @@ class _ExecutionLayout extends StatelessWidget {
           isAdminOrManager = user.isAdmin || user.isManager;
           canRequestInstallments = user.canRequestInstallments;
         }
+        final isCompleted = project.status == ProjectStatus.completed;
+        final canEditExecution = !isCompleted;
 
         return Scaffold(
           backgroundColor: AppColors.scaffoldBackground,
@@ -129,8 +131,11 @@ class _ExecutionLayout extends StatelessWidget {
                 _CompactExecutionHeader(
                   project: project,
                   onOpenPastPricing: () => _handleOpenPastPricing(context),
-                  onMarkComplete: isAdminOrManager
+                  onMarkComplete: isAdminOrManager && canEditExecution
                       ? () => _handleMarkComplete(context)
+                      : null,
+                  onReturnToExecution: isAdminOrManager && isCompleted
+                      ? () => _handleReturnToExecution(context)
                       : null,
                 ),
 
@@ -144,8 +149,8 @@ class _ExecutionLayout extends StatelessWidget {
                     totalCost: state.dashboard.totalBudget,
                     totalProfit: state.dashboard.totalProfit,
                     profitPercentage: state.dashboard.profitPercentage,
-                    isAdminOrManager: isAdminOrManager,
-                    onToggleCollected: isAdminOrManager
+                    isAdminOrManager: isAdminOrManager && canEditExecution,
+                    onToggleCollected: isAdminOrManager && canEditExecution
                         ? (phaseIndex, requestId, isCollected) =>
                               _handleToggleCollected(
                                 context,
@@ -159,6 +164,7 @@ class _ExecutionLayout extends StatelessWidget {
 
                 // ── Pending approvals (Admin/Manager only) ──────────────────
                 if (isAdminOrManager &&
+                    canEditExecution &&
                     state.dashboard.pendingInstallmentRequests.isNotEmpty)
                   PendingApprovalsCard(
                     pendingRequests: state.dashboard.pendingInstallmentRequests,
@@ -168,6 +174,7 @@ class _ExecutionLayout extends StatelessWidget {
                         _handleRejectInstallment(context, requestId, reason),
                   ),
                 if (isAdminOrManager &&
+                    canEditExecution &&
                     state.dashboard.pendingInstallmentRequests.isNotEmpty)
                   const SizedBox(height: 16),
 
@@ -186,16 +193,19 @@ class _ExecutionLayout extends StatelessWidget {
                   isLoadingMore: state.isLoadingMore,
                   hasMoreTransactions: state.dashboard.hasMoreTransactions,
                   isSiteEngineer: canRequestInstallments,
-                  isAdminOrManager: isAdminOrManager,
+                  isAdminOrManager: isAdminOrManager && canEditExecution,
                   paymentSchedule: state.dashboard.paymentSchedule,
                   pendingInstallmentRequests:
                       state.dashboard.pendingInstallmentRequests,
                   profitPercentage: state.dashboard.profitPercentage,
-                  onAddExpense: () => _handleAddExpense(context),
-                  onAddIncome: isAdminOrManager
+                  onAddExpense: canEditExecution
+                      ? () => _handleAddExpense(context)
+                      : null,
+                  onAddIncome: isAdminOrManager && canEditExecution
                       ? () => _handleAddIncome(context)
                       : null,
-                  onRequestInstallment: canRequestInstallments
+                  onRequestInstallment:
+                      canRequestInstallments && canEditExecution
                       ? () => _handleRequestInstallment(context, state)
                       : null,
                   onLoadMore: () => _handleLoadMore(context),
@@ -250,6 +260,46 @@ class _ExecutionLayout extends StatelessWidget {
       if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('فشل إكمال المشروع: ${e.toString()}')),
+      );
+    }
+  }
+
+  Future<void> _handleReturnToExecution(BuildContext context) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('إعادة المشروع للتنفيذ'),
+        content: const Text('هل تريد إعادة هذا المشروع إلى قيد التنفيذ؟'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('إلغاء'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text('تأكيد الإعادة'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true) return;
+
+    try {
+      await ProjectsApiDataSource().updateProjectStatus(
+        project.id,
+        ProjectStatus.execution.toApiString(),
+        'Returned to execution from completed',
+      );
+      if (!context.mounted) return;
+      context.read<ExecutionCubit>().loadDashboard(project.id);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('تمت إعادة المشروع إلى قيد التنفيذ')),
+      );
+    } catch (e) {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('فشل إعادة المشروع: ${e.toString()}')),
       );
     }
   }
@@ -405,11 +455,13 @@ class _CompactExecutionHeader extends StatelessWidget {
   final ProjectEntity project;
   final VoidCallback onOpenPastPricing;
   final VoidCallback? onMarkComplete;
+  final VoidCallback? onReturnToExecution;
 
   const _CompactExecutionHeader({
     required this.project,
     required this.onOpenPastPricing,
     this.onMarkComplete,
+    this.onReturnToExecution,
   });
 
   @override
@@ -429,7 +481,7 @@ class _CompactExecutionHeader extends StatelessWidget {
 
         _AttachmentsDialogButton(
           projectId: project.id,
-          projectStatus: ProjectStatus.execution,
+          projectStatus: project.status,
         ),
         const SizedBox(width: 8),
 
@@ -444,7 +496,7 @@ class _CompactExecutionHeader extends StatelessWidget {
             icon: const Icon(Icons.history_rounded),
             color: AppColors.primary,
             style: IconButton.styleFrom(
-              backgroundColor: AppColors.primary.withOpacity(0.08),
+              backgroundColor: AppColors.primary.withValues(alpha: 0.08),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(10),
               ),
@@ -462,7 +514,24 @@ class _CompactExecutionHeader extends StatelessWidget {
               icon: const Icon(Icons.check_circle_outline_rounded),
               color: AppColors.success,
               style: IconButton.styleFrom(
-                backgroundColor: AppColors.success.withOpacity(0.08),
+                backgroundColor: AppColors.success.withValues(alpha: 0.08),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+              ),
+            ),
+          ),
+        ],
+        if (onReturnToExecution != null) ...[
+          const SizedBox(width: 8),
+          Tooltip(
+            message: 'إعادة إلى قيد التنفيذ',
+            child: IconButton(
+              onPressed: onReturnToExecution,
+              icon: const Icon(Icons.replay_circle_filled_rounded),
+              color: AppColors.primary,
+              style: IconButton.styleFrom(
+                backgroundColor: AppColors.primary.withValues(alpha: 0.08),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(10),
                 ),

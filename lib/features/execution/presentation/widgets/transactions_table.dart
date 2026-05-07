@@ -49,7 +49,7 @@ class TransactionsTable extends StatelessWidget {
   final List<PaymentPhaseModel> paymentSchedule;
   final List<InstallmentRequestModel> pendingInstallmentRequests;
   final double profitPercentage;
-  final VoidCallback onAddExpense;
+  final VoidCallback? onAddExpense;
   final VoidCallback? onAddIncome;
   final VoidCallback? onRequestInstallment;
   final VoidCallback onLoadMore;
@@ -73,7 +73,7 @@ class TransactionsTable extends StatelessWidget {
     required this.paymentSchedule,
     required this.pendingInstallmentRequests,
     required this.profitPercentage,
-    required this.onAddExpense,
+    this.onAddExpense,
     this.onAddIncome,
     this.onRequestInstallment,
     required this.onLoadMore,
@@ -103,7 +103,9 @@ class TransactionsTable extends StatelessWidget {
               const Divider(height: 1, color: AppColors.border),
               // Header with actions
               _TableHeader(
-                onAddExpense: () => _showAddExpenseDialog(context, isCompact),
+                onAddExpense: onAddExpense == null
+                    ? null
+                    : () => _showAddExpenseDialog(context, isCompact),
                 onAddIncome: onAddIncome == null
                     ? null
                     : () => _showAddIncomeDialog(context, isCompact),
@@ -648,7 +650,7 @@ class _ExpenseSummaryTile extends StatelessWidget {
 }
 
 class _TableHeader extends StatelessWidget {
-  final VoidCallback onAddExpense;
+  final VoidCallback? onAddExpense;
   final VoidCallback? onAddIncome;
   final VoidCallback? onRequestInstallment;
   final bool isSiteEngineer;
@@ -656,7 +658,7 @@ class _TableHeader extends StatelessWidget {
   final bool isCompact;
 
   const _TableHeader({
-    required this.onAddExpense,
+    this.onAddExpense,
     this.onAddIncome,
     this.onRequestInstallment,
     required this.isSiteEngineer,
@@ -705,16 +707,17 @@ class _TableHeader extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           ),
         ),
-      ElevatedButton.icon(
-        onPressed: onAddExpense,
-        icon: const Icon(Icons.arrow_upward, size: 18),
-        label: const Text('إضافة مصروف'),
-        style: ElevatedButton.styleFrom(
-          backgroundColor: AppColors.error,
-          foregroundColor: AppColors.white,
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      if (onAddExpense != null)
+        ElevatedButton.icon(
+          onPressed: onAddExpense,
+          icon: const Icon(Icons.arrow_upward, size: 18),
+          label: const Text('إضافة مصروف'),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: AppColors.error,
+            foregroundColor: AppColors.white,
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          ),
         ),
-      ),
     ];
 
     return Padding(

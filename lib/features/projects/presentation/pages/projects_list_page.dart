@@ -479,7 +479,8 @@ class _ProjectsListPageState extends State<ProjectsListPage> {
       return;
     }
 
-    if (project.status == ProjectStatus.execution) {
+    if (project.status == ProjectStatus.execution ||
+        project.status == ProjectStatus.completed) {
       if (project.archived) {
         context.go(AppRoutes.projectDetails(project.id));
       } else {
@@ -860,10 +861,9 @@ class _ProjectCardState extends State<_ProjectCard> {
                                       widget.project.name,
                                       maxLines: 1,
                                       overflow: TextOverflow.ellipsis,
-                                      style: AppTextStyles.bodyLarge.copyWith(
+                                      style: AppTextStyles.bodyMedium.copyWith(
                                         color: AppColors.textPrimary,
                                         fontWeight: FontWeight.w800,
-                                        fontSize: 14.5,
                                       ),
                                     ),
                                   ],
@@ -946,6 +946,10 @@ String _resolveAction(ProjectEntity project) {
 
   if (project.status == ProjectStatus.execution) {
     return project.archived ? 'عرض التفاصيل' : 'فتح التنفيذ';
+  }
+
+  if (project.status == ProjectStatus.completed) {
+    return project.archived ? 'عرض التفاصيل' : 'عرض التنفيذ';
   }
 
   return 'عرض التفاصيل';
