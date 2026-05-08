@@ -685,17 +685,6 @@ class _TableHeader extends StatelessWidget {
     }
 
     final actions = <Widget>[
-      if (showRequestInstallment)
-        OutlinedButton.icon(
-          onPressed: onRequestInstallment,
-          icon: const Icon(Icons.request_page, size: 18),
-          label: const Text('طلب دفعة'),
-          style: OutlinedButton.styleFrom(
-            foregroundColor: AppColors.primary,
-            side: const BorderSide(color: AppColors.primary),
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-          ),
-        ),
       if (isAdminOrManager && onAddIncome != null)
         ElevatedButton.icon(
           onPressed: onAddIncome,
@@ -1648,30 +1637,7 @@ class _EditableExpenseRowState extends State<_EditableExpenseRow> {
             Text('تعديل المصروف', style: AppTextStyles.tableCellBold),
           ],
         ),
-        const SizedBox(height: 12),
-        TextField(
-          controller: _nameController,
-          decoration: const InputDecoration(
-            hintText: 'اسم المصروف',
-            isDense: true,
-            contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-          ),
-        ),
-        const SizedBox(height: 8),
-        DropdownButtonFormField<CostType>(
-          value: _costType,
-          decoration: const InputDecoration(
-            isDense: true,
-            contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-          ),
-          items: const [
-            DropdownMenuItem(value: CostType.total, child: Text('إجمالي')),
-            DropdownMenuItem(value: CostType.unitBased, child: Text('وحدة')),
-          ],
-          onChanged: (value) {
-            if (value != null) setState(() => _costType = value);
-          },
-        ),
+
         const SizedBox(height: 8),
         if (_costType == CostType.total)
           TextField(
@@ -1729,6 +1695,15 @@ class _EditableExpenseRowState extends State<_EditableExpenseRow> {
               ),
             ],
           ),
+        const SizedBox(height: 12),
+        TextField(
+          controller: _nameController,
+          decoration: const InputDecoration(
+            hintText: 'اسم المصروف',
+            isDense: true,
+            contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          ),
+        ),
         const SizedBox(height: 12),
         Row(
           mainAxisAlignment: MainAxisAlignment.end,

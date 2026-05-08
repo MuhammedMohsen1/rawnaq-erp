@@ -22,7 +22,10 @@ class ProjectEntity extends Equatable {
   final DateTime endDate;
   final bool hasEndDate;
   final double totalCost;
+  final double totalPrice;
+  final double totalAmountAfterDeduction;
   final double totalReceived;
+  final double totalExpenses;
   final String? managerId;
   final TeamMemberEntity? manager;
   final List<String> teamMemberIds;
@@ -47,7 +50,10 @@ class ProjectEntity extends Equatable {
     required this.endDate,
     this.hasEndDate = true,
     this.totalCost = 0,
+    this.totalPrice = 0,
+    this.totalAmountAfterDeduction = 0,
     this.totalReceived = 0,
+    this.totalExpenses = 0,
     this.managerId,
     this.manager,
     this.teamMemberIds = const [],
@@ -65,7 +71,10 @@ class ProjectEntity extends Equatable {
   });
   get deliveryInDays =>
       hasEndDate ? endDate.difference(DateTime.now()).inDays : null;
-  get restInCash => totalCost - totalReceived;
+  double get projectTotalPrice => totalAmountAfterDeduction > 0
+      ? totalAmountAfterDeduction
+      : (totalPrice > 0 ? totalPrice : totalCost);
+  get restInCash => totalCost - totalExpenses;
   @override
   List<Object?> get props => [
     id,
@@ -76,7 +85,10 @@ class ProjectEntity extends Equatable {
     endDate,
     hasEndDate,
     totalCost,
+    totalPrice,
+    totalAmountAfterDeduction,
     totalReceived,
+    totalExpenses,
     managerId,
     manager,
     teamMemberIds,
@@ -103,7 +115,10 @@ class ProjectEntity extends Equatable {
     DateTime? endDate,
     bool? hasEndDate,
     double? totalCost,
+    double? totalPrice,
+    double? totalAmountAfterDeduction,
     double? totalReceived,
+    double? totalExpenses,
     String? managerId,
     TeamMemberEntity? manager,
     List<String>? teamMemberIds,
@@ -128,7 +143,11 @@ class ProjectEntity extends Equatable {
       endDate: endDate ?? this.endDate,
       hasEndDate: hasEndDate ?? this.hasEndDate,
       totalCost: totalCost ?? this.totalCost,
+      totalPrice: totalPrice ?? this.totalPrice,
+      totalAmountAfterDeduction:
+          totalAmountAfterDeduction ?? this.totalAmountAfterDeduction,
       totalReceived: totalReceived ?? this.totalReceived,
+      totalExpenses: totalExpenses ?? this.totalExpenses,
       managerId: managerId ?? this.managerId,
       manager: manager ?? this.manager,
       teamMemberIds: teamMemberIds ?? this.teamMemberIds,

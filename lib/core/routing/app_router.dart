@@ -131,7 +131,11 @@ class AppRouter {
                       return BlocProvider(
                         create: (context) =>
                             ProjectsBloc(repository: ProjectsRepositoryImpl())
-                              ..add(const LoadProjects()),
+                              ..add(
+                                const LoadProjects(
+                                  status: ProjectStatus.execution,
+                                ),
+                              ),
                         child: const ProjectsListPage(
                           title: 'مشاريع التنفيذ',
                           emptyMessage: 'لا توجد مشاريع تنفيذ',

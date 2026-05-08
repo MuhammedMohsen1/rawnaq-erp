@@ -10,6 +10,7 @@ import 'package:infinite_scroll_pagination/infinite_scroll_pagination.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_text_styles.dart';
 import '../../../../core/routing/app_router.dart';
+import '../../../../core/utils/responsive_layout.dart';
 import '../../domain/entities/project_entity.dart';
 import '../../domain/enums/project_status.dart';
 import '../bloc/projects_bloc.dart';
@@ -278,9 +279,10 @@ class _ProjectsListPageState extends State<ProjectsListPage> {
   Widget _buildPagedGrid() {
     return LayoutBuilder(
       builder: (context, constraints) {
-        final isCompact = constraints.maxWidth < 680;
+        final isCompact =
+            constraints.maxWidth < 680 || ResponsiveLayout.isMobile(context);
         final maxExtent = isCompact ? constraints.maxWidth : 390.0;
-        final cardHeight = isCompact ? 226.0 : 190.0;
+        final cardHeight = isCompact ? 158.0 : 190.0;
 
         return PagingListener<int, ProjectEntity>(
           controller: _pagingController,
@@ -320,6 +322,7 @@ class _ProjectsListPageState extends State<ProjectsListPage> {
                   itemBuilder: (context, project, index) {
                     return _ProjectCard(
                       project: project,
+                      compact: isCompact,
                       onTap: () {
                         if (widget.enableNavigation) {
                           _navigate(context, project);
@@ -477,7 +480,7 @@ class _ProjectsListPageState extends State<ProjectsListPage> {
     return projects
         .map(
           (project) =>
-              '${project.id}:${project.name}:${project.status.name}:${project.archived}:${project.clientName ?? ''}:${project.clientContacts.length}:${project.googleMapLink ?? ''}:${project.startDate.toIso8601String()}:${project.endDate.toIso8601String()}:${project.hasEndDate}:${project.totalCost}:${project.totalReceived}:${project.lastEditAt?.toIso8601String() ?? ''}:${project.teamMembers?.length ?? 0}',
+              '${project.id}:${project.name}:${project.status.name}:${project.archived}:${project.clientName ?? ''}:${project.clientContacts.length}:${project.googleMapLink ?? ''}:${project.startDate.toIso8601String()}:${project.endDate.toIso8601String()}:${project.hasEndDate}:${project.totalCost}:${project.totalPrice}:${project.totalAmountAfterDeduction}:${project.totalReceived}:${project.totalExpenses}:${project.lastEditAt?.toIso8601String() ?? ''}:${project.teamMembers?.length ?? 0}',
         )
         .join('|');
   }
@@ -779,6 +782,7 @@ class _CountBubble extends StatelessWidget {
 
 class _ProjectCard extends StatefulWidget {
   final ProjectEntity project;
+  final bool compact;
   final VoidCallback onTap;
   final VoidCallback onEdit;
   final VoidCallback? onArchive;
@@ -787,6 +791,7 @@ class _ProjectCard extends StatefulWidget {
 
   const _ProjectCard({
     required this.project,
+    this.compact = false,
     required this.onTap,
     required this.onEdit,
     this.onArchive,
@@ -814,14 +819,13 @@ class _ProjectCardState extends State<_ProjectCard> {
   @override
   Widget build(BuildContext context) {
     final meta = _metaOf(widget.project.status, widget.project.lastEditAt);
-    final action = _resolveAction(widget.project);
     final dateProgress = _dateProgress(widget.project);
-    final receivedProgress = widget.project.totalCost > 0
-        ? (widget.project.totalReceived / widget.project.totalCost).clamp(
-            0.0,
-            1.0,
-          )
+    final projectTotalPrice = widget.project.projectTotalPrice;
+    final receivedProgress = projectTotalPrice > 0
+        ? (widget.project.totalExpenses / projectTotalPrice).clamp(0.0, 1.0)
         : null;
+    final compact = widget.compact;
+    final borderRadius = compact ? 14.0 : 18.0;
 
     return MouseRegion(
       cursor: SystemMouseCursors.click,
@@ -835,11 +839,11 @@ class _ProjectCardState extends State<_ProjectCard> {
           duration: const Duration(milliseconds: 200),
           curve: Curves.easeOutCubic,
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(18),
+            borderRadius: BorderRadius.circular(borderRadius),
             border: Border.all(color: AppColors.border),
           ),
           child: ClipRRect(
-            borderRadius: BorderRadius.circular(18),
+            borderRadius: BorderRadius.circular(borderRadius),
             child: Stack(
               children: [
                 const Positioned.fill(child: _CardBaseGradient()),
@@ -859,24 +863,33 @@ class _ProjectCardState extends State<_ProjectCard> {
                   color: Colors.transparent,
                   child: InkWell(
                     onTap: widget.onTap,
-                    borderRadius: BorderRadius.circular(18),
+                    borderRadius: BorderRadius.circular(borderRadius),
                     splashColor: meta.accent.withOpacity(0.05),
                     child: Padding(
-                      padding: const EdgeInsets.fromLTRB(15, 14, 11, 13),
+                      padding: compact
+                          ? const EdgeInsets.fromLTRB(11, 10, 8, 9)
+                          : const EdgeInsets.fromLTRB(15, 14, 11, 13),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Row(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              _StatusIconBox(meta: meta, hovered: _hovered),
-                              const SizedBox(width: 11),
+                              _StatusIconBox(
+                                meta: meta,
+                                hovered: _hovered,
+                                compact: compact,
+                              ),
+                              SizedBox(width: compact ? 8 : 11),
                               Expanded(
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    _PipelineLabel(meta: meta),
-                                    const SizedBox(height: 5),
+                                    _PipelineLabel(
+                                      meta: meta,
+                                      compact: compact,
+                                    ),
+                                    SizedBox(height: compact ? 3 : 5),
                                     Text(
                                       widget.project.name,
                                       maxLines: 1,
@@ -884,6 +897,8 @@ class _ProjectCardState extends State<_ProjectCard> {
                                       style: AppTextStyles.bodyMedium.copyWith(
                                         color: AppColors.textPrimary,
                                         fontWeight: FontWeight.w800,
+                                        fontSize: compact ? 12.5 : null,
+                                        height: compact ? 1.15 : null,
                                       ),
                                     ),
                                   ],
@@ -894,11 +909,12 @@ class _ProjectCardState extends State<_ProjectCard> {
                                 onArchive: widget.onArchive,
                                 onMoveToExecution: widget.onMoveToExecution,
                                 onRestore: widget.onRestore,
+                                compact: compact,
                               ),
                             ],
                           ),
 
-                          const SizedBox(height: 12),
+                          SizedBox(height: compact ? 4 : 12),
 
                           // Client & Contact Section
                           _InteractiveContactRow(
@@ -919,9 +935,10 @@ class _ProjectCardState extends State<_ProjectCard> {
                             accentColor: meta.accent,
                             dateInDays: widget.project.deliveryInDays,
                             restInCash: widget.project.restInCash,
+                            compact: compact,
                           ),
 
-                          const SizedBox(height: 8),
+                          if (!compact) const SizedBox(height: 8),
                           // Divider(
                           //   height: 24,
                           //   color: AppColors.border.withOpacity(0.5),
@@ -953,26 +970,6 @@ class _ProjectCardState extends State<_ProjectCard> {
       ),
     );
   }
-}
-
-String _resolveAction(ProjectEntity project) {
-  if (project.status == ProjectStatus.underPricing) {
-    return 'فتح التسعير';
-  }
-
-  if (project.status == ProjectStatus.pendingSignature) {
-    return 'مراجعة التوقيع';
-  }
-
-  if (project.status == ProjectStatus.execution) {
-    return project.archived ? 'عرض التفاصيل' : 'فتح التنفيذ';
-  }
-
-  if (project.status == ProjectStatus.completed) {
-    return project.archived ? 'عرض التفاصيل' : 'عرض التنفيذ';
-  }
-
-  return 'عرض التفاصيل';
 }
 
 double? _dateProgress(ProjectEntity project) {
@@ -1059,6 +1056,7 @@ class _ProgressSection extends StatelessWidget {
   final int? dateInDays;
   final double? restInCash;
   final Color accentColor;
+  final bool compact;
 
   const _ProgressSection({
     required this.dateProgress,
@@ -1066,6 +1064,7 @@ class _ProgressSection extends StatelessWidget {
     required this.dateInDays,
     required this.restInCash,
     required this.accentColor,
+    this.compact = false,
   });
 
   @override
@@ -1076,44 +1075,74 @@ class _ProgressSection extends StatelessWidget {
 
     final safeDateProgress = dateProgress?.clamp(0.0, 1.0).toDouble();
     final safeReceivedProgress = receivedProgress?.clamp(0.0, 1.0).toDouble();
+    final compactStats = [
+      if (safeDateProgress != null && dateInDays != null) '$dateInDays يوم',
+      if (safeReceivedProgress != null && restInCash != null)
+        'باقي ${restInCash!.toStringAsFixed(0)}\$',
+    ];
 
     return Column(
       children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                if (safeDateProgress != null)
-                  _ProgressLegend(label: 'الأيام', color: AppColors.secondary),
-                if (safeDateProgress != null && safeReceivedProgress != null)
-                  const SizedBox(width: 10),
-                if (safeReceivedProgress != null)
-                  const _ProgressLegend(
-                    label: 'التحصيل',
-                    color: Color(0xFF22C55E),
-                  ),
-              ],
-            ),
-            Text(
-              [
-                if (safeDateProgress != null) '$dateInDays يوم',
-                if (safeReceivedProgress != null) 'باقي $restInCash\$',
-              ].join('  |  '),
-              style: AppTextStyles.bodySmall.copyWith(
-                color: AppColors.textMuted,
-                fontWeight: FontWeight.bold,
-                fontSize: 10,
+        if (!compact)
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (safeDateProgress != null)
+                    _ProgressLegend(
+                      label: 'الأيام',
+                      color: AppColors.secondary,
+                    ),
+                  if (safeDateProgress != null && safeReceivedProgress != null)
+                    const SizedBox(width: 10),
+                  if (safeReceivedProgress != null)
+                    const _ProgressLegend(
+                      label: 'المتبقى',
+                      color: Color(0xFF22C55E),
+                    ),
+                ],
               ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 6),
+              Text(
+                [
+                  if (safeDateProgress != null) '$dateInDays يوم',
+                  if (safeReceivedProgress != null)
+                    'باقي ${restInCash!.toStringAsFixed(2)}\$',
+                ].join('  |  '),
+                style: AppTextStyles.bodySmall.copyWith(
+                  color: AppColors.textMuted,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 10,
+                ),
+              ),
+            ],
+          ),
+        if (compact && compactStats.isNotEmpty)
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  compactStats.join('  |  '),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppTextStyles.bodySmall.copyWith(
+                    color: AppColors.textMuted,
+                    fontWeight: FontWeight.w800,
+                    fontSize: 9,
+                    height: 1.1,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        if (compact && compactStats.isNotEmpty) const SizedBox(height: 3),
+        if (!compact) const SizedBox(height: 6),
         _DualProgressTrack(
           dateProgress: safeDateProgress,
           receivedProgress: safeReceivedProgress,
           dateColor: accentColor,
+          compact: compact,
         ),
       ],
     );
@@ -1153,11 +1182,13 @@ class _DualProgressTrack extends StatelessWidget {
   final double? dateProgress;
   final double? receivedProgress;
   final Color dateColor;
+  final bool compact;
 
   const _DualProgressTrack({
     required this.dateProgress,
     required this.receivedProgress,
     required this.dateColor,
+    this.compact = false,
   });
 
   @override
@@ -1187,7 +1218,7 @@ class _DualProgressTrack extends StatelessWidget {
           ..sort((a, b) => b.progress.compareTo(a.progress));
 
     return Container(
-      height: 8,
+      height: compact ? 5 : 8,
       clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
         color: AppColors.border.withOpacity(0.4),
@@ -1323,18 +1354,23 @@ class _StatusSideGlow extends StatelessWidget {
 class _StatusIconBox extends StatelessWidget {
   final _StatusMeta meta;
   final bool hovered;
+  final bool compact;
 
-  const _StatusIconBox({required this.meta, required this.hovered});
+  const _StatusIconBox({
+    required this.meta,
+    required this.hovered,
+    this.compact = false,
+  });
 
   @override
   Widget build(BuildContext context) {
     return AnimatedContainer(
       duration: _normalAnimation,
-      width: 38,
-      height: 38,
+      width: compact ? 31 : 38,
+      height: compact ? 31 : 38,
       decoration: BoxDecoration(
         color: meta.accent.withOpacity(hovered ? 0.16 : 0.11),
-        borderRadius: BorderRadius.circular(13),
+        borderRadius: BorderRadius.circular(compact ? 10 : 13),
         border: Border.all(
           color: meta.accent.withOpacity(hovered ? 0.34 : 0.20),
         ),
@@ -1346,20 +1382,24 @@ class _StatusIconBox extends StatelessWidget {
           ),
         ],
       ),
-      child: Icon(meta.icon, size: 18, color: meta.accent),
+      child: Icon(meta.icon, size: compact ? 15 : 18, color: meta.accent),
     );
   }
 }
 
 class _PipelineLabel extends StatelessWidget {
   final _StatusMeta meta;
+  final bool compact;
 
-  const _PipelineLabel({required this.meta});
+  const _PipelineLabel({required this.meta, this.compact = false});
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+      padding: EdgeInsets.symmetric(
+        horizontal: compact ? 6 : 7,
+        vertical: compact ? 2 : 3,
+      ),
       decoration: BoxDecoration(
         color: AppColors.black.withOpacity(0.14),
         borderRadius: BorderRadius.circular(999),
@@ -1369,7 +1409,7 @@ class _PipelineLabel extends StatelessWidget {
         meta.groupLabel,
         style: AppTextStyles.overline.copyWith(
           color: meta.accent,
-          fontSize: 9.2,
+          fontSize: compact ? 8.4 : 9.2,
           letterSpacing: 0,
           height: 1.1,
           fontWeight: FontWeight.w800,
@@ -1562,12 +1602,14 @@ class _CardMenu extends StatelessWidget {
   final VoidCallback? onArchive;
   final VoidCallback? onRestore;
   final VoidCallback? onMoveToExecution;
+  final bool compact;
 
   const _CardMenu({
     required this.onEdit,
     this.onArchive,
     this.onRestore,
     this.onMoveToExecution,
+    this.compact = false,
   });
 
   @override
@@ -1575,10 +1617,14 @@ class _CardMenu extends StatelessWidget {
     return PopupMenuButton<String>(
       tooltip: 'خيارات المشروع',
       padding: EdgeInsets.zero,
-      icon: const Icon(
+      icon: Icon(
         Icons.more_horiz_rounded,
-        size: 19,
+        size: compact ? 17 : 19,
         color: AppColors.textMuted,
+      ),
+      constraints: BoxConstraints.tightFor(
+        width: compact ? 32 : 40,
+        height: compact ? 32 : 40,
       ),
       color: AppColors.cardBackground,
       elevation: 8,
@@ -1667,12 +1713,16 @@ class _PopupMenuRow extends StatelessWidget {
       children: [
         Icon(icon, size: 15, color: color),
         const SizedBox(width: 8),
-        Text(
-          label,
-          style: TextStyle(
-            color: color,
-            fontSize: 12.5,
-            fontWeight: FontWeight.w600,
+        Expanded(
+          child: Text(
+            label,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              color: color,
+              fontSize: 12.5,
+              fontWeight: FontWeight.w600,
+            ),
           ),
         ),
       ],

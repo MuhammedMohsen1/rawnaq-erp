@@ -1,6 +1,8 @@
 import 'package:dartz/dartz.dart';
 import '../../../../core/error/exceptions.dart' as app_exceptions;
 import '../../../../core/error/failures.dart';
+import '../../../execution/data/datasources/execution_api_datasource.dart';
+import '../../../pricing/data/datasources/pricing_api_datasource.dart';
 import '../../domain/entities/project_attachment_entity.dart';
 import '../../domain/entities/project_entity.dart';
 import '../../domain/entities/team_member_entity.dart';
@@ -13,9 +15,16 @@ import '../models/project_model.dart';
 /// Implementation of ProjectsRepository using API
 class ProjectsRepositoryImpl implements ProjectsRepository {
   final ProjectsApiDataSource _dataSource;
+  final ExecutionApiDataSource _executionDataSource;
+  final PricingApiDataSource _pricingDataSource;
 
-  ProjectsRepositoryImpl({ProjectsApiDataSource? dataSource})
-    : _dataSource = dataSource ?? ProjectsApiDataSource();
+  ProjectsRepositoryImpl({
+    ProjectsApiDataSource? dataSource,
+    ExecutionApiDataSource? executionDataSource,
+    PricingApiDataSource? pricingDataSource,
+  }) : _dataSource = dataSource ?? ProjectsApiDataSource(),
+       _executionDataSource = executionDataSource ?? ExecutionApiDataSource(),
+       _pricingDataSource = pricingDataSource ?? PricingApiDataSource();
 
   @override
   Future<Either<Failure, PaginatedProjectsResult>> getProjects({
@@ -41,6 +50,7 @@ class ProjectsRepositoryImpl implements ProjectsRepository {
       final projects = projectsList
           .map((json) => ProjectModel.fromJson(json as Map<String, dynamic>))
           .toList();
+      final enrichedProjects = await _enrichProjectFinancials(projects);
       final total = (response['total'] as num?)?.toInt() ?? projects.length;
       final currentPage = (response['page'] as num?)?.toInt() ?? (page ?? 1);
       final currentLimit =
@@ -48,7 +58,7 @@ class ProjectsRepositoryImpl implements ProjectsRepository {
 
       return Right(
         PaginatedProjectsResult(
-          projects: projects,
+          projects: enrichedProjects,
           total: total,
           page: currentPage,
           limit: currentLimit,
@@ -56,6 +66,76 @@ class ProjectsRepositoryImpl implements ProjectsRepository {
       );
     } catch (e) {
       return Left(_attachmentFailure(e));
+    }
+  }
+
+  Future<List<ProjectEntity>> _enrichProjectFinancials(
+    List<ProjectEntity> projects,
+  ) async {
+    return Future.wait(projects.map(_enrichProjectFinancial));
+  }
+
+  Future<ProjectEntity> _enrichProjectFinancial(ProjectEntity project) async {
+    if (project.status == ProjectStatus.execution ||
+        project.status == ProjectStatus.completed) {
+      final executionProject = await _tryEnrichFromExecution(project);
+      if (executionProject.projectTotalPrice > 0 ||
+          executionProject.totalExpenses > 0) {
+        return executionProject;
+      }
+    }
+
+    if (project.projectTotalPrice > 0) return project;
+
+    return _tryEnrichFromPricing(project);
+  }
+
+  Future<ProjectEntity> _tryEnrichFromExecution(ProjectEntity project) async {
+    try {
+      final dashboard = await _executionDataSource.getExecutionDashboard(
+        project.id,
+      );
+      final projectTotal = dashboard.totalAmountAfterDeduction > 0
+          ? dashboard.totalAmountAfterDeduction
+          : dashboard.totalPrice;
+
+      if (projectTotal <= 0 && dashboard.totalExpenses <= 0) return project;
+
+      return project.copyWith(
+        totalCost: project.totalCost > 0
+            ? project.totalCost
+            : dashboard.totalBudget,
+        totalPrice: dashboard.totalPrice,
+        totalAmountAfterDeduction: dashboard.totalAmountAfterDeduction,
+        totalReceived: dashboard.totalReceived,
+        totalExpenses: dashboard.totalExpenses,
+      );
+    } catch (_) {
+      return project;
+    }
+  }
+
+  Future<ProjectEntity> _tryEnrichFromPricing(ProjectEntity project) async {
+    try {
+      final versions = await _pricingDataSource.getPricingVersions(project.id);
+      if (versions.isEmpty) return project;
+
+      final latest = versions.reduce(
+        (current, next) => next.version > current.version ? next : current,
+      );
+      final totalAmount = latest.totalAmountAfterDeduction > 0
+          ? latest.totalAmountAfterDeduction
+          : latest.totalPrice;
+
+      if (totalAmount <= 0) return project;
+
+      return project.copyWith(
+        totalCost: latest.totalCost > 0 ? latest.totalCost : project.totalCost,
+        totalPrice: latest.totalPrice,
+        totalAmountAfterDeduction: latest.totalAmountAfterDeduction,
+      );
+    } catch (_) {
+      return project;
     }
   }
 
@@ -190,12 +270,14 @@ class ProjectsRepositoryImpl implements ProjectsRepository {
       projectData['clientPhone'] = project.clientPhone?.isNotEmpty == true
           ? project.clientPhone
           : null;
-      projectData['clientContacts'] = project.clientContacts
-          .map((contact) => {'name': contact.name, 'phone': contact.phone})
-          .toList();
-      projectData['googleMapLink'] = project.googleMapLink?.isNotEmpty == true
-          ? project.googleMapLink
-          : null;
+      if (project.clientContacts.isNotEmpty) {
+        projectData['clientContacts'] = project.clientContacts
+            .map((contact) => {'name': contact.name, 'phone': contact.phone})
+            .toList();
+      }
+      if (project.googleMapLink?.isNotEmpty == true) {
+        projectData['googleMapLink'] = project.googleMapLink;
+      }
 
       final response = await _dataSource.updateProject(project.id, projectData);
       final updatedProject = ProjectModel.fromJson(response);
