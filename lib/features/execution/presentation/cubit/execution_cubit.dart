@@ -1,4 +1,5 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:dio/dio.dart';
 import '../../data/datasources/execution_api_datasource.dart';
 import '../../data/models/execution_models.dart';
 import '../../../projects/data/datasources/projects_api_datasource.dart';
@@ -280,12 +281,20 @@ class ExecutionCubit extends Cubit<ExecutionState> {
   }
 
   /// Add new income (Admin/Manager direct income addition)
-  Future<void> addIncome(String projectId, CreateIncomeDto dto) async {
+  Future<void> addIncome(
+    String projectId,
+    CreateIncomeDto dto, {
+    List<MultipartFile> attachments = const [],
+  }) async {
     final currentState = state;
     if (currentState is! ExecutionLoaded) return;
 
     try {
-      await _apiDataSource.createIncome(projectId, dto);
+      await _apiDataSource.createIncome(
+        projectId,
+        dto,
+        attachments: attachments,
+      );
       emit(currentState.copyWith(isAddingIncome: false));
       await refreshDashboard(projectId);
     } catch (e) {

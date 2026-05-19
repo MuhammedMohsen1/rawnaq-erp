@@ -317,6 +317,13 @@ abstract class ApiEndpoints {
     String subItemId,
   ) =>
       '/projects/$projectId/pricing/$version/items/$itemId/sub-items/$subItemId/elements';
+  static String reorderPricingElements(
+    String projectId,
+    int version,
+    String itemId,
+    String subItemId,
+  ) =>
+      '/projects/$projectId/pricing/$version/items/$itemId/sub-items/$subItemId/elements/reorder';
   static String pricingElement(
     String projectId,
     int version,

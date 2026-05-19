@@ -13,6 +13,7 @@ class PricingTableRow extends StatefulWidget {
   onFieldCompleted; // Called when user finishes editing (blur or submit)
   final VoidCallback? onSubmitted; // Called only when user presses Enter/submit
   final bool isNewRow;
+  final FocusNode? firstFieldFocusNode;
 
   const PricingTableRow({
     super.key,
@@ -22,6 +23,7 @@ class PricingTableRow extends StatefulWidget {
     this.onFieldCompleted,
     this.onSubmitted,
     this.isNewRow = false,
+    this.firstFieldFocusNode,
   });
 
   @override
@@ -33,10 +35,15 @@ class _PricingTableRowState extends State<PricingTableRow> {
   late TextEditingController _quantityController;
   late TextEditingController _unitPriceController;
   late TextEditingController _totalController;
+  late FocusNode _descriptionFocusNode;
+  late FocusNode _quantityFocusNode;
+  late FocusNode _unitPriceFocusNode;
+  late FocusNode _totalFocusNode;
   bool _isUnitPriceMode =
       false; // false = direct total input, true = quantity × unitPrice
   DateTime? _lastTapTime;
   int _tapCount = 0;
+  bool _hadFieldFocus = false;
 
   @override
   void initState() {
@@ -53,10 +60,24 @@ class _PricingTableRowState extends State<PricingTableRow> {
     _totalController = TextEditingController(
       text: widget.item.total > 0 ? widget.item.total.toStringAsFixed(3) : '',
     );
+    _descriptionFocusNode = widget.firstFieldFocusNode ?? FocusNode();
+    _quantityFocusNode = FocusNode();
+    _unitPriceFocusNode = FocusNode();
+    _totalFocusNode = FocusNode();
+    for (final node in _fieldFocusNodes) {
+      node.addListener(_handleFieldFocusChange);
+    }
     // Check if item already has unit price mode (quantity and unitPrice exist)
     _isUnitPriceMode =
         widget.item.quantity != null && widget.item.unitPrice != null;
   }
+
+  List<FocusNode> get _fieldFocusNodes => [
+    _descriptionFocusNode,
+    _quantityFocusNode,
+    _unitPriceFocusNode,
+    _totalFocusNode,
+  ];
 
   @override
   void dispose() {
@@ -64,7 +85,31 @@ class _PricingTableRowState extends State<PricingTableRow> {
     _quantityController.dispose();
     _unitPriceController.dispose();
     _totalController.dispose();
+    for (final node in _fieldFocusNodes) {
+      node.removeListener(_handleFieldFocusChange);
+    }
+    if (widget.firstFieldFocusNode == null) {
+      _descriptionFocusNode.dispose();
+    }
+    _quantityFocusNode.dispose();
+    _unitPriceFocusNode.dispose();
+    _totalFocusNode.dispose();
     super.dispose();
+  }
+
+  void _handleFieldFocusChange() {
+    final hasAnyFocus = _fieldFocusNodes.any((node) => node.hasFocus);
+    if (hasAnyFocus) {
+      _hadFieldFocus = true;
+      return;
+    }
+
+    if (!_hadFieldFocus) return;
+    _hadFieldFocus = false;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || _fieldFocusNodes.any((node) => node.hasFocus)) return;
+      widget.onFieldCompleted?.call();
+    });
   }
 
   void _updateTotal() {
@@ -156,6 +201,7 @@ class _PricingTableRowState extends State<PricingTableRow> {
               flex: 2,
               child: TextField(
                 controller: _descriptionController,
+                focusNode: _descriptionFocusNode,
                 textInputAction: TextInputAction.done,
                 style: AppTextStyles.bodyMedium.copyWith(
                   color: AppColors.textPrimary,
@@ -195,6 +241,7 @@ class _PricingTableRowState extends State<PricingTableRow> {
                         Expanded(
                           child: TextField(
                             controller: _quantityController,
+                            focusNode: _quantityFocusNode,
                             textInputAction: TextInputAction.done,
                             keyboardType: const TextInputType.numberWithOptions(
                               decimal: true,
@@ -248,6 +295,7 @@ class _PricingTableRowState extends State<PricingTableRow> {
                         Expanded(
                           child: TextField(
                             controller: _unitPriceController,
+                            focusNode: _unitPriceFocusNode,
                             textInputAction: TextInputAction.done,
                             keyboardType: const TextInputType.numberWithOptions(
                               decimal: true,
@@ -340,6 +388,7 @@ class _PricingTableRowState extends State<PricingTableRow> {
                             onTap: _handleTripleTap,
                             child: TextField(
                               controller: _totalController,
+                              focusNode: _totalFocusNode,
                               textInputAction: TextInputAction.done,
                               keyboardType:
                                   const TextInputType.numberWithOptions(

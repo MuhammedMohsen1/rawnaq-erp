@@ -285,6 +285,17 @@ class _PricingLayout extends StatelessWidget {
                           newIndex,
                         );
                       },
+                onReorderElements: state.readOnly
+                    ? null
+                    : (itemId, subItemId, elementId, targetOrder) async {
+                        await context.read<PricingCubit>().reorderElement(
+                          projectId,
+                          itemId,
+                          subItemId,
+                          elementId,
+                          targetOrder,
+                        );
+                      },
                 readOnly: state.readOnly,
               ),
               const SizedBox(height: 24),

@@ -33,6 +33,7 @@ class _CreateProjectDialogState extends State<CreateProjectDialog> {
   final List<TextEditingController> _contactPhoneControllers = [
     TextEditingController(),
   ];
+  DateTime _startDate = DateTime.now();
 
   // Department selection (for now, using mock data - should be fetched from API)
   String? _selectedDepartmentId;
@@ -298,6 +299,17 @@ class _CreateProjectDialogState extends State<CreateProjectDialog> {
           _buildDepartmentDisplay(),
           const SizedBox(height: 16),
 
+          _buildDatePicker(
+            label: 'تاريخ البداية',
+            date: _startDate,
+            onDateSelected: (date) {
+              setState(() {
+                _startDate = date;
+              });
+            },
+          ),
+          const SizedBox(height: 16),
+
           // Description
           _buildTextField(
             controller: _descriptionController,
@@ -523,6 +535,82 @@ class _CreateProjectDialogState extends State<CreateProjectDialog> {
     );
   }
 
+  Widget _buildDatePicker({
+    required String label,
+    required DateTime date,
+    required ValueChanged<DateTime> onDateSelected,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: AppTextStyles.bodyMedium.copyWith(
+            color: AppColors.textSecondary,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+        const SizedBox(height: 8),
+        InkWell(
+          onTap: () async {
+            final selectedDate = await showDatePicker(
+              context: context,
+              initialDate: date,
+              firstDate: DateTime(2000),
+              lastDate: DateTime(2100),
+              builder: (context, child) {
+                return Theme(
+                  data: Theme.of(context).copyWith(
+                    colorScheme: const ColorScheme.dark(
+                      primary: AppColors.primary,
+                      onPrimary: AppColors.scaffoldBackground,
+                      surface: AppColors.cardBackground,
+                      onSurface: AppColors.textPrimary,
+                    ),
+                  ),
+                  child: child!,
+                );
+              },
+            );
+            if (selectedDate != null) {
+              onDateSelected(selectedDate);
+            }
+          },
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+            decoration: BoxDecoration(
+              color: AppColors.inputBackground,
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: AppColors.inputBorder),
+            ),
+            child: Row(
+              children: [
+                const Icon(
+                  Icons.calendar_today_outlined,
+                  color: AppColors.textSecondary,
+                  size: 20,
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    '${date.year}/${date.month}/${date.day}',
+                    style: AppTextStyles.bodyMedium.copyWith(
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                ),
+                const Icon(
+                  Icons.arrow_drop_down,
+                  color: AppColors.textSecondary,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
   Widget _buildFooter() {
     return Container(
       padding: const EdgeInsets.all(24),
@@ -607,9 +695,6 @@ class _CreateProjectDialogState extends State<CreateProjectDialog> {
         return;
       }
 
-      // Dispatch create project event with all data
-      // Start date will be current date (created date)
-      final now = DateTime.now();
       final contacts = _collectContacts();
 
       context.read<ProjectsBloc>().add(
@@ -629,7 +714,7 @@ class _CreateProjectDialogState extends State<CreateProjectDialog> {
           googleMapLink: _googleMapLinkController.text.trim().isEmpty
               ? null
               : _googleMapLinkController.text.trim(),
-          startDate: now, // Start date is the created date
+          startDate: _startDate,
           endDate: null, // End date not required when creating
           deadline: null, // Deadline not needed
           progress: 0, // Progress starts at 0

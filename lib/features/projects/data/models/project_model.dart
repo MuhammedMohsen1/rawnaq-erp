@@ -62,6 +62,8 @@ class ProjectModel extends ProjectEntity {
     DateTime? startDate;
     if (json['startDate'] != null) {
       startDate = DateTime.parse(json['startDate'] as String);
+    } else if (json['createdAt'] != null) {
+      startDate = DateTime.parse(json['createdAt'] as String);
     } else {
       // If no start date, use current date as fallback
       startDate = DateTime.now();

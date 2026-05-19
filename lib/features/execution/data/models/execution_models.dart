@@ -40,6 +40,46 @@ String? _toStringOrNull(dynamic value) {
 }
 
 /// Transaction item model
+class TransactionAttachmentModel {
+  final String id;
+  final String url;
+  final String? fileName;
+  final String? mimeType;
+  final DateTime? createdAt;
+
+  const TransactionAttachmentModel({
+    required this.id,
+    required this.url,
+    this.fileName,
+    this.mimeType,
+    this.createdAt,
+  });
+
+  factory TransactionAttachmentModel.fromJson(Map<String, dynamic> json) {
+    return TransactionAttachmentModel(
+      id: _toStringOrEmpty(json['id']),
+      url: _toStringOrEmpty(json['url'] ?? json['fileUrl'] ?? json['path']),
+      fileName: _toStringOrNull(
+        json['fileName'] ?? json['filename'] ?? json['originalName'],
+      ),
+      mimeType: _toStringOrNull(json['mimeType'] ?? json['contentType']),
+      createdAt: json['createdAt'] != null
+          ? DateTime.tryParse(json['createdAt'].toString())
+          : null,
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'url': url,
+      if (fileName != null) 'fileName': fileName,
+      if (mimeType != null) 'mimeType': mimeType,
+      if (createdAt != null) 'createdAt': createdAt!.toIso8601String(),
+    };
+  }
+}
+
 class TransactionModel {
   final String id;
   final TransactionType type;
@@ -54,6 +94,7 @@ class TransactionModel {
   final CostType? costType;
   final double? unitCost;
   final double? quantity;
+  final List<TransactionAttachmentModel> attachments;
 
   TransactionModel({
     required this.id,
@@ -69,9 +110,11 @@ class TransactionModel {
     this.costType,
     this.unitCost,
     this.quantity,
+    this.attachments = const [],
   });
 
   factory TransactionModel.fromJson(Map<String, dynamic> json) {
+    final attachmentsJson = json['attachments'];
     return TransactionModel(
       id: _toStringOrEmpty(json['id']),
       type: json['type'] == 'income'
@@ -92,6 +135,17 @@ class TransactionModel {
           : CostType.total,
       unitCost: _toDoubleOrNull(json['unitCost']),
       quantity: _toDoubleOrNull(json['quantity']),
+      attachments: attachmentsJson is List
+          ? attachmentsJson
+                .whereType<Map>()
+                .map(
+                  (attachment) => TransactionAttachmentModel.fromJson(
+                    Map<String, dynamic>.from(attachment),
+                  ),
+                )
+                .where((attachment) => attachment.url.isNotEmpty)
+                .toList()
+          : const [],
     );
   }
 
@@ -110,6 +164,9 @@ class TransactionModel {
       'costType': costType == CostType.unitBased ? 'UNIT_BASED' : 'TOTAL',
       'unitCost': unitCost,
       'quantity': quantity,
+      'attachments': attachments
+          .map((attachment) => attachment.toJson())
+          .toList(),
     };
   }
 }

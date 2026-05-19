@@ -374,6 +374,75 @@ class PricingCubit extends Cubit<PricingState> {
     }
   }
 
+  Future<void> reorderElement(
+    String projectId,
+    String itemId,
+    String subItemId,
+    String elementId,
+    int targetOrder,
+  ) async {
+    final currentState = state;
+    if (currentState is! PricingLoaded) return;
+
+    final items = currentState.pricingVersion.items;
+    if (items == null || items.isEmpty) return;
+
+    final itemIndex = items.indexWhere((item) => item.id == itemId);
+    if (itemIndex == -1) return;
+
+    final targetItem = items[itemIndex];
+    final subItems = targetItem.subItems;
+    if (subItems == null || subItems.isEmpty) return;
+
+    final subItemIndex = subItems.indexWhere(
+      (subItem) => subItem.id == subItemId,
+    );
+    if (subItemIndex == -1) return;
+
+    final targetSubItem = subItems[subItemIndex];
+    final elements = targetSubItem.elements;
+    if (elements == null || elements.isEmpty) return;
+
+    final oldIndex = elements.indexWhere((element) => element.id == elementId);
+    final normalizedTargetIndex = (targetOrder - 1).clamp(
+      0,
+      elements.length - 1,
+    );
+    if (oldIndex == -1 || oldIndex == normalizedTargetIndex) return;
+
+    final reorderedElements = List<PricingElementModel>.from(elements);
+    final movedElement = reorderedElements.removeAt(oldIndex);
+    reorderedElements.insert(normalizedTargetIndex, movedElement);
+
+    final updatedSubItems = List<PricingSubItemModel>.from(subItems);
+    updatedSubItems[subItemIndex] = targetSubItem.copyWith(
+      elements: reorderedElements,
+    );
+
+    final updatedItems = List<PricingItemModel>.from(items);
+    updatedItems[itemIndex] = targetItem.copyWith(subItems: updatedSubItems);
+
+    final optimisticState = currentState.copyWith(
+      pricingVersion: currentState.pricingVersion.copyWith(items: updatedItems),
+    );
+
+    emit(optimisticState);
+
+    try {
+      await pricingApiDataSource.reorderPricingElement(
+        projectId,
+        currentState.pricingVersion.version,
+        itemId,
+        subItemId,
+        elementId,
+        targetOrder,
+      );
+    } catch (e) {
+      emit(currentState);
+      rethrow;
+    }
+  }
+
   /// Return pricing to draft status
   Future<void> returnToPricing(String projectId, String? reason) async {
     final currentState = state;

@@ -1,3 +1,5 @@
+import 'package:dio/dio.dart';
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
@@ -870,6 +872,13 @@ class _TransactionRow extends StatelessWidget {
                     overflow: TextOverflow.ellipsis,
                     style: AppTextStyles.caption,
                   ),
+                  if (transaction.attachments.isNotEmpty) ...[
+                    const SizedBox(height: 4),
+                    _TransactionAttachments(
+                      attachments: transaction.attachments,
+                      compact: true,
+                    ),
+                  ],
                 ],
               ),
             ),
@@ -976,6 +985,13 @@ class _TransactionRow extends StatelessWidget {
                     transaction.subDescription!,
                     style: AppTextStyles.bodySmall,
                   ),
+                if (transaction.attachments.isNotEmpty) ...[
+                  const SizedBox(height: 6),
+                  _TransactionAttachments(
+                    attachments: transaction.attachments,
+                    compact: false,
+                  ),
+                ],
               ],
             ),
           ),
@@ -1096,6 +1112,165 @@ class _TransactionRow extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+class _TransactionAttachments extends StatelessWidget {
+  final List<TransactionAttachmentModel> attachments;
+  final bool compact;
+
+  const _TransactionAttachments({
+    required this.attachments,
+    required this.compact,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Wrap(
+      spacing: 6,
+      runSpacing: 4,
+      children: attachments.asMap().entries.map((entry) {
+        final attachment = entry.value;
+        final label = attachment.fileName?.trim().isNotEmpty == true
+            ? attachment.fileName!.trim()
+            : 'مرفق ${entry.key + 1}';
+
+        return InkWell(
+          onTap: () => _openAttachment(context, attachment.url),
+          borderRadius: BorderRadius.circular(999),
+          child: Container(
+            constraints: BoxConstraints(maxWidth: compact ? 120 : 180),
+            padding: EdgeInsets.symmetric(
+              horizontal: compact ? 7 : 9,
+              vertical: compact ? 3 : 5,
+            ),
+            decoration: BoxDecoration(
+              color: AppColors.primary.withValues(alpha: 0.08),
+              borderRadius: BorderRadius.circular(999),
+              border: Border.all(
+                color: AppColors.primary.withValues(alpha: 0.25),
+              ),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  Icons.attachment_outlined,
+                  size: compact ? 12 : 14,
+                  color: AppColors.primary,
+                ),
+                const SizedBox(width: 4),
+                Flexible(
+                  child: Text(
+                    label,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: AppTextStyles.caption.copyWith(
+                      color: AppColors.primary,
+                      fontSize: compact ? 10 : null,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      }).toList(),
+    );
+  }
+
+  void _openAttachment(BuildContext context, String url) {
+    showDialog(
+      context: context,
+      builder: (dialogContext) {
+        return Dialog(
+          backgroundColor: AppColors.cardBackground,
+          insetPadding: const EdgeInsets.all(24),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+            side: const BorderSide(color: AppColors.border),
+          ),
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 900, maxHeight: 720),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 8,
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(
+                        Icons.image_outlined,
+                        color: AppColors.primary,
+                        size: 20,
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          'معاينة المرفق',
+                          style: AppTextStyles.bodyMedium.copyWith(
+                            color: AppColors.textPrimary,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ),
+                      IconButton(
+                        onPressed: () => Navigator.of(dialogContext).pop(),
+                        icon: const Icon(Icons.close),
+                        color: AppColors.textSecondary,
+                        tooltip: 'إغلاق',
+                      ),
+                    ],
+                  ),
+                ),
+                Flexible(
+                  child: InteractiveViewer(
+                    minScale: 0.5,
+                    maxScale: 4,
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(8),
+                        child: Image.network(
+                          url,
+                          fit: BoxFit.contain,
+                          loadingBuilder: (context, child, loadingProgress) {
+                            if (loadingProgress == null) return child;
+                            return const SizedBox(
+                              width: 420,
+                              height: 320,
+                              child: Center(child: CircularProgressIndicator()),
+                            );
+                          },
+                          errorBuilder: (context, error, stackTrace) {
+                            return SizedBox(
+                              width: 420,
+                              height: 220,
+                              child: Center(
+                                child: Text(
+                                  'تعذر عرض الصورة',
+                                  style: AppTextStyles.bodyMedium.copyWith(
+                                    color: AppColors.error,
+                                  ),
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 }
@@ -2282,6 +2457,7 @@ class _AddIncomeRowState extends State<_AddIncomeRow> {
   final _descriptionController = TextEditingController();
   final _amountController = TextEditingController();
   DateTime _selectedDate = DateTime.now();
+  final List<PlatformFile> _attachments = [];
   bool _isSubmitting = false;
 
   @override
@@ -2387,6 +2563,8 @@ class _AddIncomeRowState extends State<_AddIncomeRow> {
             contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
           ),
         ),
+        const SizedBox(height: 8),
+        _buildAttachmentPicker(compact: true),
         const SizedBox(height: 12),
         Row(
           mainAxisAlignment: MainAxisAlignment.end,
@@ -2498,6 +2676,8 @@ class _AddIncomeRowState extends State<_AddIncomeRow> {
           ),
         ),
         const SizedBox(width: 8),
+        SizedBox(width: 150, child: _buildAttachmentPicker(compact: false)),
+        const SizedBox(width: 8),
         // Actions
         Row(
           mainAxisSize: MainAxisSize.min,
@@ -2522,6 +2702,103 @@ class _AddIncomeRowState extends State<_AddIncomeRow> {
         ),
       ],
     );
+  }
+
+  Widget _buildAttachmentPicker({required bool compact}) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        OutlinedButton.icon(
+          onPressed: _isSubmitting ? null : _pickAttachments,
+          icon: const Icon(Icons.attach_file, size: 16),
+          label: Text(
+            _attachments.isEmpty ? 'إرفاق صورة' : '${_attachments.length} مرفق',
+            overflow: TextOverflow.ellipsis,
+          ),
+        ),
+        if (_attachments.isNotEmpty) ...[
+          const SizedBox(height: 4),
+          Wrap(
+            spacing: 4,
+            runSpacing: 4,
+            children: _attachments.asMap().entries.map((entry) {
+              final index = entry.key;
+              final file = entry.value;
+              return Container(
+                constraints: BoxConstraints(maxWidth: compact ? 180 : 140),
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withValues(alpha: 0.08),
+                  borderRadius: BorderRadius.circular(999),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(
+                      Icons.image_outlined,
+                      size: 13,
+                      color: AppColors.primary,
+                    ),
+                    const SizedBox(width: 4),
+                    Flexible(
+                      child: Text(
+                        file.name,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: AppTextStyles.caption.copyWith(
+                          color: AppColors.primary,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 2),
+                    InkWell(
+                      onTap: _isSubmitting
+                          ? null
+                          : () => setState(() => _attachments.removeAt(index)),
+                      child: const Icon(
+                        Icons.close,
+                        size: 13,
+                        color: AppColors.textMuted,
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            }).toList(),
+          ),
+        ],
+      ],
+    );
+  }
+
+  Future<void> _pickAttachments() async {
+    final result = await FilePicker.platform.pickFiles(
+      allowMultiple: true,
+      type: FileType.image,
+      withData: true,
+    );
+    if (result == null || result.files.isEmpty) return;
+
+    setState(() {
+      _attachments
+        ..clear()
+        ..addAll(result.files);
+    });
+  }
+
+  Future<List<MultipartFile>> _buildMultipartAttachments() async {
+    final files = <MultipartFile>[];
+    for (final file in _attachments) {
+      if (file.path != null) {
+        files.add(
+          await MultipartFile.fromFile(file.path!, filename: file.name),
+        );
+      } else if (file.bytes != null) {
+        files.add(MultipartFile.fromBytes(file.bytes!, filename: file.name));
+      }
+    }
+    return files;
   }
 
   Future<void> _submitIncome() async {
@@ -2550,7 +2827,12 @@ class _AddIncomeRowState extends State<_AddIncomeRow> {
         date: _selectedDate,
       );
 
-      await widget.cubit.addIncome(widget.projectId, dto);
+      final attachments = await _buildMultipartAttachments();
+      await widget.cubit.addIncome(
+        widget.projectId,
+        dto,
+        attachments: attachments,
+      );
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(

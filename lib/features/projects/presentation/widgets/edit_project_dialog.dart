@@ -26,7 +26,8 @@ class _EditProjectDialogState extends State<EditProjectDialog> {
   final List<TextEditingController> _contactNameControllers = [];
   final List<TextEditingController> _contactPhoneControllers = [];
 
-  // End date
+  // Dates
+  late DateTime _startDate;
   DateTime? _endDate;
 
   @override
@@ -57,7 +58,8 @@ class _EditProjectDialogState extends State<EditProjectDialog> {
         );
       }
     }
-    _endDate = widget.project.endDate;
+    _startDate = widget.project.startDate;
+    _endDate = widget.project.hasEndDate ? widget.project.endDate : null;
   }
 
   @override
@@ -211,13 +213,27 @@ class _EditProjectDialogState extends State<EditProjectDialog> {
           ),
           const SizedBox(height: 24),
 
-          // End Date Section
+          // Dates Section
           Text(
-            'تاريخ الانتهاء',
+            'تواريخ المشروع',
             style: AppTextStyles.bodyLarge.copyWith(
               color: AppColors.textPrimary,
               fontWeight: FontWeight.w600,
             ),
+          ),
+          const SizedBox(height: 16),
+
+          _buildDatePicker(
+            label: 'تاريخ البداية',
+            date: _startDate,
+            onDateSelected: (date) {
+              setState(() {
+                _startDate = date;
+                if (_endDate != null && _endDate!.isBefore(_startDate)) {
+                  _endDate = _startDate;
+                }
+              });
+            },
           ),
           const SizedBox(height: 16),
 
@@ -393,7 +409,7 @@ class _EditProjectDialogState extends State<EditProjectDialog> {
             final selectedDate = await showDatePicker(
               context: context,
               initialDate: date ?? DateTime.now(),
-              firstDate: DateTime(2020),
+              firstDate: DateTime(2000),
               lastDate: DateTime(2100),
               builder: (context, child) {
                 return Theme(
@@ -497,6 +513,7 @@ class _EditProjectDialogState extends State<EditProjectDialog> {
     final updatedProject = widget.project.copyWith(
       name: _nameController.text.trim(),
       description: _descriptionController.text.trim(),
+      startDate: _startDate,
       clientName: _clientNameController.text.trim(),
       clientPhone: contacts.isEmpty ? '' : contacts.first.phone,
       clientContacts: contacts,

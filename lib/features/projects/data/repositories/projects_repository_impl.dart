@@ -256,6 +256,7 @@ class ProjectsRepositoryImpl implements ProjectsRepository {
       // Convert entity to API format
       final projectData = <String, dynamic>{
         'name': project.name,
+        'startDate': project.startDate.toIso8601String(),
         'endDate': project.endDate.toIso8601String(),
       };
 

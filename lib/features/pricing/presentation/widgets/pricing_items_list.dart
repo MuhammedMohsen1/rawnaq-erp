@@ -25,6 +25,13 @@ class PricingItemsList extends StatelessWidget {
   final Future<void> Function(int oldIndex, int newIndex)? onReorderItems;
   final Future<void> Function(String itemId, int oldIndex, int newIndex)?
   onReorderSubItems;
+  final Future<void> Function(
+    String itemId,
+    String subItemId,
+    String elementId,
+    int targetOrder,
+  )?
+  onReorderElements;
   final bool readOnly;
 
   const PricingItemsList({
@@ -43,6 +50,7 @@ class PricingItemsList extends StatelessWidget {
     required this.onAddSubItem,
     this.onReorderItems,
     this.onReorderSubItems,
+    this.onReorderElements,
     this.readOnly = false,
   });
 
@@ -134,6 +142,17 @@ class PricingItemsList extends StatelessWidget {
                           newSubIndex,
                         );
                       },
+                      canReorderElements: canReorder,
+                      onReorderElements:
+                          (subItemId, elementId, targetOrder) async {
+                            if (onReorderElements == null) return;
+                            await onReorderElements!(
+                              item.id,
+                              subItemId,
+                              elementId,
+                              targetOrder,
+                            );
+                          },
                     ),
                   ),
                 ],

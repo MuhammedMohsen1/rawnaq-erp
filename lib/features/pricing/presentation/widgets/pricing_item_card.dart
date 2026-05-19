@@ -45,8 +45,15 @@ class LocalElement {
   });
 
   bool get hasRequiredData {
-    return name.trim().isNotEmpty && name.trim().length >= 2;
+    final hasName = name.trim().isNotEmpty;
+    final hasTotalCost = costType == 'TOTAL' && (totalCost ?? 0) > 0;
+    final hasUnitBasedCost =
+        costType == 'UNIT_BASED' && (unitCost ?? 0) > 0 && (quantity ?? 0) > 0;
+
+    return hasName || hasTotalCost || hasUnitBasedCost;
   }
+
+  bool get isEmpty => !hasRequiredData;
 }
 
 class PricingItemCard extends StatefulWidget {
@@ -71,6 +78,13 @@ class PricingItemCard extends StatefulWidget {
   final int? itemReorderIndex;
   final bool canReorderSubItems;
   final Future<void> Function(int oldIndex, int newIndex)? onReorderSubItems;
+  final bool canReorderElements;
+  final Future<void> Function(
+    String subItemId,
+    String elementId,
+    int targetOrder,
+  )?
+  onReorderElements;
 
   const PricingItemCard({
     super.key,
@@ -93,6 +107,8 @@ class PricingItemCard extends StatefulWidget {
     this.itemReorderIndex,
     this.canReorderSubItems = false,
     this.onReorderSubItems,
+    this.canReorderElements = false,
+    this.onReorderElements,
   });
 
   @override
@@ -204,6 +220,8 @@ class _PricingItemCardState extends State<PricingItemCard> {
       {}; // subItemId -> List<LocalElement>
   final Map<String, bool> _savingElements = {}; // tempId -> isSaving
   final Map<String, Timer?> _saveTimers = {}; // tempId -> debounce timer
+  final Map<String, FocusNode> _localElementFocusNodes =
+      {}; // tempId -> first field focus node
   final Map<String, bool> _updatingElements = {}; // elementId -> isUpdating
   final Map<String, Timer?> _updateTimers = {}; // elementId -> debounce timer
   final Map<String, PricingItem> _pendingUpdates =
@@ -334,6 +352,10 @@ class _PricingItemCardState extends State<PricingItemCard> {
       timer?.cancel();
     }
     _saveTimers.clear();
+    for (var focusNode in _localElementFocusNodes.values) {
+      focusNode.dispose();
+    }
+    _localElementFocusNodes.clear();
     // Cancel all pending update timers
     for (var timer in _updateTimers.values) {
       timer?.cancel();
@@ -502,6 +524,37 @@ class _PricingItemCardState extends State<PricingItemCard> {
     }
 
     await widget.onReorderSubItems!(oldIndex, newIndex);
+  }
+
+  Future<void> _handleElementReorder(
+    PricingSubItemModel subItem,
+    List<PricingElementModel> allElements,
+    int oldIndex,
+    int newIndex,
+  ) async {
+    if (!widget.canReorderElements || widget.onReorderElements == null) {
+      return;
+    }
+
+    final normalizedNewIndex = oldIndex < newIndex ? newIndex - 1 : newIndex;
+    if (oldIndex < 0 ||
+        normalizedNewIndex < 0 ||
+        oldIndex >= allElements.length ||
+        normalizedNewIndex >= allElements.length) {
+      return;
+    }
+
+    final movedElement = allElements[oldIndex];
+    if (movedElement.id.startsWith('temp-')) return;
+
+    final targetOrder =
+        allElements
+            .take(normalizedNewIndex)
+            .where((element) => !element.id.startsWith('temp-'))
+            .length +
+        1;
+
+    await widget.onReorderElements!(subItem.id, movedElement.id, targetOrder);
   }
 
   Future<Uint8List?> _getClipboardImage() async {
@@ -2152,9 +2205,36 @@ class _PricingItemCardState extends State<PricingItemCard> {
   }
 
   void _addLocalElement(String subItemId) {
+    LocalElement? existingEmptyElement;
+    for (final element in _localElements[subItemId] ?? <LocalElement>[]) {
+      if (element.isEmpty && !element.isCompleted) {
+        existingEmptyElement = element;
+        break;
+      }
+    }
+
+    if (existingEmptyElement != null) {
+      setState(() {
+        _expandedSubItems[subItemId] = true;
+      });
+      widget.onSubItemExpandedChanged?.call(
+        Map<String, bool>.from(_expandedSubItems),
+      );
+
+      final focusNode = _localElementFocusNodes[existingEmptyElement.tempId];
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted && focusNode != null && focusNode.canRequestFocus) {
+          focusNode.requestFocus();
+        }
+      });
+      return;
+    }
+
+    final tempId = 'temp-${DateTime.now().microsecondsSinceEpoch}';
+    final focusNode = FocusNode();
     setState(() {
-      final tempId = 'temp-${DateTime.now().millisecondsSinceEpoch}';
       final newElement = LocalElement(tempId: tempId, subItemId: subItemId);
+      _localElementFocusNodes[tempId] = focusNode;
 
       // Create new list with new element at the TOP (first position)
       final currentList = _localElements[subItemId] ?? [];
@@ -2167,6 +2247,20 @@ class _PricingItemCardState extends State<PricingItemCard> {
     widget.onSubItemExpandedChanged?.call(
       Map<String, bool>.from(_expandedSubItems),
     );
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted && focusNode.canRequestFocus) {
+        focusNode.requestFocus();
+      }
+    });
+  }
+
+  void _disposeLocalElementFocusNode(String tempId) {
+    final focusNode = _localElementFocusNodes.remove(tempId);
+    if (focusNode == null) return;
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      focusNode.dispose();
+    });
   }
 
   void _updateLocalElement(
@@ -2203,6 +2297,7 @@ class _PricingItemCardState extends State<PricingItemCard> {
       _savingElements.remove(tempId);
       _saveTimers[tempId]?.cancel();
       _saveTimers.remove(tempId);
+      _disposeLocalElementFocusNode(tempId);
     });
   }
 
@@ -2326,6 +2421,7 @@ class _PricingItemCardState extends State<PricingItemCard> {
               (e) => e.tempId == localElement.tempId,
             );
             _savingElements.remove(localElement.tempId);
+            _disposeLocalElementFocusNode(localElement.tempId);
           });
 
           // Update the widget with new data - parent will preserve expanded states
@@ -2337,6 +2433,7 @@ class _PricingItemCardState extends State<PricingItemCard> {
               (e) => e.tempId == localElement.tempId,
             );
             _savingElements.remove(localElement.tempId);
+            _disposeLocalElementFocusNode(localElement.tempId);
           });
         }
       } catch (e) {
@@ -2346,6 +2443,7 @@ class _PricingItemCardState extends State<PricingItemCard> {
             (e) => e.tempId == localElement.tempId,
           );
           _savingElements.remove(localElement.tempId);
+          _disposeLocalElementFocusNode(localElement.tempId);
         });
       }
 
@@ -2710,9 +2808,7 @@ class _PricingItemCardState extends State<PricingItemCard> {
       orElse: () => widget.item.subItems?.first ?? widget.item.subItems!.first,
     );
 
-    // Get saved elements and sort by createdAt (newest first)
-    final savedElements = (subItem?.elements ?? []).toList()
-      ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
+    final savedElements = (subItem?.elements ?? []).toList();
 
     // Get local elements (not yet saved)
     final localElementsList = _localElements[subItemId] ?? [];
@@ -4102,258 +4198,318 @@ class _PricingItemCardState extends State<PricingItemCard> {
                                               const SizedBox(height: 12),
                                               // Elements as Table Rows
                                               // Display in order: newest local elements first (at top), then saved elements
-                                              ...allElements.asMap().entries.map((
-                                                entry,
-                                              ) {
-                                                final index = entry.key;
-                                                final element = entry.value;
-                                                final isLocal = element.id
-                                                    .startsWith('temp-');
+                                              ReorderableListView(
+                                                shrinkWrap: true,
+                                                physics:
+                                                    const NeverScrollableScrollPhysics(),
+                                                buildDefaultDragHandles: false,
+                                                proxyDecorator:
+                                                    (child, index, animation) {
+                                                      return AnimatedBuilder(
+                                                        animation: animation,
+                                                        builder: (context, _) {
+                                                          return Material(
+                                                            color: Colors
+                                                                .transparent,
+                                                            child: child,
+                                                          );
+                                                        },
+                                                      );
+                                                    },
+                                                onReorder:
+                                                    (oldIndex, newIndex) =>
+                                                        _handleElementReorder(
+                                                          subItem,
+                                                          allElements,
+                                                          oldIndex,
+                                                          newIndex,
+                                                        ),
+                                                children: allElements.asMap().entries.map((
+                                                  entry,
+                                                ) {
+                                                  final index = entry.key;
+                                                  final element = entry.value;
+                                                  final isLocal = element.id
+                                                      .startsWith('temp-');
 
-                                                // Safely find local element
-                                                LocalElement? localElement;
-                                                if (isLocal) {
-                                                  try {
-                                                    localElement =
-                                                        _localElements[subItem
-                                                                .id]
-                                                            ?.firstWhere(
-                                                              (e) =>
-                                                                  e.tempId ==
-                                                                  element.id,
-                                                            );
-                                                  } catch (e) {
-                                                    localElement = null;
+                                                  // Safely find local element
+                                                  LocalElement? localElement;
+                                                  if (isLocal) {
+                                                    try {
+                                                      localElement =
+                                                          _localElements[subItem
+                                                                  .id]
+                                                              ?.firstWhere(
+                                                                (e) =>
+                                                                    e.tempId ==
+                                                                    element.id,
+                                                              );
+                                                    } catch (e) {
+                                                      localElement = null;
+                                                    }
                                                   }
-                                                }
 
-                                                final isSaving =
-                                                    (isLocal &&
-                                                        localElement != null &&
-                                                        (_savingElements[element
-                                                                .id] ==
-                                                            true)) ||
-                                                    (!isLocal &&
-                                                        _updatingElements[element
-                                                                .id] ==
-                                                            true);
+                                                  final isSaving =
+                                                      (isLocal &&
+                                                          localElement !=
+                                                              null &&
+                                                          (_savingElements[element
+                                                                  .id] ==
+                                                              true)) ||
+                                                      (!isLocal &&
+                                                          _updatingElements[element
+                                                                  .id] ==
+                                                              true);
 
-                                                // Convert element to PricingItem for table row
-                                                final pricingItem = PricingItem(
-                                                  id: element.id,
-                                                  description: element.name,
-                                                  quantity:
-                                                      element.costType ==
-                                                          'UNIT_BASED'
-                                                      ? element.quantity
-                                                      : null,
-                                                  unitPrice:
-                                                      element.costType ==
-                                                          'UNIT_BASED'
-                                                      ? element.unitCost
-                                                      : null,
-                                                  total: element.calculatedCost,
-                                                  costType: element.costType,
-                                                );
+                                                  // Convert element to PricingItem for table row
+                                                  final pricingItem =
+                                                      PricingItem(
+                                                        id: element.id,
+                                                        description:
+                                                            element.name,
+                                                        quantity:
+                                                            element.costType ==
+                                                                'UNIT_BASED'
+                                                            ? element.quantity
+                                                            : null,
+                                                        unitPrice:
+                                                            element.costType ==
+                                                                'UNIT_BASED'
+                                                            ? element.unitCost
+                                                            : null,
+                                                        total: element
+                                                            .calculatedCost,
+                                                        costType:
+                                                            element.costType,
+                                                      );
 
-                                                return Stack(
-                                                  key: ValueKey(
-                                                    'element-${subItem.id}-${element.id}-$index',
-                                                  ),
-                                                  children: [
-                                                    Row(
-                                                      crossAxisAlignment:
-                                                          CrossAxisAlignment
-                                                              .center,
-                                                      children: [
-                                                        SizedBox(
-                                                          width: 36,
-                                                          height: 44,
-                                                          child: isLocal
-                                                              ? const SizedBox.shrink()
-                                                              : Tooltip(
-                                                                  message:
-                                                                      element
-                                                                          .isHidden
-                                                                      ? 'إظهار العنصر في التسعير و PDF'
-                                                                      : 'إخفاء العنصر من التسعير و PDF',
-                                                                  child: Checkbox(
-                                                                    value: !element
-                                                                        .isHidden,
-                                                                    onChanged:
-                                                                        (
-                                                                          value,
-                                                                        ) => _toggleElementVisibility(
-                                                                          subItem,
-                                                                          element,
-                                                                          value ??
-                                                                              false,
-                                                                        ),
-                                                                    activeColor:
-                                                                        AppColors
-                                                                            .background,
-                                                                    checkColor:
-                                                                        AppColors
-                                                                            .primary,
-                                                                    side: BorderSide(
-                                                                      color:
-                                                                          element
-                                                                              .isHidden
-                                                                          ? Colors.red
-                                                                          : AppColors.primary,
+                                                  final canDragElement =
+                                                      widget
+                                                          .canReorderElements &&
+                                                      !isLocal;
+
+                                                  return Stack(
+                                                    key: ValueKey(
+                                                      'element-${subItem.id}-${element.id}',
+                                                    ),
+                                                    children: [
+                                                      Row(
+                                                        crossAxisAlignment:
+                                                            CrossAxisAlignment
+                                                                .center,
+                                                        children: [
+                                                          SizedBox(
+                                                            width: 36,
+                                                            height: 44,
+                                                            child: isLocal
+                                                                ? const SizedBox.shrink()
+                                                                : Tooltip(
+                                                                    message:
+                                                                        element
+                                                                            .isHidden
+                                                                        ? 'إظهار العنصر في التسعير و PDF'
+                                                                        : 'إخفاء العنصر من التسعير و PDF',
+                                                                    child: Checkbox(
+                                                                      value: !element
+                                                                          .isHidden,
+                                                                      onChanged: (value) => _toggleElementVisibility(
+                                                                        subItem,
+                                                                        element,
+                                                                        value ??
+                                                                            false,
+                                                                      ),
+                                                                      activeColor:
+                                                                          AppColors
+                                                                              .background,
+                                                                      checkColor:
+                                                                          AppColors
+                                                                              .primary,
+                                                                      side: BorderSide(
+                                                                        color:
+                                                                            element.isHidden
+                                                                            ? Colors.red
+                                                                            : AppColors.primary,
+                                                                      ),
                                                                     ),
                                                                   ),
-                                                                ),
-                                                        ),
-                                                        Expanded(
-                                                          child: Opacity(
-                                                            opacity:
-                                                                element.isHidden
-                                                                ? 0.55
-                                                                : 1,
-                                                            child: PricingTableRow(
-                                                              item: pricingItem,
-                                                              isNewRow:
-                                                                  isLocal &&
-                                                                  localElement !=
-                                                                      null &&
-                                                                  !localElement
-                                                                      .hasRequiredData,
-                                                              onDelete: () =>
-                                                                  _deleteElement(
-                                                                    subItem.id,
-                                                                    element.id,
-                                                                    isLocal,
-                                                                  ),
-                                                              onChanged: (updatedItem) {
-                                                                if (isLocal &&
+                                                          ),
+                                                          SizedBox(
+                                                            width: 28,
+                                                            height: 44,
+                                                            child:
+                                                                canDragElement
+                                                                ? ReorderableDragStartListener(
+                                                                    index:
+                                                                        index,
+                                                                    child: const Icon(
+                                                                      Icons
+                                                                          .drag_indicator,
+                                                                      color: AppColors
+                                                                          .textMuted,
+                                                                      size: 18,
+                                                                    ),
+                                                                  )
+                                                                : const SizedBox.shrink(),
+                                                          ),
+                                                          Expanded(
+                                                            child: Opacity(
+                                                              opacity:
+                                                                  element
+                                                                      .isHidden
+                                                                  ? 0.55
+                                                                  : 1,
+                                                              child: PricingTableRow(
+                                                                item:
+                                                                    pricingItem,
+                                                                isNewRow:
+                                                                    isLocal &&
                                                                     localElement !=
-                                                                        null) {
-                                                                  // Determine cost type based on what's filled
-                                                                  String
-                                                                  newCostType =
-                                                                      updatedItem
-                                                                          .costType ??
-                                                                      localElement
-                                                                          .costType;
-                                                                  if (updatedItem
-                                                                              .quantity !=
-                                                                          null &&
-                                                                      updatedItem
-                                                                              .unitPrice !=
+                                                                        null &&
+                                                                    !localElement
+                                                                        .hasRequiredData,
+                                                                firstFieldFocusNode:
+                                                                    isLocal
+                                                                    ? _localElementFocusNodes[element
+                                                                          .id]
+                                                                    : null,
+                                                                onDelete: () =>
+                                                                    _deleteElement(
+                                                                      subItem
+                                                                          .id,
+                                                                      element
+                                                                          .id,
+                                                                      isLocal,
+                                                                    ),
+                                                                onChanged: (updatedItem) {
+                                                                  if (isLocal &&
+                                                                      localElement !=
                                                                           null) {
+                                                                    // Determine cost type based on what's filled
+                                                                    String
                                                                     newCostType =
-                                                                        'UNIT_BASED';
-                                                                  } else if (newCostType ==
-                                                                          'TOTAL' &&
-                                                                      updatedItem
-                                                                              .quantity ==
-                                                                          null &&
-                                                                      updatedItem
-                                                                              .unitPrice ==
-                                                                          null) {
-                                                                    newCostType =
-                                                                        'TOTAL';
-                                                                  }
+                                                                        updatedItem
+                                                                            .costType ??
+                                                                        localElement
+                                                                            .costType;
+                                                                    if (updatedItem.quantity !=
+                                                                            null &&
+                                                                        updatedItem.unitPrice !=
+                                                                            null) {
+                                                                      newCostType =
+                                                                          'UNIT_BASED';
+                                                                    } else if (newCostType ==
+                                                                            'TOTAL' &&
+                                                                        updatedItem.quantity ==
+                                                                            null &&
+                                                                        updatedItem.unitPrice ==
+                                                                            null) {
+                                                                      newCostType =
+                                                                          'TOTAL';
+                                                                    }
 
-                                                                  // Update local element - only update name if it's not empty
-                                                                  final updated = LocalElement(
-                                                                    tempId: localElement
-                                                                        .tempId,
-                                                                    subItemId:
-                                                                        localElement
-                                                                            .subItemId,
-                                                                    name: updatedItem
-                                                                        .description
-                                                                        .trim(),
-                                                                    costType:
-                                                                        newCostType,
-                                                                    unitCost:
-                                                                        updatedItem
-                                                                            .unitPrice,
-                                                                    quantity:
-                                                                        updatedItem
-                                                                            .quantity,
-                                                                    totalCost:
-                                                                        newCostType ==
-                                                                            'TOTAL'
-                                                                        ? updatedItem
-                                                                              .total
-                                                                        : null,
-                                                                    isCompleted:
-                                                                        localElement
-                                                                            .isCompleted,
+                                                                    // Update local element - only update name if it's not empty
+                                                                    final updated = LocalElement(
+                                                                      tempId: localElement
+                                                                          .tempId,
+                                                                      subItemId:
+                                                                          localElement
+                                                                              .subItemId,
+                                                                      name: updatedItem
+                                                                          .description
+                                                                          .trim(),
+                                                                      costType:
+                                                                          newCostType,
+                                                                      unitCost:
+                                                                          updatedItem
+                                                                              .unitPrice,
+                                                                      quantity:
+                                                                          updatedItem
+                                                                              .quantity,
+                                                                      totalCost:
+                                                                          newCostType ==
+                                                                              'TOTAL'
+                                                                          ? updatedItem.total
+                                                                          : null,
+                                                                      isCompleted:
+                                                                          localElement
+                                                                              .isCompleted,
+                                                                    );
+                                                                    _updateLocalElement(
+                                                                      subItem
+                                                                          .id,
+                                                                      element
+                                                                          .id,
+                                                                      updated,
+                                                                    );
+                                                                  } else {
+                                                                    // Store latest values and schedule update with debounce
+                                                                    _pendingUpdates[element
+                                                                            .id] =
+                                                                        updatedItem;
+                                                                    _scheduleUpdateElement(
+                                                                      subItem
+                                                                          .id,
+                                                                      element
+                                                                          .id,
+                                                                      updatedItem,
+                                                                      element
+                                                                          .costType,
+                                                                    );
+                                                                  }
+                                                                },
+                                                                onFieldCompleted: () {
+                                                                  _completeElementEditing(
+                                                                    subItem:
+                                                                        subItem,
+                                                                    element:
+                                                                        element,
+                                                                    isLocal:
+                                                                        isLocal,
+                                                                    localElement:
+                                                                        localElement,
+                                                                    addNext:
+                                                                        false,
                                                                   );
-                                                                  _updateLocalElement(
-                                                                    subItem.id,
-                                                                    element.id,
-                                                                    updated,
+                                                                },
+                                                                onSubmitted: () {
+                                                                  _completeElementEditing(
+                                                                    subItem:
+                                                                        subItem,
+                                                                    element:
+                                                                        element,
+                                                                    isLocal:
+                                                                        isLocal,
+                                                                    localElement:
+                                                                        localElement,
+                                                                    addNext:
+                                                                        true,
                                                                   );
-                                                                } else {
-                                                                  // Store latest values and schedule update with debounce
-                                                                  _pendingUpdates[element
-                                                                          .id] =
-                                                                      updatedItem;
-                                                                  _scheduleUpdateElement(
-                                                                    subItem.id,
-                                                                    element.id,
-                                                                    updatedItem,
-                                                                    element
-                                                                        .costType,
-                                                                  );
-                                                                }
-                                                              },
-                                                              onFieldCompleted: () {
-                                                                _completeElementEditing(
-                                                                  subItem:
-                                                                      subItem,
-                                                                  element:
-                                                                      element,
-                                                                  isLocal:
-                                                                      isLocal,
-                                                                  localElement:
-                                                                      localElement,
-                                                                  addNext:
-                                                                      false,
-                                                                );
-                                                              },
-                                                              onSubmitted: () {
-                                                                _completeElementEditing(
-                                                                  subItem:
-                                                                      subItem,
-                                                                  element:
-                                                                      element,
-                                                                  isLocal:
-                                                                      isLocal,
-                                                                  localElement:
-                                                                      localElement,
-                                                                  addNext: true,
-                                                                );
-                                                              },
+                                                                },
+                                                              ),
+                                                            ),
+                                                          ),
+                                                        ],
+                                                      ),
+                                                      if (isSaving)
+                                                        Positioned.fill(
+                                                          child: Container(
+                                                            color: Colors.black
+                                                                .withOpacity(
+                                                                  0.3,
+                                                                ),
+                                                            child: const Center(
+                                                              child: CircularProgressIndicator(
+                                                                strokeWidth: 2,
+                                                                color: AppColors
+                                                                    .primary,
+                                                              ),
                                                             ),
                                                           ),
                                                         ),
-                                                      ],
-                                                    ),
-                                                    if (isSaving)
-                                                      Positioned.fill(
-                                                        child: Container(
-                                                          color: Colors.black
-                                                              .withOpacity(0.3),
-                                                          child: const Center(
-                                                            child:
-                                                                CircularProgressIndicator(
-                                                                  strokeWidth:
-                                                                      2,
-                                                                  color: AppColors
-                                                                      .primary,
-                                                                ),
-                                                          ),
-                                                        ),
-                                                      ),
-                                                  ],
-                                                );
-                                              }),
+                                                    ],
+                                                  );
+                                                }).toList(),
+                                              ),
                                               // Add Element Button
                                               const SizedBox(height: 12),
                                               Container(

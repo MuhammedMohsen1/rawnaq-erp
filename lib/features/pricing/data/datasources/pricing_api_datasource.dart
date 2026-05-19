@@ -224,6 +224,30 @@ class PricingApiDataSource {
     );
   }
 
+  Future<PricingElementModel> reorderPricingElement(
+    String projectId,
+    int version,
+    String itemId,
+    String subItemId,
+    String elementId,
+    int targetOrder,
+  ) async {
+    final response = await _apiClient.patch(
+      ApiEndpoints.reorderPricingElements(
+        projectId,
+        version,
+        itemId,
+        subItemId,
+      ),
+      data: {'elementId': elementId, 'targetOrder': targetOrder},
+    );
+
+    final responseData = response.data as Map<String, dynamic>;
+    return PricingElementModel.fromJson(
+      responseData['data'] as Map<String, dynamic>,
+    );
+  }
+
   Future<PricingSubItemModel> duplicatePricingSubItem(
     String projectId,
     int version,

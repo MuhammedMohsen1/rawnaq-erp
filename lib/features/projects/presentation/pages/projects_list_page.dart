@@ -1614,84 +1614,84 @@ class _CardMenu extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return PopupMenuButton<String>(
-      tooltip: 'خيارات المشروع',
-      padding: EdgeInsets.zero,
-      icon: Icon(
-        Icons.more_horiz_rounded,
-        size: compact ? 17 : 19,
-        color: AppColors.textMuted,
-      ),
-      constraints: BoxConstraints.tightFor(
-        width: compact ? 32 : 40,
-        height: compact ? 32 : 40,
-      ),
-      color: AppColors.cardBackground,
-      elevation: 8,
-      shadowColor: AppColors.black.withOpacity(0.36),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-        side: const BorderSide(color: AppColors.border),
-      ),
-      itemBuilder: (_) {
-        return [
-          const PopupMenuItem(
-            value: 'edit',
-            height: 40,
-            child: _PopupMenuRow(
-              icon: Icons.edit_outlined,
-              label: 'تعديل',
-              color: AppColors.textSecondary,
-            ),
-          ),
-          if (onRestore != null)
+    return SizedBox(
+      width: compact ? 32 : 40,
+      height: compact ? 32 : 40,
+      child: PopupMenuButton<String>(
+        tooltip: 'خيارات المشروع',
+        padding: EdgeInsets.zero,
+        icon: Icon(
+          Icons.more_horiz_rounded,
+          size: compact ? 17 : 19,
+          color: AppColors.textMuted,
+        ),
+        color: AppColors.cardBackground,
+        elevation: 8,
+        shadowColor: AppColors.black.withOpacity(0.36),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+          side: const BorderSide(color: AppColors.border),
+        ),
+        itemBuilder: (_) {
+          return [
             const PopupMenuItem(
-              value: 'restore',
+              value: 'edit',
               height: 40,
               child: _PopupMenuRow(
-                icon: Icons.unarchive_outlined,
-                label: 'استعادة',
-                color: AppColors.statusCompleted,
+                icon: Icons.edit_outlined,
+                label: 'تعديل',
+                color: AppColors.textSecondary,
               ),
             ),
-          if (onMoveToExecution != null)
-            const PopupMenuItem(
-              value: 'execution',
-              height: 40,
-              child: _PopupMenuRow(
-                icon: Icons.play_circle_outline_rounded,
-                label: 'بدء التنفيذ',
-                color: AppColors.statusCompleted,
+            if (onRestore != null)
+              const PopupMenuItem(
+                value: 'restore',
+                height: 40,
+                child: _PopupMenuRow(
+                  icon: Icons.unarchive_outlined,
+                  label: 'استعادة',
+                  color: AppColors.statusCompleted,
+                ),
               ),
-            ),
-          if (onArchive != null)
-            const PopupMenuItem(
-              value: 'archive',
-              height: 40,
-              child: _PopupMenuRow(
-                icon: Icons.archive_outlined,
-                label: 'أرشفة',
-                color: AppColors.error,
+            if (onMoveToExecution != null)
+              const PopupMenuItem(
+                value: 'execution',
+                height: 40,
+                child: _PopupMenuRow(
+                  icon: Icons.play_circle_outline_rounded,
+                  label: 'بدء التنفيذ',
+                  color: AppColors.statusCompleted,
+                ),
               ),
-            ),
-        ];
-      },
-      onSelected: (value) {
-        switch (value) {
-          case 'edit':
-            onEdit();
-            break;
-          case 'archive':
-            onArchive?.call();
-            break;
-          case 'restore':
-            onRestore?.call();
-            break;
-          case 'execution':
-            onMoveToExecution?.call();
-            break;
-        }
-      },
+            if (onArchive != null)
+              const PopupMenuItem(
+                value: 'archive',
+                height: 40,
+                child: _PopupMenuRow(
+                  icon: Icons.archive_outlined,
+                  label: 'أرشفة',
+                  color: AppColors.error,
+                ),
+              ),
+          ];
+        },
+        onSelected: (value) {
+          switch (value) {
+            case 'edit':
+              onEdit();
+              break;
+            case 'archive':
+              onArchive?.call();
+              break;
+            case 'restore':
+              onRestore?.call();
+              break;
+            case 'execution':
+              onMoveToExecution?.call();
+              break;
+          }
+        },
+      ),
     );
   }
 }

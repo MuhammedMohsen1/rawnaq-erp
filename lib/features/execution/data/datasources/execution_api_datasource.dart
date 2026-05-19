@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import '../../../../core/network/api_client.dart';
 import '../../../../core/constants/endpoints.dart';
 import '../models/execution_models.dart';
@@ -7,10 +8,12 @@ class ExecutionApiDataSource {
   final ApiClient _apiClient;
 
   ExecutionApiDataSource({ApiClient? apiClient})
-      : _apiClient = apiClient ?? ApiClient();
+    : _apiClient = apiClient ?? ApiClient();
 
   /// Get execution dashboard data
-  Future<ExecutionDashboardModel> getExecutionDashboard(String projectId) async {
+  Future<ExecutionDashboardModel> getExecutionDashboard(
+    String projectId,
+  ) async {
     final response = await _apiClient.get(
       ApiEndpoints.executionDashboard(projectId),
     );
@@ -29,10 +32,7 @@ class ExecutionApiDataSource {
   }) async {
     final response = await _apiClient.get(
       ApiEndpoints.executionTransactions(projectId),
-      queryParameters: {
-        'page': page.toString(),
-        'limit': limit.toString(),
-      },
+      queryParameters: {'page': page.toString(), 'limit': limit.toString()},
     );
 
     final responseData = response.data as Map<String, dynamic>;
@@ -74,10 +74,7 @@ class ExecutionApiDataSource {
   }) async {
     final response = await _apiClient.post(
       ApiEndpoints.executionRequestInstallment(projectId),
-      data: {
-        'phaseIndex': phaseIndex,
-        'phaseName': phaseName,
-      },
+      data: {'phaseIndex': phaseIndex, 'phaseName': phaseName},
     );
 
     final responseData = response.data as Map<String, dynamic>;
@@ -151,13 +148,8 @@ class ExecutionApiDataSource {
   }
 
   /// Delete installment (not wired yet)
-  Future<void> deleteInstallment(
-    String projectId,
-    String installmentId,
-  ) async {
-    await _apiClient.delete(
-      ApiEndpoints.deleteInstallment(installmentId),
-    );
+  Future<void> deleteInstallment(String projectId, String installmentId) async {
+    await _apiClient.delete(ApiEndpoints.deleteInstallment(installmentId));
   }
 
   /// Create expense
@@ -182,16 +174,31 @@ class ExecutionApiDataSource {
 
   /// Delete expense
   Future<void> deleteExpense(String projectId, String expenseId) async {
-    await _apiClient.delete(
-      ApiEndpoints.contractExpense(projectId, expenseId),
-    );
+    await _apiClient.delete(ApiEndpoints.contractExpense(projectId, expenseId));
   }
 
   /// Create income (Admin/Manager direct income addition)
-  Future<void> createIncome(String projectId, CreateIncomeDto dto) async {
-    await _apiClient.post(
+  Future<void> createIncome(
+    String projectId,
+    CreateIncomeDto dto, {
+    List<MultipartFile> attachments = const [],
+  }) async {
+    if (attachments.isEmpty) {
+      await _apiClient.post(
+        ApiEndpoints.executionAddIncome(projectId),
+        data: dto.toJson(),
+      );
+      return;
+    }
+
+    final formData = FormData.fromMap({
+      ...dto.toJson(),
+      'attachments': attachments,
+    });
+
+    await _apiClient.uploadFile(
       ApiEndpoints.executionAddIncome(projectId),
-      data: dto.toJson(),
+      formData: formData,
     );
   }
 }
