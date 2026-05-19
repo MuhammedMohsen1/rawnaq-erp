@@ -3,8 +3,8 @@ import 'package:flutter/foundation.dart';
 
 class NetworkConfig {
   // Environment-specific base URLs
-  static const String _devBaseUrl = 'https://api.beenedeek.com/api/v1';
-  static const String _devAltBaseUrl = 'https://api.beenedeek.com/api/v1';
+  static const String _devBaseUrl = ApiEndpoints.baseUrl;
+  static const String _devAltBaseUrl = ApiEndpoints.baseUrl;
   static const String _prodBaseUrl = 'https://api.beenedeek.com/api/v1';
 
   /// Get the appropriate base URL based on environment and platform

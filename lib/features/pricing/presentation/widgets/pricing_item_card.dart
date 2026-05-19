@@ -445,7 +445,13 @@ class _PricingItemCardState extends State<PricingItemCard> {
           const Color(0xFF10B981),
         ),
         const SizedBox(width: 4),
-        _buildStatCard('سعر', subItem.totalPrice, AppColors.warning),
+        _buildStatChip(
+          subItem.totalCost > 0
+              ? (subItem.profitAmount / subItem.totalCost * 100)
+              : 0.0,
+          const Color(0xFFF59E0B),
+          suffix: '%',
+        ),
       ],
     );
   }
