@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_text_styles.dart';
 import '../../../../core/utils/arabic_number_input_formatter.dart';
+import '../../../settings/data/datasources/settings_api_datasource.dart';
 
 class PricingExportOptions {
   final bool showDeductionBreakdown;
@@ -92,6 +93,7 @@ class PricingSummarySidebar extends StatefulWidget {
 }
 
 class _PricingSummarySidebarState extends State<PricingSummarySidebar> {
+  final SettingsApiDataSource _settingsApi = SettingsApiDataSource();
   List<TextEditingController> _noteControllers = [];
   List<FocusNode> _noteFocusNodes = [];
   Timer? _notesSaveTimer;
@@ -100,6 +102,7 @@ class _PricingSummarySidebarState extends State<PricingSummarySidebar> {
   final FocusNode _deductionFocusNode = FocusNode();
   Timer? _deductionSaveTimer;
   bool _isNotesExpanded = false;
+  bool _isRefreshingDefaultNotes = false;
   bool _showDeductionBreakdownInPdf = false;
   bool _showLineItemPricesInPdf = true;
 
@@ -216,6 +219,42 @@ class _PricingSummarySidebarState extends State<PricingSummarySidebar> {
         _noteFocusNodes.removeAt(index);
         _saveNotes();
       });
+    }
+  }
+
+  Future<void> _refreshDefaultNotes() async {
+    if (_isRefreshingDefaultNotes || widget.onUpdateNotes == null) return;
+
+    setState(() {
+      _isRefreshingDefaultNotes = true;
+      _isNotesExpanded = true;
+    });
+
+    try {
+      final defaultNotes = await _settingsApi.getDefaultPricingNotes();
+      if (!mounted) return;
+
+      _notesSaveTimer?.cancel();
+      widget.onUpdateNotes!(defaultNotes);
+
+      setState(() {
+        _isRefreshingDefaultNotes = false;
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('تم تحديث الملاحظات من الإعدادات'),
+          duration: Duration(seconds: 2),
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _isRefreshingDefaultNotes = false;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('فشل تحديث الملاحظات: ${e.toString()}')),
+      );
     }
   }
 
@@ -1220,14 +1259,53 @@ class _PricingSummarySidebarState extends State<PricingSummarySidebar> {
                         ],
                       ),
                       if (_isNotesExpanded)
-                        InkWell(
-                          onTap: _addNoteItem,
-                          borderRadius: BorderRadius.circular(4),
-                          child: Icon(
-                            Icons.add_circle_outline,
-                            size: isMobile ? 14 : 16,
-                            color: AppColors.primary,
-                          ),
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Tooltip(
+                              message: 'تحديث من ملاحظات الإعدادات',
+                              child: InkWell(
+                                onTap: _isRefreshingDefaultNotes
+                                    ? null
+                                    : _refreshDefaultNotes,
+                                borderRadius: BorderRadius.circular(4),
+                                child: Padding(
+                                  padding: const EdgeInsets.all(2),
+                                  child: _isRefreshingDefaultNotes
+                                      ? SizedBox(
+                                          width: isMobile ? 12 : 14,
+                                          height: isMobile ? 12 : 14,
+                                          child:
+                                              const CircularProgressIndicator(
+                                                strokeWidth: 2,
+                                                color: AppColors.primary,
+                                              ),
+                                        )
+                                      : Icon(
+                                          Icons.refresh,
+                                          size: isMobile ? 14 : 16,
+                                          color: AppColors.primary,
+                                        ),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 6),
+                            Tooltip(
+                              message: 'إضافة ملاحظة',
+                              child: InkWell(
+                                onTap: _addNoteItem,
+                                borderRadius: BorderRadius.circular(4),
+                                child: Padding(
+                                  padding: const EdgeInsets.all(2),
+                                  child: Icon(
+                                    Icons.add_circle_outline,
+                                    size: isMobile ? 14 : 16,
+                                    color: AppColors.primary,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
                     ],
                   ),

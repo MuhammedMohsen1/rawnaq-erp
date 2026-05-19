@@ -1653,16 +1653,7 @@ class _CardMenu extends StatelessWidget {
                   color: AppColors.statusCompleted,
                 ),
               ),
-            if (onMoveToExecution != null)
-              const PopupMenuItem(
-                value: 'execution',
-                height: 40,
-                child: _PopupMenuRow(
-                  icon: Icons.play_circle_outline_rounded,
-                  label: 'بدء التنفيذ',
-                  color: AppColors.statusCompleted,
-                ),
-              ),
+
             if (onArchive != null)
               const PopupMenuItem(
                 value: 'archive',
