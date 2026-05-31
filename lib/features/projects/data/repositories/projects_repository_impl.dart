@@ -39,7 +39,7 @@ class ProjectsRepositoryImpl implements ProjectsRepository {
     try {
       final response = await _dataSource.getProjects(
         status: status,
-        clientName: searchQuery, // Use clientName for search
+        search: searchQuery,
         archived: archived,
         page: page ?? 1,
         limit: limit ?? 10,

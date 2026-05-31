@@ -16,6 +16,7 @@ class ProjectsApiDataSource {
     String? type,
     String? departmentId,
     String? clientName,
+    String? search,
     bool archived = false,
     int? page,
     int? limit,
@@ -29,6 +30,7 @@ class ProjectsApiDataSource {
     if (type != null) queryParams['type'] = type;
     if (departmentId != null) queryParams['departmentId'] = departmentId;
     if (clientName != null) queryParams['clientName'] = clientName;
+    if (search != null && search.isNotEmpty) queryParams['search'] = search;
     if (archived) queryParams['archived'] = 'true';
     if (page != null) queryParams['page'] = page;
     if (limit != null) queryParams['limit'] = limit;

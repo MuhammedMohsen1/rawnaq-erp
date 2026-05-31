@@ -122,21 +122,10 @@ class ProjectsBloc extends Bloc<ProjectsEvent, ProjectsState> {
           ...currentState.projects,
           ...paginatedResult.projects,
         ];
-        final filteredProjects = currentState.searchQuery?.isNotEmpty == true
-            ? projects.where((project) {
-                final query = currentState.searchQuery!.toLowerCase();
-                return project.name.toLowerCase().contains(query) ||
-                    (project.description?.toLowerCase().contains(query) ??
-                        false) ||
-                    (project.clientName?.toLowerCase().contains(query) ??
-                        false);
-              }).toList()
-            : projects;
-
         emit(
           currentState.copyWith(
             projects: projects,
-            filteredProjects: filteredProjects,
+            filteredProjects: projects,
             currentPage: paginatedResult.page,
             totalPages: paginatedResult.totalPages,
             totalItems: paginatedResult.total,
@@ -177,28 +166,19 @@ class ProjectsBloc extends Bloc<ProjectsEvent, ProjectsState> {
   ) async {
     if (state is ProjectsLoaded) {
       final currentState = state as ProjectsLoaded;
+      final query = event.query.trim();
 
-      if (event.query.isEmpty) {
-        emit(
-          currentState.copyWith(
-            filteredProjects: currentState.projects,
-            clearSearchQuery: true,
-          ),
-        );
-      } else {
-        final query = event.query.toLowerCase();
-        final filtered = currentState.projects.where((project) {
-          return project.name.toLowerCase().contains(query) ||
-              (project.description?.toLowerCase().contains(query) ?? false);
-        }).toList();
-
-        emit(
-          currentState.copyWith(
-            filteredProjects: filtered,
-            searchQuery: event.query,
-          ),
-        );
-      }
+      add(
+        LoadProjects(
+          status: currentState.statusFilter,
+          managerId: currentState.managerFilter,
+          teamMemberId: currentState.teamMemberFilter,
+          searchQuery: query.isEmpty ? null : query,
+          archived: currentState.archived,
+          page: 1,
+          limit: currentState.pageSize,
+        ),
+      );
     }
   }
 

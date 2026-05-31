@@ -152,6 +152,9 @@ class ProjectsListPage extends StatefulWidget {
 class _ProjectsListPageState extends State<ProjectsListPage> {
   ProjectStatus? _selectedStatus;
   String _lastProjectsSignature = '';
+  ProjectsLoaded? _lastLoadedState;
+  final TextEditingController _searchController = TextEditingController();
+  Timer? _searchDebounce;
 
   late final PagingController<int, ProjectEntity> _pagingController =
       PagingController<int, ProjectEntity>(
@@ -164,6 +167,8 @@ class _ProjectsListPageState extends State<ProjectsListPage> {
 
   @override
   void dispose() {
+    _searchDebounce?.cancel();
+    _searchController.dispose();
     _pagingController.dispose();
     super.dispose();
   }
@@ -189,6 +194,7 @@ class _ProjectsListPageState extends State<ProjectsListPage> {
   void _onProjectsStateChanged(BuildContext context, ProjectsState state) {
     if (state is! ProjectsLoaded) return;
 
+    _lastLoadedState = state;
     final signature = _signatureOf(state.filteredProjects);
     if (signature == _lastProjectsSignature) return;
 
@@ -221,6 +227,10 @@ class _ProjectsListPageState extends State<ProjectsListPage> {
 
   Widget _buildBody(BuildContext context, ProjectsState state) {
     if (state is ProjectsLoading) {
+      final lastLoadedState = _lastLoadedState;
+      if (lastLoadedState != null) {
+        return _buildLoadedBody(lastLoadedState, isReloading: true);
+      }
       return const _CenteredLoader();
     }
 
@@ -238,11 +248,12 @@ class _ProjectsListPageState extends State<ProjectsListPage> {
       return const SizedBox.shrink();
     }
 
-    final allProjects = _applyVisibleStatusFilter(state.filteredProjects);
+    _lastLoadedState = state;
+    return _buildLoadedBody(state);
+  }
 
-    if (allProjects.isEmpty) {
-      return _EmptyState(message: widget.emptyMessage);
-    }
+  Widget _buildLoadedBody(ProjectsLoaded state, {bool isReloading = false}) {
+    final allProjects = _applyVisibleStatusFilter(state.filteredProjects);
 
     final counts = _countByStatus(allProjects);
 
@@ -259,6 +270,12 @@ class _ProjectsListPageState extends State<ProjectsListPage> {
           ),
           const SizedBox(height: 14),
         ],
+        _ProjectSearchField(
+          controller: _searchController,
+          onChanged: _onSearchChanged,
+          onClear: _clearSearch,
+        ),
+        const SizedBox(height: 14),
         _StatusFilterBar(
           selectedStatus: _selectedStatus,
           totalCount: allProjects.length,
@@ -271,9 +288,31 @@ class _ProjectsListPageState extends State<ProjectsListPage> {
         ),
         const SizedBox(height: 16),
 
-        Expanded(child: _buildPagedGrid()),
+        Expanded(
+          child: isReloading
+              ? const _CenteredLoader()
+              : allProjects.isEmpty
+              ? _EmptyState(message: widget.emptyMessage)
+              : _buildPagedGrid(),
+        ),
       ],
     );
+  }
+
+  void _onSearchChanged(String query) {
+    _searchDebounce?.cancel();
+    _searchDebounce = Timer(const Duration(milliseconds: 350), () {
+      if (!mounted) return;
+      context.read<ProjectsBloc>().add(SearchProjects(query));
+    });
+    setState(() {});
+  }
+
+  void _clearSearch() {
+    _searchDebounce?.cancel();
+    _searchController.clear();
+    context.read<ProjectsBloc>().add(const SearchProjects(''));
+    setState(() {});
   }
 
   Widget _buildPagedGrid() {
@@ -597,6 +636,48 @@ class _ProjectsListPageState extends State<ProjectsListPage> {
           },
         );
       },
+    );
+  }
+}
+
+class _ProjectSearchField extends StatelessWidget {
+  final TextEditingController controller;
+  final ValueChanged<String> onChanged;
+  final VoidCallback onClear;
+
+  const _ProjectSearchField({
+    required this.controller,
+    required this.onChanged,
+    required this.onClear,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return TextField(
+      controller: controller,
+      onChanged: onChanged,
+      textInputAction: TextInputAction.search,
+      decoration: InputDecoration(
+        hintText: 'ابحث باسم المشروع أو العميل',
+        prefixIcon: const Icon(Icons.search_rounded),
+        suffixIcon: controller.text.isEmpty
+            ? null
+            : IconButton(
+                tooltip: 'مسح البحث',
+                onPressed: onClear,
+                icon: const Icon(Icons.close_rounded),
+              ),
+        filled: true,
+        fillColor: AppColors.cardBackground,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: AppColors.border),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: AppColors.border),
+        ),
+      ),
     );
   }
 }
