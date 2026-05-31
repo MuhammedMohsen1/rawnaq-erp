@@ -33,6 +33,7 @@ class PricingItemsList extends StatelessWidget {
   )?
   onReorderElements;
   final bool readOnly;
+  final bool showFinancials;
 
   const PricingItemsList({
     super.key,
@@ -52,6 +53,7 @@ class PricingItemsList extends StatelessWidget {
     this.onReorderSubItems,
     this.onReorderElements,
     this.readOnly = false,
+    this.showFinancials = true,
   });
 
   @override
@@ -109,6 +111,7 @@ class PricingItemsList extends StatelessWidget {
                       item: item,
                       pricingStatus: pricingStatus,
                       isAdminOrManager: isAdminOrManager && !readOnly,
+                      canViewFinancials: isAdminOrManager && showFinancials,
                       initialIsExpanded: itemExpandedStates[item.id] ?? false,
                       initialSubItemExpandedStates:
                           subItemExpandedStates[item.id] ?? {},
@@ -153,6 +156,7 @@ class PricingItemsList extends StatelessWidget {
                               targetOrder,
                             );
                           },
+                      showFinancials: showFinancials,
                     ),
                   ),
                 ],

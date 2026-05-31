@@ -46,17 +46,24 @@ class MainLayout extends StatelessWidget {
                           return ValueListenableBuilder<String?>(
                             valueListenable: TopBarTitleController.pricingTitle,
                             builder: (context, pricingTitle, _) {
-                              return TopBar(
-                                title: _getPageTitle(
-                                  currentPath,
-                                  routeState,
-                                  projectDetailsTitle,
-                                  pricingTitle,
-                                ),
-                                showBackButton: _shouldShowBackButton(
-                                  currentPath,
-                                ),
-                                onBackPressed: () => context.pop(),
+                              return ValueListenableBuilder<TopBarAction?>(
+                                valueListenable:
+                                    TopBarTitleController.pricingAction,
+                                builder: (context, pricingAction, _) {
+                                  return TopBar(
+                                    title: _getPageTitle(
+                                      currentPath,
+                                      routeState,
+                                      projectDetailsTitle,
+                                      pricingTitle,
+                                    ),
+                                    showBackButton: _shouldShowBackButton(
+                                      currentPath,
+                                    ),
+                                    onBackPressed: () => context.pop(),
+                                    action: pricingAction,
+                                  );
+                                },
                               );
                             },
                           );

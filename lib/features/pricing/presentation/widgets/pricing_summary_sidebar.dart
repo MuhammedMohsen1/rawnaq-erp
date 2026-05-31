@@ -50,6 +50,7 @@ class PricingSummarySidebar extends StatefulWidget {
   final Function(double)? onBulkProfitMarginUpdate;
   final Function(double)? onDeductionAmountChanged;
   final Function(double)? onDeductionAmountApplied;
+  final bool showFinancials;
 
   const PricingSummarySidebar({
     super.key,
@@ -86,6 +87,7 @@ class PricingSummarySidebar extends StatefulWidget {
     required this.isDraft,
     required this.isUnderPricing,
     required this.isPendingSignature,
+    this.showFinancials = true,
   });
 
   @override
@@ -302,6 +304,8 @@ class _PricingSummarySidebarState extends State<PricingSummarySidebar> {
   }
 
   String _formatNumberWithDecimals(double value) {
+    if (!widget.showFinancials) return '••••';
+
     // Format number with 3 decimals and add thousand separators
     final parts = value.toStringAsFixed(3).split('.');
     final integerPart = parts[0];

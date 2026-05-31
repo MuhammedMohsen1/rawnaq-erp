@@ -37,6 +37,7 @@ class TransactionsTable extends StatelessWidget {
   final double totalReceived;
   final double totalExpenses;
   final double netCashFlow;
+  final double totalCost;
   final DateTime? startDate;
   final DateTime? endDate;
   final bool isAddingExpense;
@@ -63,6 +64,7 @@ class TransactionsTable extends StatelessWidget {
     required this.totalReceived,
     required this.totalExpenses,
     required this.netCashFlow,
+    required this.totalCost,
     this.startDate,
     this.endDate,
     required this.isAddingExpense,
@@ -98,6 +100,7 @@ class TransactionsTable extends StatelessWidget {
                 totalReceived: totalReceived,
                 totalExpenses: totalExpenses,
                 netCashFlow: netCashFlow,
+                totalCost: totalCost,
                 startDate: startDate,
                 endDate: endDate,
                 isCompact: isCompact,
@@ -215,6 +218,7 @@ class _ExpenseSummaryStrip extends StatefulWidget {
   final double totalReceived;
   final double totalExpenses;
   final double netCashFlow;
+  final double totalCost;
   final DateTime? startDate;
   final DateTime? endDate;
   final bool isCompact;
@@ -223,6 +227,7 @@ class _ExpenseSummaryStrip extends StatefulWidget {
     required this.totalReceived,
     required this.totalExpenses,
     required this.netCashFlow,
+    required this.totalCost,
     this.startDate,
     this.endDate,
     required this.isCompact,
@@ -327,6 +332,7 @@ class _ExpenseSummaryStripState extends State<_ExpenseSummaryStrip> {
                 totalReceived: widget.totalReceived,
                 totalExpenses: widget.totalExpenses,
                 netCashFlow: widget.netCashFlow,
+                totalCost: widget.totalCost,
                 deliveryValue: _deliveryValue,
                 deliveryDetail: _deliveryDetail,
                 netCashColor: _netCashColor,
@@ -348,6 +354,7 @@ class _StatsDetailsPanel extends StatelessWidget {
   final double totalReceived;
   final double totalExpenses;
   final double netCashFlow;
+  final double totalCost;
   final String deliveryValue;
   final String deliveryDetail;
   final Color netCashColor;
@@ -357,6 +364,7 @@ class _StatsDetailsPanel extends StatelessWidget {
     required this.totalReceived,
     required this.totalExpenses,
     required this.netCashFlow,
+    required this.totalCost,
     required this.deliveryValue,
     required this.deliveryDetail,
     required this.netCashColor,
@@ -380,25 +388,31 @@ class _StatsDetailsPanel extends StatelessWidget {
           final columns = constraints.maxWidth < 520 ? 1 : 2;
           final width =
               (constraints.maxWidth - spacing * (columns - 1)) / columns;
+          final remainingFromCost = (totalCost - totalReceived).clamp(
+            0.0,
+            double.infinity,
+          );
           final items = [
             _ExpenseSummaryTile(
               title: 'إجمالي الدخل',
               value: _formatMoney(totalReceived),
-              detail: 'All income',
+              detail: totalCost > 0
+                  ? 'الباقي ${_formatMoney(remainingFromCost)} من ${_formatMoney(totalCost)}'
+                  : 'لا توجد تكلفة إجمالية',
               icon: Icons.south_west_rounded,
               color: AppColors.success,
             ),
             _ExpenseSummaryTile(
               title: 'إجمالي المصروفات',
               value: _formatMoney(totalExpenses),
-              detail: 'All outcome',
+              detail: 'إجمالي الخارج',
               icon: Icons.north_east_rounded,
               color: AppColors.error,
             ),
             _ExpenseSummaryTile(
               title: 'السيولة',
               value: _formatMoney(netCashFlow),
-              detail: 'Net Cash',
+              detail: 'الدخل ناقص المصروفات',
               icon: Icons.account_balance_wallet_rounded,
               color: netCashColor,
             ),
@@ -640,6 +654,15 @@ class _ExpenseSummaryTile extends StatelessWidget {
                     value,
                     maxLines: 1,
                     style: AppTextStyles.h6.copyWith(color: color),
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  detail,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppTextStyles.caption.copyWith(
+                    color: AppColors.textMuted,
                   ),
                 ),
               ],

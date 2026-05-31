@@ -185,6 +185,7 @@ class _ExecutionLayout extends StatelessWidget {
                   totalReceived: state.dashboard.totalReceived,
                   totalExpenses: state.dashboard.totalExpenses,
                   netCashFlow: state.dashboard.netCashFlow,
+                  totalCost: state.dashboard.totalBudget,
                   startDate: state.dashboard.startDate,
                   endDate: state.dashboard.endDate,
                   isAddingExpense: state.isAddingExpense,
@@ -221,7 +222,9 @@ class _ExecutionLayout extends StatelessWidget {
   // ── handlers (unchanged) ──────────────────────────────────────────────────
 
   void _handleOpenPastPricing(BuildContext context) {
-    context.push(AppRoutes.pricing(project.id));
+    context.push(
+      AppRoutes.pricing(project.id, readOnly: true, hideFinancials: true),
+    );
   }
 
   Future<void> _handleMarkComplete(BuildContext context) async {

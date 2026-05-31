@@ -9,6 +9,7 @@ import 'package:file_picker/file_picker.dart';
 import 'package:open_file/open_file.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:rawnaq/core/routing/app_router.dart';
+import 'package:flutter_ionicons/flutter_ionicons.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_text_styles.dart';
 import '../../../../core/di/injection_container.dart';
@@ -19,7 +20,6 @@ import '../../../auth/presentation/bloc/auth_bloc.dart';
 import '../../../projects/data/datasources/projects_api_datasource.dart';
 import '../../../projects/domain/enums/project_status.dart';
 import '../../../projects/presentation/widgets/project_attachments_panel.dart';
-import '../../../projects/presentation/widgets/project_contact_actions.dart';
 import '../../../contracts/data/datasources/contracts_api_datasource.dart';
 import '../cubit/pricing_cubit.dart';
 import '../cubit/pricing_state.dart';
@@ -36,11 +36,13 @@ import '../widgets/pricing_summary_sidebar.dart';
 class UnderPricingPage extends StatelessWidget {
   final String projectId;
   final bool readOnly;
+  final bool hideFinancials;
 
   const UnderPricingPage({
     super.key,
     required this.projectId,
     this.readOnly = false,
+    this.hideFinancials = false,
   });
 
   @override
@@ -48,7 +50,11 @@ class UnderPricingPage extends StatelessWidget {
     return BlocProvider(
       create: (context) =>
           getIt<PricingCubit>()..loadPricingData(projectId, readOnly: readOnly),
-      child: _UnderPricingContent(projectId: projectId, readOnly: readOnly),
+      child: _UnderPricingContent(
+        projectId: projectId,
+        readOnly: readOnly,
+        hideFinancials: hideFinancials,
+      ),
     );
   }
 }
@@ -57,18 +63,65 @@ class UnderPricingPage extends StatelessWidget {
 class _UnderPricingContent extends StatefulWidget {
   final String projectId;
   final bool readOnly;
+  final bool hideFinancials;
 
-  const _UnderPricingContent({required this.projectId, required this.readOnly});
+  const _UnderPricingContent({
+    required this.projectId,
+    required this.readOnly,
+    required this.hideFinancials,
+  });
 
   @override
   State<_UnderPricingContent> createState() => _UnderPricingContentState();
 }
 
 class _UnderPricingContentState extends State<_UnderPricingContent> {
+  late bool _showFinancials = !widget.hideFinancials;
+
+  @override
+  void initState() {
+    super.initState();
+    _syncToolbarAction();
+  }
+
+  @override
+  void didUpdateWidget(_UnderPricingContent oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.hideFinancials != widget.hideFinancials) {
+      _showFinancials = !widget.hideFinancials;
+    }
+    _syncToolbarAction();
+  }
+
   @override
   void dispose() {
     TopBarTitleController.clearPricingTitle();
+    TopBarTitleController.clearPricingAction();
     super.dispose();
+  }
+
+  void _syncToolbarAction() {
+    if (!widget.hideFinancials) {
+      TopBarTitleController.clearPricingAction();
+      return;
+    }
+
+    TopBarTitleController.setPricingAction(
+      TopBarAction(
+        icon: _showFinancials ? Ionicons.eye_outline : Ionicons.eye_off_outline,
+        tooltip: _showFinancials
+            ? 'إخفاء بيانات التسعير'
+            : 'إظهار بيانات التسعير',
+        onPressed: _toggleFinancialVisibility,
+      ),
+    );
+  }
+
+  void _toggleFinancialVisibility() {
+    setState(() {
+      _showFinancials = !_showFinancials;
+    });
+    _syncToolbarAction();
   }
 
   @override
@@ -125,7 +178,13 @@ class _UnderPricingContentState extends State<_UnderPricingContent> {
         }
 
         if (state is PricingLoaded) {
-          return _LoadedContent(projectId: widget.projectId, state: state);
+          return _LoadedContent(
+            projectId: widget.projectId,
+            state: state,
+            hideFinancials: widget.hideFinancials,
+            showFinancials: _showFinancials,
+            onToggleFinancials: _toggleFinancialVisibility,
+          );
         }
 
         if (state is PricingEmptyReadOnly) {
@@ -173,25 +232,68 @@ class _UnderPricingContentState extends State<_UnderPricingContent> {
 class _LoadedContent extends StatelessWidget {
   final String projectId;
   final PricingLoaded state;
+  final bool hideFinancials;
+  final bool showFinancials;
+  final VoidCallback onToggleFinancials;
 
-  const _LoadedContent({required this.projectId, required this.state});
+  const _LoadedContent({
+    required this.projectId,
+    required this.state,
+    required this.hideFinancials,
+    required this.showFinancials,
+    required this.onToggleFinancials,
+  });
 
   @override
   Widget build(BuildContext context) {
     return ResponsiveLayout(
-      mobile: _PricingLayout(projectId: projectId, padding: 16),
-      tablet: _PricingLayout(projectId: projectId, padding: 24),
-      desktop: _PricingLayout(projectId: projectId, padding: 32),
+      mobile: _PricingLayout(
+        projectId: projectId,
+        padding: 16,
+        hideFinancialsInitially: hideFinancials,
+        showFinancials: showFinancials,
+        onToggleFinancials: onToggleFinancials,
+      ),
+      tablet: _PricingLayout(
+        projectId: projectId,
+        padding: 24,
+        hideFinancialsInitially: hideFinancials,
+        showFinancials: showFinancials,
+        onToggleFinancials: onToggleFinancials,
+      ),
+      desktop: _PricingLayout(
+        projectId: projectId,
+        padding: 32,
+        hideFinancialsInitially: hideFinancials,
+        showFinancials: showFinancials,
+        onToggleFinancials: onToggleFinancials,
+      ),
     );
   }
 }
 
 /// Pricing layout for different screen sizes
-class _PricingLayout extends StatelessWidget {
+class _PricingLayout extends StatefulWidget {
   final String projectId;
   final double padding;
+  final bool hideFinancialsInitially;
+  final bool showFinancials;
+  final VoidCallback onToggleFinancials;
 
-  const _PricingLayout({required this.projectId, required this.padding});
+  const _PricingLayout({
+    required this.projectId,
+    required this.padding,
+    required this.hideFinancialsInitially,
+    required this.showFinancials,
+    required this.onToggleFinancials,
+  });
+
+  @override
+  State<_PricingLayout> createState() => _PricingLayoutState();
+}
+
+class _PricingLayoutState extends State<_PricingLayout> {
+  String get projectId => widget.projectId;
 
   @override
   Widget build(BuildContext context) {
@@ -202,19 +304,30 @@ class _PricingLayout extends StatelessWidget {
         final statusColor = PricingStatusUtils.getStatusColor(
           state.pricingVersion.status,
         );
+        final showMobileFinancialToggle =
+            widget.hideFinancialsInitially &&
+            ResponsiveLayout.isMobile(context);
 
         return SingleChildScrollView(
-          padding: EdgeInsets.all(padding),
+          padding: EdgeInsets.all(widget.padding),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // // Header with status badge
-              // PricingHeader(
-              //   statusText: state.getStatusText(),
-              //   statusColor: statusColor,
-              //   trailing: ProjectContactActionsLoader(projectId: projectId),
-              // ),
-              // const SizedBox(height: 24),
+              PricingHeader(
+                statusText: state.getStatusText(),
+                statusColor: statusColor,
+              ),
+              const SizedBox(height: 24),
+              if (showMobileFinancialToggle) ...[
+                Align(
+                  alignment: AlignmentDirectional.centerEnd,
+                  child: _MobileFinancialVisibilityButton(
+                    showFinancials: widget.showFinancials,
+                    onPressed: widget.onToggleFinancials,
+                  ),
+                ),
+                const SizedBox(height: 16),
+              ],
               ProjectAttachmentsPanel(
                 projectId: projectId,
                 projectStatus: _projectStatusFromApi(
@@ -226,7 +339,7 @@ class _PricingLayout extends StatelessWidget {
 
               // Items list
               PricingItemsList(
-                projectId: projectId,
+                projectId: widget.projectId,
                 version: state.pricingVersion.version,
                 items: state.pricingVersion.items ?? [],
                 pricingStatus: state.pricingVersion.status,
@@ -247,7 +360,7 @@ class _PricingLayout extends StatelessWidget {
                 },
                 onDataChanged: () {
                   context.read<PricingCubit>().loadPricingData(
-                    projectId,
+                    widget.projectId,
                     readOnly: state.readOnly,
                   );
                 },
@@ -270,7 +383,7 @@ class _PricingLayout extends StatelessWidget {
                     ? null
                     : (oldIndex, newIndex) async {
                         await context.read<PricingCubit>().reorderItems(
-                          projectId,
+                          widget.projectId,
                           oldIndex,
                           newIndex,
                         );
@@ -279,7 +392,7 @@ class _PricingLayout extends StatelessWidget {
                     ? null
                     : (itemId, oldIndex, newIndex) async {
                         await context.read<PricingCubit>().reorderSubItems(
-                          projectId,
+                          widget.projectId,
                           itemId,
                           oldIndex,
                           newIndex,
@@ -289,7 +402,7 @@ class _PricingLayout extends StatelessWidget {
                     ? null
                     : (itemId, subItemId, elementId, targetOrder) async {
                         await context.read<PricingCubit>().reorderElement(
-                          projectId,
+                          widget.projectId,
                           itemId,
                           subItemId,
                           elementId,
@@ -297,6 +410,7 @@ class _PricingLayout extends StatelessWidget {
                         );
                       },
                 readOnly: state.readOnly,
+                showFinancials: widget.showFinancials,
               ),
               const SizedBox(height: 24),
 
@@ -307,7 +421,7 @@ class _PricingLayout extends StatelessWidget {
               ],
 
               // Sidebar with summary and actions
-              _buildSidebar(context, state),
+              if (widget.showFinancials) _buildSidebar(context, state),
             ],
           ),
         );
@@ -357,7 +471,7 @@ class _PricingLayout extends StatelessWidget {
         onReturnToPricing: showReturnButton && !state.readOnly
             ? () => _handleReturnToPricing(context)
             : null,
-        isAdminOrManager: isAdminOrManager && !state.readOnly,
+        isAdminOrManager: isAdminOrManager && widget.showFinancials,
         isPendingApproval: false,
         onAcceptPricing: null,
         isApproved: isApproved,
@@ -412,7 +526,7 @@ class _PricingLayout extends StatelessWidget {
                 if (currentState is! PricingLoaded) return;
 
                 try {
-                  await cubit.calculateProfitForSubItems(projectId);
+                  await cubit.calculateProfitForSubItems(widget.projectId);
                   if (context.mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(
@@ -454,6 +568,7 @@ class _PricingLayout extends StatelessWidget {
                 );
               }
             : null,
+        showFinancials: widget.showFinancials,
       ),
     );
   }
@@ -1051,6 +1166,43 @@ class _PricingLayout extends StatelessWidget {
       SnackBar(
         content: Text(errorMessage),
         duration: const Duration(seconds: 5),
+      ),
+    );
+  }
+}
+
+class _MobileFinancialVisibilityButton extends StatelessWidget {
+  final bool showFinancials;
+  final VoidCallback onPressed;
+
+  const _MobileFinancialVisibilityButton({
+    required this.showFinancials,
+    required this.onPressed,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Tooltip(
+      message: showFinancials ? 'إخفاء بيانات التسعير' : 'إظهار بيانات التسعير',
+      child: Container(
+        width: 40,
+        height: 40,
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          color: AppColors.inputBackground,
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: AppColors.inputBorder),
+        ),
+        child: IconButton(
+          padding: EdgeInsets.zero,
+          constraints: const BoxConstraints.tightFor(width: 40, height: 40),
+          icon: Icon(
+            showFinancials ? Ionicons.eye_outline : Ionicons.eye_off_outline,
+            color: AppColors.textSecondary,
+            size: 20,
+          ),
+          onPressed: onPressed,
+        ),
       ),
     );
   }

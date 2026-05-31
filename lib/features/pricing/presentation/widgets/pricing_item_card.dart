@@ -72,6 +72,7 @@ class PricingItemCard extends StatefulWidget {
   final VoidCallback? onItemDeleted;
   final ValueChanged<String>? onSubItemDeleted; // subItemId
   final bool isAdminOrManager; // Whether user is Admin or Manager of Department
+  final bool canViewFinancials;
   final Map<String, double>?
   externalProfitMargins; // Profit margins from parent (e.g., bulk update)
   final bool canReorderItem;
@@ -79,6 +80,7 @@ class PricingItemCard extends StatefulWidget {
   final bool canReorderSubItems;
   final Future<void> Function(int oldIndex, int newIndex)? onReorderSubItems;
   final bool canReorderElements;
+  final bool showFinancials;
   final Future<void> Function(
     String subItemId,
     String elementId,
@@ -102,12 +104,14 @@ class PricingItemCard extends StatefulWidget {
     this.onItemDeleted,
     this.onSubItemDeleted,
     this.isAdminOrManager = false,
+    this.canViewFinancials = false,
     this.externalProfitMargins,
     this.canReorderItem = false,
     this.itemReorderIndex,
     this.canReorderSubItems = false,
     this.onReorderSubItems,
     this.canReorderElements = false,
+    this.showFinancials = true,
     this.onReorderElements,
   });
 
@@ -389,6 +393,18 @@ class _PricingItemCardState extends State<PricingItemCard> {
     double fontSize = 20,
     FontWeight fontWeight = FontWeight.w700,
   }) {
+    if (!widget.showFinancials) {
+      return Text(
+        '••••',
+        style: TextStyle(
+          fontFamily: 'Menlo',
+          fontSize: fontSize,
+          fontWeight: fontWeight,
+          color: AppColors.textPrimary,
+        ),
+      );
+    }
+
     // Format number with 3 decimals and add thousand separators
     final parts = value.toStringAsFixed(3).split('.');
     final integerPart = parts[0];
@@ -424,7 +440,9 @@ class _PricingItemCardState extends State<PricingItemCard> {
 
   /// Build a compact stat chip for displaying cost, profit, or percentage
   Widget _buildStatChip(double value, Color color, {String suffix = 'KD'}) {
-    final formattedValue = suffix == '%'
+    final formattedValue = !widget.showFinancials
+        ? '••••'
+        : suffix == '%'
         ? value.toStringAsFixed(1)
         : value.toStringAsFixed(2);
 
@@ -452,7 +470,7 @@ class _PricingItemCardState extends State<PricingItemCard> {
   }
 
   Widget _buildSubItemStatCards(PricingSubItemModel subItem) {
-    if (!widget.isAdminOrManager) {
+    if (!widget.showFinancials || !widget.canViewFinancials) {
       return const SizedBox.shrink();
     }
 
@@ -493,7 +511,7 @@ class _PricingItemCardState extends State<PricingItemCard> {
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
-              '${value.toStringAsFixed(2)} KD',
+              '${widget.showFinancials ? value.toStringAsFixed(2) : '••••'} KD',
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: AppTextStyles.bodySmall.copyWith(
@@ -2896,7 +2914,8 @@ class _PricingItemCardState extends State<PricingItemCard> {
             ),
             const SizedBox(width: 16),
             if (widget.pricingStatus != null &&
-                widget.isAdminOrManager &&
+                widget.showFinancials &&
+                widget.canViewFinancials &&
                 (widget.pricingStatus!.toUpperCase() == 'APPROVED' ||
                     widget.pricingStatus!.toUpperCase() ==
                         'PENDING_SIGNATURE')) ...[
@@ -2916,37 +2935,39 @@ class _PricingItemCardState extends State<PricingItemCard> {
               ),
               const SizedBox(width: 16),
             ],
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 2.0),
-                      child: Text(
-                        'KD',
-                        style: AppTextStyles.caption.copyWith(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w500,
-                          color: AppColors.textSecondary,
+            if (widget.showFinancials) ...[
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 2.0),
+                        child: Text(
+                          'KD',
+                          style: AppTextStyles.caption.copyWith(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                            color: AppColors.textSecondary,
+                          ),
                         ),
                       ),
-                    ),
-                    const SizedBox(width: 6),
-                    _buildFormattedNumber(
-                      widget.isAdminOrManager
-                          ? widget.item.profitAmount + widget.item.totalCost
-                          : widget.item.totalCost,
-                      fontSize: 20,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ],
-                ),
-              ],
-            ),
-            const SizedBox(width: 16),
+                      const SizedBox(width: 6),
+                      _buildFormattedNumber(
+                        widget.canViewFinancials
+                            ? widget.item.profitAmount + widget.item.totalCost
+                            : widget.item.totalCost,
+                        fontSize: 20,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+              const SizedBox(width: 16),
+            ],
             IconButton(
               onPressed: _showItemContextMenu,
               icon: const Icon(
@@ -3161,82 +3182,87 @@ class _PricingItemCardState extends State<PricingItemCard> {
                                                 const SizedBox(width: 8),
                                               ],
                                               _buildSubItemStatCards(subItem),
-                                              if (widget.isAdminOrManager)
+                                              if (widget.canViewFinancials)
                                                 const SizedBox(width: 8),
-                                              Builder(
-                                                builder: (context) {
-                                                  double total = 0;
-                                                  if (widget.isAdminOrManager) {
-                                                    total =
-                                                        subItem.totalCost +
-                                                        subItem.profitAmount;
-                                                  } else {
-                                                    total = subItem.totalCost;
-                                                  }
+                                              if (widget.showFinancials)
+                                                Builder(
+                                                  builder: (context) {
+                                                    double total = 0;
+                                                    if (widget
+                                                        .canViewFinancials) {
+                                                      total =
+                                                          subItem.totalCost +
+                                                          subItem.profitAmount;
+                                                    } else {
+                                                      total = subItem.totalCost;
+                                                    }
 
-                                                  final totalStr = total
-                                                      .toStringAsFixed(3);
-                                                  final dotIndex = totalStr
-                                                      .indexOf('.');
-                                                  final intPart = dotIndex >= 0
-                                                      ? totalStr.substring(
-                                                          0,
-                                                          dotIndex,
-                                                        )
-                                                      : totalStr;
-                                                  final decimalPart =
-                                                      dotIndex >= 0
-                                                      ? totalStr.substring(
-                                                          dotIndex,
-                                                        )
-                                                      : '';
-                                                  return RichText(
-                                                    textDirection:
-                                                        TextDirection.ltr,
-                                                    text: TextSpan(
-                                                      children: [
-                                                        TextSpan(
-                                                          text: intPart,
-                                                          style: AppTextStyles
-                                                              .caption
-                                                              .copyWith(
-                                                                color: AppColors
-                                                                    .textSecondary,
-                                                              ),
-                                                        ),
-                                                        if (decimalPart
-                                                            .isNotEmpty)
+                                                    final totalStr =
+                                                        widget.showFinancials
+                                                        ? total.toStringAsFixed(
+                                                            3,
+                                                          )
+                                                        : '••••';
+                                                    final dotIndex = totalStr
+                                                        .indexOf('.');
+                                                    final intPart =
+                                                        dotIndex >= 0
+                                                        ? totalStr.substring(
+                                                            0,
+                                                            dotIndex,
+                                                          )
+                                                        : totalStr;
+                                                    final decimalPart =
+                                                        dotIndex >= 0
+                                                        ? totalStr.substring(
+                                                            dotIndex,
+                                                          )
+                                                        : '';
+                                                    return RichText(
+                                                      textDirection:
+                                                          TextDirection.ltr,
+                                                      text: TextSpan(
+                                                        children: [
                                                           TextSpan(
-                                                            text: decimalPart,
+                                                            text: intPart,
                                                             style: AppTextStyles
                                                                 .caption
                                                                 .copyWith(
                                                                   color: AppColors
                                                                       .textSecondary,
-                                                                  fontSize:
-                                                                      AppTextStyles
-                                                                          .caption
-                                                                          .fontSize! *
-                                                                      0.75,
                                                                 ),
                                                           ),
-                                                        TextSpan(
-                                                          text: ' KD',
-                                                          style: TextStyle(
-                                                            color: AppColors
-                                                                .textSecondary,
-                                                            fontSize:
-                                                                AppTextStyles
-                                                                    .caption
-                                                                    .fontSize! *
-                                                                0.75,
+                                                          if (decimalPart
+                                                              .isNotEmpty)
+                                                            TextSpan(
+                                                              text: decimalPart,
+                                                              style: AppTextStyles.caption.copyWith(
+                                                                color: AppColors
+                                                                    .textSecondary,
+                                                                fontSize:
+                                                                    AppTextStyles
+                                                                        .caption
+                                                                        .fontSize! *
+                                                                    0.75,
+                                                              ),
+                                                            ),
+                                                          TextSpan(
+                                                            text: ' KD',
+                                                            style: TextStyle(
+                                                              color: AppColors
+                                                                  .textSecondary,
+                                                              fontSize:
+                                                                  AppTextStyles
+                                                                      .caption
+                                                                      .fontSize! *
+                                                                  0.75,
+                                                            ),
                                                           ),
-                                                        ),
-                                                      ],
-                                                    ),
-                                                  );
-                                                },
-                                              ),
+                                                        ],
+                                                      ),
+                                                    );
+                                                  },
+                                                ),
                                               const SizedBox(width: 8),
                                               IconButton(
                                                 onPressed: () =>
@@ -3362,84 +3388,86 @@ class _PricingItemCardState extends State<PricingItemCard> {
                                               const SizedBox(width: 8),
                                             ],
                                             _buildSubItemStatCards(subItem),
-                                            if (widget.isAdminOrManager)
+                                            if (widget.canViewFinancials)
                                               const SizedBox(width: 8),
 
                                             // Show total cost in header only when NOT APPROVED/PENDING_SIGNATURE
-                                            Builder(
-                                              builder: (context) {
-                                                double total = 0;
-                                                if (widget.isAdminOrManager) {
-                                                  total =
-                                                      subItem.totalCost +
-                                                      subItem.profitAmount;
-                                                } else {
-                                                  total = subItem.totalCost;
-                                                }
+                                            if (widget.showFinancials)
+                                              Builder(
+                                                builder: (context) {
+                                                  double total = 0;
+                                                  if (widget
+                                                      .canViewFinancials) {
+                                                    total =
+                                                        subItem.totalCost +
+                                                        subItem.profitAmount;
+                                                  } else {
+                                                    total = subItem.totalCost;
+                                                  }
 
-                                                final totalStr = total
-                                                    .toStringAsFixed(3);
-                                                final dotIndex = totalStr
-                                                    .indexOf('.');
-                                                final intPart = dotIndex >= 0
-                                                    ? totalStr.substring(
-                                                        0,
-                                                        dotIndex,
-                                                      )
-                                                    : totalStr;
-                                                final decimalPart =
-                                                    dotIndex >= 0
-                                                    ? totalStr.substring(
-                                                        dotIndex,
-                                                      )
-                                                    : '';
-                                                return RichText(
-                                                  textDirection:
-                                                      TextDirection.ltr,
-                                                  text: TextSpan(
-                                                    children: [
-                                                      TextSpan(
-                                                        text: intPart,
-                                                        style: AppTextStyles
-                                                            .caption
-                                                            .copyWith(
-                                                              color: AppColors
-                                                                  .textSecondary,
-                                                            ),
-                                                      ),
-                                                      if (decimalPart
-                                                          .isNotEmpty)
+                                                  final totalStr =
+                                                      widget.showFinancials
+                                                      ? total.toStringAsFixed(3)
+                                                      : '••••';
+                                                  final dotIndex = totalStr
+                                                      .indexOf('.');
+                                                  final intPart = dotIndex >= 0
+                                                      ? totalStr.substring(
+                                                          0,
+                                                          dotIndex,
+                                                        )
+                                                      : totalStr;
+                                                  final decimalPart =
+                                                      dotIndex >= 0
+                                                      ? totalStr.substring(
+                                                          dotIndex,
+                                                        )
+                                                      : '';
+                                                  return RichText(
+                                                    textDirection:
+                                                        TextDirection.ltr,
+                                                    text: TextSpan(
+                                                      children: [
                                                         TextSpan(
-                                                          text: decimalPart,
+                                                          text: intPart,
                                                           style: AppTextStyles
                                                               .caption
                                                               .copyWith(
                                                                 color: AppColors
                                                                     .textSecondary,
-                                                                fontSize:
-                                                                    AppTextStyles
-                                                                        .caption
-                                                                        .fontSize! *
-                                                                    0.75, // smaller
                                                               ),
                                                         ),
-                                                      TextSpan(
-                                                        text: ' KD',
-                                                        style: TextStyle(
-                                                          color: AppColors
-                                                              .textSecondary,
-                                                          fontSize:
-                                                              AppTextStyles
-                                                                  .caption
-                                                                  .fontSize! *
-                                                              0.75, // smaller
+                                                        if (decimalPart
+                                                            .isNotEmpty)
+                                                          TextSpan(
+                                                            text: decimalPart,
+                                                            style: AppTextStyles.caption.copyWith(
+                                                              color: AppColors
+                                                                  .textSecondary,
+                                                              fontSize:
+                                                                  AppTextStyles
+                                                                      .caption
+                                                                      .fontSize! *
+                                                                  0.75, // smaller
+                                                            ),
+                                                          ),
+                                                        TextSpan(
+                                                          text: ' KD',
+                                                          style: TextStyle(
+                                                            color: AppColors
+                                                                .textSecondary,
+                                                            fontSize:
+                                                                AppTextStyles
+                                                                    .caption
+                                                                    .fontSize! *
+                                                                0.75, // smaller
+                                                          ),
                                                         ),
-                                                      ),
-                                                    ],
-                                                  ),
-                                                );
-                                              },
-                                            ),
+                                                      ],
+                                                    ),
+                                                  );
+                                                },
+                                              ),
                                             const SizedBox(width: 8),
                                             IconButton(
                                               onPressed: () =>
@@ -4171,27 +4199,30 @@ class _PricingItemCardState extends State<PricingItemCard> {
                                                             ),
                                                       ),
                                                     ),
-                                                    const SizedBox(width: 8),
-                                                    Expanded(
-                                                      flex: 2,
-                                                      child: Text(
-                                                        'التكلفة (دينار)',
-                                                        style: AppTextStyles
-                                                            .caption
-                                                            .copyWith(
-                                                              fontSize: 12,
-                                                              fontWeight:
-                                                                  FontWeight
-                                                                      .w500,
-                                                              color:
-                                                                  const Color(
-                                                                    0xFF6B7280,
-                                                                  ),
-                                                            ),
-                                                        textAlign:
-                                                            TextAlign.center,
+                                                    if (widget
+                                                        .showFinancials) ...[
+                                                      const SizedBox(width: 8),
+                                                      Expanded(
+                                                        flex: 2,
+                                                        child: Text(
+                                                          'التكلفة (دينار)',
+                                                          style: AppTextStyles
+                                                              .caption
+                                                              .copyWith(
+                                                                fontSize: 12,
+                                                                fontWeight:
+                                                                    FontWeight
+                                                                        .w500,
+                                                                color:
+                                                                    const Color(
+                                                                      0xFF6B7280,
+                                                                    ),
+                                                              ),
+                                                          textAlign:
+                                                              TextAlign.center,
+                                                        ),
                                                       ),
-                                                    ),
+                                                    ],
                                                   ],
                                                 ),
                                               ),
@@ -4361,6 +4392,9 @@ class _PricingItemCardState extends State<PricingItemCard> {
                                                               child: PricingTableRow(
                                                                 item:
                                                                     pricingItem,
+                                                                showFinancials:
+                                                                    widget
+                                                                        .showFinancials,
                                                                 isNewRow:
                                                                     isLocal &&
                                                                     localElement !=
@@ -4712,46 +4746,49 @@ class _PricingItemCardState extends State<PricingItemCard> {
                     ),
                   ),
                   // Subtotal
-                  const SizedBox(height: 16),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      vertical: 17.22,
-                      horizontal: 20,
-                    ),
-                    decoration: const BoxDecoration(
-                      border: Border(top: BorderSide(color: Color(0xFF363C4A))),
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          'المجموع الفرعي',
-                          style: AppTextStyles.bodyMedium.copyWith(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w500,
-                            color: AppColors.textSecondary,
+                  if (widget.showFinancials) const SizedBox(height: 16),
+                  if (widget.showFinancials)
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        vertical: 17.22,
+                        horizontal: 20,
+                      ),
+                      decoration: const BoxDecoration(
+                        border: Border(
+                          top: BorderSide(color: Color(0xFF363C4A)),
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            'المجموع الفرعي',
+                            style: AppTextStyles.bodyMedium.copyWith(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w500,
+                              color: AppColors.textSecondary,
+                            ),
                           ),
-                        ),
-                        Row(
-                          children: [
-                            Text(
-                              'KD',
-                              style: AppTextStyles.bodyMedium.copyWith(
-                                fontSize: 14,
-                                color: const Color(0xFF6B7280),
+                          Row(
+                            children: [
+                              Text(
+                                'KD',
+                                style: AppTextStyles.bodyMedium.copyWith(
+                                  fontSize: 14,
+                                  color: const Color(0xFF6B7280),
+                                ),
                               ),
-                            ),
-                            const SizedBox(width: 8),
-                            _buildFormattedNumber(
-                              widget.item.totalPrice,
-                              fontSize: 20,
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ],
-                        ),
-                      ],
+                              const SizedBox(width: 8),
+                              _buildFormattedNumber(
+                                widget.item.totalPrice,
+                                fontSize: 20,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
                 ],
               ),
             ),

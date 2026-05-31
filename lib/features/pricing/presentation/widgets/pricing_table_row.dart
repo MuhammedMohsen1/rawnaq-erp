@@ -14,6 +14,7 @@ class PricingTableRow extends StatefulWidget {
   final VoidCallback? onSubmitted; // Called only when user presses Enter/submit
   final bool isNewRow;
   final FocusNode? firstFieldFocusNode;
+  final bool showFinancials;
 
   const PricingTableRow({
     super.key,
@@ -24,6 +25,7 @@ class PricingTableRow extends StatefulWidget {
     this.onSubmitted,
     this.isNewRow = false,
     this.firstFieldFocusNode,
+    this.showFinancials = true,
   });
 
   @override
@@ -234,7 +236,9 @@ class _PricingTableRowState extends State<PricingTableRow> {
             // Cost (KD) - Direct total input or unit price mode
             Expanded(
               flex: 2,
-              child: _isUnitPriceMode
+              child: !widget.showFinancials
+                  ? const SizedBox.shrink()
+                  : _isUnitPriceMode
                   ? Row(
                       children: [
                         // Quantity input

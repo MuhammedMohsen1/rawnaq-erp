@@ -54,8 +54,18 @@ class AppRoutes {
   static const String reminders = '/reminders';
 
   // Pricing
-  static String pricing(String projectId, {bool readOnly = false}) =>
-      readOnly ? '/pricing/$projectId?readOnly=true' : '/pricing/$projectId';
+  static String pricing(
+    String projectId, {
+    bool readOnly = false,
+    bool hideFinancials = false,
+  }) {
+    final queryParameters = <String, String>{
+      if (readOnly) 'readOnly': 'true',
+      if (hideFinancials) 'hideFinancials': 'true',
+    };
+    final query = Uri(queryParameters: queryParameters).query;
+    return query.isEmpty ? '/pricing/$projectId' : '/pricing/$projectId?$query';
+  }
 
   // Execution
   static String execution(String projectId) => '/execution/$projectId';
@@ -329,6 +339,8 @@ class AppRouter {
                 child: UnderPricingPage(
                   projectId: projectId,
                   readOnly: state.uri.queryParameters['readOnly'] == 'true',
+                  hideFinancials:
+                      state.uri.queryParameters['hideFinancials'] == 'true',
                 ),
               );
             },
