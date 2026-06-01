@@ -245,6 +245,15 @@ abstract class ApiEndpoints {
     String attachmentId,
   ) => '/projects/$projectId/attachments/$attachmentId';
 
+  // Tasks Endpoints
+  static const String tasks = '/tasks';
+  static const String myTasks = '/tasks/my';
+  static const String taskTeamMembers = '/tasks/team-members';
+  static String taskById(String id) => '/tasks/$id';
+  static String taskSchedule(String id) => '/tasks/$id/schedule';
+  static String taskAssign(String id) => '/tasks/$id/assign';
+  static String taskMyStatus(String id) => '/tasks/$id/my-status';
+
   // Pricing Endpoints
   static String pricingVersions(String projectId) =>
       '/projects/$projectId/pricing';

@@ -111,6 +111,7 @@ class MainLayout extends StatelessWidget {
     if (currentPath == AppRoutes.archivedProjects) return 'الأرشيف';
     if (currentPath == AppRoutes.completedProjects) return 'المشاريع المكتملة';
     if (currentPath == AppRoutes.gantt) return 'مخطط جانت';
+    if (currentPath == AppRoutes.tasks) return 'مهامي';
     if (currentPath == AppRoutes.settings) return 'الإعدادات';
     if (currentPath == AppRoutes.notifications) return 'الإشعارات';
     if (currentPath == AppRoutes.reminders) return 'التذكيرات';
@@ -258,10 +259,10 @@ class _SidebarState extends State<_Sidebar> {
                     ),
                     _buildCollapsedNavItem(
                       context: context,
-                      icon: Icons.notifications_active_outlined,
-                      activeIcon: Icons.notifications_active,
-                      path: AppRoutes.reminders,
-                      isActive: widget.currentPath == AppRoutes.reminders,
+                      icon: Icons.check_circle_outline,
+                      activeIcon: Icons.check_circle,
+                      path: AppRoutes.tasks,
+                      isActive: widget.currentPath == AppRoutes.tasks,
                     ),
                     _buildCollapsedNavItem(
                       context: context,
@@ -450,11 +451,11 @@ class _SidebarState extends State<_Sidebar> {
                     ),
                     _buildNavItem(
                       context: context,
-                      icon: Icons.notifications_active_outlined,
-                      activeIcon: Icons.notifications_active,
-                      label: 'التذكيرات',
-                      path: AppRoutes.reminders,
-                      isActive: widget.currentPath == AppRoutes.reminders,
+                      icon: Icons.check_circle_outline,
+                      activeIcon: Icons.check_circle,
+                      label: 'مهامي',
+                      path: AppRoutes.tasks,
+                      isActive: widget.currentPath == AppRoutes.tasks,
                     ),
                     if (isAdmin) ...[
                       // _buildNavItem(

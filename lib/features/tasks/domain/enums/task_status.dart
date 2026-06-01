@@ -67,15 +67,32 @@ extension TaskStatusExtension on TaskStatus {
 
   /// Convert status to string for API
   String toApiString() {
-    return name;
+    switch (this) {
+      case TaskStatus.inProgress:
+        return 'IN_PROGRESS';
+      case TaskStatus.completed:
+        return 'COMPLETED';
+      case TaskStatus.waiting:
+        return 'TODO';
+      case TaskStatus.delayed:
+        return 'BLOCKED';
+    }
   }
 
   /// Create status from API string
   static TaskStatus fromApiString(String value) {
-    return TaskStatus.values.firstWhere(
-      (status) => status.name.toLowerCase() == value.toLowerCase(),
-      orElse: () => TaskStatus.waiting,
-    );
+    switch (value.toUpperCase()) {
+      case 'IN_PROGRESS':
+        return TaskStatus.inProgress;
+      case 'COMPLETED':
+        return TaskStatus.completed;
+      case 'DELAYED':
+        return TaskStatus.delayed;
+      case 'BLOCKED':
+        return TaskStatus.delayed;
+      case 'TODO':
+      default:
+        return TaskStatus.waiting;
+    }
   }
 }
-

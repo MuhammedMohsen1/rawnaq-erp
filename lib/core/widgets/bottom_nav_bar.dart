@@ -15,7 +15,7 @@ class AppBottomNavBar extends StatelessWidget {
     if (isSiteEngineer) {
       if (currentPath == AppRoutes.dashboard) return 0;
       if (currentPath == AppRoutes.siteEngineerPricingProjects) return 1;
-      if (currentPath == AppRoutes.reminders) return 2;
+      if (currentPath == AppRoutes.tasks) return 2;
       if (currentPath == AppRoutes.settings) return 3;
       return 0;
     } else {
@@ -67,10 +67,10 @@ class AppBottomNavBar extends StatelessWidget {
                         ),
                         _buildNavItem(
                           context: context,
-                          icon: Icons.notifications_active_outlined,
-                          activeIcon: Icons.notifications_active,
-                          label: 'التذكيرات',
-                          path: AppRoutes.reminders,
+                          icon: Icons.check_circle_outline,
+                          activeIcon: Icons.check_circle,
+                          label: 'مهامي',
+                          path: AppRoutes.tasks,
                           index: 2,
                           isSiteEngineer: true,
                         ),

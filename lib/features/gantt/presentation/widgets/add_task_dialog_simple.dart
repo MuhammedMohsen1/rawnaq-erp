@@ -10,17 +10,13 @@ import '../../../tasks/domain/entities/task_entity.dart';
 /// Simple dialog for adding a new task (always as draft - no assignee)
 class AddTaskDialogSimple extends StatefulWidget {
   final Function(TaskEntity) onTaskAdded;
+  final List<Map<String, String>> projects;
 
-  // Mock projects for dropdown
-  static const List<Map<String, String>> mockProjects = [
-    {'id': 'proj-1', 'name': 'فيلا العبدالله'},
-    {'id': 'proj-2', 'name': 'برج التجارة'},
-    {'id': 'proj-3', 'name': 'شقة جدة'},
-    {'id': 'proj-4', 'name': 'مكتب شركة التقنية'},
-    {'id': 'proj-5', 'name': 'فندق الملك'},
-  ];
-
-  const AddTaskDialogSimple({super.key, required this.onTaskAdded});
+  const AddTaskDialogSimple({
+    super.key,
+    required this.onTaskAdded,
+    this.projects = const [],
+  });
 
   @override
   State<AddTaskDialogSimple> createState() => _AddTaskDialogSimpleState();
@@ -282,7 +278,7 @@ class _AddTaskDialogSimpleState extends State<AddTaskDialogSimple>
             dropdownColor: AppColors.cardBackground,
             style: AppTextStyles.inputText,
             hint: const Text('اختر المشروع', style: AppTextStyles.inputHint),
-            items: AddTaskDialogSimple.mockProjects.map((project) {
+            items: widget.projects.map((project) {
               return DropdownMenuItem(
                 value: project['id'],
                 child: Text(project['name']!),
@@ -291,8 +287,9 @@ class _AddTaskDialogSimpleState extends State<AddTaskDialogSimple>
             onChanged: (value) {
               setState(() {
                 _selectedProjectId = value;
-                _selectedProjectName = AddTaskDialogSimple.mockProjects
-                    .firstWhere((p) => p['id'] == value)['name'];
+                _selectedProjectName = widget.projects.firstWhere(
+                  (p) => p['id'] == value,
+                )['name'];
               });
             },
             validator: (value) =>

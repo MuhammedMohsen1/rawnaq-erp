@@ -5,6 +5,19 @@ import '../../../projects/domain/entities/team_member_entity.dart';
 /// Time period options for Gantt chart
 enum GanttTimePeriod { today, week, month, threeMonths }
 
+enum GanttLayoutOrientation { horizontal, vertical }
+
+extension GanttLayoutOrientationExtension on GanttLayoutOrientation {
+  String get arabicName {
+    switch (this) {
+      case GanttLayoutOrientation.horizontal:
+        return 'أفقي';
+      case GanttLayoutOrientation.vertical:
+        return 'عمودي';
+    }
+  }
+}
+
 extension GanttTimePeriodExtension on GanttTimePeriod {
   String get arabicName {
     switch (this) {
@@ -36,10 +49,12 @@ extension GanttTimePeriodExtension on GanttTimePeriod {
 /// Compact widget for Gantt chart filters - all in one row
 class GanttFiltersWidget extends StatelessWidget {
   final GanttTimePeriod selectedPeriod;
+  final GanttLayoutOrientation selectedOrientation;
   final bool showTeamTasks;
   final String? selectedMemberId;
   final List<TeamMemberEntity> teamMembers;
   final ValueChanged<GanttTimePeriod> onPeriodChanged;
+  final ValueChanged<GanttLayoutOrientation> onOrientationChanged;
   final ValueChanged<bool> onTeamTasksChanged;
   final ValueChanged<String?> onMemberChanged;
   final VoidCallback onApplyFilters;
@@ -48,10 +63,12 @@ class GanttFiltersWidget extends StatelessWidget {
   const GanttFiltersWidget({
     super.key,
     required this.selectedPeriod,
+    required this.selectedOrientation,
     required this.showTeamTasks,
     required this.selectedMemberId,
     required this.teamMembers,
     required this.onPeriodChanged,
+    required this.onOrientationChanged,
     required this.onTeamTasksChanged,
     required this.onMemberChanged,
     required this.onApplyFilters,
@@ -71,6 +88,10 @@ class GanttFiltersWidget extends StatelessWidget {
 
         // Team/My toggle (compact)
         _buildTeamToggle(),
+
+        const SizedBox(width: 12),
+
+        _buildOrientationToggle(),
 
         const SizedBox(width: 12),
 
@@ -167,6 +188,30 @@ class GanttFiltersWidget extends StatelessWidget {
             },
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildOrientationToggle() {
+    return Container(
+      height: 36,
+      decoration: BoxDecoration(
+        color: AppColors.surfaceColor,
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: GanttLayoutOrientation.values.map((orientation) {
+          final isSelected = selectedOrientation == orientation;
+          return _buildMiniToggle(
+            icon: orientation == GanttLayoutOrientation.horizontal
+                ? Icons.swap_horiz
+                : Icons.swap_vert,
+            label: orientation.arabicName,
+            isSelected: isSelected,
+            onTap: () => onOrientationChanged(orientation),
+          );
+        }).toList(),
       ),
     );
   }

@@ -80,15 +80,26 @@ extension TaskTypeExtension on TaskType {
 
   /// Convert type to string for API
   String toApiString() {
-    return name;
+    switch (this) {
+      case TaskType.workTask:
+        return 'WORK_TASK';
+      case TaskType.appointment:
+        return 'APPOINTMENT';
+      case TaskType.generalTask:
+        return 'GENERAL_TASK';
+    }
   }
 
   /// Create type from API string
   static TaskType fromApiString(String value) {
-    return TaskType.values.firstWhere(
-      (type) => type.name.toLowerCase() == value.toLowerCase(),
-      orElse: () => TaskType.generalTask,
-    );
+    switch (value.toUpperCase()) {
+      case 'WORK_TASK':
+        return TaskType.workTask;
+      case 'APPOINTMENT':
+        return TaskType.appointment;
+      case 'GENERAL_TASK':
+      default:
+        return TaskType.generalTask;
+    }
   }
 }
-

@@ -2,10 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_text_styles.dart';
+import '../../../projects/data/datasources/projects_api_datasource.dart';
 import '../../../tasks/domain/entities/task_entity.dart';
 import '../../../tasks/domain/enums/task_status.dart';
 import '../../../tasks/domain/enums/task_type.dart';
-import '../../../tasks/data/datasources/mock_tasks_datasource.dart';
+import '../../../tasks/data/datasources/tasks_api_datasource.dart';
 import '../../../projects/domain/entities/team_member_entity.dart';
 import '../widgets/gantt_filters_widget.dart';
 import '../widgets/add_task_dialog_simple.dart';
@@ -21,18 +22,24 @@ class GanttChartPage extends StatefulWidget {
 }
 
 class _GanttChartPageState extends State<GanttChartPage> {
-  final MockTasksDataSource _dataSource = MockTasksDataSource();
+  final TasksApiDataSource _dataSource = TasksApiDataSource();
+  final ProjectsApiDataSource _projectsDataSource = ProjectsApiDataSource();
 
   GanttTimePeriod _selectedPeriod = GanttTimePeriod.week;
+  GanttLayoutOrientation _selectedOrientation =
+      GanttLayoutOrientation.horizontal;
   bool _showTeamTasks = true;
   String? _selectedMemberId;
   bool _isDraftPanelExpanded = true;
+  bool _isLoading = true;
+  String? _errorMessage;
 
-  late List<TaskEntity> _tasks;
-  late List<TaskEntity> _draftTasks;
-  late List<TeamMemberEntity> _teamMembers;
-  late List<TeamMemberEntity> _overloadedMembers;
-  late List<String> _delayedProjects;
+  List<TaskEntity> _tasks = [];
+  List<TaskEntity> _draftTasks = [];
+  List<TeamMemberEntity> _teamMembers = [];
+  List<TeamMemberEntity> _overloadedMembers = [];
+  List<String> _delayedProjects = [];
+  List<Map<String, String>> _projects = [];
 
   @override
   void initState() {
@@ -40,29 +47,91 @@ class _GanttChartPageState extends State<GanttChartPage> {
     _loadData();
   }
 
-  void _loadData() {
-    _teamMembers = _dataSource.getTeamMembers();
-    _overloadedMembers = _dataSource.getMembersWithOverload();
-    _delayedProjects = _dataSource.getDelayedProjects();
-    _draftTasks = _dataSource.getDraftTasks();
-    _applyFilters();
+  Future<void> _loadData() async {
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+
+    try {
+      _teamMembers = await _dataSource.getTeamMembers();
+      _projects = await _loadProjectsForTasks();
+      await _applyFilters(setLoading: false);
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _isLoading = false;
+        _errorMessage = 'تعذر تحميل المهام';
+      });
+    }
   }
 
-  void _applyFilters() {
-    setState(() {
-      if (_showTeamTasks) {
-        _tasks = _dataSource
-            .getTasks(assigneeId: _selectedMemberId)
+  Future<List<Map<String, String>>> _loadProjectsForTasks() async {
+    try {
+      final response = await _projectsDataSource.getProjects(limit: 100);
+      final projects = response['projects'] as List<dynamic>;
+      return projects
+          .map((json) {
+            final map = json as Map<String, dynamic>;
+            return {
+              'id': map['id'] as String,
+              'name': map['name'] as String? ?? '',
+            };
+          })
+          .where((project) => project['name']!.isNotEmpty)
+          .toList();
+    } catch (_) {
+      return [];
+    }
+  }
+
+  Future<void> _applyFilters({bool setLoading = true}) async {
+    if (setLoading) {
+      setState(() {
+        _isLoading = true;
+        _errorMessage = null;
+      });
+    }
+
+    try {
+      final startDate = _getStartDate();
+      final endDate = DateTime(
+        startDate.year,
+        startDate.month,
+        startDate.day + _getViewDays(),
+      );
+      final assigneeId = _showTeamTasks ? _selectedMemberId : null;
+      final tasks = _showTeamTasks
+          ? await _dataSource.getTasks(
+              assigneeId: assigneeId,
+              startDate: startDate,
+              endDate: endDate,
+              includeDrafts: true,
+            )
+          : await _dataSource.getMyTasks(
+              startDate: startDate,
+              endDate: endDate,
+            );
+
+      if (!mounted) return;
+      setState(() {
+        _tasks = tasks
             .where((t) => !t.isDraft && t.assigneeId != null)
             .toList();
-      } else {
-        _tasks = _dataSource
-            .getTasks(assigneeId: 'tm-1')
-            .where((t) => !t.isDraft && t.assigneeId != null)
+        _draftTasks = tasks
+            .where((t) => t.isDraft || t.assigneeId == null)
             .toList();
-      }
-      _draftTasks = _dataSource.getDraftTasks();
-    });
+        _overloadedMembers = _calculateOverloadedMembers(_tasks);
+        _delayedProjects = _calculateDelayedProjects(_tasks);
+        _isLoading = false;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _isLoading = false;
+        _errorMessage = 'تعذر تحميل المهام';
+      });
+    }
   }
 
   void _clearFilters() {
@@ -72,6 +141,28 @@ class _GanttChartPageState extends State<GanttChartPage> {
       _selectedMemberId = null;
     });
     _applyFilters();
+  }
+
+  List<TeamMemberEntity> _calculateOverloadedMembers(List<TaskEntity> tasks) {
+    final counts = <String, int>{};
+    for (final task in tasks) {
+      if (task.status != TaskStatus.completed && task.assigneeId != null) {
+        counts[task.assigneeId!] = (counts[task.assigneeId!] ?? 0) + 1;
+      }
+    }
+
+    return _teamMembers.where((m) => (counts[m.id] ?? 0) > 3).toList();
+  }
+
+  List<String> _calculateDelayedProjects(List<TaskEntity> tasks) {
+    return tasks
+        .where(
+          (task) =>
+              task.status == TaskStatus.delayed && task.projectName != null,
+        )
+        .map((task) => task.projectName!)
+        .toSet()
+        .toList();
   }
 
   DateTime _getStartDate() {
@@ -123,32 +214,34 @@ class _GanttChartPageState extends State<GanttChartPage> {
   void _showAddTaskDialog() {
     showDialog(
       context: context,
-      builder: (context) => AddTaskDialogSimple(
+      builder: (dialogContext) => AddTaskDialogSimple(
+        projects: _projects,
         onTaskAdded: (task) {
           bool wasAdjusted = false;
-          setState(() {
-            wasAdjusted = _dataSource.addTask(task);
+          _dataSource.createTask(task).then((createdTask) {
+            wasAdjusted = createdTask.wasAdjusted;
             _applyFilters();
-          });
 
-          if (wasAdjusted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(
-                  'تم إضافة المهمة: ${task.name}\nتم تعديل الوقت تلقائياً لتجنب التعارض',
+            if (!mounted) return;
+            if (wasAdjusted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(
+                    'تم إضافة المهمة: ${task.name}\nتم تعديل الوقت تلقائياً لتجنب التعارض',
+                  ),
+                  backgroundColor: AppColors.warning,
+                  duration: const Duration(seconds: 4),
                 ),
-                backgroundColor: AppColors.warning,
-                duration: const Duration(seconds: 4),
-              ),
-            );
-          } else {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text('تم إضافة المهمة: ${task.name}'),
-                backgroundColor: AppColors.statusOnHold,
-              ),
-            );
-          }
+              );
+            } else {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text('تم إضافة المهمة: ${task.name}'),
+                  backgroundColor: AppColors.statusOnHold,
+                ),
+              );
+            }
+          });
         },
       ),
     );
@@ -161,22 +254,24 @@ class _GanttChartPageState extends State<GanttChartPage> {
     );
   }
 
-  void _onTaskDropped(TaskEntity task, String assigneeId, DateTime date) {
-    bool wasAdjusted = false;
-    setState(() {
-      if (task.isDraft || task.assigneeId == null) {
-        // Assign draft task to employee starting from dropped date
-        wasAdjusted = _dataSource.assignTask(task.id, assigneeId, date);
-      } else {
-        // Update existing task - new start date (keeps duration), optionally new assignee
-        wasAdjusted = _dataSource.updateTaskDates(
-          task.id,
-          date,
-          newAssigneeId: assigneeId,
-        );
-      }
-      _applyFilters();
-    });
+  Future<void> _onTaskDropped(
+    TaskEntity task,
+    String assigneeId,
+    DateTime date,
+  ) async {
+    final updatedTask = task.isDraft || task.assigneeId == null
+        ? await _dataSource.assignTask(
+            task.id,
+            assigneeId: assigneeId,
+            startDate: _datePreservingTaskTime(date, task.startDate),
+          )
+        : await _dataSource.scheduleTask(
+            task.id,
+            startDate: _datePreservingTaskTime(date, task.startDate),
+            assigneeId: assigneeId,
+          );
+
+    await _applyFilters();
 
     final action = (task.isDraft || task.assigneeId == null)
         ? 'تم تعيين المهمة'
@@ -184,7 +279,8 @@ class _GanttChartPageState extends State<GanttChartPage> {
               ? 'تم نقل المهمة'
               : 'تم تحديث تاريخ المهمة');
 
-    if (wasAdjusted) {
+    if (updatedTask.wasAdjusted) {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
@@ -195,6 +291,7 @@ class _GanttChartPageState extends State<GanttChartPage> {
         ),
       );
     } else {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('$action: ${task.name}'),
@@ -205,15 +302,21 @@ class _GanttChartPageState extends State<GanttChartPage> {
   }
 
   /// Called when a task is resized by dragging its edges
-  void _onTaskResized(TaskEntity task, DateTime newStart, DateTime newEnd) {
+  Future<void> _onTaskResized(
+    TaskEntity task,
+    DateTime newStart,
+    DateTime newEnd,
+  ) async {
     // Skip conflict check for appointments
     if (task.taskType == TaskType.appointment || task.assigneeId == null) {
-      setState(() {
-        final updatedTask = task.copyWith(startDate: newStart, endDate: newEnd);
-        _dataSource.updateTask(updatedTask);
-        _applyFilters();
-      });
+      await _dataSource.scheduleTask(
+        task.id,
+        startDate: newStart,
+        endDate: newEnd,
+      );
+      await _applyFilters();
 
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('تم تعديل مدة المهمة: ${task.name}'),
@@ -223,28 +326,17 @@ class _GanttChartPageState extends State<GanttChartPage> {
       return;
     }
 
-    // Check for conflicts and auto-adjust
-    final duration = newEnd.difference(newStart);
-    final adjustedStart = _dataSource.findNextAvailableSlot(
-      task.assigneeId!,
-      newStart,
-      duration,
-      excludeTaskId: task.id,
+    final updatedTask = await _dataSource.scheduleTask(
+      task.id,
+      startDate: newStart,
+      endDate: newEnd,
+      assigneeId: task.assigneeId,
     );
+    await _applyFilters();
 
-    final wasAdjusted = adjustedStart != newStart;
-    final adjustedEnd = wasAdjusted ? adjustedStart.add(duration) : newEnd;
-
-    setState(() {
-      final updatedTask = task.copyWith(
-        startDate: wasAdjusted ? adjustedStart : newStart,
-        endDate: adjustedEnd,
-      );
-      _dataSource.updateTask(updatedTask);
-      _applyFilters();
-    });
-
+    final wasAdjusted = updatedTask.wasAdjusted;
     if (wasAdjusted) {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
@@ -255,6 +347,7 @@ class _GanttChartPageState extends State<GanttChartPage> {
         ),
       );
     } else {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('تم تعديل مدة المهمة: ${task.name}'),
@@ -264,6 +357,17 @@ class _GanttChartPageState extends State<GanttChartPage> {
     }
   }
 
+  DateTime _datePreservingTaskTime(DateTime date, DateTime timeSource) {
+    return DateTime(
+      date.year,
+      date.month,
+      date.day,
+      timeSource.hour,
+      timeSource.minute,
+      timeSource.second,
+    );
+  }
+
   void _showEditTaskDialog(TaskEntity task) {
     showDialog(
       context: context,
@@ -271,10 +375,7 @@ class _GanttChartPageState extends State<GanttChartPage> {
         task: task,
         teamMembers: _teamMembers,
         onTaskUpdated: (updatedTask) {
-          setState(() {
-            _dataSource.updateTask(updatedTask);
-            _applyFilters();
-          });
+          _dataSource.updateTask(updatedTask).then((_) => _applyFilters());
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text('تم تحديث المهمة: ${updatedTask.name}'),
@@ -283,10 +384,7 @@ class _GanttChartPageState extends State<GanttChartPage> {
           );
         },
         onTaskDeleted: () {
-          setState(() {
-            _dataSource.deleteTask(task.id);
-            _applyFilters();
-          });
+          _dataSource.deleteTask(task.id).then((_) => _applyFilters());
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text('تم حذف المهمة: ${task.name}'),
@@ -316,11 +414,15 @@ class _GanttChartPageState extends State<GanttChartPage> {
             // Filters row (compact)
             GanttFiltersWidget(
               selectedPeriod: _selectedPeriod,
+              selectedOrientation: _selectedOrientation,
               showTeamTasks: _showTeamTasks,
               selectedMemberId: _selectedMemberId,
               teamMembers: _teamMembers,
               onPeriodChanged: (period) {
                 setState(() => _selectedPeriod = period);
+              },
+              onOrientationChanged: (orientation) {
+                setState(() => _selectedOrientation = orientation);
               },
               onTeamTasksChanged: (showTeam) {
                 setState(() => _showTeamTasks = showTeam);
@@ -346,12 +448,40 @@ class _GanttChartPageState extends State<GanttChartPage> {
                   border: Border.all(color: AppColors.border),
                 ),
                 child: _teamMembers.isEmpty
-                    ? _buildEmptyState()
+                    ? (_isLoading
+                          ? const Center(child: CircularProgressIndicator())
+                          : _buildEmptyState())
+                    : _errorMessage != null
+                    ? _buildErrorState()
+                    : _isLoading
+                    ? const Center(child: CircularProgressIndicator())
                     : _buildGanttChart(startDate),
               ),
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildErrorState() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.error_outline, size: 56, color: AppColors.statusDelayed),
+          const SizedBox(height: 12),
+          Text(
+            _errorMessage ?? 'حدث خطأ',
+            style: AppTextStyles.h5.copyWith(color: AppColors.textPrimary),
+          ),
+          const SizedBox(height: 12),
+          TextButton.icon(
+            onPressed: _loadData,
+            icon: const Icon(Icons.refresh),
+            label: const Text('إعادة المحاولة'),
+          ),
+        ],
       ),
     );
   }
@@ -677,6 +807,10 @@ class _GanttChartPageState extends State<GanttChartPage> {
   }
 
   Widget _buildGanttChart(DateTime startDate) {
+    if (_selectedOrientation == GanttLayoutOrientation.vertical) {
+      return _buildVerticalGanttChart(startDate);
+    }
+
     final displayDays = _getViewDays();
 
     final tasksByEmployee = <String, List<TaskEntity>>{};
@@ -721,6 +855,455 @@ class _GanttChartPageState extends State<GanttChartPage> {
     }
 
     return chartContent;
+  }
+
+  Widget _buildVerticalGanttChart(DateTime startDate) {
+    final displayDays = _getViewDays();
+    const dateRailWidth = 118.0;
+    const employeeColumnWidth = 220.0;
+    final rowHeight = _selectedPeriod == GanttTimePeriod.today ? 168.0 : 112.0;
+    final chartWidth =
+        dateRailWidth + (_teamMembers.length * employeeColumnWidth);
+
+    final content = Column(
+      children: [
+        _buildVerticalMembersHeader(
+          dateRailWidth: dateRailWidth,
+          employeeColumnWidth: employeeColumnWidth,
+        ),
+        Expanded(
+          child: ListView.builder(
+            itemCount: displayDays,
+            itemBuilder: (context, index) {
+              final date = DateTime(
+                startDate.year,
+                startDate.month,
+                startDate.day + index,
+              );
+              return SizedBox(
+                height: rowHeight,
+                child: Row(
+                  children: [
+                    _buildVerticalDateCell(date, width: dateRailWidth),
+                    ..._teamMembers.map((member) {
+                      final memberDayTasks = _tasks.where((task) {
+                        return task.assigneeId == member.id &&
+                            !task.endDateOnly.isBefore(date) &&
+                            !task.startDateOnly.isAfter(date);
+                      }).toList();
+
+                      return SizedBox(
+                        width: employeeColumnWidth,
+                        child: _buildVerticalTaskCell(
+                          member,
+                          date,
+                          memberDayTasks,
+                          rowHeight: rowHeight,
+                        ),
+                      );
+                    }),
+                  ],
+                ),
+              );
+            },
+          ),
+        ),
+      ],
+    );
+
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: SizedBox(width: chartWidth, child: content),
+    );
+  }
+
+  Widget _buildVerticalMembersHeader({
+    required double dateRailWidth,
+    required double employeeColumnWidth,
+  }) {
+    return Container(
+      height: 58,
+      decoration: const BoxDecoration(
+        color: AppColors.tableHeader,
+        borderRadius: BorderRadius.only(
+          topLeft: Radius.circular(12),
+          topRight: Radius.circular(12),
+        ),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: dateRailWidth,
+            alignment: Alignment.center,
+            decoration: const BoxDecoration(
+              border: Border(left: BorderSide(color: AppColors.border)),
+            ),
+            child: Text('التاريخ', style: AppTextStyles.tableHeader),
+          ),
+          ..._teamMembers.map((member) {
+            return SizedBox(
+              width: employeeColumnWidth,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12),
+                decoration: const BoxDecoration(
+                  border: Border(left: BorderSide(color: AppColors.border)),
+                ),
+                child: Row(
+                  children: [
+                    CircleAvatar(
+                      radius: 15,
+                      backgroundColor: AppColors.primary.withValues(alpha: 0.2),
+                      child: Text(
+                        member.name.isEmpty ? '-' : member.name.substring(0, 1),
+                        style: TextStyle(
+                          color: AppColors.primary,
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            member.name,
+                            style: AppTextStyles.tableCellBold,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          Text(
+                            member.role,
+                            style: AppTextStyles.caption.copyWith(
+                              color: AppColors.textMuted,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          }),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildVerticalDateCell(DateTime date, {required double width}) {
+    final dayFormat = DateFormat('EEEE', 'ar');
+    final dateFormat = DateFormat('d MMM', 'ar');
+    final isToday = _isToday(date);
+    final isWeekend = date.weekday == DateTime.friday;
+
+    return Container(
+      width: width,
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: BoxDecoration(
+        color: isToday
+            ? AppColors.primary.withValues(alpha: 0.1)
+            : isWeekend
+            ? AppColors.surfaceColor.withValues(alpha: 0.28)
+            : AppColors.cardBackground,
+        border: const Border(
+          left: BorderSide(color: AppColors.border),
+          bottom: BorderSide(color: AppColors.divider),
+        ),
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(
+            dayFormat.format(date),
+            style: AppTextStyles.labelSmall.copyWith(
+              color: isToday ? AppColors.primary : AppColors.textSecondary,
+              fontWeight: isToday ? FontWeight.w700 : FontWeight.w500,
+            ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 6),
+          Container(
+            height: 30,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              color: isToday ? AppColors.primary : AppColors.surfaceColor,
+              borderRadius: BorderRadius.circular(6),
+              border: Border.all(
+                color: isToday ? AppColors.primary : AppColors.border,
+              ),
+            ),
+            child: Text(
+              dateFormat.format(date),
+              style: AppTextStyles.tableCellBold.copyWith(
+                color: isToday
+                    ? AppColors.scaffoldBackground
+                    : AppColors.textPrimary,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildVerticalTaskCell(
+    TeamMemberEntity member,
+    DateTime date,
+    List<TaskEntity> tasks, {
+    required double rowHeight,
+  }) {
+    final visibleTasks = tasks.take(3).toList();
+    final hiddenCount = tasks.length - visibleTasks.length;
+    final isToday = _isToday(date);
+    final isWeekend = date.weekday == DateTime.friday;
+
+    return DragTarget<TaskEntity>(
+      onWillAcceptWithDetails: (details) => true,
+      onAcceptWithDetails: (details) {
+        _onTaskDropped(details.data, member.id, date);
+      },
+      builder: (context, candidateData, rejectedData) {
+        final isHovering = candidateData.isNotEmpty;
+        return Container(
+          padding: const EdgeInsets.all(10),
+          decoration: BoxDecoration(
+            color: isHovering
+                ? AppColors.primary.withValues(alpha: 0.14)
+                : isToday
+                ? AppColors.primary.withValues(alpha: 0.035)
+                : isWeekend
+                ? AppColors.surfaceColor.withValues(alpha: 0.12)
+                : AppColors.cardBackground,
+            border: const Border(
+              left: BorderSide(color: AppColors.border),
+              bottom: BorderSide(color: AppColors.divider),
+            ),
+          ),
+          child: Stack(
+            children: [
+              if (isHovering)
+                Positioned.fill(
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(
+                        color: AppColors.primary.withValues(alpha: 0.45),
+                      ),
+                    ),
+                    child: Center(
+                      child: Icon(
+                        Icons.add_circle,
+                        color: AppColors.primary,
+                        size: 22,
+                      ),
+                    ),
+                  ),
+                ),
+              if (!isHovering && tasks.isEmpty)
+                Align(
+                  alignment: Alignment.center,
+                  child: Container(
+                    width: 34,
+                    height: 2,
+                    decoration: BoxDecoration(
+                      color: AppColors.border,
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                ),
+              if (tasks.isNotEmpty)
+                Column(
+                  children: [
+                    ...visibleTasks.map((task) {
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: 6),
+                        child: task.isAppointment
+                            ? _buildVerticalAppointmentChip(task)
+                            : _buildVerticalTaskChip(
+                                task,
+                                date: date,
+                                rowHeight: rowHeight,
+                              ),
+                      );
+                    }),
+                    if (hiddenCount > 0)
+                      Align(
+                        alignment: Alignment.centerRight,
+                        child: Text(
+                          '+$hiddenCount مهام',
+                          style: AppTextStyles.caption.copyWith(
+                            color: AppColors.textMuted,
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildVerticalAppointmentChip(TaskEntity task) {
+    return GestureDetector(
+      onTap: () => _showAppointmentDetails(task),
+      onDoubleTap: () => _showEditTaskDialog(task),
+      child: Draggable<TaskEntity>(
+        data: task,
+        feedback: Material(
+          elevation: 8,
+          borderRadius: BorderRadius.circular(8),
+          child: SizedBox(
+            width: 190,
+            child: _buildVerticalTaskChipContent(
+              task,
+              TaskType.appointment.color,
+              compactMeta: task.formattedStartTime,
+            ),
+          ),
+        ),
+        childWhenDragging: Opacity(
+          opacity: 0.4,
+          child: _buildVerticalTaskChipContent(
+            task,
+            TaskType.appointment.color,
+            compactMeta: task.formattedStartTime,
+          ),
+        ),
+        child: Tooltip(
+          message: 'اضغط للتفاصيل • اسحب لنقل',
+          child: _buildVerticalTaskChipContent(
+            task,
+            TaskType.appointment.color,
+            compactMeta: task.formattedStartTime,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildVerticalTaskChip(
+    TaskEntity task, {
+    required DateTime date,
+    required double rowHeight,
+  }) {
+    final color = task.taskType == TaskType.generalTask
+        ? TaskType.generalTask.color
+        : task.status.color;
+    final canResizeStart = _isSameDate(date, task.startDateOnly);
+    final canResizeEnd = _isSameDate(date, task.endDateOnly);
+
+    return Draggable<TaskEntity>(
+      data: task,
+      feedback: Material(
+        elevation: 8,
+        borderRadius: BorderRadius.circular(6),
+        child: SizedBox(
+          width: 170,
+          child: _buildVerticalTaskChipContent(
+            task,
+            color,
+            compactMeta: task.projectName ?? task.formattedStartTime,
+          ),
+        ),
+      ),
+      childWhenDragging: Opacity(
+        opacity: 0.4,
+        child: _VerticalResizableTaskChip(
+          task: task,
+          color: color,
+          compactMeta: task.projectName ?? task.formattedStartTime,
+          rowHeight: rowHeight,
+          canResizeStart: canResizeStart,
+          canResizeEnd: canResizeEnd,
+          onResized: _onTaskResized,
+        ),
+      ),
+      child: GestureDetector(
+        onDoubleTap: () => _showEditTaskDialog(task),
+        child: Tooltip(
+          message: 'اسحب لنقل • انقر مرتين للتعديل',
+          child: _VerticalResizableTaskChip(
+            task: task,
+            color: color,
+            compactMeta: task.projectName ?? task.formattedStartTime,
+            rowHeight: rowHeight,
+            canResizeStart: canResizeStart,
+            canResizeEnd: canResizeEnd,
+            onResized: _onTaskResized,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildVerticalTaskChipContent(
+    TaskEntity task,
+    Color color, {
+    String? compactMeta,
+  }) {
+    return Container(
+      constraints: const BoxConstraints(minHeight: 30),
+      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 7),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.9),
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(color: color.withValues(alpha: 0.95)),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.black.withValues(alpha: 0.12),
+            blurRadius: 6,
+            offset: const Offset(0, 3),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          Icon(task.taskType.icon, color: Colors.white, size: 13),
+          const SizedBox(width: 6),
+          Expanded(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  task.name,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                if (compactMeta != null && compactMeta.isNotEmpty) ...[
+                  const SizedBox(height: 1),
+                  Text(
+                    compactMeta,
+                    style: TextStyle(
+                      color: Colors.white.withValues(alpha: 0.78),
+                      fontSize: 9,
+                      fontWeight: FontWeight.w500,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   Widget _buildDateHeader(DateTime startDate, int displayDays) {
@@ -827,6 +1410,10 @@ class _GanttChartPageState extends State<GanttChartPage> {
     return date.year == now.year &&
         date.month == now.month &&
         date.day == now.day;
+  }
+
+  bool _isSameDate(DateTime a, DateTime b) {
+    return a.year == b.year && a.month == b.month && a.day == b.day;
   }
 
   /// Convert a date to Julian day number (accurate calendar calculation)
@@ -1126,6 +1713,220 @@ class _GanttChartPageState extends State<GanttChartPage> {
         );
       },
     );
+  }
+}
+
+class _VerticalResizableTaskChip extends StatefulWidget {
+  final TaskEntity task;
+  final Color color;
+  final String? compactMeta;
+  final double rowHeight;
+  final bool canResizeStart;
+  final bool canResizeEnd;
+  final void Function(TaskEntity task, DateTime newStart, DateTime newEnd)
+  onResized;
+
+  const _VerticalResizableTaskChip({
+    required this.task,
+    required this.color,
+    required this.rowHeight,
+    required this.canResizeStart,
+    required this.canResizeEnd,
+    required this.onResized,
+    this.compactMeta,
+  });
+
+  @override
+  State<_VerticalResizableTaskChip> createState() =>
+      _VerticalResizableTaskChipState();
+}
+
+class _VerticalResizableTaskChipState
+    extends State<_VerticalResizableTaskChip> {
+  bool _isHovering = false;
+  bool _isResizingStart = false;
+  bool _isResizingEnd = false;
+  double _dragDelta = 0;
+
+  static const double _handleHeight = 7;
+
+  @override
+  Widget build(BuildContext context) {
+    return MouseRegion(
+      onEnter: (_) => setState(() => _isHovering = true),
+      onExit: (_) => setState(() => _isHovering = false),
+      child: Stack(
+        children: [
+          _buildContent(),
+          if (widget.canResizeStart)
+            Positioned(
+              top: 0,
+              left: 0,
+              right: 0,
+              child: _buildHandle(isStart: true),
+            ),
+          if (widget.canResizeEnd)
+            Positioned(
+              bottom: 0,
+              left: 0,
+              right: 0,
+              child: _buildHandle(isStart: false),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildContent() {
+    return Container(
+      constraints: const BoxConstraints(minHeight: 34),
+      padding: EdgeInsets.fromLTRB(
+        9,
+        widget.canResizeStart ? 10 : 7,
+        9,
+        widget.canResizeEnd ? 10 : 7,
+      ),
+      decoration: BoxDecoration(
+        color: widget.color.withValues(alpha: 0.9),
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(color: widget.color.withValues(alpha: 0.95)),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.black.withValues(alpha: 0.12),
+            blurRadius: 6,
+            offset: const Offset(0, 3),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          Icon(widget.task.taskType.icon, color: Colors.white, size: 13),
+          const SizedBox(width: 6),
+          Expanded(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  widget.task.name,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                if (widget.compactMeta != null &&
+                    widget.compactMeta!.isNotEmpty) ...[
+                  const SizedBox(height: 1),
+                  Text(
+                    widget.compactMeta!,
+                    style: TextStyle(
+                      color: Colors.white.withValues(alpha: 0.78),
+                      fontSize: 9,
+                      fontWeight: FontWeight.w500,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildHandle({required bool isStart}) {
+    final isActive = isStart ? _isResizingStart : _isResizingEnd;
+
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onVerticalDragStart: (_) {
+        setState(() {
+          _dragDelta = 0;
+          _isResizingStart = isStart;
+          _isResizingEnd = !isStart;
+        });
+      },
+      onVerticalDragUpdate: (details) {
+        setState(() {
+          _dragDelta += details.delta.dy;
+        });
+      },
+      onVerticalDragEnd: (_) {
+        _applyResize(isStart);
+        setState(() {
+          _dragDelta = 0;
+          _isResizingStart = false;
+          _isResizingEnd = false;
+        });
+      },
+      child: MouseRegion(
+        cursor: SystemMouseCursors.resizeRow,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 120),
+          height: _handleHeight,
+          margin: const EdgeInsets.symmetric(horizontal: 20),
+          decoration: BoxDecoration(
+            color: (_isHovering || isActive)
+                ? Colors.white.withValues(alpha: 0.34)
+                : Colors.transparent,
+            borderRadius: BorderRadius.vertical(
+              top: isStart ? const Radius.circular(6) : Radius.zero,
+              bottom: isStart ? Radius.zero : const Radius.circular(6),
+            ),
+          ),
+          child: (_isHovering || isActive)
+              ? Center(
+                  child: Container(
+                    width: 22,
+                    height: 2,
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.75),
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                )
+              : null,
+        ),
+      ),
+    );
+  }
+
+  void _applyResize(bool isStart) {
+    final dayDelta = (_dragDelta / widget.rowHeight).round();
+    if (dayDelta == 0) return;
+
+    final task = widget.task;
+    DateTime newStart = task.startDate;
+    DateTime newEnd = task.endDate;
+
+    if (isStart) {
+      newStart = DateTime(
+        task.startDate.year,
+        task.startDate.month,
+        task.startDate.day + dayDelta,
+        task.startDate.hour,
+        task.startDate.minute,
+        task.startDate.second,
+      );
+    } else {
+      newEnd = DateTime(
+        task.endDate.year,
+        task.endDate.month,
+        task.endDate.day + dayDelta,
+        task.endDate.hour,
+        task.endDate.minute,
+        task.endDate.second,
+      );
+    }
+
+    if (newStart.isBefore(newEnd)) {
+      widget.onResized(task, newStart, newEnd);
+    }
   }
 }
 

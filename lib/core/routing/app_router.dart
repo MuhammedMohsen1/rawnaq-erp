@@ -10,6 +10,7 @@ import '../../features/projects/presentation/bloc/projects_event.dart';
 import '../../features/projects/data/repositories/projects_repository_impl.dart';
 import '../../features/projects/domain/enums/project_status.dart';
 import '../../features/gantt/presentation/pages/gantt_chart_page.dart';
+import '../../features/tasks/presentation/pages/my_tasks_page.dart';
 import '../../features/settings/presentation/pages/settings_page.dart';
 import '../../features/notifications/presentation/pages/notifications_page.dart';
 import '../../features/projects/presentation/pages/project_details_page.dart';
@@ -277,11 +278,7 @@ class AppRouter {
             path: AppRoutes.tasks,
             pageBuilder: (context, state) => FadePageTransition(
               key: state.pageKey,
-              child: const _PlaceholderPage(
-                title: 'المهام',
-                icon: Icons.check_circle_outline,
-                subtitle: 'قريباً - إدارة المهام والأنشطة',
-              ),
+              child: const MyTasksPage(),
             ),
           ),
 
