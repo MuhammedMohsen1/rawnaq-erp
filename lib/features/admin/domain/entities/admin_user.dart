@@ -7,13 +7,13 @@ class AdminUser extends Equatable {
   final int? projectCount;
   final DateTime? lastActivity;
 
-  const AdminUser({
-    required this.user,
-    this.projectCount,
-    this.lastActivity,
-  });
+  const AdminUser({required this.user, this.projectCount, this.lastActivity});
 
-  factory AdminUser.fromUser(User user, {int? projectCount, DateTime? lastActivity}) {
+  factory AdminUser.fromUser(
+    User user, {
+    int? projectCount,
+    DateTime? lastActivity,
+  }) {
     return AdminUser(
       user: user,
       projectCount: projectCount,
@@ -24,4 +24,3 @@ class AdminUser extends Equatable {
   @override
   List<Object?> get props => [user, projectCount, lastActivity];
 }
-

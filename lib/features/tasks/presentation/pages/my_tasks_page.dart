@@ -33,7 +33,13 @@ class _MyTasksPageState extends State<MyTasksPage> {
     });
 
     try {
-      final tasks = await _dataSource.getMyTasks();
+      final today = DateTime.now();
+      final startOfToday = DateTime(today.year, today.month, today.day);
+      final startOfTomorrow = DateTime(today.year, today.month, today.day + 1);
+      final tasks = await _dataSource.getMyTasks(
+        startDate: startOfToday,
+        endDate: startOfTomorrow,
+      );
       if (!mounted) return;
       setState(() {
         _tasks = tasks;
@@ -79,7 +85,7 @@ class _MyTasksPageState extends State<MyTasksPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('مهامي', style: AppTextStyles.pageTitle),
+            Text('مهامي اليوم', style: AppTextStyles.pageTitle),
             const SizedBox(height: 20),
             Expanded(child: _buildBody()),
           ],
@@ -120,7 +126,7 @@ class _MyTasksPageState extends State<MyTasksPage> {
             Icon(Icons.task_alt, size: 64, color: AppColors.textMuted),
             const SizedBox(height: 16),
             Text(
-              'لا توجد مهام مسندة لك',
+              'لا توجد مهام مسندة لك اليوم',
               style: AppTextStyles.h5.copyWith(color: AppColors.textMuted),
             ),
           ],
@@ -185,6 +191,14 @@ class _MyTasksPageState extends State<MyTasksPage> {
                       Icons.schedule,
                       '${task.formattedStartTime} - ${task.formattedEndTime}',
                     ),
+                    _buildMeta(
+                      Icons.timelapse_outlined,
+                      'المدة: ${_formatDuration(task)}',
+                    ),
+                    _buildMeta(
+                      Icons.event_available_outlined,
+                      _formatRemainingDays(task),
+                    ),
                   ],
                 ),
               ],
@@ -209,6 +223,24 @@ class _MyTasksPageState extends State<MyTasksPage> {
         ),
       ],
     );
+  }
+
+  String _formatDuration(TaskEntity task) {
+    if (task.isAppointment) return 'موعد';
+    final days = task.durationDays;
+    if (days <= 1) return 'يوم واحد';
+    if (days == 2) return 'يومان';
+    return '$days أيام';
+  }
+
+  String _formatRemainingDays(TaskEntity task) {
+    final days = task.remainingDays;
+    if (task.status == TaskStatus.completed) return 'مكتملة';
+    if (days < 0) return 'متأخرة ${days.abs()} يوم';
+    if (days == 0) return 'تنتهي اليوم';
+    if (days == 1) return 'متبقي يوم';
+    if (days == 2) return 'متبقي يومان';
+    return 'متبقي $days أيام';
   }
 
   Widget _buildStatusMenu(TaskEntity task) {

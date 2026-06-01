@@ -27,10 +27,7 @@ class MockTransactionsDataSource {
       amount: 20000.00,
       date: DateTime(2023, 10, 24, 14, 30),
       projectId: 'proj-1',
-      metadata: TransactionMetadata(
-        transferId: '#TRX-9982',
-        isLocked: true,
-      ),
+      metadata: TransactionMetadata(transferId: '#TRX-9982', isLocked: true),
     ),
     TransactionModel(
       id: 'txn-002',
@@ -39,10 +36,7 @@ class MockTransactionsDataSource {
       amount: 30000.00,
       date: DateTime(2023, 10, 1, 10, 0),
       projectId: 'proj-1',
-      metadata: TransactionMetadata(
-        notes: 'بدء المشروع',
-        isLocked: true,
-      ),
+      metadata: TransactionMetadata(notes: 'بدء المشروع', isLocked: true),
     ),
     TransactionModel(
       id: 'txn-003',
@@ -51,10 +45,7 @@ class MockTransactionsDataSource {
       amount: 20000.00,
       date: DateTime(2023, 10, 24, 15, 45),
       projectId: 'proj-1',
-      metadata: TransactionMetadata(
-        transferId: '#TRX-9982',
-        isLocked: true,
-      ),
+      metadata: TransactionMetadata(transferId: '#TRX-9982', isLocked: true),
     ),
     TransactionModel(
       id: 'txn-004',
@@ -63,10 +54,7 @@ class MockTransactionsDataSource {
       amount: 30000.00,
       date: DateTime(2023, 10, 1, 11, 15),
       projectId: 'proj-1',
-      metadata: TransactionMetadata(
-        notes: 'بدء المشروع',
-        isLocked: true,
-      ),
+      metadata: TransactionMetadata(notes: 'بدء المشروع', isLocked: true),
     ),
     TransactionModel(
       id: 'txn-005',
@@ -75,10 +63,7 @@ class MockTransactionsDataSource {
       amount: 30000.00,
       date: DateTime(2023, 10, 1, 9, 30),
       projectId: 'proj-1',
-      metadata: TransactionMetadata(
-        notes: 'بدء المشروع',
-        isLocked: true,
-      ),
+      metadata: TransactionMetadata(notes: 'بدء المشروع', isLocked: true),
     ),
 
     // Expenses
@@ -89,10 +74,7 @@ class MockTransactionsDataSource {
       amount: 1200.00,
       date: DateTime(2023, 10, 26, 8, 0),
       projectId: 'proj-1',
-      metadata: TransactionMetadata(
-        supplier: 'مواد الأمل',
-        isLocked: false,
-      ),
+      metadata: TransactionMetadata(supplier: 'مواد الأمل', isLocked: false),
     ),
     TransactionModel(
       id: 'txn-007',
@@ -113,10 +95,7 @@ class MockTransactionsDataSource {
       amount: 850.00,
       date: DateTime(2023, 10, 28, 12, 15),
       projectId: 'proj-1',
-      metadata: TransactionMetadata(
-        notes: 'شراء طارئ',
-        isLocked: false,
-      ),
+      metadata: TransactionMetadata(notes: 'شراء طارئ', isLocked: false),
     ),
     TransactionModel(
       id: 'txn-009',
@@ -125,10 +104,7 @@ class MockTransactionsDataSource {
       amount: 1200.00,
       date: DateTime(2023, 10, 26, 13, 20),
       projectId: 'proj-1',
-      metadata: TransactionMetadata(
-        supplier: 'مواد الأمل',
-        isLocked: false,
-      ),
+      metadata: TransactionMetadata(supplier: 'مواد الأمل', isLocked: false),
     ),
     TransactionModel(
       id: 'txn-010',
@@ -149,10 +125,7 @@ class MockTransactionsDataSource {
       amount: 850.00,
       date: DateTime(2023, 10, 28, 14, 45),
       projectId: 'proj-1',
-      metadata: TransactionMetadata(
-        notes: 'شراء طارئ',
-        isLocked: false,
-      ),
+      metadata: TransactionMetadata(notes: 'شراء طارئ', isLocked: false),
     ),
     TransactionModel(
       id: 'txn-012',
@@ -161,10 +134,7 @@ class MockTransactionsDataSource {
       amount: 850.00,
       date: DateTime(2023, 10, 28, 10, 30),
       projectId: 'proj-1',
-      metadata: TransactionMetadata(
-        notes: 'شراء طارئ',
-        isLocked: false,
-      ),
+      metadata: TransactionMetadata(notes: 'شراء طارئ', isLocked: false),
     ),
 
     // Additional transactions for other projects
@@ -175,10 +145,7 @@ class MockTransactionsDataSource {
       amount: 15000.00,
       date: DateTime(2023, 10, 15, 11, 0),
       projectId: 'proj-2',
-      metadata: TransactionMetadata(
-        transferId: '#TRX-9981',
-        isLocked: true,
-      ),
+      metadata: TransactionMetadata(transferId: '#TRX-9981', isLocked: true),
     ),
     TransactionModel(
       id: 'txn-014',
@@ -187,11 +154,7 @@ class MockTransactionsDataSource {
       amount: 2500.00,
       date: DateTime(2023, 10, 20, 9, 15),
       projectId: 'proj-2',
-      metadata: TransactionMetadata(
-        supplier: 'شركة الحديد',
-        isLocked: false,
-      ),
+      metadata: TransactionMetadata(supplier: 'شركة الحديد', isLocked: false),
     ),
   ];
 }
-

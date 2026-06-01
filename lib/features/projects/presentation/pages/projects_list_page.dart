@@ -200,9 +200,7 @@ class _ProjectsListPageState extends State<ProjectsListPage> {
 
     _lastProjectsSignature = signature;
 
-    if (!_pagingController.isLoading) {
-      _pagingController.refresh();
-    }
+    _pagingController.refresh();
   }
 
   void _reloadCurrentList(BuildContext context) {

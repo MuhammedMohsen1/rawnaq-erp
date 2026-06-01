@@ -20,13 +20,13 @@ class ProjectFinancialSummary extends Equatable {
 
   @override
   List<Object?> get props => [
-        totalReceived,
-        totalExpenses,
-        netCashFlow,
-        budget,
-        remainingBudget,
-        budgetPercentage,
-      ];
+    totalReceived,
+    totalExpenses,
+    netCashFlow,
+    budget,
+    remainingBudget,
+    budgetPercentage,
+  ];
 
   /// Create a copy with updated fields
   ProjectFinancialSummary copyWith({
@@ -56,4 +56,3 @@ class ProjectFinancialSummary extends Equatable {
     );
   }
 }
-

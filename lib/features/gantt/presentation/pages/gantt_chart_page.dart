@@ -371,15 +371,26 @@ class _GanttChartPageState extends State<GanttChartPage> {
   void _showEditTaskDialog(TaskEntity task) {
     showDialog(
       context: context,
-      builder: (context) => EditTaskDialog(
+      builder: (dialogContext) => EditTaskDialog(
         task: task,
         teamMembers: _teamMembers,
-        onTaskUpdated: (updatedTask) {
-          _dataSource.updateTask(updatedTask).then((_) => _applyFilters());
+        onTaskUpdated: (updatedTask) async {
+          final savedTask = await _dataSource.updateTask(updatedTask);
+          await _applyFilters();
+          if (!mounted) return;
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('تم تحديث المهمة: ${updatedTask.name}'),
-              backgroundColor: AppColors.statusCompleted,
+              content: Text(
+                savedTask.wasAdjusted
+                    ? 'تم تحديث المهمة: ${updatedTask.name}\nتم تعديل الوقت تلقائياً لتجنب التعارض'
+                    : 'تم تحديث المهمة: ${updatedTask.name}',
+              ),
+              backgroundColor: savedTask.wasAdjusted
+                  ? AppColors.warning
+                  : AppColors.statusCompleted,
+              duration: savedTask.wasAdjusted
+                  ? const Duration(seconds: 4)
+                  : const Duration(seconds: 3),
             ),
           );
         },
@@ -864,6 +875,7 @@ class _GanttChartPageState extends State<GanttChartPage> {
     final rowHeight = _selectedPeriod == GanttTimePeriod.today ? 168.0 : 112.0;
     final chartWidth =
         dateRailWidth + (_teamMembers.length * employeeColumnWidth);
+    final chartHeight = displayDays * rowHeight;
 
     final content = Column(
       children: [
@@ -872,40 +884,49 @@ class _GanttChartPageState extends State<GanttChartPage> {
           employeeColumnWidth: employeeColumnWidth,
         ),
         Expanded(
-          child: ListView.builder(
-            itemCount: displayDays,
-            itemBuilder: (context, index) {
-              final date = DateTime(
-                startDate.year,
-                startDate.month,
-                startDate.day + index,
-              );
-              return SizedBox(
-                height: rowHeight,
-                child: Row(
-                  children: [
-                    _buildVerticalDateCell(date, width: dateRailWidth),
-                    ..._teamMembers.map((member) {
-                      final memberDayTasks = _tasks.where((task) {
-                        return task.assigneeId == member.id &&
-                            !task.endDateOnly.isBefore(date) &&
-                            !task.startDateOnly.isAfter(date);
-                      }).toList();
+          child: SingleChildScrollView(
+            child: SizedBox(
+              height: chartHeight,
+              child: Row(
+                children: [
+                  SizedBox(
+                    width: dateRailWidth,
+                    child: Column(
+                      children: List.generate(displayDays, (index) {
+                        final date = DateTime(
+                          startDate.year,
+                          startDate.month,
+                          startDate.day + index,
+                        );
+                        return SizedBox(
+                          height: rowHeight,
+                          child: _buildVerticalDateCell(
+                            date,
+                            width: dateRailWidth,
+                          ),
+                        );
+                      }),
+                    ),
+                  ),
+                  ..._teamMembers.map((member) {
+                    final memberTasks = _tasks
+                        .where((task) => task.assigneeId == member.id)
+                        .toList();
 
-                      return SizedBox(
-                        width: employeeColumnWidth,
-                        child: _buildVerticalTaskCell(
-                          member,
-                          date,
-                          memberDayTasks,
-                          rowHeight: rowHeight,
-                        ),
-                      );
-                    }),
-                  ],
-                ),
-              );
-            },
+                    return SizedBox(
+                      width: employeeColumnWidth,
+                      child: _buildVerticalEmployeeTimeline(
+                        member,
+                        memberTasks,
+                        startDate,
+                        displayDays,
+                        rowHeight,
+                      ),
+                    );
+                  }),
+                ],
+              ),
+            ),
           ),
         ),
       ],
@@ -914,6 +935,165 @@ class _GanttChartPageState extends State<GanttChartPage> {
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
       child: SizedBox(width: chartWidth, child: content),
+    );
+  }
+
+  Widget _buildVerticalEmployeeTimeline(
+    TeamMemberEntity member,
+    List<TaskEntity> tasks,
+    DateTime startDate,
+    int displayDays,
+    double rowHeight,
+  ) {
+    final chartEnd = DateTime(
+      startDate.year,
+      startDate.month,
+      startDate.day + displayDays,
+    );
+    final visibleTasks = tasks.where((task) {
+      return task.endDate.isAfter(startDate) &&
+          task.startDate.isBefore(chartEnd);
+    }).toList();
+    final taskLanes = _calculateTaskLanes(
+      visibleTasks,
+      visibleStart: startDate,
+      visibleEnd: chartEnd,
+    );
+    final laneCount = _laneCount(taskLanes);
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final laneGap = laneCount > 1 ? 6.0 : 0.0;
+        final laneWidth =
+            (constraints.maxWidth - 20 - ((laneCount - 1) * laneGap)) /
+            laneCount;
+
+        return Stack(
+          clipBehavior: Clip.hardEdge,
+          children: [
+            Column(
+              children: List.generate(displayDays, (index) {
+                final date = DateTime(
+                  startDate.year,
+                  startDate.month,
+                  startDate.day + index,
+                );
+                return SizedBox(
+                  height: rowHeight,
+                  child: _buildVerticalTaskCell(
+                    member,
+                    date,
+                    const [],
+                    rowHeight: rowHeight,
+                    showEmptyState: true,
+                  ),
+                );
+              }),
+            ),
+            ...visibleTasks.map((task) {
+              if (task.endDate.isBefore(startDate) ||
+                  !task.startDate.isBefore(chartEnd)) {
+                return const SizedBox.shrink();
+              }
+
+              final visibleStart = task.startDate.isBefore(startDate)
+                  ? startDate
+                  : task.startDate;
+              final visibleEnd = task.endDate.isAfter(chartEnd)
+                  ? chartEnd
+                  : task.endDate;
+              final startOffsetDays =
+                  visibleStart.difference(startDate).inMinutes / (24 * 60);
+              final durationDays =
+                  visibleEnd.difference(visibleStart).inMinutes / (24 * 60);
+              final top = (startOffsetDays * rowHeight) + 10;
+              final height = (durationDays * rowHeight - 20).clamp(
+                36.0,
+                rowHeight * displayDays,
+              );
+
+              if (task.isAppointment) {
+                final lane = taskLanes[task.id] ?? 0;
+                final laneLeft = 10 + (lane * (laneWidth + laneGap));
+                return Positioned(
+                  top: top,
+                  left: laneLeft,
+                  width: laneWidth,
+                  child: Align(
+                    alignment: Alignment.center,
+                    child: AppointmentCircle(
+                      task: task,
+                      onTap: () => _showAppointmentDetails(task),
+                      onDoubleTap: () => _showEditTaskDialog(task),
+                    ),
+                  ),
+                );
+              }
+
+              final lane = taskLanes[task.id] ?? 0;
+              final laneLeft = 10 + (lane * (laneWidth + laneGap));
+
+              return Positioned(
+                top: top,
+                left: laneLeft,
+                width: laneWidth,
+                height: height,
+                child: Draggable<TaskEntity>(
+                  data: task,
+                  feedback: Material(
+                    elevation: 8,
+                    borderRadius: BorderRadius.circular(8),
+                    child: SizedBox(
+                      width: laneWidth,
+                      height: height,
+                      child: _VerticalResizableTaskChip(
+                        task: task,
+                        color: task.taskType == TaskType.generalTask
+                            ? TaskType.generalTask.color
+                            : task.status.color,
+                        compactMeta:
+                            '${task.formattedStartTime} - ${task.formattedEndTime}',
+                        rowHeight: rowHeight,
+                        canResizeStart: _isSameDate(
+                          visibleStart,
+                          task.startDateOnly,
+                        ),
+                        canResizeEnd: _isSameDate(visibleEnd, task.endDateOnly),
+                        onResized: _onTaskResized,
+                      ),
+                    ),
+                  ),
+                  childWhenDragging: const Opacity(
+                    opacity: 0.35,
+                    child: SizedBox.expand(),
+                  ),
+                  child: GestureDetector(
+                    onDoubleTap: () => _showEditTaskDialog(task),
+                    child: Tooltip(
+                      message: 'اسحب لنقل • انقر مرتين للتعديل',
+                      child: _VerticalResizableTaskChip(
+                        task: task,
+                        color: task.taskType == TaskType.generalTask
+                            ? TaskType.generalTask.color
+                            : task.status.color,
+                        compactMeta:
+                            '${task.formattedStartTime} - ${task.formattedEndTime}',
+                        rowHeight: rowHeight,
+                        canResizeStart: _isSameDate(
+                          visibleStart,
+                          task.startDateOnly,
+                        ),
+                        canResizeEnd: _isSameDate(visibleEnd, task.endDateOnly),
+                        onResized: _onTaskResized,
+                      ),
+                    ),
+                  ),
+                ),
+              );
+            }),
+          ],
+        );
+      },
     );
   }
 
@@ -1059,6 +1239,7 @@ class _GanttChartPageState extends State<GanttChartPage> {
     DateTime date,
     List<TaskEntity> tasks, {
     required double rowHeight,
+    bool showEmptyState = false,
   }) {
     final visibleTasks = tasks.take(3).toList();
     final hiddenCount = tasks.length - visibleTasks.length;
@@ -1107,7 +1288,7 @@ class _GanttChartPageState extends State<GanttChartPage> {
                     ),
                   ),
                 ),
-              if (!isHovering && tasks.isEmpty)
+              if (!isHovering && tasks.isEmpty && showEmptyState)
                 Align(
                   alignment: Alignment.center,
                   child: Container(
@@ -1443,14 +1624,77 @@ class _GanttChartPageState extends State<GanttChartPage> {
     return (dateTime.hour * 60 + dateTime.minute) / (24 * 60);
   }
 
+  Map<String, int> _calculateTaskLanes(
+    List<TaskEntity> tasks, {
+    DateTime? visibleStart,
+    DateTime? visibleEnd,
+  }) {
+    final sortedTasks = [...tasks]
+      ..sort((a, b) {
+        final startCompare = a.startDate.compareTo(b.startDate);
+        if (startCompare != 0) return startCompare;
+        return a.endDate.compareTo(b.endDate);
+      });
+
+    final laneEnds = <DateTime>[];
+    final lanes = <String, int>{};
+
+    for (final task in sortedTasks) {
+      final laneStart =
+          visibleStart != null && task.startDate.isBefore(visibleStart)
+          ? visibleStart
+          : task.startDate;
+      final laneEnd = visibleEnd != null && task.endDate.isAfter(visibleEnd)
+          ? visibleEnd
+          : task.endDate;
+
+      if (!laneStart.isBefore(laneEnd)) continue;
+
+      var laneIndex = laneEnds.indexWhere(
+        (currentLaneEnd) => !laneStart.isBefore(currentLaneEnd),
+      );
+      if (laneIndex == -1) {
+        laneIndex = laneEnds.length;
+        laneEnds.add(laneEnd);
+      } else {
+        laneEnds[laneIndex] = laneEnd;
+      }
+      lanes[task.id] = laneIndex;
+    }
+
+    return lanes;
+  }
+
+  int _laneCount(Map<String, int> lanes) {
+    if (lanes.isEmpty) return 1;
+    return lanes.values.reduce((a, b) => a > b ? a : b) + 1;
+  }
+
   Widget _buildEmployeeRow(
     TeamMemberEntity member,
     List<TaskEntity> tasks,
     DateTime startDate,
     int displayDays,
   ) {
+    final endDate = DateTime(
+      startDate.year,
+      startDate.month,
+      startDate.day + displayDays,
+    );
+    final visibleTasks = tasks.where((task) {
+      return task.endDate.isAfter(startDate) &&
+          task.startDate.isBefore(endDate);
+    }).toList();
+    final taskLanes = _calculateTaskLanes(
+      visibleTasks,
+      visibleStart: startDate,
+      visibleEnd: endDate,
+    );
+    final laneCount = _laneCount(taskLanes);
+    final rowHeight = 72.0 + ((laneCount - 1) * 38);
+
     return Container(
-      height: 72,
+      height: rowHeight,
       decoration: const BoxDecoration(
         border: Border(bottom: BorderSide(color: AppColors.divider)),
       ),
@@ -1499,6 +1743,18 @@ class _GanttChartPageState extends State<GanttChartPage> {
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
+                      if (laneCount > 1) ...[
+                        const SizedBox(height: 4),
+                        Text(
+                          '$laneCount مهام متزامنة',
+                          style: AppTextStyles.caption.copyWith(
+                            color: AppColors.primary,
+                            fontSize: 10,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
                     ],
                   ),
                 ),
@@ -1511,6 +1767,7 @@ class _GanttChartPageState extends State<GanttChartPage> {
               tasks,
               startDate,
               displayDays,
+              taskLanes,
             ),
           ),
         ],
@@ -1523,6 +1780,7 @@ class _GanttChartPageState extends State<GanttChartPage> {
     List<TaskEntity> tasks,
     DateTime startDate,
     int displayDays,
+    Map<String, int> taskLanes,
   ) {
     // Calculate end date using DateTime constructor (handles month overflow correctly)
     final endDate = DateTime(
@@ -1682,7 +1940,7 @@ class _GanttChartPageState extends State<GanttChartPage> {
               if (task.isAppointment) {
                 return Positioned(
                   right: startOffset * dayWidth,
-                  top: 20,
+                  top: 20 + ((taskLanes[task.id] ?? 0) * 38.0),
                   child: AppointmentCircle(
                     task: task,
                     onTap: () => _showAppointmentDetails(task),
@@ -1696,7 +1954,7 @@ class _GanttChartPageState extends State<GanttChartPage> {
 
                 return Positioned(
                   right: barRight,
-                  top: 20,
+                  top: 20 + ((taskLanes[task.id] ?? 0) * 38.0),
                   child: _ResizableTaskBar(
                     task: task,
                     width: barWidth,
@@ -1778,63 +2036,66 @@ class _VerticalResizableTaskChipState
   }
 
   Widget _buildContent() {
-    return Container(
-      constraints: const BoxConstraints(minHeight: 34),
-      padding: EdgeInsets.fromLTRB(
-        9,
-        widget.canResizeStart ? 10 : 7,
-        9,
-        widget.canResizeEnd ? 10 : 7,
-      ),
-      decoration: BoxDecoration(
-        color: widget.color.withValues(alpha: 0.9),
-        borderRadius: BorderRadius.circular(6),
-        border: Border.all(color: widget.color.withValues(alpha: 0.95)),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.black.withValues(alpha: 0.12),
-            blurRadius: 6,
-            offset: const Offset(0, 3),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          Icon(widget.task.taskType.icon, color: Colors.white, size: 13),
-          const SizedBox(width: 6),
-          Expanded(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  widget.task.name,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 11,
-                    fontWeight: FontWeight.w700,
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                if (widget.compactMeta != null &&
-                    widget.compactMeta!.isNotEmpty) ...[
-                  const SizedBox(height: 1),
+    return Positioned.fill(
+      child: Container(
+        constraints: const BoxConstraints(minHeight: 34),
+        padding: EdgeInsets.fromLTRB(
+          9,
+          widget.canResizeStart ? 10 : 7,
+          9,
+          widget.canResizeEnd ? 10 : 7,
+        ),
+        decoration: BoxDecoration(
+          color: widget.color.withValues(alpha: 0.9),
+          borderRadius: BorderRadius.circular(6),
+          border: Border.all(color: widget.color.withValues(alpha: 0.95)),
+          boxShadow: [
+            BoxShadow(
+              color: AppColors.black.withValues(alpha: 0.12),
+              blurRadius: 6,
+              offset: const Offset(0, 3),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            Icon(widget.task.taskType.icon, color: Colors.white, size: 13),
+            const SizedBox(width: 6),
+            Expanded(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
                   Text(
-                    widget.compactMeta!,
-                    style: TextStyle(
-                      color: Colors.white.withValues(alpha: 0.78),
-                      fontSize: 9,
-                      fontWeight: FontWeight.w500,
+                    widget.task.name,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w700,
                     ),
-                    maxLines: 1,
+                    maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                   ),
+                  if (widget.compactMeta != null &&
+                      widget.compactMeta!.isNotEmpty) ...[
+                    const SizedBox(height: 2),
+                    Text(
+                      widget.compactMeta!,
+                      style: TextStyle(
+                        color: Colors.white.withValues(alpha: 0.78),
+                        fontSize: 9,
+                        fontWeight: FontWeight.w500,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
                 ],
-              ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -2041,32 +2302,41 @@ class _ResizableTaskBarState extends State<_ResizableTaskBar> {
                 // Content overlay
                 Positioned.fill(
                   child: IgnorePointer(
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12),
-                      alignment: Alignment.centerRight,
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            widget.task.taskType.icon,
-                            color: Colors.white.withValues(alpha: 0.8),
-                            size: 14,
+                    child: LayoutBuilder(
+                      builder: (context, constraints) {
+                        final showIcon = constraints.maxWidth >= 54;
+                        return Container(
+                          padding: EdgeInsets.symmetric(
+                            horizontal: constraints.maxWidth >= 44 ? 10 : 4,
                           ),
-                          const SizedBox(width: 6),
-                          Expanded(
-                            child: Text(
-                              widget.task.name,
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 11,
-                                fontWeight: FontWeight.w600,
+                          alignment: Alignment.centerRight,
+                          child: Row(
+                            children: [
+                              if (showIcon) ...[
+                                Icon(
+                                  widget.task.taskType.icon,
+                                  color: Colors.white.withValues(alpha: 0.8),
+                                  size: 14,
+                                ),
+                                const SizedBox(width: 6),
+                              ],
+                              Expanded(
+                                child: Text(
+                                  widget.task.name,
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  textAlign: TextAlign.right,
+                                ),
                               ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
+                            ],
                           ),
-                        ],
-                      ),
+                        );
+                      },
                     ),
                   ),
                 ),

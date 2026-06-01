@@ -16,6 +16,8 @@ import '../../features/notifications/presentation/pages/notifications_page.dart'
 import '../../features/projects/presentation/pages/project_details_page.dart';
 import '../../features/pricing/presentation/pages/under_pricing_page.dart';
 import '../../features/execution/presentation/pages/execution_page.dart';
+import '../../features/financial/presentation/pages/financial_page.dart';
+import '../../features/admin/presentation/pages/admin_users_page.dart';
 import '../../features/auth/presentation/bloc/auth_bloc.dart';
 import '../widgets/error_page.dart';
 import '../widgets/unauthorized_page.dart';
@@ -45,6 +47,9 @@ class AppRoutes {
   // Reports
   static const String reports = '/reports';
 
+  // Financial
+  static const String financial = '/financial';
+
   // Settings
   static const String settings = '/settings';
 
@@ -53,6 +58,9 @@ class AppRoutes {
 
   // Reminders
   static const String reminders = '/reminders';
+
+  // Admin
+  static const String adminUsers = '/admin/users';
 
   // Pricing
   static String pricing(
@@ -284,6 +292,14 @@ class AppRouter {
 
           // Reports (placeholder)
           GoRoute(
+            path: AppRoutes.financial,
+            pageBuilder: (context, state) => FadePageTransition(
+              key: state.pageKey,
+              child: const FinancialPage(),
+            ),
+          ),
+
+          GoRoute(
             path: AppRoutes.reports,
             pageBuilder: (context, state) => FadePageTransition(
               key: state.pageKey,
@@ -323,6 +339,15 @@ class AppRouter {
                 icon: Icons.notifications_active_outlined,
                 subtitle: 'قريباً - إدارة التذكيرات والمواعيد',
               ),
+            ),
+          ),
+
+          // Admin Users
+          GoRoute(
+            path: AppRoutes.adminUsers,
+            pageBuilder: (context, state) => FadePageTransition(
+              key: state.pageKey,
+              child: const AdminUsersPage(),
             ),
           ),
 

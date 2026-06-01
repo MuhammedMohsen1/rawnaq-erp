@@ -10,7 +10,7 @@ class TransactionsRepositoryImpl implements TransactionsRepository {
   final MockTransactionsDataSource _dataSource;
 
   TransactionsRepositoryImpl({MockTransactionsDataSource? dataSource})
-      : _dataSource = dataSource ?? MockTransactionsDataSource();
+    : _dataSource = dataSource ?? MockTransactionsDataSource();
 
   @override
   Future<Either<Failure, List<TransactionEntity>>> getTransactionsByProjectId(
@@ -54,7 +54,9 @@ class TransactionsRepositoryImpl implements TransactionsRepository {
       // Calculate budget percentage (assuming a budget of 50,000 KD based on image)
       const double budget = 50000.0;
       final remainingBudget = budget - totalExpenses;
-      final budgetPercentage = budget > 0 ? (remainingBudget / budget) * 100 : 0.0;
+      final budgetPercentage = budget > 0
+          ? (remainingBudget / budget) * 100
+          : 0.0;
 
       final summary = ProjectFinancialSummary(
         totalReceived: totalReceived,
@@ -101,4 +103,3 @@ class TransactionsRepositoryImpl implements TransactionsRepository {
     }
   }
 }
-

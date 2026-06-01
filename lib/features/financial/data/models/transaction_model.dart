@@ -90,4 +90,3 @@ class TransactionModel extends TransactionEntity {
     }
   }
 }
-

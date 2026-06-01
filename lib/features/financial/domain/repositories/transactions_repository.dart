@@ -23,4 +23,3 @@ abstract class TransactionsRepository {
   /// Delete a transaction
   Future<Either<Failure, void>> deleteTransaction(String transactionId);
 }
-

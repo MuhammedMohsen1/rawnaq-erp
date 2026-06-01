@@ -115,7 +115,8 @@ class MainLayout extends StatelessWidget {
     if (currentPath == AppRoutes.settings) return 'الإعدادات';
     if (currentPath == AppRoutes.notifications) return 'الإشعارات';
     if (currentPath == AppRoutes.reminders) return 'التذكيرات';
-    if (currentPath == '/financial') return 'المالية';
+    if (currentPath == AppRoutes.adminUsers) return 'إدارة المستخدمين';
+    if (currentPath == AppRoutes.financial) return 'المالية';
     if (currentPath == '/team') return 'الفريق';
 
     // Check if it's a project details page
@@ -138,6 +139,7 @@ class MainLayout extends StatelessWidget {
         currentPath != AppRoutes.archivedProjects &&
         currentPath != AppRoutes.completedProjects &&
         currentPath != AppRoutes.siteEngineerPricingProjects &&
+        currentPath != AppRoutes.adminUsers &&
         currentPath != AppRoutes.gantt &&
         currentPath != AppRoutes.settings;
   }
@@ -259,18 +261,18 @@ class _SidebarState extends State<_Sidebar> {
                     ),
                     _buildCollapsedNavItem(
                       context: context,
-                      icon: Icons.check_circle_outline,
-                      activeIcon: Icons.check_circle,
-                      path: AppRoutes.tasks,
-                      isActive: widget.currentPath == AppRoutes.tasks,
-                    ),
-                    _buildCollapsedNavItem(
-                      context: context,
                       icon: Icons.archive_outlined,
                       activeIcon: Icons.archive,
                       path: AppRoutes.archivedProjects,
                       isActive:
                           widget.currentPath == AppRoutes.archivedProjects,
+                    ),
+                    _buildCollapsedNavItem(
+                      context: context,
+                      icon: Icons.check_circle_outline,
+                      activeIcon: Icons.check_circle,
+                      path: AppRoutes.tasks,
+                      isActive: widget.currentPath == AppRoutes.tasks,
                     ),
                     _buildCollapsedNavItem(
                       context: context,
@@ -308,6 +310,15 @@ class _SidebarState extends State<_Sidebar> {
                         isActive:
                             widget.currentPath == AppRoutes.archivedProjects,
                       ),
+                    ],
+                    _buildCollapsedNavItem(
+                      context: context,
+                      icon: Icons.check_circle_outline,
+                      activeIcon: Icons.check_circle,
+                      path: AppRoutes.tasks,
+                      isActive: widget.currentPath == AppRoutes.tasks,
+                    ),
+                    if (isAdmin) ...[
                       _buildCollapsedNavItem(
                         context: context,
                         icon: Icons.verified_outlined,
@@ -328,15 +339,17 @@ class _SidebarState extends State<_Sidebar> {
                       context: context,
                       icon: Icons.account_balance_outlined,
                       activeIcon: Icons.account_balance,
-                      path: '/financial',
-                      isActive: widget.currentPath == '/financial',
+                      path: AppRoutes.financial,
+                      isActive: widget.currentPath == AppRoutes.financial,
                     ),
                     _buildCollapsedNavItem(
                       context: context,
                       icon: Icons.people_outlined,
                       activeIcon: Icons.people,
-                      path: '/team',
-                      isActive: widget.currentPath == '/team',
+                      path: isAdmin ? AppRoutes.adminUsers : '/team',
+                      isActive: isAdmin
+                          ? widget.currentPath == AppRoutes.adminUsers
+                          : widget.currentPath == '/team',
                     ),
                   ],
                 );
@@ -508,6 +521,14 @@ class _SidebarState extends State<_Sidebar> {
                       isActive:
                           widget.currentPath == AppRoutes.archivedProjects,
                     ),
+                    _buildNavItem(
+                      context: context,
+                      icon: Icons.check_circle_outline,
+                      activeIcon: Icons.check_circle,
+                      label: 'مهامي',
+                      path: AppRoutes.tasks,
+                      isActive: widget.currentPath == AppRoutes.tasks,
+                    ),
                     // _buildNavItem(
                     //   context: context,
                     //   icon: Icons.verified_outlined,
@@ -530,16 +551,18 @@ class _SidebarState extends State<_Sidebar> {
                       icon: Icons.account_balance_outlined,
                       activeIcon: Icons.account_balance,
                       label: 'المالية',
-                      path: '/financial',
-                      isActive: widget.currentPath == '/financial',
+                      path: AppRoutes.financial,
+                      isActive: widget.currentPath == AppRoutes.financial,
                     ),
                     _buildNavItem(
                       context: context,
                       icon: Icons.people_outlined,
                       activeIcon: Icons.people,
                       label: 'الفريق',
-                      path: '/team',
-                      isActive: widget.currentPath == '/team',
+                      path: isAdmin ? AppRoutes.adminUsers : '/team',
+                      isActive: isAdmin
+                          ? widget.currentPath == AppRoutes.adminUsers
+                          : widget.currentPath == '/team',
                     ),
                   ],
                 );
@@ -736,10 +759,12 @@ class _SidebarState extends State<_Sidebar> {
     if (path == AppRoutes.archivedProjects) return 'الأرشيف';
     if (path == AppRoutes.completedProjects) return 'المكتملة';
     if (path == AppRoutes.gantt) return 'مخطط جانت';
+    if (path == AppRoutes.tasks) return 'مهامي';
     if (path == AppRoutes.settings) return 'الإعدادات';
     if (path == AppRoutes.notifications) return 'الإشعارات';
     if (path == AppRoutes.reminders) return 'التذكيرات';
-    if (path == '/financial') return 'المالية';
+    if (path == AppRoutes.adminUsers) return 'الفريق';
+    if (path == AppRoutes.financial) return 'المالية';
     if (path == '/team') return 'الفريق';
     if (path == '/help') return 'المساعدة';
     return '';

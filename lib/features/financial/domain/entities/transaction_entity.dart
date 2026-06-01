@@ -4,7 +4,7 @@ import 'package:equatable/equatable.dart';
 enum TransactionType {
   /// Money received (deposit, payment)
   deposit,
-  
+
   /// Money spent (expense)
   expense,
 }
@@ -49,13 +49,7 @@ class TransactionMetadata extends Equatable {
   });
 
   @override
-  List<Object?> get props => [
-        supplier,
-        transferId,
-        notes,
-        category,
-        isLocked,
-      ];
+  List<Object?> get props => [supplier, transferId, notes, category, isLocked];
 
   TransactionMetadata copyWith({
     String? supplier,
@@ -96,14 +90,14 @@ class TransactionEntity extends Equatable {
 
   @override
   List<Object?> get props => [
-        id,
-        type,
-        description,
-        amount,
-        date,
-        projectId,
-        metadata,
-      ];
+    id,
+    type,
+    description,
+    amount,
+    date,
+    projectId,
+    metadata,
+  ];
 
   /// Create a copy with updated fields
   TransactionEntity copyWith({
@@ -129,4 +123,3 @@ class TransactionEntity extends Equatable {
   /// Check if transaction can be deleted
   bool get canDelete => !metadata.isLocked;
 }
-

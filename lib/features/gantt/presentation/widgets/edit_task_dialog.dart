@@ -12,7 +12,7 @@ import '../../../projects/domain/entities/team_member_entity.dart';
 class EditTaskDialog extends StatefulWidget {
   final TaskEntity task;
   final List<TeamMemberEntity> teamMembers;
-  final Function(TaskEntity updatedTask) onTaskUpdated;
+  final Future<void> Function(TaskEntity updatedTask) onTaskUpdated;
   final VoidCallback? onTaskDeleted;
 
   const EditTaskDialog({
@@ -34,6 +34,7 @@ class _EditTaskDialogState extends State<EditTaskDialog> {
   late TimeOfDay _endTime;
   late String? _assigneeId;
   late TaskStatus _status;
+  bool _isSaving = false;
 
   @override
   void initState() {
@@ -58,63 +59,38 @@ class _EditTaskDialogState extends State<EditTaskDialog> {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         child: Container(
           width: 480,
+          constraints: BoxConstraints(
+            maxWidth: MediaQuery.sizeOf(context).width - 32,
+            maxHeight: MediaQuery.sizeOf(context).height - 32,
+          ),
           padding: const EdgeInsets.all(0),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               _buildHeader(),
-              Padding(
-                padding: const EdgeInsets.all(20),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Task info (read-only)
-                    _buildTaskInfo(),
-                    const SizedBox(height: 20),
+              Flexible(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.all(20),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Task info (read-only)
+                      _buildTaskInfo(),
+                      const SizedBox(height: 20),
 
-                    // Assignee dropdown
-                    _buildAssigneeDropdown(),
-                    const SizedBox(height: 16),
-
-                    // Status dropdown
-                    _buildStatusDropdown(),
-                    const SizedBox(height: 20),
-
-                    // Start Date & Time
-                    Text(
-                      isAppointment
-                          ? 'تاريخ ووقت الموعد'
-                          : 'تاريخ ووقت البداية',
-                      style: AppTextStyles.inputLabel.copyWith(
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Row(
-                      children: [
-                        Expanded(
-                          flex: 3,
-                          child: _buildDateField(
-                            value: _startDate,
-                            onTap: () => _selectDate(true),
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          flex: 2,
-                          child: _buildTimeField(
-                            value: _startTime,
-                            onTap: () => _selectTime(true),
-                          ),
-                        ),
-                      ],
-                    ),
-
-                    // End Date & Time (only for non-appointments)
-                    if (!isAppointment) ...[
+                      // Assignee dropdown
+                      _buildAssigneeDropdown(),
                       const SizedBox(height: 16),
+
+                      // Status dropdown
+                      _buildStatusDropdown(),
+                      const SizedBox(height: 20),
+
+                      // Start Date & Time
                       Text(
-                        'تاريخ ووقت النهاية',
+                        isAppointment
+                            ? 'تاريخ ووقت الموعد'
+                            : 'تاريخ ووقت البداية',
                         style: AppTextStyles.inputLabel.copyWith(
                           fontWeight: FontWeight.w600,
                         ),
@@ -125,22 +101,53 @@ class _EditTaskDialogState extends State<EditTaskDialog> {
                           Expanded(
                             flex: 3,
                             child: _buildDateField(
-                              value: _endDate,
-                              onTap: () => _selectDate(false),
+                              value: _startDate,
+                              onTap: () => _selectDate(true),
                             ),
                           ),
                           const SizedBox(width: 12),
                           Expanded(
                             flex: 2,
                             child: _buildTimeField(
-                              value: _endTime,
-                              onTap: () => _selectTime(false),
+                              value: _startTime,
+                              onTap: () => _selectTime(true),
                             ),
                           ),
                         ],
                       ),
+
+                      // End Date & Time (only for non-appointments)
+                      if (!isAppointment) ...[
+                        const SizedBox(height: 16),
+                        Text(
+                          'تاريخ ووقت النهاية',
+                          style: AppTextStyles.inputLabel.copyWith(
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Row(
+                          children: [
+                            Expanded(
+                              flex: 3,
+                              child: _buildDateField(
+                                value: _endDate,
+                                onTap: () => _selectDate(false),
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              flex: 2,
+                              child: _buildTimeField(
+                                value: _endTime,
+                                onTap: () => _selectTime(false),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
                     ],
-                  ],
+                  ),
                 ),
               ),
               _buildActions(),
@@ -514,9 +521,9 @@ class _EditTaskDialogState extends State<EditTaskDialog> {
           ),
           const SizedBox(width: 10),
           ElevatedButton.icon(
-            onPressed: _saveChanges,
+            onPressed: _isSaving ? null : _saveChanges,
             icon: const Icon(Icons.check, size: 18),
-            label: const Text('حفظ التغييرات'),
+            label: Text(_isSaving ? 'جار الحفظ...' : 'حفظ التغييرات'),
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.primary,
               foregroundColor: AppColors.scaffoldBackground,
@@ -556,7 +563,8 @@ class _EditTaskDialogState extends State<EditTaskDialog> {
     );
   }
 
-  void _saveChanges() {
+  Future<void> _saveChanges() async {
+    if (_isSaving) return;
     if (_assigneeId == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -567,10 +575,13 @@ class _EditTaskDialogState extends State<EditTaskDialog> {
       return;
     }
 
-    final assignee = widget.teamMembers.firstWhere(
-      (m) => m.id == _assigneeId,
-      orElse: () => widget.teamMembers.first,
-    );
+    TeamMemberEntity? assignee = widget.task.assignee;
+    for (final member in widget.teamMembers) {
+      if (member.id == _assigneeId) {
+        assignee = member;
+        break;
+      }
+    }
 
     // Combine date and time into DateTime
     final startDateTime = DateTime(
@@ -603,7 +614,19 @@ class _EditTaskDialogState extends State<EditTaskDialog> {
       isDraft: false,
     );
 
-    widget.onTaskUpdated(updatedTask);
-    Navigator.pop(context);
+    setState(() => _isSaving = true);
+    try {
+      await widget.onTaskUpdated(updatedTask);
+      if (mounted) Navigator.pop(context);
+    } catch (_) {
+      if (!mounted) return;
+      setState(() => _isSaving = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('تعذر حفظ التغييرات'),
+          backgroundColor: AppColors.statusDelayed,
+        ),
+      );
+    }
   }
 }

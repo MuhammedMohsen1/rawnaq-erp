@@ -21,8 +21,9 @@ class AppBottomNavBar extends StatelessWidget {
     } else {
       if (currentPath == AppRoutes.dashboard) return 0;
       if (currentPath == AppRoutes.projects) return 1;
-      if (currentPath == AppRoutes.gantt) return 2;
-      if (currentPath == AppRoutes.settings) return 3;
+      if (currentPath == AppRoutes.tasks) return 2;
+      if (currentPath == AppRoutes.gantt) return 3;
+      if (currentPath == AppRoutes.settings) return 4;
       return 0;
     }
   }
@@ -106,11 +107,20 @@ class AppBottomNavBar extends StatelessWidget {
                         ),
                         _buildNavItem(
                           context: context,
+                          icon: Icons.check_circle_outline,
+                          activeIcon: Icons.check_circle,
+                          label: 'مهامي',
+                          path: AppRoutes.tasks,
+                          index: 2,
+                          isSiteEngineer: false,
+                        ),
+                        _buildNavItem(
+                          context: context,
                           icon: Icons.bar_chart_outlined,
                           activeIcon: Icons.bar_chart,
                           label: 'مخطط جانت',
                           path: AppRoutes.gantt,
-                          index: 2,
+                          index: 3,
                           isSiteEngineer: false,
                         ),
                         _buildNavItem(
@@ -119,7 +129,7 @@ class AppBottomNavBar extends StatelessWidget {
                           activeIcon: Icons.settings,
                           label: 'الإعدادات',
                           path: AppRoutes.settings,
-                          index: 3,
+                          index: 4,
                           isSiteEngineer: false,
                         ),
                       ],
