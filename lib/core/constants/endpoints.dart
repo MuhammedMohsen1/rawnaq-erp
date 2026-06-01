@@ -258,6 +258,8 @@ abstract class ApiEndpoints {
       '/design-projects/$projectId/tasks/$taskId/status';
   static String designInstallment(String projectId, String installmentId) =>
       '/design-projects/$projectId/installments/$installmentId';
+  static String designInstallments(String projectId) =>
+      '/design-projects/$projectId/installments';
 
   // Tasks Endpoints
   static const String tasks = '/tasks';

@@ -165,6 +165,9 @@ Elevation is intentionally low.
 - Dialogs should be focused and task-oriented
 - Keep admin-only controls inside dialogs when they would otherwise clutter the main workspace
 - Use dialogs for financial details, confirmations, and secondary workflows
+- Dialog action buttons inside dark modals should be explicitly styled
+- Avoid default pale Material filled buttons in Rawnaq dialogs
+- Primary modal actions should use the dark brand accent with strong contrast
 
 ## Project Types
 
@@ -189,8 +192,16 @@ For design projects, use this pattern:
 1. Workspace header with project identity
 2. Main chat/timeline area
 3. Uploaded files appear as activity items
-4. Admin-only financial dialog for totals and installments
+4. Admin-only financial dialog for totals and installment management
 5. Default tasks stay in the task backlog
+
+### Installment Management
+
+- Administrators can add, edit, and remove installments after project creation
+- Installment management should happen in a focused dialog, not inside the chat stream
+- Each installment row may show payment state, amount, and due date
+- The save action must use a dark, high-contrast button style
+- Do not accept the default pale filled button look in finance dialogs
 
 Do not place finance, task boards, or media galleries in the main design project page unless there is a strong reason.
 

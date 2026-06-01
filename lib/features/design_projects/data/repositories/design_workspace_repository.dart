@@ -1,5 +1,6 @@
 import '../datasources/design_workspace_api_datasource.dart';
 import '../../domain/entities/design_workspace_entities.dart';
+import '../../../projects/domain/entities/project_entity.dart';
 
 class DesignWorkspaceRepository {
   final DesignWorkspaceApiDataSource _dataSource;
@@ -32,9 +33,33 @@ class DesignWorkspaceRepository {
     DesignTaskStatus.inProgress => 'IN_PROGRESS',
     DesignTaskStatus.completed => 'DONE',
   });
-  Future<void> updateInstallmentStatus(
+  Future<void> updateInstallment(
     String projectId,
-    String installmentId,
-    bool isPaid,
-  ) => _dataSource.updateInstallmentStatus(projectId, installmentId, isPaid);
+    String installmentId, {
+    bool? isPaid,
+    double? amount,
+    DateTime? dueDate,
+  }) => _dataSource.updateInstallment(
+    projectId,
+    installmentId,
+    isPaid: isPaid,
+    amount: amount,
+    dueDate: dueDate,
+  );
+  Future<void> replaceInstallments(
+    String projectId,
+    List<ProjectInstallment> installments,
+  ) => _dataSource.replaceInstallments(
+    projectId,
+    installments
+        .map(
+          (installment) => {
+            'id': installment.id,
+            'amount': installment.amount,
+            'dueDate': installment.dueDate.toIso8601String(),
+            'isPaid': installment.isPaid,
+          },
+        )
+        .toList(),
+  );
 }

@@ -1,6 +1,7 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../data/repositories/design_workspace_repository.dart';
 import '../../domain/entities/design_workspace_entities.dart';
+import '../../../projects/domain/entities/project_entity.dart';
 
 sealed class DesignWorkspaceState {
   const DesignWorkspaceState();
@@ -67,8 +68,27 @@ class DesignWorkspaceCubit extends Cubit<DesignWorkspaceState> {
   );
 
   Future<void> toggleInstallment(String installmentId, bool isPaid) => _perform(
-    () => _repository.updateInstallmentStatus(projectId, installmentId, isPaid),
+    () =>
+        _repository.updateInstallment(projectId, installmentId, isPaid: isPaid),
   );
+
+  Future<void> updateInstallment(
+    String installmentId, {
+    bool? isPaid,
+    double? amount,
+    DateTime? dueDate,
+  }) => _perform(
+    () => _repository.updateInstallment(
+      projectId,
+      installmentId,
+      isPaid: isPaid,
+      amount: amount,
+      dueDate: dueDate,
+    ),
+  );
+
+  Future<void> replaceInstallments(List<ProjectInstallment> installments) =>
+      _perform(() => _repository.replaceInstallments(projectId, installments));
 
   Future<void> _perform(Future<void> Function() operation) async {
     final current = state;

@@ -86,14 +86,31 @@ class DesignWorkspaceApiDataSource {
     );
   }
 
-  Future<void> updateInstallmentStatus(
+  Future<void> updateInstallment(
     String projectId,
-    String installmentId,
-    bool isPaid,
-  ) async {
+    String installmentId, {
+    bool? isPaid,
+    double? amount,
+    DateTime? dueDate,
+  }) async {
+    final payload = <String, dynamic>{
+      if (isPaid != null) 'isPaid': isPaid,
+      if (amount != null) 'amount': amount,
+      if (dueDate != null) 'dueDate': dueDate.toIso8601String(),
+    };
     await _apiClient.patch(
       ApiEndpoints.designInstallment(projectId, installmentId),
-      data: {'isPaid': isPaid},
+      data: payload,
+    );
+  }
+
+  Future<void> replaceInstallments(
+    String projectId,
+    List<Map<String, dynamic>> paymentSchedule,
+  ) async {
+    await _apiClient.patch(
+      ApiEndpoints.designInstallments(projectId),
+      data: {'paymentSchedule': paymentSchedule},
     );
   }
 
