@@ -13,12 +13,15 @@ class AppColors {
   static const Color background = Color(0xFF161B22);
   static const Color surface = Color(0xFF1C2128);
 
-  // Primary accent (lavender - brand color)
-  static const Color primary = Color(0xFFDFD8DE);
-  static const Color primaryLight = Color(0xFFEBE6EA);
-  static const Color primaryDark = Color(0xFFB8B0B7);
-  static const Color buttonPrimary = Color(0xFFDFD8DE);
-  static const Color buttonHover = Color(0xFFEBE6EA);
+  // Primary accent and state surfaces. Interactive selections must stay dark.
+  static const Color primary = Color(0xFF3B82F6);
+  static const Color primaryLight = Color(0xFF60A5FA);
+  static const Color primaryDark = Color(0xFF2563EB);
+  static const Color selectedSurface = Color(0x263B82F6);
+  static const Color selectedSurfaceStrong = Color(0x403B82F6);
+  static const Color hoverSurface = Color(0x1A3B82F6);
+  static const Color buttonPrimary = Color(0xFF3B82F6);
+  static const Color buttonHover = Color(0xFF60A5FA);
 
   // Secondary colors
   static const Color secondary = Color(0xFF3B82F6);
@@ -31,10 +34,10 @@ class AppColors {
   static const Color textDisabled = Color(0xFF484F58);
 
   // Status colors
-  static const Color statusActive = Color(0xFF3B82F6);      // Blue
-  static const Color statusCompleted = Color(0xFF22C55E);   // Green
-  static const Color statusDelayed = Color(0xFFEF4444);     // Red
-  static const Color statusOnHold = Color(0xFFF59E0B);      // Amber
+  static const Color statusActive = Color(0xFF3B82F6); // Blue
+  static const Color statusCompleted = Color(0xFF22C55E); // Green
+  static const Color statusDelayed = Color(0xFFEF4444); // Red
+  static const Color statusOnHold = Color(0xFFF59E0B); // Amber
 
   // Semantic colors
   static const Color success = Color(0xFF22C55E);
@@ -66,9 +69,9 @@ class AppColors {
   // Input colors
   static const Color inputBackground = Color(0xFF0D1117);
   static const Color inputBorder = Color(0xFF30363D);
-  static const Color inputFocusBorder = Color(0xFFDFD8DE);
+  static const Color inputFocusBorder = Color(0xFF3B82F6);
 
   // Progress bar colors
   static const Color progressBackground = Color(0xFF30363D);
-  static const Color progressFill = Color(0xFFDFD8DE);
+  static const Color progressFill = Color(0xFF3B82F6);
 }

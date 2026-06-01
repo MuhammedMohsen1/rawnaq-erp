@@ -21,6 +21,10 @@ class AppTheme {
         onSurface: AppColors.textPrimary,
         onError: AppColors.white,
       ),
+      splashColor: AppColors.hoverSurface,
+      highlightColor: AppColors.hoverSurface,
+      hoverColor: AppColors.hoverSurface,
+      focusColor: AppColors.selectedSurface,
 
       // AppBar Theme
       appBarTheme: const AppBarTheme(
@@ -41,11 +45,35 @@ class AppTheme {
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
           backgroundColor: AppColors.buttonPrimary,
-          foregroundColor: AppColors.scaffoldBackground,
+          foregroundColor: AppColors.white,
           elevation: 0,
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
           textStyle: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+        ),
+      ),
+
+      // Filled Button Theme
+      filledButtonTheme: FilledButtonThemeData(
+        style: ButtonStyle(
+          backgroundColor: WidgetStateProperty.resolveWith((states) {
+            if (states.contains(WidgetState.disabled)) {
+              return AppColors.surfaceColor;
+            }
+            if (states.contains(WidgetState.hovered)) {
+              return AppColors.buttonHover;
+            }
+            return AppColors.buttonPrimary;
+          }),
+          foregroundColor: WidgetStateProperty.resolveWith((states) {
+            return states.contains(WidgetState.disabled)
+                ? AppColors.textDisabled
+                : AppColors.white;
+          }),
+          overlayColor: WidgetStateProperty.all(AppColors.hoverSurface),
+          shape: WidgetStateProperty.all(
+            RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          ),
         ),
       ),
 
@@ -124,16 +152,42 @@ class AppTheme {
       // Chip Theme
       chipTheme: ChipThemeData(
         backgroundColor: AppColors.surfaceColor,
-        selectedColor: AppColors.primary,
+        selectedColor: AppColors.selectedSurface,
         disabledColor: AppColors.darkGrey,
         labelStyle: const TextStyle(color: AppColors.textPrimary, fontSize: 12),
         secondaryLabelStyle: const TextStyle(
-          color: AppColors.white,
+          color: AppColors.primaryLight,
           fontSize: 12,
         ),
+        checkmarkColor: Colors.transparent,
+        showCheckmark: false,
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
         side: const BorderSide(color: AppColors.border),
+      ),
+
+      // Segmented controls use the same dark selected surface as chips.
+      segmentedButtonTheme: SegmentedButtonThemeData(
+        style: ButtonStyle(
+          backgroundColor: WidgetStateProperty.resolveWith((states) {
+            return states.contains(WidgetState.selected)
+                ? AppColors.selectedSurface
+                : AppColors.surfaceColor;
+          }),
+          foregroundColor: WidgetStateProperty.resolveWith((states) {
+            return states.contains(WidgetState.selected)
+                ? AppColors.primaryLight
+                : AppColors.textSecondary;
+          }),
+          overlayColor: WidgetStateProperty.all(AppColors.hoverSurface),
+          side: WidgetStateProperty.resolveWith((states) {
+            return BorderSide(
+              color: states.contains(WidgetState.selected)
+                  ? AppColors.primary
+                  : AppColors.border,
+            );
+          }),
+        ),
       ),
 
       // Dialog Theme
@@ -299,6 +353,30 @@ class AppTheme {
           side: const BorderSide(color: AppColors.border),
         ),
         textStyle: const TextStyle(color: AppColors.textPrimary, fontSize: 14),
+      ),
+
+      menuTheme: MenuThemeData(
+        style: MenuStyle(
+          backgroundColor: WidgetStateProperty.all(AppColors.cardBackground),
+          surfaceTintColor: WidgetStateProperty.all(Colors.transparent),
+          side: WidgetStateProperty.all(
+            const BorderSide(color: AppColors.border),
+          ),
+        ),
+      ),
+
+      dropdownMenuTheme: const DropdownMenuThemeData(
+        menuStyle: MenuStyle(
+          backgroundColor: WidgetStatePropertyAll(AppColors.cardBackground),
+          surfaceTintColor: WidgetStatePropertyAll(Colors.transparent),
+        ),
+        textStyle: TextStyle(color: AppColors.textPrimary),
+      ),
+
+      textSelectionTheme: const TextSelectionThemeData(
+        cursorColor: AppColors.primary,
+        selectionColor: AppColors.selectedSurfaceStrong,
+        selectionHandleColor: AppColors.primary,
       ),
 
       // Tooltip Theme

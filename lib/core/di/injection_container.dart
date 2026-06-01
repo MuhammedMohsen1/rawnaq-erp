@@ -21,6 +21,8 @@ import '../../features/execution/presentation/cubit/execution_cubit.dart';
 import '../../features/execution/data/datasources/execution_api_datasource.dart';
 import '../../features/financial/data/datasources/financial_api_datasource.dart';
 import '../../features/financial/presentation/cubit/financial_cubit.dart';
+import '../../features/dashboard/data/datasources/dashboard_api_datasource.dart';
+import '../../features/dashboard/presentation/cubit/dashboard_cubit.dart';
 
 final getIt = GetIt.instance;
 
@@ -107,6 +109,8 @@ Future<void> setupDI() async {
         ExecutionCubit(apiDataSource: getIt(), projectsApiDataSource: getIt()),
   );
   getIt.registerFactory(() => FinancialCubit(apiDataSource: getIt()));
+  getIt.registerLazySingleton(() => DashboardApiDataSource());
+  getIt.registerFactory(() => DashboardCubit(dataSource: getIt()));
 }
 
 Future<void> resetDI() async {

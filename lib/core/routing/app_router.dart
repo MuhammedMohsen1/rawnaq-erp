@@ -165,6 +165,18 @@ class AppRouter {
                         ),
                       );
                     }
+                    if (authState is AuthAuthenticated &&
+                        !authState.user.isAdmin) {
+                      return BlocProvider(
+                        create: (context) =>
+                            ProjectsBloc(repository: ProjectsRepositoryImpl())
+                              ..add(const LoadProjects()),
+                        child: const ProjectsListPage(
+                          title: 'المشاريع',
+                          emptyMessage: 'لا توجد مشاريع',
+                        ),
+                      );
+                    }
                     return const DashboardPage();
                   },
                 ),

@@ -152,6 +152,7 @@ abstract class ApiEndpoints {
   static const String dashboardStats = '/dashboard/stats';
   static const String dashboardNotifications = '/dashboard/notifications';
   static const String dashboardRecentOrders = '/dashboard/recent-orders';
+  static const String dashboardSummary = '/dashboard/summary';
 
   // Restaurant Deactivation Endpoints
   static const String deactivateRestaurant = '/restaurant/deactivate';
