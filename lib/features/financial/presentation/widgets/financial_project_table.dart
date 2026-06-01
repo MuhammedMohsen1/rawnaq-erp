@@ -165,11 +165,22 @@ class _ProjectName extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
       children: [
-        Text(
-          project.projectName,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-          style: AppTextStyles.tableCellBold,
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Flexible(
+              child: Text(
+                project.projectName,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: AppTextStyles.tableCellBold,
+              ),
+            ),
+            if (project.isDesignProject) ...[
+              const SizedBox(width: 6),
+              const _ProjectTypeBadge(label: 'تصميم'),
+            ],
+          ],
         ),
         if ((project.clientName ?? '').isNotEmpty) ...[
           const SizedBox(height: 3),
@@ -181,6 +192,27 @@ class _ProjectName extends StatelessWidget {
           ),
         ],
       ],
+    );
+  }
+}
+
+class _ProjectTypeBadge extends StatelessWidget {
+  final String label;
+
+  const _ProjectTypeBadge({required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      decoration: BoxDecoration(
+        color: AppColors.primary.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(4),
+      ),
+      child: Text(
+        label,
+        style: AppTextStyles.caption.copyWith(color: AppColors.primary),
+      ),
     );
   }
 }
@@ -276,15 +308,16 @@ class _RowActions extends StatelessWidget {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Tooltip(
-          message: 'فتح التنفيذ',
-          child: IconButton(
-            icon: const Icon(Icons.open_in_new, size: 20),
-            color: AppColors.primary,
-            onPressed: () =>
-                context.push(AppRoutes.execution(project.projectId)),
+        if (!project.isDesignProject)
+          Tooltip(
+            message: 'فتح التنفيذ',
+            child: IconButton(
+              icon: const Icon(Icons.open_in_new, size: 20),
+              color: AppColors.primary,
+              onPressed: () =>
+                  context.push(AppRoutes.execution(project.projectId)),
+            ),
           ),
-        ),
         Tooltip(
           message: 'تفاصيل المشروع',
           child: IconButton(

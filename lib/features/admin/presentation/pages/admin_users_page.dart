@@ -118,6 +118,7 @@ class _Toolbar extends StatelessWidget {
               AppConstants.seniorEngineerRole: 'مهندس أول',
               AppConstants.juniorEngineerRole: 'مهندس',
               AppConstants.siteEngineerRole: 'مهندس موقع',
+              'designer': 'مصمم',
             },
             onChanged: context.read<AdminUsersCubit>().updateRoleFilter,
           ),
@@ -736,6 +737,7 @@ class _UserFormDialogState extends State<_UserFormDialog> {
                             AppConstants.seniorEngineerRole: 'مهندس أول',
                             AppConstants.juniorEngineerRole: 'مهندس',
                             AppConstants.siteEngineerRole: 'مهندس موقع',
+                            'designer': 'مصمم',
                           },
                           onChanged: (value) => setState(() => _role = value),
                         ),
@@ -973,6 +975,8 @@ String _roleLabel(String role) {
       return 'مهندس';
     case AppConstants.siteEngineerRole:
       return 'مهندس موقع';
+    case 'designer':
+      return 'مصمم';
     default:
       return role;
   }

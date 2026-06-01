@@ -43,8 +43,8 @@ class User extends Equatable {
     // Normalize adminSubRoles to lowercase if they exist
     final List<String>? normalizedAdminSubRoles = json['adminSubRoles'] != null
         ? (json['adminSubRoles'] as List)
-            .map((subRole) => (subRole as String).toLowerCase())
-            .toList()
+              .map((subRole) => (subRole as String).toLowerCase())
+              .toList()
         : null;
 
     return User(
@@ -121,6 +121,7 @@ class User extends Equatable {
   bool get isJuniorEngineer => role == 'junior_engineer';
   bool get isSiteEngineer => role == 'site_engineer';
   bool get isEngineer => role == 'engineer';
+  bool get isDesigner => role == 'designer';
 
   /// Returns true if user is any type of engineer that can request installments
   bool get canRequestInstallments =>
@@ -132,10 +133,14 @@ class User extends Equatable {
     return adminSubRoles?.contains(subRole) ?? false;
   }
 
-  bool get isSystemAdmin => isAdmin && (adminSubRoles?.contains('system_admin') ?? true);
-  bool get isProjectAdmin => isAdmin && (adminSubRoles?.contains('project_admin') ?? true);
-  bool get isFinancialAdmin => isAdmin && (adminSubRoles?.contains('financial_admin') ?? true);
-  bool get isTechnicalAdmin => isAdmin && (adminSubRoles?.contains('technical_admin') ?? true);
+  bool get isSystemAdmin =>
+      isAdmin && (adminSubRoles?.contains('system_admin') ?? true);
+  bool get isProjectAdmin =>
+      isAdmin && (adminSubRoles?.contains('project_admin') ?? true);
+  bool get isFinancialAdmin =>
+      isAdmin && (adminSubRoles?.contains('financial_admin') ?? true);
+  bool get isTechnicalAdmin =>
+      isAdmin && (adminSubRoles?.contains('technical_admin') ?? true);
 
   // Check if user can access all projects
   bool get canAccessAllProjects {

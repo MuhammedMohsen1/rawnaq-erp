@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_text_styles.dart';
 import '../../domain/entities/project_entity.dart';
+import '../../domain/enums/project_type.dart';
 import 'status_badge_widget.dart';
 import 'progress_indicator_widget.dart';
 
@@ -65,7 +66,10 @@ class ProjectTableWidget extends StatelessWidget {
                 ),
                 Expanded(
                   flex: 2,
-                  child: Text('تاريخ الانتهاء', style: AppTextStyles.tableHeader),
+                  child: Text(
+                    'تاريخ الانتهاء',
+                    style: AppTextStyles.tableHeader,
+                  ),
                 ),
                 const SizedBox(width: 80), // Actions column
               ],
@@ -96,10 +100,8 @@ class ProjectTableWidget extends StatelessWidget {
                   )
                 : ListView.separated(
                     itemCount: projects.length,
-                    separatorBuilder: (context, index) => const Divider(
-                      height: 1,
-                      color: AppColors.divider,
-                    ),
+                    separatorBuilder: (context, index) =>
+                        const Divider(height: 1, color: AppColors.divider),
                     itemBuilder: (context, index) {
                       final project = projects[index];
                       final isEven = index % 2 == 0;
@@ -121,10 +123,25 @@ class ProjectTableWidget extends StatelessWidget {
                               // Project name
                               Expanded(
                                 flex: 3,
-                                child: Text(
-                                  project.name,
-                                  style: AppTextStyles.tableCellBold,
-                                  overflow: TextOverflow.ellipsis,
+                                child: Row(
+                                  children: [
+                                    Expanded(
+                                      child: Text(
+                                        project.name,
+                                        style: AppTextStyles.tableCellBold,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ),
+                                    if (project.type == ProjectType.design)
+                                      const Padding(
+                                        padding: EdgeInsets.only(right: 8),
+                                        child: Icon(
+                                          Icons.palette_outlined,
+                                          size: 16,
+                                          color: Color(0xFF60A5FA),
+                                        ),
+                                      ),
+                                  ],
                                 ),
                               ),
 
@@ -187,8 +204,10 @@ class ProjectTableWidget extends StatelessWidget {
                                           value: 'view',
                                           child: Row(
                                             children: [
-                                              Icon(Icons.visibility_outlined,
-                                                  size: 18),
+                                              Icon(
+                                                Icons.visibility_outlined,
+                                                size: 18,
+                                              ),
                                               SizedBox(width: 8),
                                               Text('عرض'),
                                             ],
@@ -198,8 +217,10 @@ class ProjectTableWidget extends StatelessWidget {
                                           value: 'edit',
                                           child: Row(
                                             children: [
-                                              Icon(Icons.edit_outlined,
-                                                  size: 18),
+                                              Icon(
+                                                Icons.edit_outlined,
+                                                size: 18,
+                                              ),
                                               SizedBox(width: 8),
                                               Text('تعديل'),
                                             ],
@@ -254,4 +275,3 @@ class ProjectTableWidget extends StatelessWidget {
     );
   }
 }
-

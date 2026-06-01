@@ -6,16 +6,17 @@ import '../../../../core/di/injection_container.dart';
 import '../../../../core/layout/top_bar_title_controller.dart';
 import '../../../../core/utils/responsive_layout.dart';
 import '../../../auth/presentation/bloc/auth_bloc.dart';
+import '../../../design_projects/presentation/pages/design_project_workspace.dart';
 import '../../../financial/data/models/transaction_model.dart';
 import '../../../financial/domain/entities/transaction_entity.dart' as tx;
 import '../../domain/entities/project_attachment_entity.dart';
 import '../../domain/enums/project_status.dart';
+import '../../domain/enums/project_type.dart';
 import '../cubit/project_financial_cubit.dart';
 import '../cubit/project_financial_state.dart';
 import '../widgets/delete_transaction_dialog.dart';
 import '../widgets/financial_summary_cards_row.dart';
 import '../widgets/project_attachments_section.dart';
-import '../widgets/project_breadcrumb.dart';
 import '../widgets/project_header.dart';
 import '../widgets/transactions_table.dart';
 
@@ -84,22 +85,24 @@ class _ProjectDetailsLayout extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      padding: EdgeInsets.all(padding),
-      child: BlocBuilder<ProjectFinancialCubit, ProjectFinancialState>(
-        builder: (context, state) {
-          return Column(
+    return BlocBuilder<ProjectFinancialCubit, ProjectFinancialState>(
+      builder: (context, state) {
+        if (state is ProjectFinancialLoaded &&
+            state.project.type == ProjectType.design) {
+          return SizedBox(
+            height: MediaQuery.sizeOf(context).height,
+            child: Padding(
+              padding: EdgeInsets.all(padding),
+              child: DesignProjectWorkspace(project: state.project),
+            ),
+          );
+        }
+
+        return SingleChildScrollView(
+          padding: EdgeInsets.all(padding),
+          child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Breadcrumb
-              ProjectBreadcrumb(
-                projectName: state is ProjectFinancialLoaded
-                    ? state.project.name
-                    : null,
-              ),
-              const SizedBox(height: 16),
-
-              // Content based on state
               if (state is ProjectFinancialLoading)
                 const Center(child: CircularProgressIndicator())
               else if (state is ProjectFinancialError)
@@ -109,9 +112,9 @@ class _ProjectDetailsLayout extends StatelessWidget {
               else if (state is ProjectFinancialLoaded)
                 _LoadedContent(state: state),
             ],
-          );
-        },
-      ),
+          ),
+        );
+      },
     );
   }
 }
@@ -124,6 +127,9 @@ class _LoadedContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (state.project.type == ProjectType.design) {
+      return DesignProjectWorkspace(project: state.project);
+    }
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [

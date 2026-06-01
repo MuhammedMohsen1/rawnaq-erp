@@ -343,6 +343,8 @@ class ProjectsBloc extends Bloc<ProjectsEvent, ProjectsState> {
         endDate: event.endDate,
         deadline: event.deadline,
         progress: event.progress,
+        projectValue: event.projectValue,
+        installments: event.installments,
       );
 
       result.fold(

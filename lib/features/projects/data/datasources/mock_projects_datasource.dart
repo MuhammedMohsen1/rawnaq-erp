@@ -1,6 +1,7 @@
 import '../../domain/entities/project_entity.dart';
 import '../../domain/entities/team_member_entity.dart';
 import '../../domain/enums/project_status.dart';
+import '../../domain/enums/project_type.dart';
 import '../../domain/repositories/projects_repository.dart';
 
 /// Mock data source for projects during development
@@ -116,6 +117,7 @@ class MockProjectsDataSource {
     ProjectEntity(
       id: 'proj-5',
       name: 'تصميم فيلا الرياض',
+      type: ProjectType.design,
       status: ProjectStatus.execution,
       progress: 60,
       startDate: DateTime(2024, 4, 1),
@@ -125,6 +127,26 @@ class MockProjectsDataSource {
       teamMemberIds: ['tm-2', 'tm-4', 'tm-5'],
       teamMembers: [_teamMembers[1], _teamMembers[3], _teamMembers[4]],
       description: 'تصميم داخلي متكامل لفيلا سكنية في الرياض',
+      totalPrice: 90000,
+      installments: [
+        ProjectInstallment(
+          id: 'proj-5-payment-1',
+          amount: 30000,
+          dueDate: DateTime(2024, 4, 1),
+          isPaid: true,
+        ),
+        ProjectInstallment(
+          id: 'proj-5-payment-2',
+          amount: 30000,
+          dueDate: DateTime(2024, 5, 1),
+          isPaid: true,
+        ),
+        ProjectInstallment(
+          id: 'proj-5-payment-3',
+          amount: 30000,
+          dueDate: DateTime(2024, 6, 1),
+        ),
+      ],
       createdAt: DateTime(2024, 3, 15),
       updatedAt: DateTime.now(),
     ),

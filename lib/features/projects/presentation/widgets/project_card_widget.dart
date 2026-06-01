@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_text_styles.dart';
 import '../../domain/entities/project_entity.dart';
+import '../../domain/enums/project_type.dart';
 import 'status_badge_widget.dart';
 import 'progress_indicator_widget.dart';
 
@@ -121,7 +122,15 @@ class ProjectCardWidget extends StatelessWidget {
               const SizedBox(height: 12),
 
               // Status badge
-              StatusBadgeWidget(status: project.status),
+              Row(
+                children: [
+                  StatusBadgeWidget(status: project.status),
+                  if (project.type == ProjectType.design) ...[
+                    const SizedBox(width: 8),
+                    const _DesignProjectBadge(),
+                  ],
+                ],
+              ),
 
               const SizedBox(height: 16),
 
@@ -210,6 +219,29 @@ class ProjectCardWidget extends StatelessWidget {
               ],
             ],
           ),
+        ),
+      ),
+    );
+  }
+}
+
+class _DesignProjectBadge extends StatelessWidget {
+  const _DesignProjectBadge();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: const Color(0xFF3B82F6).withValues(alpha: 0.14),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: const Text(
+        'تصميم',
+        style: TextStyle(
+          color: Color(0xFF60A5FA),
+          fontSize: 11,
+          fontWeight: FontWeight.w600,
         ),
       ),
     );

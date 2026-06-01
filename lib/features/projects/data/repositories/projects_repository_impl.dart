@@ -7,6 +7,7 @@ import '../../domain/entities/project_attachment_entity.dart';
 import '../../domain/entities/project_entity.dart';
 import '../../domain/entities/team_member_entity.dart';
 import '../../domain/enums/project_status.dart';
+import '../../domain/enums/project_type.dart';
 import '../../domain/repositories/projects_repository.dart';
 import '../datasources/projects_api_datasource.dart';
 import '../models/project_attachment_model.dart';
@@ -200,6 +201,8 @@ class ProjectsRepositoryImpl implements ProjectsRepository {
     DateTime? endDate,
     DateTime? deadline,
     int progress = 0,
+    double projectValue = 0,
+    List<ProjectInstallment> installments = const [],
   }) async {
     try {
       // Convert entity to API format
@@ -208,6 +211,19 @@ class ProjectsRepositoryImpl implements ProjectsRepository {
         'type': type,
         'primaryDepartmentId': primaryDepartmentId,
         'progress': progress,
+        if (projectValue > 0) 'projectValue': projectValue,
+        if (installments.isNotEmpty) 'installmentCount': installments.length,
+        if (installments.isNotEmpty)
+          'paymentSchedule': installments
+              .map(
+                (item) => {
+                  'id': item.id,
+                  'amount': item.amount,
+                  'dueDate': item.dueDate.toIso8601String(),
+                  'isPaid': item.isPaid,
+                },
+              )
+              .toList(),
       };
 
       if (description != null && description.isNotEmpty) {
@@ -278,6 +294,20 @@ class ProjectsRepositoryImpl implements ProjectsRepository {
       }
       if (project.googleMapLink?.isNotEmpty == true) {
         projectData['googleMapLink'] = project.googleMapLink;
+      }
+      if (project.type == ProjectType.design) {
+        projectData['projectValue'] = project.totalPrice;
+        projectData['installmentCount'] = project.installments.length;
+        projectData['paymentSchedule'] = project.installments
+            .map(
+              (installment) => {
+                'id': installment.id,
+                'amount': installment.amount,
+                'dueDate': installment.dueDate.toIso8601String(),
+                'isPaid': installment.isPaid,
+              },
+            )
+            .toList();
       }
 
       final response = await _dataSource.updateProject(project.id, projectData);

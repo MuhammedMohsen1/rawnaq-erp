@@ -29,7 +29,8 @@ final class FinancialLoaded extends FinancialState {
     return summary.projects.where((project) {
       return project.projectName.toLowerCase().contains(query) ||
           (project.clientName ?? '').toLowerCase().contains(query) ||
-          project.status.toLowerCase().contains(query);
+          project.status.toLowerCase().contains(query) ||
+          (project.projectType ?? '').toLowerCase().contains(query);
     }).toList();
   }
 

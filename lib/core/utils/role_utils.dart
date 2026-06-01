@@ -52,9 +52,10 @@ class RoleUtils {
         return 'Senior Engineer';
       case AppConstants.juniorEngineerRole:
         return 'Junior Engineer';
+      case 'designer':
+        return 'Designer';
       default:
         return user.role;
     }
   }
 }
-

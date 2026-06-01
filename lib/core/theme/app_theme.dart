@@ -363,15 +363,31 @@ class AppTheme {
 
       // Checkbox Theme
       checkboxTheme: CheckboxThemeData(
+        materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
         fillColor: WidgetStateProperty.resolveWith((states) {
           if (states.contains(WidgetState.selected)) {
-            return AppColors.primary;
+            return AppColors.secondary.withValues(alpha: 0.92);
+          }
+          if (states.contains(WidgetState.disabled)) {
+            return AppColors.surfaceColor.withValues(alpha: 0.24);
+          }
+          return AppColors.surfaceColor.withValues(alpha: 0.22);
+        }),
+        checkColor: WidgetStateProperty.all(AppColors.white),
+        overlayColor: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.pressed)) {
+            return AppColors.secondary.withValues(alpha: 0.16);
+          }
+          if (states.contains(WidgetState.hovered)) {
+            return AppColors.secondary.withValues(alpha: 0.10);
           }
           return Colors.transparent;
         }),
-        checkColor: WidgetStateProperty.all(AppColors.white),
-        side: const BorderSide(color: AppColors.border, width: 2),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
+        side: BorderSide(
+          color: AppColors.textMuted.withValues(alpha: 0.65),
+          width: 1.4,
+        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
       ),
 
       // Radio Theme

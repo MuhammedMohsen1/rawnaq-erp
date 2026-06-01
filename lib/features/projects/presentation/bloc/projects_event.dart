@@ -121,6 +121,8 @@ class CreateProjectWithData extends ProjectsEvent {
   final DateTime? endDate;
   final DateTime? deadline;
   final int progress;
+  final double projectValue;
+  final List<ProjectInstallment> installments;
 
   const CreateProjectWithData({
     required this.name,
@@ -136,6 +138,8 @@ class CreateProjectWithData extends ProjectsEvent {
     this.endDate,
     this.deadline,
     this.progress = 0,
+    this.projectValue = 0,
+    this.installments = const [],
   });
 
   @override
@@ -153,6 +157,8 @@ class CreateProjectWithData extends ProjectsEvent {
     endDate,
     deadline,
     progress,
+    projectValue,
+    installments,
   ];
 }
 

@@ -245,6 +245,20 @@ abstract class ApiEndpoints {
     String attachmentId,
   ) => '/projects/$projectId/attachments/$attachmentId';
 
+  // Design Projects Endpoints
+  static String designWorkspace(String projectId) =>
+      '/design-projects/$projectId/workspace';
+  static String designComments(String projectId) =>
+      '/design-projects/$projectId/comments';
+  static String designAttachments(String projectId) =>
+      '/design-projects/$projectId/files';
+  static String designTaskAssign(String projectId, String taskId) =>
+      '/design-projects/$projectId/tasks/$taskId/assignee';
+  static String designTaskStatus(String projectId, String taskId) =>
+      '/design-projects/$projectId/tasks/$taskId/status';
+  static String designInstallment(String projectId, String installmentId) =>
+      '/design-projects/$projectId/installments/$installmentId';
+
   // Tasks Endpoints
   static const String tasks = '/tasks';
   static const String myTasks = '/tasks/my';

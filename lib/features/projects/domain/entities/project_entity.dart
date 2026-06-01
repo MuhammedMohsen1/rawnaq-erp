@@ -1,6 +1,24 @@
 import 'package:equatable/equatable.dart';
 import '../enums/project_status.dart';
+import '../enums/project_type.dart';
 import 'team_member_entity.dart';
+
+class ProjectInstallment extends Equatable {
+  final String id;
+  final double amount;
+  final DateTime dueDate;
+  final bool isPaid;
+
+  const ProjectInstallment({
+    required this.id,
+    required this.amount,
+    required this.dueDate,
+    this.isPaid = false,
+  });
+
+  @override
+  List<Object?> get props => [id, amount, dueDate, isPaid];
+}
 
 class ProjectPhoneContact extends Equatable {
   final String name;
@@ -17,6 +35,7 @@ class ProjectEntity extends Equatable {
   final String id;
   final String name;
   final ProjectStatus status;
+  final ProjectType type;
   final int progress; // 0-100
   final DateTime startDate;
   final DateTime endDate;
@@ -40,11 +59,13 @@ class ProjectEntity extends Equatable {
   final DateTime? lastEditAt;
   final int? itemsCount;
   final bool archived;
+  final List<ProjectInstallment> installments;
 
   const ProjectEntity({
     required this.id,
     required this.name,
     required this.status,
+    this.type = ProjectType.execution,
     required this.progress,
     required this.startDate,
     required this.endDate,
@@ -68,6 +89,7 @@ class ProjectEntity extends Equatable {
     this.lastEditAt,
     this.itemsCount,
     this.archived = false,
+    this.installments = const [],
   });
   get deliveryInDays =>
       hasEndDate ? endDate.difference(DateTime.now()).inDays : null;
@@ -80,6 +102,7 @@ class ProjectEntity extends Equatable {
     id,
     name,
     status,
+    type,
     progress,
     startDate,
     endDate,
@@ -103,6 +126,7 @@ class ProjectEntity extends Equatable {
     lastEditAt,
     itemsCount,
     archived,
+    installments,
   ];
 
   /// Create a copy with updated fields
@@ -110,6 +134,7 @@ class ProjectEntity extends Equatable {
     String? id,
     String? name,
     ProjectStatus? status,
+    ProjectType? type,
     int? progress,
     DateTime? startDate,
     DateTime? endDate,
@@ -133,11 +158,13 @@ class ProjectEntity extends Equatable {
     DateTime? lastEditAt,
     int? itemsCount,
     bool? archived,
+    List<ProjectInstallment>? installments,
   }) {
     return ProjectEntity(
       id: id ?? this.id,
       name: name ?? this.name,
       status: status ?? this.status,
+      type: type ?? this.type,
       progress: progress ?? this.progress,
       startDate: startDate ?? this.startDate,
       endDate: endDate ?? this.endDate,
@@ -162,6 +189,7 @@ class ProjectEntity extends Equatable {
       lastEditAt: lastEditAt ?? this.lastEditAt,
       itemsCount: itemsCount ?? this.itemsCount,
       archived: archived ?? this.archived,
+      installments: installments ?? this.installments,
     );
   }
 

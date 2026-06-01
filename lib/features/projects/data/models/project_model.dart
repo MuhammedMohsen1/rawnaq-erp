@@ -1,5 +1,6 @@
 import '../../domain/entities/project_entity.dart';
 import '../../domain/enums/project_status.dart';
+import '../../domain/enums/project_type.dart';
 import 'team_member_model.dart';
 
 class ProjectPhoneContactModel extends ProjectPhoneContact {
@@ -27,6 +28,7 @@ class ProjectModel extends ProjectEntity {
     required super.id,
     required super.name,
     required super.status,
+    super.type,
     required super.progress,
     required super.startDate,
     required super.endDate,
@@ -50,6 +52,7 @@ class ProjectModel extends ProjectEntity {
     super.lastEditAt,
     super.itemsCount,
     super.archived,
+    super.installments,
   });
 
   /// Create from JSON (backend format)
@@ -92,17 +95,36 @@ class ProjectModel extends ProjectEntity {
               .where((contact) => contact.phone.trim().isNotEmpty)
               .toList()
         : <ProjectPhoneContactModel>[];
+    final scheduleJson = json['installments'] ?? json['paymentSchedule'];
+    final installments = scheduleJson is List
+        ? scheduleJson.whereType<Map>().map((item) {
+            final data = Map<String, dynamic>.from(item);
+            return ProjectInstallment(
+              id: (data['id'] ?? data['number'] ?? '').toString(),
+              amount: _toDouble(data['amount'] ?? data['value']),
+              dueDate:
+                  DateTime.tryParse(
+                    (data['dueDate'] ?? data['date'] ?? '').toString(),
+                  ) ??
+                  startDate!,
+              isPaid: data['isPaid'] as bool? ?? data['paid'] as bool? ?? false,
+            );
+          }).toList()
+        : <ProjectInstallment>[];
 
     return ProjectModel(
       id: json['id'] as String,
       name: json['name'] as String,
       status: frontendStatus,
+      type: ProjectTypeExtension.fromApiString(json['type'] as String?),
       progress: (json['progress'] as int?) ?? 0,
       startDate: startDate,
       endDate: endDate,
       hasEndDate: hasEndDate,
       totalCost: _toDouble(json['totalCost']),
-      totalPrice: _toDouble(json['totalPrice']),
+      totalPrice: _toDouble(json['projectValue']) > 0
+          ? _toDouble(json['projectValue'])
+          : _toDouble(json['totalPrice']),
       totalAmountAfterDeduction: _toDouble(json['totalAmountAfterDeduction']),
       totalReceived: _toDouble(json['totalReceived']),
       totalExpenses: _toDouble(json['totalExpenses']),
@@ -129,6 +151,7 @@ class ProjectModel extends ProjectEntity {
           : null,
       itemsCount: json['itemsCount'] as int?,
       archived: json['archived'] as bool? ?? json['deletedAt'] != null,
+      installments: installments,
     );
   }
 
@@ -138,6 +161,7 @@ class ProjectModel extends ProjectEntity {
       'id': id,
       'name': name,
       'status': status.toApiString(),
+      'type': type.apiValue,
       'progress': progress,
       'startDate': startDate.toIso8601String(),
       'endDate': endDate.toIso8601String(),
@@ -166,6 +190,16 @@ class ProjectModel extends ProjectEntity {
       'updatedAt': updatedAt?.toIso8601String(),
       'lastEditAt': lastEditAt?.toIso8601String(),
       'archived': archived,
+      'installments': installments
+          .map(
+            (item) => {
+              'id': item.id,
+              'amount': item.amount,
+              'dueDate': item.dueDate.toIso8601String(),
+              'isPaid': item.isPaid,
+            },
+          )
+          .toList(),
     };
   }
 
@@ -175,6 +209,7 @@ class ProjectModel extends ProjectEntity {
       id: entity.id,
       name: entity.name,
       status: entity.status,
+      type: entity.type,
       progress: entity.progress,
       startDate: entity.startDate,
       endDate: entity.endDate,
@@ -198,6 +233,7 @@ class ProjectModel extends ProjectEntity {
       lastEditAt: entity.lastEditAt,
       itemsCount: entity.itemsCount,
       archived: entity.archived,
+      installments: entity.installments,
     );
   }
 
@@ -207,6 +243,7 @@ class ProjectModel extends ProjectEntity {
       id: id,
       name: name,
       status: status,
+      type: type,
       progress: progress,
       startDate: startDate,
       endDate: endDate,
@@ -230,6 +267,7 @@ class ProjectModel extends ProjectEntity {
       lastEditAt: lastEditAt,
       itemsCount: itemsCount,
       archived: archived,
+      installments: installments,
     );
   }
 }

@@ -64,6 +64,7 @@ class FinancialProjectModel extends Equatable {
   final String projectId;
   final String projectName;
   final String status;
+  final String? projectType;
   final String? clientName;
   final double totalContractValue;
   final double totalCost;
@@ -77,6 +78,7 @@ class FinancialProjectModel extends Equatable {
     required this.projectId,
     required this.projectName,
     required this.status,
+    this.projectType,
     this.clientName,
     required this.totalContractValue,
     required this.totalCost,
@@ -92,6 +94,7 @@ class FinancialProjectModel extends Equatable {
       projectId: json['projectId']?.toString() ?? '',
       projectName: json['projectName']?.toString() ?? '',
       status: json['status']?.toString() ?? '',
+      projectType: (json['projectType'] ?? json['type'])?.toString(),
       clientName: json['clientName']?.toString(),
       totalContractValue: _toDouble(json['totalContractValue']),
       totalCost: _toDouble(json['totalCost']),
@@ -103,11 +106,14 @@ class FinancialProjectModel extends Equatable {
     );
   }
 
+  bool get isDesignProject => projectType?.toUpperCase() == 'DESIGN';
+
   @override
   List<Object?> get props => [
     projectId,
     projectName,
     status,
+    projectType,
     clientName,
     totalContractValue,
     totalCost,

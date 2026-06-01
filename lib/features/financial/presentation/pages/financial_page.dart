@@ -103,7 +103,7 @@ class _FinancialHeader extends StatelessWidget {
         Text('المالية', style: AppTextStyles.pageTitle),
         SizedBox(height: 6),
         Text(
-          'نظرة مالية على مشاريع التنفيذ والمشاريع المكتملة',
+          'نظرة مالية على مشاريع التنفيذ والتصميم والمشاريع المكتملة',
           style: AppTextStyles.bodyMedium,
         ),
       ],

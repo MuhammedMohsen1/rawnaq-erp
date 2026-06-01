@@ -27,6 +27,11 @@ class _CreateProjectDialogState extends State<CreateProjectDialog> {
   final _descriptionController = TextEditingController();
   final _clientNameController = TextEditingController();
   final _googleMapLinkController = TextEditingController();
+  final _projectValueController = TextEditingController();
+  final List<TextEditingController> _installmentAmountControllers = [
+    TextEditingController(),
+  ];
+  final List<DateTime> _installmentDueDates = [DateTime.now()];
   final List<TextEditingController> _contactNameControllers = [
     TextEditingController(),
   ];
@@ -68,6 +73,10 @@ class _CreateProjectDialogState extends State<CreateProjectDialog> {
     _descriptionController.dispose();
     _clientNameController.dispose();
     _googleMapLinkController.dispose();
+    _projectValueController.dispose();
+    for (final controller in _installmentAmountControllers) {
+      controller.dispose();
+    }
     for (final controller in _contactNameControllers) {
       controller.dispose();
     }
@@ -348,6 +357,27 @@ class _CreateProjectDialogState extends State<CreateProjectDialog> {
             icon: Icons.map_outlined,
             keyboardType: TextInputType.url,
           ),
+          if (_selectedProjectType == 'DESIGN') ...[
+            const SizedBox(height: 24),
+            Text(
+              'البيانات المالية لمشروع التصميم',
+              style: AppTextStyles.bodyLarge.copyWith(
+                color: AppColors.textPrimary,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const SizedBox(height: 16),
+            _buildTextField(
+              controller: _projectValueController,
+              label: 'قيمة المشروع *',
+              hint: 'أدخل القيمة الإجمالية',
+              icon: Icons.payments_outlined,
+              keyboardType: TextInputType.number,
+              validator: _validatePositiveNumber,
+            ),
+            const SizedBox(height: 16),
+            _buildInstallmentFields(),
+          ],
         ],
       ),
     );
@@ -419,6 +449,86 @@ class _CreateProjectDialogState extends State<CreateProjectDialog> {
             ],
           ),
           if (i < _contactPhoneControllers.length - 1)
+            const SizedBox(height: 12),
+        ],
+      ],
+    );
+  }
+
+  Widget _buildInstallmentFields() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Expanded(
+              child: Text(
+                'دفعات المشروع',
+                style: AppTextStyles.bodyMedium.copyWith(
+                  color: AppColors.textSecondary,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ),
+            TextButton.icon(
+              onPressed: () {
+                setState(() {
+                  _installmentAmountControllers.add(TextEditingController());
+                  _installmentDueDates.add(
+                    DateTime(
+                      _startDate.year,
+                      _startDate.month + _installmentDueDates.length,
+                      _startDate.day,
+                    ),
+                  );
+                });
+              },
+              icon: const Icon(Icons.add, size: 18),
+              label: const Text('إضافة دفعة'),
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        for (var i = 0; i < _installmentAmountControllers.length; i++) ...[
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Expanded(
+                child: _buildTextField(
+                  controller: _installmentAmountControllers[i],
+                  label: 'قيمة الدفعة ${i + 1} *',
+                  hint: 'أدخل قيمة الدفعة',
+                  icon: Icons.payments_outlined,
+                  keyboardType: TextInputType.number,
+                  validator: _validatePositiveNumber,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: _buildDatePicker(
+                  label: 'تاريخ الاستحقاق',
+                  date: _installmentDueDates[i],
+                  onDateSelected: (date) {
+                    setState(() => _installmentDueDates[i] = date);
+                  },
+                ),
+              ),
+              if (_installmentAmountControllers.length > 1) ...[
+                const SizedBox(width: 8),
+                IconButton(
+                  onPressed: () {
+                    setState(() {
+                      _installmentAmountControllers.removeAt(i).dispose();
+                      _installmentDueDates.removeAt(i);
+                    });
+                  },
+                  icon: const Icon(Icons.delete_outline),
+                  color: AppColors.error,
+                ),
+              ],
+            ],
+          ),
+          if (i < _installmentAmountControllers.length - 1)
             const SizedBox(height: 12),
         ],
       ],
@@ -696,6 +806,26 @@ class _CreateProjectDialogState extends State<CreateProjectDialog> {
       }
 
       final contacts = _collectContacts();
+      final projectValue =
+          double.tryParse(_projectValueController.text.trim()) ?? 0;
+      final installments = _selectedProjectType == 'DESIGN'
+          ? _collectInstallments()
+          : const <ProjectInstallment>[];
+      if (_selectedProjectType == 'DESIGN') {
+        final paymentsTotal = installments.fold<double>(
+          0,
+          (sum, installment) => sum + installment.amount,
+        );
+        if ((paymentsTotal - projectValue).abs() > 0.01) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('إجمالي الدفعات يجب أن يساوي قيمة المشروع'),
+              backgroundColor: AppColors.error,
+            ),
+          );
+          return;
+        }
+      }
 
       context.read<ProjectsBloc>().add(
         CreateProjectWithData(
@@ -718,6 +848,8 @@ class _CreateProjectDialogState extends State<CreateProjectDialog> {
           endDate: null, // End date not required when creating
           deadline: null, // Deadline not needed
           progress: 0, // Progress starts at 0
+          projectValue: projectValue,
+          installments: installments,
         ),
       );
 
@@ -743,5 +875,22 @@ class _CreateProjectDialogState extends State<CreateProjectDialog> {
     }
 
     return contacts;
+  }
+
+  String? _validatePositiveNumber(String? value) {
+    final number = double.tryParse(value?.trim() ?? '');
+    return number == null || number <= 0 ? 'أدخل قيمة صحيحة أكبر من صفر' : null;
+  }
+
+  List<ProjectInstallment> _collectInstallments() {
+    return List.generate(_installmentAmountControllers.length, (index) {
+      return ProjectInstallment(
+        id: 'installment-${index + 1}',
+        amount:
+            double.tryParse(_installmentAmountControllers[index].text.trim()) ??
+            0,
+        dueDate: _installmentDueDates[index],
+      );
+    });
   }
 }
