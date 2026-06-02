@@ -1,4 +1,5 @@
 import 'package:equatable/equatable.dart';
+import 'package:flutter/material.dart';
 import '../../data/models/financial_summary_model.dart';
 
 sealed class FinancialState extends Equatable {
@@ -19,8 +20,15 @@ final class FinancialLoading extends FinancialState {
 final class FinancialLoaded extends FinancialState {
   final FinancialSummaryModel summary;
   final String searchQuery;
+  final String? period;
+  final DateTimeRange? customRange;
 
-  const FinancialLoaded({required this.summary, this.searchQuery = ''});
+  const FinancialLoaded({
+    required this.summary,
+    this.searchQuery = '',
+    this.period,
+    this.customRange,
+  });
 
   List<FinancialProjectModel> get filteredProjects {
     final query = searchQuery.trim().toLowerCase();
@@ -37,15 +45,21 @@ final class FinancialLoaded extends FinancialState {
   FinancialLoaded copyWith({
     FinancialSummaryModel? summary,
     String? searchQuery,
+    String? period,
+    DateTimeRange? customRange,
+    bool clearPeriod = false,
+    bool clearCustomRange = false,
   }) {
     return FinancialLoaded(
       summary: summary ?? this.summary,
       searchQuery: searchQuery ?? this.searchQuery,
+      period: clearPeriod ? null : period ?? this.period,
+      customRange: clearCustomRange ? null : customRange ?? this.customRange,
     );
   }
 
   @override
-  List<Object?> get props => [summary, searchQuery];
+  List<Object?> get props => [summary, searchQuery, period, customRange];
 }
 
 final class FinancialFailure extends FinancialState {

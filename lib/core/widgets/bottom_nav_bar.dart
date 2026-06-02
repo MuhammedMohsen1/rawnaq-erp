@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../constants/app_colors.dart';
 import '../routing/app_router.dart';
 import '../../features/auth/presentation/bloc/auth_bloc.dart';
+import 'logout_confirmation_dialog.dart';
 
 /// Bottom navigation bar for mobile view
 class AppBottomNavBar extends StatelessWidget {
@@ -11,12 +12,19 @@ class AppBottomNavBar extends StatelessWidget {
 
   const AppBottomNavBar({super.key, required this.currentPath});
 
-  int _getSelectedIndex(bool isSiteEngineer) {
+  int _getSelectedIndex(bool isSiteEngineer, bool isDesigner) {
     if (isSiteEngineer) {
       if (currentPath == AppRoutes.dashboard) return 0;
       if (currentPath == AppRoutes.siteEngineerPricingProjects) return 1;
       if (currentPath == AppRoutes.tasks) return 2;
       if (currentPath == AppRoutes.settings) return 3;
+      return 0;
+    } else if (isDesigner) {
+      if (currentPath == AppRoutes.projects ||
+          currentPath == AppRoutes.dashboard) {
+        return 0;
+      }
+      if (currentPath == AppRoutes.tasks) return 1;
       return 0;
     } else {
       if (currentPath == AppRoutes.dashboard) return 0;
@@ -34,6 +42,8 @@ class AppBottomNavBar extends StatelessWidget {
       builder: (context, authState) {
         final isSiteEngineer =
             authState is AuthAuthenticated && authState.user.isSiteEngineer;
+        final isDesigner =
+            authState is AuthAuthenticated && authState.user.isDesigner;
 
         return Container(
           decoration: const BoxDecoration(
@@ -85,6 +95,30 @@ class AppBottomNavBar extends StatelessWidget {
                           isSiteEngineer: true,
                         ),
                       ]
+                    : isDesigner
+                    ? [
+                        _buildNavItem(
+                          context: context,
+                          icon: Icons.design_services_outlined,
+                          activeIcon: Icons.design_services,
+                          label: 'التصميم',
+                          path: AppRoutes.projects,
+                          index: 0,
+                          isSiteEngineer: false,
+                          isDesigner: true,
+                        ),
+                        _buildNavItem(
+                          context: context,
+                          icon: Icons.check_circle_outline,
+                          activeIcon: Icons.check_circle,
+                          label: 'مهامي',
+                          path: AppRoutes.tasks,
+                          index: 1,
+                          isSiteEngineer: false,
+                          isDesigner: true,
+                        ),
+                        _buildLogoutItem(context),
+                      ]
                     : [
                         // Manager/Admin menu items
                         _buildNavItem(
@@ -95,6 +129,7 @@ class AppBottomNavBar extends StatelessWidget {
                           path: AppRoutes.dashboard,
                           index: 0,
                           isSiteEngineer: false,
+                          isDesigner: false,
                         ),
                         _buildNavItem(
                           context: context,
@@ -104,6 +139,7 @@ class AppBottomNavBar extends StatelessWidget {
                           path: AppRoutes.projects,
                           index: 1,
                           isSiteEngineer: false,
+                          isDesigner: false,
                         ),
                         _buildNavItem(
                           context: context,
@@ -113,6 +149,7 @@ class AppBottomNavBar extends StatelessWidget {
                           path: AppRoutes.tasks,
                           index: 2,
                           isSiteEngineer: false,
+                          isDesigner: false,
                         ),
                         _buildNavItem(
                           context: context,
@@ -122,6 +159,7 @@ class AppBottomNavBar extends StatelessWidget {
                           path: AppRoutes.gantt,
                           index: 3,
                           isSiteEngineer: false,
+                          isDesigner: false,
                         ),
                         _buildNavItem(
                           context: context,
@@ -131,6 +169,7 @@ class AppBottomNavBar extends StatelessWidget {
                           path: AppRoutes.settings,
                           index: 4,
                           isSiteEngineer: false,
+                          isDesigner: false,
                         ),
                       ],
               ),
@@ -149,8 +188,9 @@ class AppBottomNavBar extends StatelessWidget {
     required String path,
     required int index,
     required bool isSiteEngineer,
+    bool isDesigner = false,
   }) {
-    final isSelected = _getSelectedIndex(isSiteEngineer) == index;
+    final isSelected = _getSelectedIndex(isSiteEngineer, isDesigner) == index;
 
     return InkWell(
       onTap: () {
@@ -178,6 +218,30 @@ class AppBottomNavBar extends StatelessWidget {
               ),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLogoutItem(BuildContext context) {
+    return InkWell(
+      onTap: () => showLogoutConfirmationDialog(context),
+      child: const SizedBox(
+        width: 80,
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.logout, color: Colors.red, size: 24),
+            SizedBox(height: 4),
+            Text(
+              'خروج',
+              style: TextStyle(
+                color: Colors.red,
+                fontSize: 10,
+                fontWeight: FontWeight.w500,
+              ),
             ),
           ],
         ),

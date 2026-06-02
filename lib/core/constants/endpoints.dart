@@ -429,6 +429,8 @@ abstract class ApiEndpoints {
   static String executionAddIncome(String projectId) =>
       '/projects/$projectId/execution/income';
   static const String financialSummary = '/financial/summary';
+  static String projectFinancialOverview(String projectId) =>
+      '/financial/projects/$projectId/overview';
   static String approveInstallment(String requestId) =>
       '/execution/installments/$requestId/approve';
   static String rejectInstallment(String requestId) =>

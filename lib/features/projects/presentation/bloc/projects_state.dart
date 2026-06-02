@@ -29,10 +29,12 @@ class ProjectsLoaded extends ProjectsState {
   final List<TeamMemberEntity> teamMembers;
   final ProjectStatistics? statistics;
   final ProjectStatus? statusFilter;
+  final String? typeFilter;
   final String? managerFilter;
   final String? teamMemberFilter;
   final String? searchQuery;
   final bool archived;
+  final bool assignedToMe;
   final bool isTableView;
   final int currentPage;
   final int totalPages;
@@ -47,10 +49,12 @@ class ProjectsLoaded extends ProjectsState {
     this.teamMembers = const [],
     this.statistics,
     this.statusFilter,
+    this.typeFilter,
     this.managerFilter,
     this.teamMemberFilter,
     this.searchQuery,
     this.archived = false,
+    this.assignedToMe = false,
     this.isTableView = true,
     this.currentPage = 1,
     this.totalPages = 1,
@@ -67,10 +71,12 @@ class ProjectsLoaded extends ProjectsState {
     teamMembers,
     statistics,
     statusFilter,
+    typeFilter,
     managerFilter,
     teamMemberFilter,
     searchQuery,
     archived,
+    assignedToMe,
     isTableView,
     currentPage,
     totalPages,
@@ -87,10 +93,12 @@ class ProjectsLoaded extends ProjectsState {
     List<TeamMemberEntity>? teamMembers,
     ProjectStatistics? statistics,
     ProjectStatus? statusFilter,
+    String? typeFilter,
     String? managerFilter,
     String? teamMemberFilter,
     String? searchQuery,
     bool? archived,
+    bool? assignedToMe,
     bool? isTableView,
     int? currentPage,
     int? totalPages,
@@ -99,6 +107,7 @@ class ProjectsLoaded extends ProjectsState {
     bool? hasMore,
     bool? isLoadingMore,
     bool clearStatusFilter = false,
+    bool clearTypeFilter = false,
     bool clearManagerFilter = false,
     bool clearTeamMemberFilter = false,
     bool clearSearchQuery = false,
@@ -111,6 +120,7 @@ class ProjectsLoaded extends ProjectsState {
       statusFilter: clearStatusFilter
           ? null
           : (statusFilter ?? this.statusFilter),
+      typeFilter: clearTypeFilter ? null : (typeFilter ?? this.typeFilter),
       managerFilter: clearManagerFilter
           ? null
           : (managerFilter ?? this.managerFilter),
@@ -119,6 +129,7 @@ class ProjectsLoaded extends ProjectsState {
           : (teamMemberFilter ?? this.teamMemberFilter),
       searchQuery: clearSearchQuery ? null : (searchQuery ?? this.searchQuery),
       archived: archived ?? this.archived,
+      assignedToMe: assignedToMe ?? this.assignedToMe,
       isTableView: isTableView ?? this.isTableView,
       currentPage: currentPage ?? this.currentPage,
       totalPages: totalPages ?? this.totalPages,

@@ -259,21 +259,48 @@ class _FinancialSection extends StatelessWidget {
             child: summary.cashFlowSeries.isEmpty
                 ? const Center(child: Text('لا توجد حركة مالية خلال الفترة'))
                 : SfCartesianChart(
-                    primaryXAxis: const CategoryAxis(),
-                    series: <CartesianSeries<DashboardCashFlowPoint, String>>[
-                      LineSeries(
-                        dataSource: summary.cashFlowSeries,
-                        xValueMapper: (p, _) => p.label,
-                        yValueMapper: (p, _) => p.income,
-                        name: 'المحصل',
-                        color: const Color(0xff22c55e),
+                    primaryXAxis: DateTimeAxis(
+                      interval: summary.period == 'MONTH' ? 7 : 1,
+                      intervalType: summary.period == 'YEAR'
+                          ? DateTimeIntervalType.months
+                          : DateTimeIntervalType.days,
+                      dateFormat: summary.period == 'YEAR'
+                          ? DateFormat('MMM yyyy')
+                          : DateFormat('dd MMM'),
+                    ),
+                    tooltipBehavior: TooltipBehavior(enable: true),
+                    trackballBehavior: TrackballBehavior(
+                      enable: true,
+                      activationMode: ActivationMode.singleTap,
+                      tooltipDisplayMode: TrackballDisplayMode.groupAllPoints,
+                      markerSettings: const TrackballMarkerSettings(
+                        markerVisibility: TrackballVisibilityMode.visible,
                       ),
-                      LineSeries(
+                    ),
+                    series: <CartesianSeries<DashboardCashFlowPoint, DateTime>>[
+                      SplineAreaSeries(
                         dataSource: summary.cashFlowSeries,
-                        xValueMapper: (p, _) => p.label,
+                        xValueMapper: (p, _) => DateTime.parse(p.label),
                         yValueMapper: (p, _) => p.expenses,
                         name: 'المصروفات',
                         color: const Color(0xffef4444),
+                        opacity: 0.22,
+                        borderColor: const Color(0xffef4444),
+                        borderWidth: 2,
+                        splineType: SplineType.monotonic,
+                        enableTooltip: true,
+                      ),
+                      SplineAreaSeries(
+                        dataSource: summary.cashFlowSeries,
+                        xValueMapper: (p, _) => DateTime.parse(p.label),
+                        yValueMapper: (p, _) => p.income,
+                        name: 'المحصل',
+                        color: const Color(0xff22c55e),
+                        opacity: 0.28,
+                        borderColor: const Color(0xff22c55e),
+                        borderWidth: 2,
+                        splineType: SplineType.monotonic,
+                        enableTooltip: true,
                       ),
                     ],
                   ),

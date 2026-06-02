@@ -151,10 +151,12 @@ class _ProjectsListPageState extends State<ProjectsListPage> {
       context.read<ProjectsBloc>().add(
         LoadProjects(
           status: state.statusFilter,
+          type: state.typeFilter,
           managerId: state.managerFilter,
           teamMemberId: state.teamMemberFilter,
           searchQuery: state.searchQuery,
           archived: state.archived,
+          assignedToMe: state.assignedToMe,
           page: 1,
           limit: state.pageSize,
         ),

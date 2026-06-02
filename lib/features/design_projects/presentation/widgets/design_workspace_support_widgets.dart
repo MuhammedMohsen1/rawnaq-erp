@@ -1,18 +1,24 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/routing/app_router.dart';
+import '../../../projects/data/datasources/projects_api_datasource.dart';
 import '../../../projects/domain/entities/project_entity.dart';
+import '../../../projects/domain/enums/project_status.dart';
 import '../cubit/design_workspace_cubit.dart';
 
 class DesignWorkspaceProjectHeader extends StatelessWidget {
   final ProjectEntity project;
   final bool showFinancials;
+  final bool canComplete;
 
   const DesignWorkspaceProjectHeader({
     super.key,
     required this.project,
     required this.showFinancials,
+    required this.canComplete,
   });
 
   @override
@@ -62,6 +68,14 @@ class DesignWorkspaceProjectHeader extends StatelessWidget {
               ],
             ),
           ),
+          if (canComplete && project.status != ProjectStatus.completed) ...[
+            FilledButton.tonalIcon(
+              onPressed: () => _markComplete(context),
+              icon: const Icon(Icons.check_circle_outline),
+              label: const Text('إكمال المشروع'),
+            ),
+            const SizedBox(width: 8),
+          ],
           if (showFinancials)
             FilledButton.tonalIcon(
               onPressed: () => showDialog<void>(
@@ -77,6 +91,45 @@ class DesignWorkspaceProjectHeader extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  Future<void> _markComplete(BuildContext context) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('إكمال مشروع التصميم'),
+        content: const Text('هل تريد تعليم مشروع التصميم كمكتمل؟'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('إلغاء'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text('تأكيد الإكمال'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !context.mounted) return;
+    try {
+      await ProjectsApiDataSource().updateProjectStatus(
+        project.id,
+        ProjectStatus.completed.toApiString(),
+        'Marked complete from design workspace',
+      );
+      if (!context.mounted) return;
+      final refresh = DateTime.now().millisecondsSinceEpoch;
+      context.go('${AppRoutes.projects}?refresh=$refresh');
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('تم تعليم مشروع التصميم كمكتمل')),
+      );
+    } catch (error) {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('فشل إكمال المشروع: $error')));
+    }
   }
 }
 

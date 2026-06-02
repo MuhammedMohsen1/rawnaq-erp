@@ -83,7 +83,20 @@ class _LoadedFinancialView extends StatelessWidget {
             projectCount: state.filteredProjects.length,
             onSearchChanged: context.read<FinancialCubit>().updateSearchQuery,
             onRefresh: context.read<FinancialCubit>().loadSummary,
+            selectedPeriod: state.period,
+            customRange: state.customRange,
+            onPeriodChanged: context.read<FinancialCubit>().selectPeriod,
+            onCustomRangeChanged: context
+                .read<FinancialCubit>()
+                .selectCustomRange,
           ),
+          if (state.period != null || state.customRange != null) ...[
+            const SizedBox(height: 10),
+            const Text(
+              'تم تطبيق الفترة على المشاريع والقيم المالية المعروضة.',
+              style: AppTextStyles.caption,
+            ),
+          ],
           const SizedBox(height: 14),
           FinancialProjectTable(projects: state.filteredProjects),
         ],

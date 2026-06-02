@@ -13,19 +13,23 @@ abstract class ProjectsEvent extends Equatable {
 /// Load projects with optional filters
 class LoadProjects extends ProjectsEvent {
   final ProjectStatus? status;
+  final String? type;
   final String? managerId;
   final String? teamMemberId;
   final String? searchQuery;
   final bool archived;
+  final bool assignedToMe;
   final int? page;
   final int? limit;
 
   const LoadProjects({
     this.status,
+    this.type,
     this.managerId,
     this.teamMemberId,
     this.searchQuery,
     this.archived = false,
+    this.assignedToMe = false,
     this.page,
     this.limit,
   });
@@ -33,10 +37,12 @@ class LoadProjects extends ProjectsEvent {
   @override
   List<Object?> get props => [
     status,
+    type,
     managerId,
     teamMemberId,
     searchQuery,
     archived,
+    assignedToMe,
     page,
     limit,
   ];

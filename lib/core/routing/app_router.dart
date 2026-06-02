@@ -9,6 +9,7 @@ import '../../features/projects/presentation/bloc/projects_bloc.dart';
 import '../../features/projects/presentation/bloc/projects_event.dart';
 import '../../features/projects/data/repositories/projects_repository_impl.dart';
 import '../../features/projects/domain/enums/project_status.dart';
+import '../../features/projects/domain/enums/project_type.dart';
 import '../../features/gantt/presentation/pages/gantt_chart_page.dart';
 import '../../features/tasks/presentation/pages/my_tasks_page.dart';
 import '../../features/settings/presentation/pages/settings_page.dart';
@@ -17,6 +18,7 @@ import '../../features/projects/presentation/pages/project_details_page.dart';
 import '../../features/pricing/presentation/pages/under_pricing_page.dart';
 import '../../features/execution/presentation/pages/execution_page.dart';
 import '../../features/financial/presentation/pages/financial_page.dart';
+import '../../features/financial/presentation/pages/project_financial_overview_page.dart';
 import '../../features/admin/presentation/pages/admin_users_page.dart';
 import '../../features/auth/presentation/bloc/auth_bloc.dart';
 import '../widgets/error_page.dart';
@@ -49,6 +51,8 @@ class AppRoutes {
 
   // Financial
   static const String financial = '/financial';
+  static String projectFinancialOverview(String projectId) =>
+      '/financial/projects/$projectId';
 
   // Settings
   static const String settings = '/settings';
@@ -166,6 +170,21 @@ class AppRouter {
                       );
                     }
                     if (authState is AuthAuthenticated &&
+                        authState.user.isDesigner) {
+                      return BlocProvider(
+                        create: (context) => ProjectsBloc(
+                          repository: ProjectsRepositoryImpl(),
+                        )..add(LoadProjects(type: ProjectType.design.apiValue)),
+                        child: const ProjectsListPage(
+                          title: 'مشاريع التصميم',
+                          emptyMessage: 'لا توجد مشاريع تصميم',
+                          showCreateButton: false,
+                          showArchiveActions: false,
+                          showStatusActions: false,
+                        ),
+                      );
+                    }
+                    if (authState is AuthAuthenticated &&
                         !authState.user.isAdmin) {
                       return BlocProvider(
                         create: (context) =>
@@ -269,19 +288,41 @@ class AppRouter {
           // Projects List
           GoRoute(
             path: AppRoutes.projects,
-            pageBuilder: (context, state) => FadePageTransition(
-              key: state.pageKey,
-              child: BlocProvider(
-                create: (context) =>
-                    ProjectsBloc(repository: ProjectsRepositoryImpl())
-                      ..add(const LoadProjects()),
-                child: ProjectsListPage(
-                  key: ValueKey(
-                    'projects-${state.uri.queryParameters['refresh'] ?? 'initial'}',
-                  ),
+            pageBuilder: (context, state) {
+              return FadePageTransition(
+                key: state.pageKey,
+                child: BlocBuilder<AuthBloc, AuthState>(
+                  builder: (context, authState) {
+                    final isDesigner =
+                        authState is AuthAuthenticated &&
+                        authState.user.isDesigner;
+                    return BlocProvider(
+                      create: (context) =>
+                          ProjectsBloc(repository: ProjectsRepositoryImpl())
+                            ..add(
+                              LoadProjects(
+                                type: isDesigner
+                                    ? ProjectType.design.apiValue
+                                    : null,
+                              ),
+                            ),
+                      child: ProjectsListPage(
+                        key: ValueKey(
+                          'projects-${state.uri.queryParameters['refresh'] ?? 'initial'}-${isDesigner ? 'designer' : 'all'}',
+                        ),
+                        title: isDesigner ? 'مشاريع التصميم' : 'المشاريع',
+                        emptyMessage: isDesigner
+                            ? 'لا توجد مشاريع تصميم'
+                            : 'لا توجد مشاريع',
+                        showCreateButton: !isDesigner,
+                        showArchiveActions: !isDesigner,
+                        showStatusActions: !isDesigner,
+                      ),
+                    );
+                  },
                 ),
-              ),
-            ),
+              );
+            },
           ),
 
           // Gantt Chart
@@ -308,6 +349,15 @@ class AppRouter {
             pageBuilder: (context, state) => FadePageTransition(
               key: state.pageKey,
               child: const FinancialPage(),
+            ),
+          ),
+          GoRoute(
+            path: '/financial/projects/:projectId',
+            pageBuilder: (context, state) => FadePageTransition(
+              key: state.pageKey,
+              child: ProjectFinancialOverviewPage(
+                projectId: state.pathParameters['projectId']!,
+              ),
             ),
           ),
 

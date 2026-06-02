@@ -40,10 +40,12 @@ class ProjectsBloc extends Bloc<ProjectsEvent, ProjectsState> {
     final requestedLimit = event.limit ?? 10;
     final result = await _repository.getProjects(
       status: event.status,
+      type: event.type,
       managerId: event.managerId,
       teamMemberId: event.teamMemberId,
       searchQuery: event.searchQuery,
       archived: event.archived,
+      assignedToMe: event.assignedToMe,
       page: requestedPage,
       limit: requestedLimit,
     );
@@ -74,10 +76,12 @@ class ProjectsBloc extends Bloc<ProjectsEvent, ProjectsState> {
             teamMembers: teamMembers.cast(),
             statistics: statistics,
             statusFilter: event.status,
+            typeFilter: event.type,
             managerFilter: event.managerId,
             teamMemberFilter: event.teamMemberId,
             searchQuery: event.searchQuery,
             archived: event.archived,
+            assignedToMe: event.assignedToMe,
             currentPage: paginatedResult.page,
             totalPages: paginatedResult.totalPages,
             totalItems: paginatedResult.total,
@@ -103,10 +107,12 @@ class ProjectsBloc extends Bloc<ProjectsEvent, ProjectsState> {
     final nextPage = currentState.currentPage + 1;
     final result = await _repository.getProjects(
       status: currentState.statusFilter,
+      type: currentState.typeFilter,
       managerId: currentState.managerFilter,
       teamMemberId: currentState.teamMemberFilter,
       searchQuery: currentState.searchQuery,
       archived: currentState.archived,
+      assignedToMe: currentState.assignedToMe,
       page: nextPage,
       limit: currentState.pageSize,
     );
@@ -147,10 +153,12 @@ class ProjectsBloc extends Bloc<ProjectsEvent, ProjectsState> {
       add(
         LoadProjects(
           status: currentState.statusFilter,
+          type: currentState.typeFilter,
           managerId: currentState.managerFilter,
           teamMemberId: currentState.teamMemberFilter,
           searchQuery: currentState.searchQuery,
           archived: currentState.archived,
+          assignedToMe: currentState.assignedToMe,
           page: currentState.currentPage,
           limit: currentState.pageSize,
         ),
@@ -171,10 +179,12 @@ class ProjectsBloc extends Bloc<ProjectsEvent, ProjectsState> {
       add(
         LoadProjects(
           status: currentState.statusFilter,
+          type: currentState.typeFilter,
           managerId: currentState.managerFilter,
           teamMemberId: currentState.teamMemberFilter,
           searchQuery: query.isEmpty ? null : query,
           archived: currentState.archived,
+          assignedToMe: currentState.assignedToMe,
           page: 1,
           limit: currentState.pageSize,
         ),
@@ -192,10 +202,12 @@ class ProjectsBloc extends Bloc<ProjectsEvent, ProjectsState> {
       add(
         LoadProjects(
           status: event.status,
+          type: currentState.typeFilter,
           managerId: currentState.managerFilter,
           teamMemberId: currentState.teamMemberFilter,
           searchQuery: currentState.searchQuery,
           archived: currentState.archived,
+          assignedToMe: currentState.assignedToMe,
           page: 1,
           limit: currentState.pageSize,
         ),
@@ -213,10 +225,12 @@ class ProjectsBloc extends Bloc<ProjectsEvent, ProjectsState> {
       add(
         LoadProjects(
           status: currentState.statusFilter,
+          type: currentState.typeFilter,
           managerId: event.managerId,
           teamMemberId: currentState.teamMemberFilter,
           searchQuery: currentState.searchQuery,
           archived: currentState.archived,
+          assignedToMe: currentState.assignedToMe,
           page: 1,
           limit: currentState.pageSize,
         ),
@@ -234,10 +248,12 @@ class ProjectsBloc extends Bloc<ProjectsEvent, ProjectsState> {
       add(
         LoadProjects(
           status: currentState.statusFilter,
+          type: currentState.typeFilter,
           managerId: currentState.managerFilter,
           teamMemberId: event.teamMemberId,
           searchQuery: currentState.searchQuery,
           archived: currentState.archived,
+          assignedToMe: currentState.assignedToMe,
           page: 1,
           limit: currentState.pageSize,
         ),
@@ -479,10 +495,12 @@ class ProjectsBloc extends Bloc<ProjectsEvent, ProjectsState> {
           add(
             LoadProjects(
               status: currentState.statusFilter,
+              type: currentState.typeFilter,
               managerId: currentState.managerFilter,
               teamMemberId: currentState.teamMemberFilter,
               searchQuery: currentState.searchQuery,
               archived: currentState.archived,
+              assignedToMe: currentState.assignedToMe,
               page: currentState.currentPage,
               limit: currentState.pageSize,
             ),
@@ -515,10 +533,12 @@ class ProjectsBloc extends Bloc<ProjectsEvent, ProjectsState> {
   LoadProjects _reloadFromState(ProjectsLoaded state) {
     return LoadProjects(
       status: state.statusFilter,
+      type: state.typeFilter,
       managerId: state.managerFilter,
       teamMemberId: state.teamMemberFilter,
       searchQuery: state.searchQuery,
       archived: state.archived,
+      assignedToMe: state.assignedToMe,
       page: 1,
       limit: state.pageSize,
     );

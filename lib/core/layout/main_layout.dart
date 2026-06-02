@@ -5,6 +5,7 @@ import '../constants/app_colors.dart';
 import '../constants/app_text_styles.dart';
 import '../routing/app_router.dart';
 import '../widgets/bottom_nav_bar.dart';
+import '../widgets/logout_confirmation_dialog.dart';
 import '../widgets/top_bar.dart';
 import 'top_bar_title_controller.dart';
 import '../../features/auth/presentation/bloc/auth_bloc.dart';
@@ -56,6 +57,7 @@ class MainLayout extends StatelessWidget {
                                       routeState,
                                       projectDetailsTitle,
                                       pricingTitle,
+                                      context,
                                     ),
                                     showBackButton: _shouldShowBackButton(
                                       currentPath,
@@ -105,9 +107,22 @@ class MainLayout extends StatelessWidget {
     GoRouterState routeState,
     String? projectDetailsTitle,
     String? pricingTitle,
+    BuildContext context,
   ) {
-    if (currentPath == AppRoutes.dashboard) return 'نظرة عامة';
-    if (currentPath == AppRoutes.projects) return 'المشاريع';
+    if (currentPath == AppRoutes.dashboard) {
+      final authState = context.read<AuthBloc>().state;
+      if (authState is AuthAuthenticated && authState.user.isDesigner) {
+        return 'مشاريع التصميم';
+      }
+      return 'نظرة عامة';
+    }
+    if (currentPath == AppRoutes.projects) {
+      final authState = context.read<AuthBloc>().state;
+      if (authState is AuthAuthenticated && authState.user.isDesigner) {
+        return 'مشاريع التصميم';
+      }
+      return 'المشاريع';
+    }
     if (currentPath == AppRoutes.archivedProjects) return 'الأرشيف';
     if (currentPath == AppRoutes.completedProjects) return 'المشاريع المكتملة';
     if (currentPath == AppRoutes.gantt) return 'مخطط جانت';
@@ -117,6 +132,9 @@ class MainLayout extends StatelessWidget {
     if (currentPath == AppRoutes.reminders) return 'التذكيرات';
     if (currentPath == AppRoutes.adminUsers) return 'إدارة المستخدمين';
     if (currentPath == AppRoutes.financial) return 'المالية';
+    if (currentPath.startsWith('/financial/projects/')) {
+      return 'نظرة مالية للمشروع';
+    }
     if (currentPath == '/team') return 'الفريق';
 
     // Check if it's a project details page
@@ -246,6 +264,8 @@ class _SidebarState extends State<_Sidebar> {
               final isSiteEngineer =
                   authState is AuthAuthenticated &&
                   authState.user.isSiteEngineer;
+              final isDesigner =
+                  authState is AuthAuthenticated && authState.user.isDesigner;
               final isAdmin =
                   authState is AuthAuthenticated && authState.user.isAdmin;
 
@@ -281,6 +301,27 @@ class _SidebarState extends State<_Sidebar> {
                       path: AppRoutes.completedProjects,
                       isActive:
                           widget.currentPath == AppRoutes.completedProjects,
+                    ),
+                  ],
+                );
+              } else if (isDesigner) {
+                return Column(
+                  children: [
+                    _buildCollapsedNavItem(
+                      context: context,
+                      icon: Icons.design_services_outlined,
+                      activeIcon: Icons.design_services,
+                      path: AppRoutes.projects,
+                      isActive:
+                          widget.currentPath == AppRoutes.projects ||
+                          widget.currentPath == AppRoutes.dashboard,
+                    ),
+                    _buildCollapsedNavItem(
+                      context: context,
+                      icon: Icons.check_circle_outline,
+                      activeIcon: Icons.check_circle,
+                      path: AppRoutes.tasks,
+                      isActive: widget.currentPath == AppRoutes.tasks,
                     ),
                   ],
                 );
@@ -340,7 +381,9 @@ class _SidebarState extends State<_Sidebar> {
                       icon: Icons.account_balance_outlined,
                       activeIcon: Icons.account_balance,
                       path: AppRoutes.financial,
-                      isActive: widget.currentPath == AppRoutes.financial,
+                      isActive:
+                          widget.currentPath == AppRoutes.financial ||
+                          widget.currentPath.startsWith('/financial/projects/'),
                     ),
                     _buildCollapsedNavItem(
                       context: context,
@@ -365,19 +408,38 @@ class _SidebarState extends State<_Sidebar> {
         padding: const EdgeInsets.all(12),
         child: Column(
           children: [
-            _buildCollapsedNavItem(
-              context: context,
-              icon: Icons.settings_outlined,
-              activeIcon: Icons.settings,
-              path: AppRoutes.settings,
-              isActive: widget.currentPath == AppRoutes.settings,
-            ),
-            _buildCollapsedNavItem(
-              context: context,
-              icon: Icons.help_outline,
-              activeIcon: Icons.help,
-              path: '/help',
-              isActive: false,
+            BlocBuilder<AuthBloc, AuthState>(
+              builder: (context, authState) {
+                final isDesigner =
+                    authState is AuthAuthenticated && authState.user.isDesigner;
+                if (isDesigner) {
+                  return _buildCollapsedActionItem(
+                    context: context,
+                    icon: Icons.logout,
+                    label: 'تسجيل الخروج',
+                    onTap: () => showLogoutConfirmationDialog(context),
+                  );
+                }
+
+                return Column(
+                  children: [
+                    _buildCollapsedNavItem(
+                      context: context,
+                      icon: Icons.settings_outlined,
+                      activeIcon: Icons.settings,
+                      path: AppRoutes.settings,
+                      isActive: widget.currentPath == AppRoutes.settings,
+                    ),
+                    _buildCollapsedNavItem(
+                      context: context,
+                      icon: Icons.help_outline,
+                      activeIcon: Icons.help,
+                      path: '/help',
+                      isActive: false,
+                    ),
+                  ],
+                );
+              },
             ),
             // Toggle button
             const SizedBox(height: 12),
@@ -437,6 +499,8 @@ class _SidebarState extends State<_Sidebar> {
               final isSiteEngineer =
                   authState is AuthAuthenticated &&
                   authState.user.isSiteEngineer;
+              final isDesigner =
+                  authState is AuthAuthenticated && authState.user.isDesigner;
               final isAdmin =
                   authState is AuthAuthenticated && authState.user.isAdmin;
 
@@ -490,6 +554,29 @@ class _SidebarState extends State<_Sidebar> {
                       //       widget.currentPath == AppRoutes.completedProjects,
                       // ),
                     ],
+                  ],
+                );
+              } else if (isDesigner) {
+                return Column(
+                  children: [
+                    _buildNavItem(
+                      context: context,
+                      icon: Icons.design_services_outlined,
+                      activeIcon: Icons.design_services,
+                      label: 'مشاريع التصميم',
+                      path: AppRoutes.projects,
+                      isActive:
+                          widget.currentPath == AppRoutes.projects ||
+                          widget.currentPath == AppRoutes.dashboard,
+                    ),
+                    _buildNavItem(
+                      context: context,
+                      icon: Icons.check_circle_outline,
+                      activeIcon: Icons.check_circle,
+                      label: 'مهامي',
+                      path: AppRoutes.tasks,
+                      isActive: widget.currentPath == AppRoutes.tasks,
+                    ),
                   ],
                 );
               } else {
@@ -552,7 +639,9 @@ class _SidebarState extends State<_Sidebar> {
                       activeIcon: Icons.account_balance,
                       label: 'المالية',
                       path: AppRoutes.financial,
-                      isActive: widget.currentPath == AppRoutes.financial,
+                      isActive:
+                          widget.currentPath == AppRoutes.financial ||
+                          widget.currentPath.startsWith('/financial/projects/'),
                     ),
                     _buildNavItem(
                       context: context,
@@ -578,21 +667,40 @@ class _SidebarState extends State<_Sidebar> {
         padding: const EdgeInsets.all(12),
         child: Column(
           children: [
-            _buildNavItem(
-              context: context,
-              icon: Icons.settings_outlined,
-              activeIcon: Icons.settings,
-              label: 'الإعدادات',
-              path: AppRoutes.settings,
-              isActive: widget.currentPath == AppRoutes.settings,
-            ),
-            _buildNavItem(
-              context: context,
-              icon: Icons.help_outline,
-              activeIcon: Icons.help,
-              label: 'المساعدة',
-              path: '/help',
-              isActive: false,
+            BlocBuilder<AuthBloc, AuthState>(
+              builder: (context, authState) {
+                final isDesigner =
+                    authState is AuthAuthenticated && authState.user.isDesigner;
+                if (isDesigner) {
+                  return _buildActionItem(
+                    context: context,
+                    icon: Icons.logout,
+                    label: 'تسجيل الخروج',
+                    onTap: () => showLogoutConfirmationDialog(context),
+                  );
+                }
+
+                return Column(
+                  children: [
+                    _buildNavItem(
+                      context: context,
+                      icon: Icons.settings_outlined,
+                      activeIcon: Icons.settings,
+                      label: 'الإعدادات',
+                      path: AppRoutes.settings,
+                      isActive: widget.currentPath == AppRoutes.settings,
+                    ),
+                    _buildNavItem(
+                      context: context,
+                      icon: Icons.help_outline,
+                      activeIcon: Icons.help,
+                      label: 'المساعدة',
+                      path: '/help',
+                      isActive: false,
+                    ),
+                  ],
+                );
+              },
             ),
             // Toggle button
             const SizedBox(height: 12),
@@ -753,6 +861,33 @@ class _SidebarState extends State<_Sidebar> {
     );
   }
 
+  Widget _buildCollapsedActionItem({
+    required BuildContext context,
+    required IconData icon,
+    required String label,
+    required VoidCallback onTap,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 4),
+      child: Material(
+        color: Colors.transparent,
+        child: Tooltip(
+          message: label,
+          child: InkWell(
+            onTap: onTap,
+            borderRadius: BorderRadius.circular(8),
+            child: Container(
+              width: 44,
+              height: 44,
+              margin: const EdgeInsets.symmetric(horizontal: 4),
+              child: Icon(icon, size: 22, color: Colors.red),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
   String _getNavItemLabel(String path) {
     if (path == AppRoutes.dashboard) return 'لوحة التحكم';
     if (path == AppRoutes.projects) return 'المشاريع';
@@ -843,6 +978,39 @@ class _SidebarState extends State<_Sidebar> {
                   ],
                 ],
               ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildActionItem({
+    required BuildContext context,
+    required IconData icon,
+    required String label,
+    required VoidCallback onTap,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 4),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(8),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+            child: Row(
+              children: [
+                Icon(icon, size: 22, color: Colors.red),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    label,
+                    style: AppTextStyles.navItem.copyWith(color: Colors.red),
+                  ),
+                ),
+              ],
             ),
           ),
         ),

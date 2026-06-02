@@ -30,18 +30,22 @@ class ProjectsRepositoryImpl implements ProjectsRepository {
   @override
   Future<Either<Failure, PaginatedProjectsResult>> getProjects({
     ProjectStatus? status,
+    String? type,
     String? managerId,
     String? teamMemberId,
     String? searchQuery,
     bool archived = false,
+    bool assignedToMe = false,
     int? page,
     int? limit,
   }) async {
     try {
       final response = await _dataSource.getProjects(
         status: status,
+        type: type,
         search: searchQuery,
         archived: archived,
+        assignedToMe: assignedToMe,
         page: page ?? 1,
         limit: limit ?? 10,
       );

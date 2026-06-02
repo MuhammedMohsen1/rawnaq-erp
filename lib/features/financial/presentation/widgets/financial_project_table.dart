@@ -110,45 +110,49 @@ class _MobileProjectTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Expanded(child: _ProjectName(project: project)),
-              _StatusBadge(status: project.status),
-            ],
-          ),
-          const SizedBox(height: 14),
-          Wrap(
-            spacing: 16,
-            runSpacing: 10,
-            children: [
-              _MiniMetric(
-                label: 'العقد',
-                value: formatKwd(project.totalContractValue),
-              ),
-              _MiniMetric(
-                label: 'المحصل',
-                value: formatKwd(project.totalReceived),
-              ),
-              _MiniMetric(
-                label: 'المصروف',
-                value: formatKwd(project.totalExpenses),
-              ),
-              _MiniMetric(
-                label: 'المتبقي',
-                value: formatKwd(project.remainingBudget),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          _BudgetUsageBar(value: project.budgetUsagePercentage),
-          const SizedBox(height: 12),
-          _RowActions(project: project),
-        ],
+    return InkWell(
+      onTap: () =>
+          context.push(AppRoutes.projectFinancialOverview(project.projectId)),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Expanded(child: _ProjectName(project: project)),
+                _StatusBadge(status: project.status),
+              ],
+            ),
+            const SizedBox(height: 14),
+            Wrap(
+              spacing: 16,
+              runSpacing: 10,
+              children: [
+                _MiniMetric(
+                  label: 'العقد',
+                  value: formatKwd(project.totalContractValue),
+                ),
+                _MiniMetric(
+                  label: 'المحصل',
+                  value: formatKwd(project.totalReceived),
+                ),
+                _MiniMetric(
+                  label: 'المصروف',
+                  value: formatKwd(project.totalExpenses),
+                ),
+                _MiniMetric(
+                  label: 'المتبقي',
+                  value: formatKwd(project.remainingBudget),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            _BudgetUsageBar(value: project.budgetUsagePercentage),
+            const SizedBox(height: 12),
+            _RowActions(project: project),
+          ],
+        ),
       ),
     );
   }
@@ -161,37 +165,47 @@ class _ProjectName extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Row(
+    return InkWell(
+      onTap: () =>
+          context.push(AppRoutes.projectFinancialOverview(project.projectId)),
+      borderRadius: BorderRadius.circular(4),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 4),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisSize: MainAxisSize.min,
           children: [
-            Flexible(
-              child: Text(
-                project.projectName,
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Flexible(
+                  child: Text(
+                    project.projectName,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: AppTextStyles.tableCellBold.copyWith(
+                      color: AppColors.primary,
+                    ),
+                  ),
+                ),
+                if (project.isDesignProject) ...[
+                  const SizedBox(width: 6),
+                  const _ProjectTypeBadge(label: 'تصميم'),
+                ],
+              ],
+            ),
+            if ((project.clientName ?? '').isNotEmpty) ...[
+              const SizedBox(height: 3),
+              Text(
+                project.clientName!,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: AppTextStyles.tableCellBold,
+                style: AppTextStyles.caption,
               ),
-            ),
-            if (project.isDesignProject) ...[
-              const SizedBox(width: 6),
-              const _ProjectTypeBadge(label: 'تصميم'),
             ],
           ],
         ),
-        if ((project.clientName ?? '').isNotEmpty) ...[
-          const SizedBox(height: 3),
-          Text(
-            project.clientName!,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: AppTextStyles.caption,
-          ),
-        ],
-      ],
+      ),
     );
   }
 }
@@ -308,6 +322,16 @@ class _RowActions extends StatelessWidget {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
+        Tooltip(
+          message: 'كشف الحساب المالي',
+          child: IconButton(
+            icon: const Icon(Icons.receipt_long_outlined, size: 20),
+            color: AppColors.success,
+            onPressed: () => context.push(
+              AppRoutes.projectFinancialOverview(project.projectId),
+            ),
+          ),
+        ),
         if (!project.isDesignProject)
           Tooltip(
             message: 'فتح التنفيذ',

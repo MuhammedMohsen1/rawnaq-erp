@@ -28,6 +28,7 @@ class DesignWorkspaceHeader extends StatelessWidget {
       child: DesignWorkspaceProjectHeader(
         project: project,
         showFinancials: showFinancials,
+        canComplete: false,
       ),
     );
   }
@@ -181,7 +182,12 @@ class DesignTimelineSurface extends StatelessWidget {
           BlocBuilder<AuthBloc, AuthState>(
             builder: (context, state) => DesignWorkspaceProjectHeader(
               project: project,
-              showFinancials: state is AuthAuthenticated && state.user.isAdmin,
+              showFinancials:
+                  state is AuthAuthenticated &&
+                  (state.user.isAdmin || state.user.isManager),
+              canComplete:
+                  state is AuthAuthenticated &&
+                  (state.user.isAdmin || state.user.isManager),
             ),
           ),
           const SizedBox(height: 6),

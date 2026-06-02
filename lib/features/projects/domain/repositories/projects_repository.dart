@@ -10,10 +10,12 @@ abstract class ProjectsRepository {
   /// Get all projects with optional filters
   Future<Either<Failure, PaginatedProjectsResult>> getProjects({
     ProjectStatus? status,
+    String? type,
     String? managerId,
     String? teamMemberId,
     String? searchQuery,
     bool archived = false,
+    bool assignedToMe = false,
     int? page,
     int? limit,
   });

@@ -18,6 +18,7 @@ class ProjectsApiDataSource {
     String? clientName,
     String? search,
     bool archived = false,
+    bool assignedToMe = false,
     int? page,
     int? limit,
   }) async {
@@ -32,6 +33,7 @@ class ProjectsApiDataSource {
     if (clientName != null) queryParams['clientName'] = clientName;
     if (search != null && search.isNotEmpty) queryParams['search'] = search;
     if (archived) queryParams['archived'] = 'true';
+    if (assignedToMe) queryParams['assignedToMe'] = 'true';
     if (page != null) queryParams['page'] = page;
     if (limit != null) queryParams['limit'] = limit;
 
