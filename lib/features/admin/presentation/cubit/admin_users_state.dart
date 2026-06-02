@@ -2,10 +2,7 @@ import 'package:equatable/equatable.dart';
 
 import '../../../auth/domain/entities/user.dart';
 
-enum AdminUsersStatus { initial, loading, loaded, saving, error }
-
-class AdminUsersState extends Equatable {
-  final AdminUsersStatus status;
+sealed class AdminUsersState extends Equatable {
   final List<User> users;
   final String searchQuery;
   final String roleFilter;
@@ -14,7 +11,6 @@ class AdminUsersState extends Equatable {
   final String? successMessage;
 
   const AdminUsersState({
-    this.status = AdminUsersStatus.initial,
     this.users = const [],
     this.searchQuery = '',
     this.roleFilter = 'all',
@@ -42,33 +38,11 @@ class AdminUsersState extends Equatable {
     }).toList();
   }
 
-  bool get isLoading => status == AdminUsersStatus.loading;
-  bool get isSaving => status == AdminUsersStatus.saving;
-
-  AdminUsersState copyWith({
-    AdminUsersStatus? status,
-    List<User>? users,
-    String? searchQuery,
-    String? roleFilter,
-    String? statusFilter,
-    String? errorMessage,
-    String? successMessage,
-    bool clearMessages = false,
-  }) {
-    return AdminUsersState(
-      status: status ?? this.status,
-      users: users ?? this.users,
-      searchQuery: searchQuery ?? this.searchQuery,
-      roleFilter: roleFilter ?? this.roleFilter,
-      statusFilter: statusFilter ?? this.statusFilter,
-      errorMessage: clearMessages ? null : errorMessage,
-      successMessage: clearMessages ? null : successMessage,
-    );
-  }
+  bool get isLoading => false;
+  bool get isSaving => false;
 
   @override
   List<Object?> get props => [
-    status,
     users,
     searchQuery,
     roleFilter,
@@ -76,4 +50,53 @@ class AdminUsersState extends Equatable {
     errorMessage,
     successMessage,
   ];
+}
+
+final class AdminUsersInitial extends AdminUsersState {
+  const AdminUsersInitial();
+}
+
+final class AdminUsersLoading extends AdminUsersState {
+  const AdminUsersLoading({
+    super.users,
+    super.searchQuery,
+    super.roleFilter,
+    super.statusFilter,
+  });
+
+  @override
+  bool get isLoading => true;
+}
+
+final class AdminUsersLoaded extends AdminUsersState {
+  const AdminUsersLoaded({
+    super.users,
+    super.searchQuery,
+    super.roleFilter,
+    super.statusFilter,
+    super.errorMessage,
+    super.successMessage,
+  });
+}
+
+final class AdminUsersSaving extends AdminUsersState {
+  const AdminUsersSaving({
+    super.users,
+    super.searchQuery,
+    super.roleFilter,
+    super.statusFilter,
+  });
+
+  @override
+  bool get isSaving => true;
+}
+
+final class AdminUsersFailure extends AdminUsersState {
+  const AdminUsersFailure({
+    super.users,
+    super.searchQuery,
+    super.roleFilter,
+    super.statusFilter,
+    super.errorMessage,
+  });
 }

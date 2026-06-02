@@ -7,8 +7,11 @@ import '../../../../features/settings/data/datasources/settings_api_datasource.d
 import '../../../../features/contracts/data/datasources/contracts_api_datasource.dart';
 import '../../../../features/projects/data/datasources/projects_api_datasource.dart';
 import '../../../../core/error/exceptions.dart';
-import '../../../../core/constants/app_colors.dart';
 import '../../../../core/widgets/dialog_keyboard_actions.dart';
+import 'contract_export_step1_content.dart';
+import 'contract_export_step2_content.dart';
+import 'contract_export_step3_content.dart';
+import 'contract_export_step4_content.dart';
 
 class ContractExportDialog extends StatefulWidget {
   final String projectId;
@@ -454,7 +457,11 @@ class _ContractExportDialogState extends State<ContractExportDialog> {
                     // Step 1: Civil ID
                     Step(
                       title: const Text('الرقم المدني للعميل'),
-                      content: _buildStep1Content(),
+                      content: ContractExportStep1Content(
+                        isLoadingProject: _isLoadingProject,
+                        civilIdController: _civilIdController,
+                        projectAddressController: _projectAddressController,
+                      ),
                       isActive: _currentStep >= 0,
                       state: _currentStep > 0
                           ? StepState.complete
@@ -463,7 +470,24 @@ class _ContractExportDialogState extends State<ContractExportDialog> {
                     // Step 2: Terms Approval
                     Step(
                       title: const Text('الموافقة على البنود'),
-                      content: _buildStep2Content(),
+                      content: ContractExportStep2Content(
+                        isLoadingTerms: _isLoadingTerms,
+                        contractTerms: _contractTerms,
+                        termsApproved: _termsApproved,
+                        onApproveAll: () {
+                          setState(() {
+                            _termsApproved = List.filled(
+                              _contractTerms.length,
+                              true,
+                            );
+                          });
+                        },
+                        onToggleApproved: (index) {
+                          setState(() {
+                            _termsApproved[index] = !_termsApproved[index];
+                          });
+                        },
+                      ),
                       isActive: _currentStep >= 1,
                       state: _currentStep > 1
                           ? StepState.complete
@@ -472,7 +496,20 @@ class _ContractExportDialogState extends State<ContractExportDialog> {
                     // Step 3: Payment Schedule
                     Step(
                       title: const Text('جدول الدفعات'),
-                      content: _buildStep3Content(),
+                      content: ContractExportStep3Content(
+                        totalAmount: widget.totalAmount,
+                        paymentPhases: _paymentPhases,
+                        paymentControllers: _paymentControllers,
+                        onAddPaymentPhase: _addPaymentPhase,
+                        onRemovePaymentPhase: _removePaymentPhase,
+                        onPhaseNameChanged: (index, value) {
+                          setState(() {
+                            _paymentPhases[index]['phase'] = value;
+                          });
+                        },
+                        onPercentageChanged: _onPercentageChanged,
+                        onAmountChanged: _onAmountChanged,
+                      ),
                       isActive: _currentStep >= 2,
                       state: _currentStep > 2
                           ? StepState.complete
@@ -481,7 +518,14 @@ class _ContractExportDialogState extends State<ContractExportDialog> {
                     // Step 4: Export
                     Step(
                       title: const Text('تصدير PDF'),
-                      content: _buildStep4Content(),
+                      content: ContractExportStep4Content(
+                        isExporting: _isExporting,
+                        civilIdController: _civilIdController,
+                        projectAddressController: _projectAddressController,
+                        contractTermsCount: _contractTerms.length,
+                        paymentPhasesCount: _paymentPhases.length,
+                        onExportPdf: _exportPdf,
+                      ),
                       isActive: _currentStep >= 3,
                       state: StepState.complete,
                     ),
@@ -551,684 +595,4 @@ class _ContractExportDialogState extends State<ContractExportDialog> {
     );
   }
 
-  Widget _buildStep1Content() {
-    if (_isLoadingProject) {
-      return const Center(child: CircularProgressIndicator());
-    }
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Container(
-          padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            color: Colors.blue[50],
-            borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: Colors.blue[200]!),
-          ),
-          child: Row(
-            children: [
-              Icon(Icons.info_outline, color: Colors.blue[700], size: 20),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Text(
-                  'أدخل الرقم المدني للعميل وعنوان المشروع',
-                  style: TextStyle(fontSize: 13, color: Colors.blue[900]),
-                ),
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(height: 20),
-        TextField(
-          controller: _civilIdController,
-          decoration: InputDecoration(
-            labelText: 'الرقم المدني للعميل (12 رقم)',
-            hintText: '298040400214',
-            prefixIcon: const Icon(Icons.badge, color: AppColors.textSecondary),
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(10),
-              borderSide: const BorderSide(color: AppColors.inputBorder),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(10),
-              borderSide: BorderSide(color: AppColors.primary, width: 2),
-            ),
-            filled: true,
-            fillColor: AppColors.inputBackground,
-            contentPadding: const EdgeInsets.symmetric(
-              horizontal: 16,
-              vertical: 16,
-            ),
-          ),
-          keyboardType: TextInputType.number,
-          maxLength: 12,
-          textDirection: TextDirection.ltr,
-          textAlign: TextAlign.left,
-          style: const TextStyle(
-            fontSize: 15,
-            fontWeight: FontWeight.w500,
-            color: AppColors.textPrimary,
-          ),
-        ),
-        const SizedBox(height: 20),
-        TextField(
-          controller: _projectAddressController,
-          decoration: InputDecoration(
-            labelText: 'عنوان المشروع',
-            hintText: 'مثال: قطعة 4 اليرموك - شارع 2 - جادة 2 - منزل 14',
-            prefixIcon: const Icon(
-              Icons.location_on,
-              color: AppColors.textSecondary,
-            ),
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(10),
-              borderSide: const BorderSide(color: AppColors.inputBorder),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(10),
-              borderSide: const BorderSide(
-                color: AppColors.inputFocusBorder,
-                width: 2,
-              ),
-            ),
-            filled: true,
-            fillColor: AppColors.inputBackground,
-            contentPadding: const EdgeInsets.all(16),
-          ),
-          maxLines: 3,
-          minLines: 3,
-          textDirection: TextDirection.rtl,
-          textAlign: TextAlign.right,
-          style: const TextStyle(fontSize: 14),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildStep2Content() {
-    if (_isLoadingTerms) {
-      return const Center(child: CircularProgressIndicator());
-    }
-
-    if (_contractTerms.isEmpty) {
-      return const Center(child: Text('لا توجد بنود عقد متاحة'));
-    }
-
-    return SizedBox(
-      height: 400,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              const Text(
-                'يمكنك تعديل بنود العقد ثم الموافقة عليها:',
-                style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
-              ),
-              TextButton.icon(
-                onPressed: () {
-                  setState(() {
-                    _termsApproved = List.filled(_contractTerms.length, true);
-                  });
-                },
-                icon: const Icon(Icons.check_circle, size: 18),
-                label: const Text('الموافقة على الكل'),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          Expanded(
-            child: ListView.builder(
-              itemCount: _contractTerms.length,
-              itemBuilder: (context, index) {
-                final term = _contractTerms[index];
-                return Container(
-                  margin: const EdgeInsets.only(bottom: 16),
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: _termsApproved[index]
-                        ? Colors.green[900]?.withOpacity(0.2)
-                        : AppColors.surfaceColor,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                      color: _termsApproved[index]
-                          ? Colors.green[300]!
-                          : AppColors.border,
-                      width: _termsApproved[index] ? 2 : 1,
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.2),
-                        blurRadius: 4,
-                        offset: const Offset(0, 2),
-                      ),
-                    ],
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Checkbox(
-                            value: _termsApproved[index],
-                            onChanged: (value) {
-                              setState(() {
-                                _termsApproved[index] = value ?? false;
-                              });
-                            },
-                            activeColor: Colors.green,
-                          ),
-                          Expanded(
-                            child: Text(
-                              'بند ${index + 1}',
-                              style: TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.grey[600],
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 12),
-                      TextField(
-                        controller: term['title'],
-                        decoration: InputDecoration(
-                          labelText: 'العنوان',
-                          hintText: 'مثال: أولا: التمهيد',
-                          prefixIcon: const Icon(
-                            Icons.title,
-                            size: 20,
-                            color: AppColors.textSecondary,
-                          ),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(10),
-                            borderSide: const BorderSide(
-                              color: AppColors.inputBorder,
-                            ),
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(10),
-                            borderSide: BorderSide(
-                              color: AppColors.primary,
-                              width: 2,
-                            ),
-                          ),
-                          filled: true,
-                          fillColor: AppColors.inputBackground,
-                          contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 16,
-                            vertical: 16,
-                          ),
-                        ),
-                        style: const TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.bold,
-                          color: AppColors.textPrimary,
-                        ),
-                        textDirection: TextDirection.rtl,
-                        textAlign: TextAlign.right,
-                      ),
-                      const SizedBox(height: 16),
-                      TextField(
-                        controller: term['description'],
-                        maxLines: 6,
-                        minLines: 4,
-                        decoration: InputDecoration(
-                          labelText: 'الوصف',
-                          hintText: 'أدخل نص البند هنا...',
-                          prefixIcon: const Icon(
-                            Icons.description,
-                            size: 20,
-                            color: AppColors.textSecondary,
-                          ),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(10),
-                            borderSide: const BorderSide(
-                              color: AppColors.inputBorder,
-                            ),
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(10),
-                            borderSide: const BorderSide(
-                              color: AppColors.inputFocusBorder,
-                              width: 2,
-                            ),
-                          ),
-                          filled: true,
-                          fillColor: AppColors.inputBackground,
-                          contentPadding: const EdgeInsets.all(16),
-                        ),
-                        style: const TextStyle(
-                          fontSize: 14,
-                          color: AppColors.textPrimary,
-                        ),
-                        textDirection: TextDirection.rtl,
-                        textAlign: TextAlign.right,
-                      ),
-                    ],
-                  ),
-                );
-              },
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildStep3Content() {
-    final totalPercentage = _paymentPhases.fold<double>(
-      0.0,
-      (sum, phase) => sum + (phase['percentage'] as num).toDouble(),
-    );
-    final totalAllocated = _paymentPhases.fold<double>(
-      0.0,
-      (sum, phase) => sum + ((phase['amount'] as num?)?.toDouble() ?? 0.0),
-    );
-    final remainingAmount = widget.totalAmount - totalAllocated;
-    final remainingPercentage = 100.0 - totalPercentage;
-
-    return SizedBox(
-      height: 400,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                'إجمالي المبلغ: ${widget.totalAmount.toStringAsFixed(3)} د.ك',
-                style: const TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.textPrimary,
-                ),
-              ),
-              TextButton.icon(
-                onPressed: _addPaymentPhase,
-                icon: const Icon(Icons.add, size: 16),
-                label: const Text('إضافة دفعة', style: TextStyle(fontSize: 12)),
-                style: TextButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 8,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Container(
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color:
-                  (totalPercentage - 100.0).abs() < 0.01 &&
-                      remainingAmount.abs() < 0.01
-                  ? Colors.green[900]?.withOpacity(0.2)
-                  : Colors.orange[900]?.withOpacity(0.2),
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(
-                color:
-                    (totalPercentage - 100.0).abs() < 0.01 &&
-                        remainingAmount.abs() < 0.01
-                    ? Colors.green[300]!
-                    : Colors.orange[300]!,
-              ),
-            ),
-            child: Row(
-              children: [
-                Icon(
-                  (totalPercentage - 100.0).abs() < 0.01 &&
-                          remainingAmount.abs() < 0.01
-                      ? Icons.check_circle
-                      : Icons.warning,
-                  color:
-                      (totalPercentage - 100.0).abs() < 0.01 &&
-                          remainingAmount.abs() < 0.01
-                      ? Colors.green[400]
-                      : Colors.orange[400],
-                  size: 18,
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        (totalPercentage - 100.0).abs() < 0.01 &&
-                                remainingAmount.abs() < 0.01
-                            ? 'المجموع: 100% ✓'
-                            : 'المجموع: ${totalPercentage.toStringAsFixed(2)}%',
-                        style: TextStyle(
-                          color:
-                              (totalPercentage - 100.0).abs() < 0.01 &&
-                                  remainingAmount.abs() < 0.01
-                              ? Colors.green[400]
-                              : Colors.orange[400],
-                          fontWeight: FontWeight.bold,
-                          fontSize: 12,
-                        ),
-                      ),
-                      if (remainingAmount.abs() > 0.01 ||
-                          remainingPercentage.abs() > 0.01) ...[
-                        const SizedBox(height: 4),
-                        Text(
-                          'المتبقي: ${remainingAmount.toStringAsFixed(3)} د.ك (${remainingPercentage.toStringAsFixed(2)}%)',
-                          style: TextStyle(
-                            color: Colors.orange[400],
-                            fontSize: 11,
-                          ),
-                        ),
-                      ],
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 12),
-          Expanded(
-            child: ListView.builder(
-              itemCount: _paymentPhases.length,
-              itemBuilder: (context, index) {
-                return Container(
-                  margin: const EdgeInsets.only(bottom: 10),
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: AppColors.surfaceColor,
-                    borderRadius: BorderRadius.circular(10),
-                    border: Border.all(color: AppColors.border, width: 1),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 4,
-                            ),
-                            decoration: BoxDecoration(
-                              color: AppColors.primary.withOpacity(0.1),
-                              borderRadius: BorderRadius.circular(4),
-                            ),
-                            child: Text(
-                              'دفعة ${index + 1}',
-                              style: TextStyle(
-                                fontSize: 11,
-                                fontWeight: FontWeight.bold,
-                                color: AppColors.primary,
-                              ),
-                            ),
-                          ),
-                          const Spacer(),
-                          if (_paymentPhases.length > 1)
-                            IconButton(
-                              icon: const Icon(
-                                Icons.delete,
-                                color: Colors.red,
-                                size: 18,
-                              ),
-                              onPressed: () => _removePaymentPhase(index),
-                              tooltip: 'حذف الدفعة',
-                              padding: EdgeInsets.zero,
-                              constraints: const BoxConstraints(),
-                            ),
-                        ],
-                      ),
-                      const SizedBox(height: 10),
-                      // Phase name
-                      TextField(
-                        controller: _paymentControllers[index]['phase'],
-                        onChanged: (value) {
-                          setState(() {
-                            _paymentPhases[index]['phase'] = value;
-                          });
-                        },
-                        decoration: InputDecoration(
-                          labelText: 'اسم الدفعة',
-                          hintText: 'مثال: دفعة أولى',
-                          prefixIcon: const Icon(
-                            Icons.payment,
-                            size: 18,
-                            color: AppColors.textSecondary,
-                          ),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8),
-                            borderSide: const BorderSide(
-                              color: AppColors.inputBorder,
-                            ),
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8),
-                            borderSide: const BorderSide(
-                              color: AppColors.inputFocusBorder,
-                              width: 2,
-                            ),
-                          ),
-                          filled: true,
-                          fillColor: AppColors.inputBackground,
-                          contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 12,
-                          ),
-                          isDense: true,
-                        ),
-                        style: const TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w500,
-                          color: AppColors.textPrimary,
-                        ),
-                        textDirection: TextDirection.rtl,
-                        textAlign: TextAlign.right,
-                      ),
-                      const SizedBox(height: 8),
-                      // Percentage and Amount in a row
-                      Row(
-                        children: [
-                          Expanded(
-                            child: TextField(
-                              controller:
-                                  _paymentControllers[index]['percentage'],
-                              onChanged: (value) {
-                                final newValue = double.tryParse(value) ?? 0.0;
-                                _onPercentageChanged(index, newValue);
-                              },
-                              decoration: InputDecoration(
-                                labelText: 'النسبة %',
-                                prefixIcon: const Icon(
-                                  Icons.percent,
-                                  size: 18,
-                                  color: AppColors.textSecondary,
-                                ),
-                                border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                                enabledBorder: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(8),
-                                  borderSide: const BorderSide(
-                                    color: AppColors.inputBorder,
-                                  ),
-                                ),
-                                focusedBorder: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(8),
-                                  borderSide: const BorderSide(
-                                    color: AppColors.inputFocusBorder,
-                                    width: 2,
-                                  ),
-                                ),
-                                filled: true,
-                                fillColor: AppColors.inputBackground,
-                                contentPadding: const EdgeInsets.symmetric(
-                                  horizontal: 12,
-                                  vertical: 12,
-                                ),
-                                isDense: true,
-                              ),
-                              keyboardType:
-                                  const TextInputType.numberWithOptions(
-                                    decimal: true,
-                                  ),
-                              textDirection: TextDirection.ltr,
-                              textAlign: TextAlign.center,
-                              style: const TextStyle(
-                                fontSize: 13,
-                                fontWeight: FontWeight.bold,
-                                color: AppColors.textPrimary,
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: TextField(
-                              controller: _paymentControllers[index]['amount'],
-                              onChanged: (value) {
-                                final newValue = double.tryParse(value) ?? 0.0;
-                                _onAmountChanged(index, newValue);
-                              },
-                              decoration: InputDecoration(
-                                labelText: 'المبلغ',
-                                suffixText: 'د.ك',
-                                prefixIcon: const Icon(
-                                  Icons.attach_money,
-                                  size: 18,
-                                  color: AppColors.textSecondary,
-                                ),
-                                border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                                enabledBorder: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(8),
-                                  borderSide: const BorderSide(
-                                    color: AppColors.inputBorder,
-                                  ),
-                                ),
-                                focusedBorder: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(8),
-                                  borderSide: const BorderSide(
-                                    color: AppColors.inputFocusBorder,
-                                    width: 2,
-                                  ),
-                                ),
-                                filled: true,
-                                fillColor: AppColors.inputBackground,
-                                contentPadding: const EdgeInsets.symmetric(
-                                  horizontal: 12,
-                                  vertical: 12,
-                                ),
-                                isDense: true,
-                              ),
-                              keyboardType:
-                                  const TextInputType.numberWithOptions(
-                                    decimal: true,
-                                  ),
-                              textDirection: TextDirection.ltr,
-                              textAlign: TextAlign.center,
-                              style: const TextStyle(
-                                fontSize: 13,
-                                fontWeight: FontWeight.bold,
-                                color: AppColors.textPrimary,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                );
-              },
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildStep4Content() {
-    if (_isExporting) {
-      return const Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            CircularProgressIndicator(),
-            SizedBox(height: 16),
-            Text('جاري تصدير PDF...'),
-          ],
-        ),
-      );
-    }
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text(
-          'مراجعة المعلومات قبل التصدير:',
-          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-        ),
-        const SizedBox(height: 16),
-        _buildReviewItem('الرقم المدني', _civilIdController.text),
-        _buildReviewItem('عنوان المشروع', _projectAddressController.text),
-        _buildReviewItem('عدد البنود', '${_contractTerms.length} بند'),
-        _buildReviewItem('عدد الدفعات', '${_paymentPhases.length} دفعة'),
-        const SizedBox(height: 24),
-        SizedBox(
-          width: double.infinity,
-          child: ElevatedButton.icon(
-            onPressed: _exportPdf,
-            icon: const Icon(Icons.picture_as_pdf),
-            label: const Text('تصدير PDF'),
-            style: ElevatedButton.styleFrom(
-              padding: const EdgeInsets.symmetric(vertical: 16),
-              backgroundColor: const Color(0xFF10B981),
-              foregroundColor: Colors.white,
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildReviewItem(String label, String value) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SizedBox(
-            width: 120,
-            child: Text(
-              label,
-              style: const TextStyle(
-                fontWeight: FontWeight.bold,
-                color: Colors.grey,
-              ),
-            ),
-          ),
-          Expanded(
-            child: Text(
-              value.isEmpty ? '-' : value,
-              textDirection: value.contains(RegExp(r'[ء-ي]'))
-                  ? TextDirection.rtl
-                  : TextDirection.ltr,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 }

@@ -3,8 +3,7 @@ import 'package:flutter/services.dart' show ClipboardData, Clipboard;
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../../../core/constants/app_colors.dart';
-import '../../data/datasources/projects_api_datasource.dart';
-import '../../data/models/project_model.dart';
+
 import '../../domain/entities/project_entity.dart';
 
 class ProjectContactActions extends StatelessWidget {

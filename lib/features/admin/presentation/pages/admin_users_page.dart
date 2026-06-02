@@ -262,7 +262,7 @@ class _UsersBody extends StatelessWidget {
       return const Center(child: CircularProgressIndicator());
     }
 
-    if (state.status == AdminUsersStatus.error && state.users.isEmpty) {
+    if (state is AdminUsersFailure && state.users.isEmpty) {
       return _EmptyState(
         icon: Icons.error_outline,
         title: 'تعذر تحميل المستخدمين',

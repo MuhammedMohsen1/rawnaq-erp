@@ -11,26 +11,20 @@ import 'package:path_provider/path_provider.dart';
 import 'package:rawnaq/core/routing/app_router.dart';
 import 'package:flutter_ionicons/flutter_ionicons.dart';
 import '../../../../core/constants/app_colors.dart';
-import '../../../../core/constants/app_text_styles.dart';
 import '../../../../core/di/injection_container.dart';
 import '../../../../core/error/exceptions.dart';
 import '../../../../core/layout/top_bar_title_controller.dart';
-import '../../../../core/utils/responsive_layout.dart';
 import '../../../auth/presentation/bloc/auth_bloc.dart';
 import '../../../projects/data/datasources/projects_api_datasource.dart';
-import '../../../projects/domain/enums/project_status.dart';
-import '../../../projects/presentation/widgets/project_attachments_panel.dart';
 import '../../../contracts/data/datasources/contracts_api_datasource.dart';
 import '../cubit/pricing_cubit.dart';
 import '../cubit/pricing_state.dart';
 import '../utils/pricing_status_utils.dart';
 import '../widgets/add_item_dialog.dart';
-import '../widgets/add_pricing_item_button.dart';
 import '../widgets/contract_export_dialog.dart';
 import '../widgets/pricing_confirmation_dialogs.dart';
-import '../widgets/pricing_header.dart';
-import '../widgets/pricing_items_list.dart';
 import '../widgets/pricing_summary_sidebar.dart';
+import '../widgets/under_pricing_page_views.dart';
 
 /// Under pricing page - refactored with Cubit and extracted widgets
 class UnderPricingPage extends StatelessWidget {
@@ -77,6 +71,9 @@ class _UnderPricingContent extends StatefulWidget {
 
 class _UnderPricingContentState extends State<_UnderPricingContent> {
   late bool _showFinancials = !widget.hideFinancials;
+
+  String get projectId => widget.projectId;
+  bool get showFinancials => _showFinancials;
 
   @override
   void initState() {
@@ -159,16 +156,11 @@ class _UnderPricingContentState extends State<_UnderPricingContent> {
       },
       builder: (context, state) {
         if (state is PricingLoading) {
-          return const Scaffold(
-            backgroundColor: AppColors.scaffoldBackground,
-            body: Center(
-              child: CircularProgressIndicator(color: AppColors.primary),
-            ),
-          );
+          return const PricingLoadingView();
         }
 
         if (state is PricingError) {
-          return _ErrorView(
+          return PricingErrorView(
             message: state.message,
             onRetry: () => context.read<PricingCubit>().loadPricingData(
               widget.projectId,
@@ -178,259 +170,85 @@ class _UnderPricingContentState extends State<_UnderPricingContent> {
         }
 
         if (state is PricingLoaded) {
-          return _LoadedContent(
+          return PricingLoadedLayout(
             projectId: widget.projectId,
             state: state,
             hideFinancials: widget.hideFinancials,
             showFinancials: _showFinancials,
             onToggleFinancials: _toggleFinancialVisibility,
+            buildSidebar: _buildSidebar,
+            onAddItem: () => _handleAddItem(context),
+            onAddSubItem: (itemId) =>
+                () => _handleAddSubItem(context, itemId),
+            onReorderItems: state.readOnly
+                ? null
+                : (oldIndex, newIndex) async {
+                    await context.read<PricingCubit>().reorderItems(
+                      widget.projectId,
+                      oldIndex,
+                      newIndex,
+                    );
+                  },
+            onReorderSubItems: state.readOnly
+                ? null
+                : (itemId, oldIndex, newIndex) async {
+                    await context.read<PricingCubit>().reorderSubItems(
+                      widget.projectId,
+                      itemId,
+                      oldIndex,
+                      newIndex,
+                    );
+                  },
+            onReorderElements: state.readOnly
+                ? null
+                : (itemId, subItemId, elementId, targetOrder) async {
+                    await context.read<PricingCubit>().reorderElement(
+                      widget.projectId,
+                      itemId,
+                      subItemId,
+                      elementId,
+                      targetOrder,
+                    );
+                  },
+            onItemExpandedChanged: (itemId, isExpanded) {
+              context.read<PricingCubit>().toggleItemExpanded(itemId);
+            },
+            onSubItemExpandedChanged: (itemId, subItemStates) {
+              for (var entry in subItemStates.entries) {
+                context.read<PricingCubit>().toggleSubItemExpanded(
+                  itemId,
+                  entry.key,
+                );
+              }
+            },
+            onSubItemProfitMarginChanged: (subItemId, profitMargin) async {
+              if (state.readOnly) return;
+              await context.read<PricingCubit>().loadPricingData(
+                widget.projectId,
+                readOnly: state.readOnly,
+              );
+              await context.read<PricingCubit>().updateSubItemProfitMargin(
+                subItemId,
+                profitMargin,
+                widget.projectId,
+              );
+            },
+            onDataChanged: () {
+              context.read<PricingCubit>().loadPricingData(
+                widget.projectId,
+                readOnly: state.readOnly,
+              );
+            },
           );
         }
 
         if (state is PricingEmptyReadOnly) {
-          return Scaffold(
-            backgroundColor: AppColors.scaffoldBackground,
-            body: Center(
-              child: Padding(
-                padding: const EdgeInsets.all(32),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Icon(
-                      Icons.lock_outline_rounded,
-                      size: 54,
-                      color: AppColors.textMuted,
-                    ),
-                    const SizedBox(height: 16),
-                    Text(
-                      'لا توجد بيانات تسعير لهذا المشروع المؤرشف',
-                      style: AppTextStyles.bodyLarge.copyWith(
-                        color: AppColors.textPrimary,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      'استعد المشروع أولاً لإضافة إصدار تسعير جديد.',
-                      style: AppTextStyles.bodyMedium.copyWith(
-                        color: AppColors.textSecondary,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          );
+          return const PricingEmptyReadOnlyView();
         }
 
         return const SizedBox.shrink();
       },
     );
-  }
-}
-
-/// Loaded content view
-class _LoadedContent extends StatelessWidget {
-  final String projectId;
-  final PricingLoaded state;
-  final bool hideFinancials;
-  final bool showFinancials;
-  final VoidCallback onToggleFinancials;
-
-  const _LoadedContent({
-    required this.projectId,
-    required this.state,
-    required this.hideFinancials,
-    required this.showFinancials,
-    required this.onToggleFinancials,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return ResponsiveLayout(
-      mobile: _PricingLayout(
-        projectId: projectId,
-        padding: 16,
-        hideFinancialsInitially: hideFinancials,
-        showFinancials: showFinancials,
-        onToggleFinancials: onToggleFinancials,
-      ),
-      tablet: _PricingLayout(
-        projectId: projectId,
-        padding: 24,
-        hideFinancialsInitially: hideFinancials,
-        showFinancials: showFinancials,
-        onToggleFinancials: onToggleFinancials,
-      ),
-      desktop: _PricingLayout(
-        projectId: projectId,
-        padding: 32,
-        hideFinancialsInitially: hideFinancials,
-        showFinancials: showFinancials,
-        onToggleFinancials: onToggleFinancials,
-      ),
-    );
-  }
-}
-
-/// Pricing layout for different screen sizes
-class _PricingLayout extends StatefulWidget {
-  final String projectId;
-  final double padding;
-  final bool hideFinancialsInitially;
-  final bool showFinancials;
-  final VoidCallback onToggleFinancials;
-
-  const _PricingLayout({
-    required this.projectId,
-    required this.padding,
-    required this.hideFinancialsInitially,
-    required this.showFinancials,
-    required this.onToggleFinancials,
-  });
-
-  @override
-  State<_PricingLayout> createState() => _PricingLayoutState();
-}
-
-class _PricingLayoutState extends State<_PricingLayout> {
-  String get projectId => widget.projectId;
-
-  @override
-  Widget build(BuildContext context) {
-    return BlocBuilder<PricingCubit, PricingState>(
-      builder: (context, state) {
-        if (state is! PricingLoaded) return const SizedBox.shrink();
-
-        final statusColor = PricingStatusUtils.getStatusColor(
-          state.pricingVersion.status,
-        );
-        final showMobileFinancialToggle =
-            widget.hideFinancialsInitially &&
-            ResponsiveLayout.isMobile(context);
-
-        return SingleChildScrollView(
-          padding: EdgeInsets.all(widget.padding),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              PricingHeader(
-                statusText: state.getStatusText(),
-                statusColor: statusColor,
-              ),
-              const SizedBox(height: 24),
-              if (showMobileFinancialToggle) ...[
-                Align(
-                  alignment: AlignmentDirectional.centerEnd,
-                  child: _MobileFinancialVisibilityButton(
-                    showFinancials: widget.showFinancials,
-                    onPressed: widget.onToggleFinancials,
-                  ),
-                ),
-                const SizedBox(height: 16),
-              ],
-              ProjectAttachmentsPanel(
-                projectId: projectId,
-                projectStatus: _projectStatusFromApi(
-                  state.pricingVersion.status,
-                ),
-                readOnly: state.readOnly,
-              ),
-              const SizedBox(height: 24),
-
-              // Items list
-              PricingItemsList(
-                projectId: widget.projectId,
-                version: state.pricingVersion.version,
-                items: state.pricingVersion.items ?? [],
-                pricingStatus: state.pricingVersion.status,
-                itemExpandedStates: state.itemExpandedStates,
-                subItemExpandedStates: state.subItemExpandedStates,
-                subItemProfitMargins: state.subItemProfitMargins,
-                onItemExpandedChanged: (itemId, isExpanded) {
-                  context.read<PricingCubit>().toggleItemExpanded(itemId);
-                },
-                onSubItemExpandedChanged: (itemId, subItemStates) {
-                  // Update all sub-item states for this item
-                  for (var entry in subItemStates.entries) {
-                    context.read<PricingCubit>().toggleSubItemExpanded(
-                      itemId,
-                      entry.key,
-                    );
-                  }
-                },
-                onDataChanged: () {
-                  context.read<PricingCubit>().loadPricingData(
-                    widget.projectId,
-                    readOnly: state.readOnly,
-                  );
-                },
-                onSubItemProfitMarginChanged: (subItemId, profitMargin) async {
-                  if (state.readOnly) return;
-                  await context.read<PricingCubit>().loadPricingData(
-                    projectId,
-                    readOnly: state.readOnly,
-                  );
-                  await context.read<PricingCubit>().updateSubItemProfitMargin(
-                    subItemId,
-                    profitMargin,
-                    projectId,
-                  );
-                },
-                onAddSubItem: state.readOnly
-                    ? (_) {}
-                    : (itemId) => _handleAddSubItem(context, itemId),
-                onReorderItems: state.readOnly
-                    ? null
-                    : (oldIndex, newIndex) async {
-                        await context.read<PricingCubit>().reorderItems(
-                          widget.projectId,
-                          oldIndex,
-                          newIndex,
-                        );
-                      },
-                onReorderSubItems: state.readOnly
-                    ? null
-                    : (itemId, oldIndex, newIndex) async {
-                        await context.read<PricingCubit>().reorderSubItems(
-                          widget.projectId,
-                          itemId,
-                          oldIndex,
-                          newIndex,
-                        );
-                      },
-                onReorderElements: state.readOnly
-                    ? null
-                    : (itemId, subItemId, elementId, targetOrder) async {
-                        await context.read<PricingCubit>().reorderElement(
-                          widget.projectId,
-                          itemId,
-                          subItemId,
-                          elementId,
-                          targetOrder,
-                        );
-                      },
-                readOnly: state.readOnly,
-                showFinancials: widget.showFinancials,
-              ),
-              const SizedBox(height: 24),
-
-              // Add item button
-              if (!state.readOnly) ...[
-                AddPricingItemButton(onTap: () => _handleAddItem(context)),
-                const SizedBox(height: 24),
-              ],
-
-              // Sidebar with summary and actions
-              if (widget.showFinancials) _buildSidebar(context, state),
-            ],
-          ),
-        );
-      },
-    );
-  }
-
-  ProjectStatus _projectStatusFromApi(String status) {
-    return ProjectStatusExtension.fromApiString(status);
   }
 
   Widget _buildSidebar(BuildContext context, PricingLoaded state) {
@@ -471,7 +289,7 @@ class _PricingLayoutState extends State<_PricingLayout> {
         onReturnToPricing: showReturnButton && !state.readOnly
             ? () => _handleReturnToPricing(context)
             : null,
-        isAdminOrManager: isAdminOrManager && widget.showFinancials,
+        isAdminOrManager: isAdminOrManager && showFinancials,
         isPendingApproval: false,
         onAcceptPricing: null,
         isApproved: isApproved,
@@ -526,7 +344,7 @@ class _PricingLayoutState extends State<_PricingLayout> {
                 if (currentState is! PricingLoaded) return;
 
                 try {
-                  await cubit.calculateProfitForSubItems(widget.projectId);
+                  await cubit.calculateProfitForSubItems(projectId);
                   if (context.mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(
@@ -568,7 +386,7 @@ class _PricingLayoutState extends State<_PricingLayout> {
                 );
               }
             : null,
-        showFinancials: widget.showFinancials,
+        showFinancials: showFinancials,
       ),
     );
   }
@@ -1166,76 +984,6 @@ class _PricingLayoutState extends State<_PricingLayout> {
       SnackBar(
         content: Text(errorMessage),
         duration: const Duration(seconds: 5),
-      ),
-    );
-  }
-}
-
-class _MobileFinancialVisibilityButton extends StatelessWidget {
-  final bool showFinancials;
-  final VoidCallback onPressed;
-
-  const _MobileFinancialVisibilityButton({
-    required this.showFinancials,
-    required this.onPressed,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Tooltip(
-      message: showFinancials ? 'إخفاء بيانات التسعير' : 'إظهار بيانات التسعير',
-      child: Container(
-        width: 40,
-        height: 40,
-        alignment: Alignment.center,
-        decoration: BoxDecoration(
-          color: AppColors.inputBackground,
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: AppColors.inputBorder),
-        ),
-        child: IconButton(
-          padding: EdgeInsets.zero,
-          constraints: const BoxConstraints.tightFor(width: 40, height: 40),
-          icon: Icon(
-            showFinancials ? Ionicons.eye_outline : Ionicons.eye_off_outline,
-            color: AppColors.textSecondary,
-            size: 20,
-          ),
-          onPressed: onPressed,
-        ),
-      ),
-    );
-  }
-}
-
-/// Error view
-class _ErrorView extends StatelessWidget {
-  final String message;
-  final VoidCallback onRetry;
-
-  const _ErrorView({required this.message, required this.onRetry});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.scaffoldBackground,
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Icon(Icons.error_outline, size: 64, color: AppColors.error),
-            const SizedBox(height: 16),
-            Text(
-              message,
-              style: AppTextStyles.bodyLarge.copyWith(color: AppColors.error),
-            ),
-            const SizedBox(height: 16),
-            ElevatedButton(
-              onPressed: onRetry,
-              child: const Text('إعادة المحاولة'),
-            ),
-          ],
-        ),
       ),
     );
   }

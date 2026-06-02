@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
-import '../../../../../core/constants/app_colors.dart';
-import '../../../../../core/constants/app_text_styles.dart';
 import '../../domain/entities/notification_entity.dart';
+import '../widgets/notification_card.dart';
 
 class NotificationsPage extends StatelessWidget {
   const NotificationsPage({super.key});
@@ -13,7 +12,8 @@ class NotificationsPage extends StatelessWidget {
       type: NotificationType.projectUpdate,
       icon: Icons.folder,
       iconColor: const Color(0xFF3B82F6), // Blue
-      message: 'تم تغيير حالة مشروع "مكتب شركة التقنية" من معلق إلى قيد التنفيذ.',
+      message:
+          'تم تغيير حالة مشروع "مكتب شركة التقنية" من معلق إلى قيد التنفيذ.',
       timestamp: 'منذ 30 دقيقة',
       isUnread: true,
       actionButtons: [
@@ -22,10 +22,7 @@ class NotificationsPage extends StatelessWidget {
           isPrimary: true,
           onPressed: () {},
         ),
-        NotificationActionButton(
-          label: 'عرض التفاصيل',
-          onPressed: () {},
-        ),
+        NotificationActionButton(label: 'عرض التفاصيل', onPressed: () {}),
       ],
     ),
     NotificationEntity(
@@ -42,10 +39,7 @@ class NotificationsPage extends StatelessWidget {
           isPrimary: true,
           onPressed: () {},
         ),
-        NotificationActionButton(
-          label: 'قبول',
-          onPressed: () {},
-        ),
+        NotificationActionButton(label: 'قبول', onPressed: () {}),
       ],
     ),
     NotificationEntity(
@@ -53,7 +47,8 @@ class NotificationsPage extends StatelessWidget {
       type: NotificationType.financialUpdate,
       icon: Icons.account_balance_wallet,
       iconColor: const Color(0xFF22C55E), // Green
-      message: 'تم استلام دفعة مقدمة لمشروع "فندق الملك عبد العزيز" بقيمة 50,000 ريال.',
+      message:
+          'تم استلام دفعة مقدمة لمشروع "فندق الملك عبد العزيز" بقيمة 50,000 ريال.',
       timestamp: 'منذ ساعتين',
       isUnread: true,
       actionButtons: [
@@ -62,10 +57,7 @@ class NotificationsPage extends StatelessWidget {
           isPrimary: true,
           onPressed: () {},
         ),
-        NotificationActionButton(
-          label: 'عرض الفاتورة',
-          onPressed: () {},
-        ),
+        NotificationActionButton(label: 'عرض الفاتورة', onPressed: () {}),
       ],
     ),
     NotificationEntity(
@@ -82,10 +74,7 @@ class NotificationsPage extends StatelessWidget {
           isPrimary: true,
           onPressed: () {},
         ),
-        NotificationActionButton(
-          label: 'عرض التفاصيل',
-          onPressed: () {},
-        ),
+        NotificationActionButton(label: 'عرض التفاصيل', onPressed: () {}),
       ],
     ),
     NotificationEntity(
@@ -102,10 +91,7 @@ class NotificationsPage extends StatelessWidget {
           isPrimary: true,
           onPressed: () {},
         ),
-        NotificationActionButton(
-          label: 'قبول',
-          onPressed: () {},
-        ),
+        NotificationActionButton(label: 'قبول', onPressed: () {}),
       ],
     ),
     NotificationEntity(
@@ -122,10 +108,7 @@ class NotificationsPage extends StatelessWidget {
           isPrimary: true,
           onPressed: () {},
         ),
-        NotificationActionButton(
-          label: 'عرض الفاتورة',
-          onPressed: () {},
-        ),
+        NotificationActionButton(label: 'عرض الفاتورة', onPressed: () {}),
       ],
     ),
     NotificationEntity(
@@ -142,10 +125,7 @@ class NotificationsPage extends StatelessWidget {
           isPrimary: true,
           onPressed: () {},
         ),
-        NotificationActionButton(
-          label: 'عرض التفاصيل',
-          onPressed: () {},
-        ),
+        NotificationActionButton(label: 'عرض التفاصيل', onPressed: () {}),
       ],
     ),
     NotificationEntity(
@@ -162,10 +142,7 @@ class NotificationsPage extends StatelessWidget {
           isPrimary: true,
           onPressed: () {},
         ),
-        NotificationActionButton(
-          label: 'قبول',
-          onPressed: () {},
-        ),
+        NotificationActionButton(label: 'قبول', onPressed: () {}),
       ],
     ),
     NotificationEntity(
@@ -182,10 +159,7 @@ class NotificationsPage extends StatelessWidget {
           isPrimary: true,
           onPressed: () {},
         ),
-        NotificationActionButton(
-          label: 'عرض الفاتورة',
-          onPressed: () {},
-        ),
+        NotificationActionButton(label: 'عرض الفاتورة', onPressed: () {}),
       ],
     ),
     NotificationEntity(
@@ -202,10 +176,7 @@ class NotificationsPage extends StatelessWidget {
           isPrimary: true,
           onPressed: () {},
         ),
-        NotificationActionButton(
-          label: 'عرض التفاصيل',
-          onPressed: () {},
-        ),
+        NotificationActionButton(label: 'عرض التفاصيل', onPressed: () {}),
       ],
     ),
     NotificationEntity(
@@ -222,10 +193,7 @@ class NotificationsPage extends StatelessWidget {
           isPrimary: true,
           onPressed: () {},
         ),
-        NotificationActionButton(
-          label: 'قبول',
-          onPressed: () {},
-        ),
+        NotificationActionButton(label: 'قبول', onPressed: () {}),
       ],
     ),
     NotificationEntity(
@@ -233,7 +201,8 @@ class NotificationsPage extends StatelessWidget {
       type: NotificationType.financialUpdate,
       icon: Icons.account_balance_wallet,
       iconColor: const Color(0xFF22C55E),
-      message: 'تم استلام دفعة نهائية لمشروع "مبنى المكاتب الإداري" بقيمة 100,000 ريال.',
+      message:
+          'تم استلام دفعة نهائية لمشروع "مبنى المكاتب الإداري" بقيمة 100,000 ريال.',
       timestamp: 'منذ 11 ساعة',
       isUnread: false,
       actionButtons: [
@@ -242,10 +211,7 @@ class NotificationsPage extends StatelessWidget {
           isPrimary: true,
           onPressed: () {},
         ),
-        NotificationActionButton(
-          label: 'عرض الفاتورة',
-          onPressed: () {},
-        ),
+        NotificationActionButton(label: 'عرض الفاتورة', onPressed: () {}),
       ],
     ),
   ];
@@ -257,141 +223,14 @@ class NotificationsPage extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Build notification cards
-          ..._mockNotifications.map((notification) => Padding(
-                padding: const EdgeInsets.only(bottom: 16),
-                child: _buildNotificationCard(context, notification),
-              )),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildNotificationCard(
-    BuildContext context,
-    NotificationEntity notification,
-  ) {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: notification.isUnread
-            ? Colors.white.withValues(alpha: 0.05)
-            : AppColors.cardBackground,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: AppColors.border,
-          width: 1,
-        ),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Icon container
-          Container(
-            width: 40,
-            height: 40,
-            decoration: BoxDecoration(
-              color: notification.iconColor.withValues(alpha: 0.15),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Icon(
-              notification.icon,
-              color: notification.iconColor,
-              size: 22,
-            ),
-          ),
-          const SizedBox(width: 16),
-          // Content
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Message
-                Text(
-                  notification.message,
-                  style: AppTextStyles.bodyMedium.copyWith(
-                    color: AppColors.textPrimary,
-                  ),
-                ),
-                const SizedBox(height: 12),
-                // Timestamp and action buttons row
-                Row(
-                  children: [
-                    // Timestamp
-                    Text(
-                      notification.timestamp,
-                      style: AppTextStyles.caption.copyWith(
-                        color: AppColors.textMuted,
-                      ),
-                    ),
-                    const Spacer(),
-                    // Action buttons
-                    ...notification.actionButtons.map((button) {
-                      return Padding(
-                        padding: const EdgeInsets.only(left: 8),
-                        child: _buildActionButton(
-                          context,
-                          button,
-                          notification.iconColor,
-                        ),
-                      );
-                    }),
-                  ],
-                ),
-              ],
+          ..._mockNotifications.map(
+            (notification) => Padding(
+              padding: const EdgeInsets.only(bottom: 16),
+              child: NotificationCard(notification: notification),
             ),
           ),
         ],
       ),
     );
-  }
-
-  Widget _buildActionButton(
-    BuildContext context,
-    NotificationActionButton button,
-    Color primaryColor,
-  ) {
-    if (button.isPrimary) {
-      return ElevatedButton(
-        onPressed: button.onPressed,
-        style: ElevatedButton.styleFrom(
-          backgroundColor: primaryColor,
-          foregroundColor: Colors.white,
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          minimumSize: const Size(0, 32),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(6),
-          ),
-        ),
-        child: Text(
-          button.label,
-          style: const TextStyle(
-            fontSize: 12,
-            fontWeight: FontWeight.w500,
-          ),
-        ),
-      );
-    } else {
-      return OutlinedButton(
-        onPressed: button.onPressed,
-        style: OutlinedButton.styleFrom(
-          foregroundColor: AppColors.textSecondary,
-          side: const BorderSide(color: AppColors.border),
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          minimumSize: const Size(0, 32),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(6),
-          ),
-        ),
-        child: Text(
-          button.label,
-          style: const TextStyle(
-            fontSize: 12,
-            fontWeight: FontWeight.w500,
-          ),
-        ),
-      );
-    }
   }
 }
-

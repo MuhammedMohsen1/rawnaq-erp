@@ -10,17 +10,34 @@ class AdminUsersCubit extends Cubit<AdminUsersState> {
 
   AdminUsersCubit({AdminUsersApiDataSource? dataSource})
     : _dataSource = dataSource ?? AdminUsersApiDataSource(),
-      super(const AdminUsersState());
+      super(const AdminUsersInitial());
 
   Future<void> loadUsers() async {
-    emit(state.copyWith(status: AdminUsersStatus.loading, clearMessages: true));
+    emit(
+      AdminUsersLoading(
+        users: state.users,
+        searchQuery: state.searchQuery,
+        roleFilter: state.roleFilter,
+        statusFilter: state.statusFilter,
+      ),
+    );
     try {
       final users = await _dataSource.getUsers();
-      emit(state.copyWith(status: AdminUsersStatus.loaded, users: users));
+      emit(
+        AdminUsersLoaded(
+          users: users,
+          searchQuery: state.searchQuery,
+          roleFilter: state.roleFilter,
+          statusFilter: state.statusFilter,
+        ),
+      );
     } catch (e) {
       emit(
-        state.copyWith(
-          status: AdminUsersStatus.error,
+        AdminUsersFailure(
+          users: state.users,
+          searchQuery: state.searchQuery,
+          roleFilter: state.roleFilter,
+          statusFilter: state.statusFilter,
           errorMessage: 'فشل تحميل المستخدمين: ${e.toString()}',
         ),
       );
@@ -28,15 +45,15 @@ class AdminUsersCubit extends Cubit<AdminUsersState> {
   }
 
   void updateSearch(String query) {
-    emit(state.copyWith(searchQuery: query, clearMessages: true));
+    emit(_copyState(searchQuery: query));
   }
 
   void updateRoleFilter(String role) {
-    emit(state.copyWith(roleFilter: role, clearMessages: true));
+    emit(_copyState(roleFilter: role));
   }
 
   void updateStatusFilter(String status) {
-    emit(state.copyWith(statusFilter: status, clearMessages: true));
+    emit(_copyState(statusFilter: status));
   }
 
   Future<void> createUser({
@@ -96,23 +113,28 @@ class AdminUsersCubit extends Cubit<AdminUsersState> {
   }
 
   Future<void> deleteUser(User user) async {
-    emit(state.copyWith(status: AdminUsersStatus.saving, clearMessages: true));
+    emit(_savingState());
     try {
       await _dataSource.deleteUser(user.id);
       final updatedUsers = state.users
           .where((item) => item.id != user.id)
           .toList();
       emit(
-        state.copyWith(
-          status: AdminUsersStatus.loaded,
+        AdminUsersLoaded(
           users: updatedUsers,
+          searchQuery: state.searchQuery,
+          roleFilter: state.roleFilter,
+          statusFilter: state.statusFilter,
           successMessage: AppConstants.deleteSuccess,
         ),
       );
     } catch (e) {
       emit(
-        state.copyWith(
-          status: AdminUsersStatus.loaded,
+        AdminUsersFailure(
+          users: state.users,
+          searchQuery: state.searchQuery,
+          roleFilter: state.roleFilter,
+          statusFilter: state.statusFilter,
           errorMessage: 'فشل حذف المستخدم: ${e.toString()}',
         ),
       );
@@ -123,21 +145,26 @@ class AdminUsersCubit extends Cubit<AdminUsersState> {
     required String successMessage,
     required Future<User> Function() action,
   }) async {
-    emit(state.copyWith(status: AdminUsersStatus.saving, clearMessages: true));
+    emit(_savingState());
     try {
       await action();
       final users = await _dataSource.getUsers();
       emit(
-        state.copyWith(
-          status: AdminUsersStatus.loaded,
+        AdminUsersLoaded(
           users: users,
+          searchQuery: state.searchQuery,
+          roleFilter: state.roleFilter,
+          statusFilter: state.statusFilter,
           successMessage: successMessage,
         ),
       );
     } catch (e) {
       emit(
-        state.copyWith(
-          status: AdminUsersStatus.loaded,
+        AdminUsersFailure(
+          users: state.users,
+          searchQuery: state.searchQuery,
+          roleFilter: state.roleFilter,
+          statusFilter: state.statusFilter,
           errorMessage: 'تعذر حفظ بيانات المستخدم: ${e.toString()}',
         ),
       );
@@ -145,4 +172,56 @@ class AdminUsersCubit extends Cubit<AdminUsersState> {
   }
 
   String _toApiEnum(String value) => value.toUpperCase();
+
+  AdminUsersState _savingState() {
+    return AdminUsersSaving(
+      users: state.users,
+      searchQuery: state.searchQuery,
+      roleFilter: state.roleFilter,
+      statusFilter: state.statusFilter,
+    );
+  }
+
+  AdminUsersState _copyState({
+    List<User>? users,
+    String? searchQuery,
+    String? roleFilter,
+    String? statusFilter,
+  }) {
+    final currentUsers = users ?? state.users;
+    final currentSearchQuery = searchQuery ?? state.searchQuery;
+    final currentRoleFilter = roleFilter ?? state.roleFilter;
+    final currentStatusFilter = statusFilter ?? state.statusFilter;
+
+    return switch (state) {
+      AdminUsersInitial() => AdminUsersInitial(),
+      AdminUsersLoading() => AdminUsersLoading(
+        users: currentUsers,
+        searchQuery: currentSearchQuery,
+        roleFilter: currentRoleFilter,
+        statusFilter: currentStatusFilter,
+      ),
+      AdminUsersLoaded() => AdminUsersLoaded(
+        users: currentUsers,
+        searchQuery: currentSearchQuery,
+        roleFilter: currentRoleFilter,
+        statusFilter: currentStatusFilter,
+        errorMessage: state.errorMessage,
+        successMessage: state.successMessage,
+      ),
+      AdminUsersSaving() => AdminUsersSaving(
+        users: currentUsers,
+        searchQuery: currentSearchQuery,
+        roleFilter: currentRoleFilter,
+        statusFilter: currentStatusFilter,
+      ),
+      AdminUsersFailure() => AdminUsersFailure(
+        users: currentUsers,
+        searchQuery: currentSearchQuery,
+        roleFilter: currentRoleFilter,
+        statusFilter: currentStatusFilter,
+        errorMessage: state.errorMessage,
+      ),
+    };
+  }
 }
