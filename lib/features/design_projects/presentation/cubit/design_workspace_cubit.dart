@@ -89,6 +89,21 @@ class DesignWorkspaceCubit extends Cubit<DesignWorkspaceState> {
     ),
   );
 
+  Future<void> uploadInstallmentCapture(
+    String installmentId, {
+    required String fileName,
+    String? filePath,
+    List<int>? bytes,
+  }) => _perform(
+    () => _repository.uploadInstallmentCapture(
+      projectId,
+      installmentId,
+      fileName: fileName,
+      filePath: filePath,
+      bytes: bytes,
+    ),
+  );
+
   Future<void> replaceInstallments(List<ProjectInstallment> installments) =>
       _perform(() => _repository.replaceInstallments(projectId, installments));
 

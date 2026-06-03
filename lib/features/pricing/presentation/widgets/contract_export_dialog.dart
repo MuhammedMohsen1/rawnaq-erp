@@ -198,6 +198,12 @@ class _ContractExportDialogState extends State<ContractExportDialog> {
       });
       return false;
     }
+    if (widget.totalAmount <= 0) {
+      setState(() {
+        _errorMessage = 'لا يمكن إنشاء جدول دفعات بدون قيمة عقد صحيحة';
+      });
+      return false;
+    }
     final totalPercentage = _paymentPhases.fold<double>(
       0.0,
       (sum, phase) => sum + (phase['percentage'] as num).toDouble(),
@@ -206,6 +212,15 @@ class _ContractExportDialogState extends State<ContractExportDialog> {
       setState(() {
         _errorMessage =
             'مجموع النسب يجب أن يساوي 100%. المجموع الحالي: ${totalPercentage.toStringAsFixed(2)}%';
+      });
+      return false;
+    }
+    final hasInvalidAmount = _paymentPhases.any(
+      (phase) => (phase['amount'] as num).toDouble() <= 0,
+    );
+    if (hasInvalidAmount) {
+      setState(() {
+        _errorMessage = 'كل دفعة يجب أن تكون أكبر من صفر';
       });
       return false;
     }
@@ -267,7 +282,9 @@ class _ContractExportDialogState extends State<ContractExportDialog> {
   void _onAmountChanged(int index, double value) {
     setState(() {
       final amount = value.clamp(0.0, widget.totalAmount);
-      final percentage = (amount / widget.totalAmount) * 100;
+      final percentage = widget.totalAmount > 0
+          ? (amount / widget.totalAmount) * 100
+          : 0.0;
 
       _paymentPhases[index]['amount'] = amount;
       _paymentPhases[index]['percentage'] = percentage;
@@ -594,5 +611,4 @@ class _ContractExportDialogState extends State<ContractExportDialog> {
       ),
     );
   }
-
 }

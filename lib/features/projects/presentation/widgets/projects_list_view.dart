@@ -45,6 +45,7 @@ class ProjectsListView extends StatelessWidget {
   final ValueChanged<ProjectEntity> onNavigate;
   final ValueChanged<ProjectEntity> onEdit;
   final ValueChanged<ProjectEntity>? onArchive;
+  final ValueChanged<ProjectEntity>? onDelete;
   final ValueChanged<ProjectEntity>? onRestore;
   final ValueChanged<ProjectEntity>? onMoveToExecution;
   final VoidCallback onClearFilters;
@@ -73,6 +74,7 @@ class ProjectsListView extends StatelessWidget {
     required this.onNavigate,
     required this.onEdit,
     required this.onArchive,
+    required this.onDelete,
     required this.onRestore,
     required this.onMoveToExecution,
     required this.onClearFilters,
@@ -126,6 +128,7 @@ class ProjectsListView extends StatelessWidget {
                   onNavigate: onNavigate,
                   onEdit: onEdit,
                   onArchive: onArchive,
+                  onDelete: onDelete,
                   onRestore: onRestore,
                   onMoveToExecution: onMoveToExecution,
                   onClearFilters: onClearFilters,
@@ -190,6 +193,7 @@ class _PagedProjectsGrid extends StatelessWidget {
   final ValueChanged<ProjectEntity> onNavigate;
   final ValueChanged<ProjectEntity> onEdit;
   final ValueChanged<ProjectEntity>? onArchive;
+  final ValueChanged<ProjectEntity>? onDelete;
   final ValueChanged<ProjectEntity>? onRestore;
   final ValueChanged<ProjectEntity>? onMoveToExecution;
   final bool enableNavigation;
@@ -205,6 +209,7 @@ class _PagedProjectsGrid extends StatelessWidget {
     required this.onNavigate,
     required this.onEdit,
     required this.onArchive,
+    required this.onDelete,
     required this.onRestore,
     required this.onMoveToExecution,
     required this.enableNavigation,
@@ -270,6 +275,7 @@ class _PagedProjectsGrid extends StatelessWidget {
                     onNavigate: onNavigate,
                     onEdit: onEdit,
                     onArchive: onArchive,
+                    onDelete: onDelete,
                     onRestore: onRestore,
                     onMoveToExecution: onMoveToExecution,
                   ),

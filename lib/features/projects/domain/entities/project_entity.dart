@@ -3,21 +3,42 @@ import '../enums/project_status.dart';
 import '../enums/project_type.dart';
 import 'team_member_entity.dart';
 
+class ProjectInstallmentCapture extends Equatable {
+  final String id;
+  final String url;
+  final String fileName;
+  final String? mimeType;
+  final DateTime? createdAt;
+
+  const ProjectInstallmentCapture({
+    required this.id,
+    required this.url,
+    required this.fileName,
+    this.mimeType,
+    this.createdAt,
+  });
+
+  @override
+  List<Object?> get props => [id, url, fileName, mimeType, createdAt];
+}
+
 class ProjectInstallment extends Equatable {
   final String id;
   final double amount;
   final DateTime dueDate;
   final bool isPaid;
+  final List<ProjectInstallmentCapture> captures;
 
   const ProjectInstallment({
     required this.id,
     required this.amount,
     required this.dueDate,
     this.isPaid = false,
+    this.captures = const [],
   });
 
   @override
-  List<Object?> get props => [id, amount, dueDate, isPaid];
+  List<Object?> get props => [id, amount, dueDate, isPaid, captures];
 }
 
 class ProjectPhoneContact extends Equatable {

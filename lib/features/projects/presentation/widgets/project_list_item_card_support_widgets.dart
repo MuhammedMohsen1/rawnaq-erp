@@ -132,6 +132,7 @@ class ProjectListItemPipelineLabel extends StatelessWidget {
 class ProjectListItemCardMenu extends StatelessWidget {
   final VoidCallback onEdit;
   final VoidCallback? onArchive;
+  final VoidCallback? onDelete;
   final VoidCallback? onRestore;
   final VoidCallback? onMoveToExecution;
   final bool compact;
@@ -140,6 +141,7 @@ class ProjectListItemCardMenu extends StatelessWidget {
     super.key,
     required this.onEdit,
     this.onArchive,
+    this.onDelete,
     this.onRestore,
     this.onMoveToExecution,
     this.compact = false,
@@ -166,7 +168,9 @@ class ProjectListItemCardMenu extends StatelessWidget {
           if (onRestore != null)
             const PopupMenuItem(value: 'restore', child: Text('استعادة')),
           if (onArchive != null)
-            const PopupMenuItem(value: 'archive', child: Text('أرشفة')),
+            const PopupMenuItem(value: 'archive', child: Text('أرشفة المشروع')),
+          if (onDelete != null)
+            const PopupMenuItem(value: 'delete', child: Text('حذف المشروع')),
         ],
         onSelected: (value) {
           switch (value) {
@@ -175,6 +179,9 @@ class ProjectListItemCardMenu extends StatelessWidget {
               break;
             case 'archive':
               onArchive?.call();
+              break;
+            case 'delete':
+              onDelete?.call();
               break;
             case 'restore':
               onRestore?.call();

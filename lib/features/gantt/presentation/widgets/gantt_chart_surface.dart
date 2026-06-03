@@ -20,6 +20,9 @@ class GanttChartSurface extends StatelessWidget {
     required this.teamMembers,
     required this.tasks,
     required this.startDate,
+    required this.horizontalTimelineScrollController,
+    required this.shouldScrollToToday,
+    required this.onScrolledToToday,
     required this.isToday,
     required this.calculateTaskLanes,
     required this.laneCount,
@@ -38,6 +41,9 @@ class GanttChartSurface extends StatelessWidget {
   final List<TeamMemberEntity> teamMembers;
   final List<TaskEntity> tasks;
   final DateTime startDate;
+  final ScrollController horizontalTimelineScrollController;
+  final bool shouldScrollToToday;
+  final VoidCallback onScrolledToToday;
   final bool Function(DateTime date) isToday;
   final Map<String, int> Function(
     List<TaskEntity> tasks, {
@@ -82,6 +88,10 @@ class GanttChartSurface extends StatelessWidget {
             teamMembers: teamMembers,
             tasks: tasks,
             startDate: startDate,
+            horizontalTimelineScrollController:
+                horizontalTimelineScrollController,
+            shouldScrollToToday: shouldScrollToToday,
+            onScrolledToToday: onScrolledToToday,
             isToday: isToday,
             calculateTaskLanes: calculateTaskLanes,
             onAppointmentDetails: onAppointmentDetails,
@@ -95,11 +105,14 @@ class GanttChartSurface extends StatelessWidget {
   }
 }
 
-class _HorizontalGanttChart extends StatelessWidget {
+class _HorizontalGanttChart extends StatefulWidget {
   const _HorizontalGanttChart({
     required this.teamMembers,
     required this.tasks,
     required this.startDate,
+    required this.horizontalTimelineScrollController,
+    required this.shouldScrollToToday,
+    required this.onScrolledToToday,
     required this.isToday,
     required this.calculateTaskLanes,
     required this.onAppointmentDetails,
@@ -114,6 +127,9 @@ class _HorizontalGanttChart extends StatelessWidget {
   final List<TeamMemberEntity> teamMembers;
   final List<TaskEntity> tasks;
   final DateTime startDate;
+  final ScrollController horizontalTimelineScrollController;
+  final bool shouldScrollToToday;
+  final VoidCallback onScrolledToToday;
   final bool Function(DateTime date) isToday;
   final Map<String, int> Function(
     List<TaskEntity> tasks, {
@@ -136,55 +152,119 @@ class _HorizontalGanttChart extends StatelessWidget {
   final double Function(DateTime dateTime) timeToFraction;
 
   @override
-  Widget build(BuildContext context) {
-    final displayDays = getViewDays();
-    final tasksByEmployee = {
-      for (final member in teamMembers)
-        member.id: tasks.where((task) => task.assigneeId == member.id).toList(),
-    };
-    final needsHorizontalScroll = displayDays > 14;
-    Widget chartContent = Column(
-      children: [
-        _HorizontalDateHeader(
-          startDate: startDate,
-          displayDays: displayDays,
-          isToday: isToday,
-        ),
-        Expanded(
-          child: ListView.builder(
-            itemCount: teamMembers.length,
-            itemBuilder: (context, index) {
-              final member = teamMembers[index];
-              final memberTasks = tasksByEmployee[member.id] ?? const [];
-              return GanttEmployeeRow(
-                member: member,
-                tasks: memberTasks,
-                startDate: startDate,
-                displayDays: displayDays,
-                isToday: isToday,
-                calculateTaskLanes: calculateTaskLanes,
-                onAppointmentDetails: onAppointmentDetails,
-                onEditTask: onEditTask,
-                onTaskDropped: onTaskDropped,
-                onTaskResized: onTaskResized,
-                toJulianDay: toJulianDay,
-                timeToFraction: timeToFraction,
-              );
-            },
-          ),
-        ),
-      ],
-    );
-    if (needsHorizontalScroll) {
-      return SingleChildScrollView(
-        scrollDirection: Axis.horizontal,
-        child: SizedBox(
-          width: 200.0 + (displayDays * 60.0),
-          child: chartContent,
-        ),
-      );
+  State<_HorizontalGanttChart> createState() => _HorizontalGanttChartState();
+}
+
+class _HorizontalGanttChartState extends State<_HorizontalGanttChart> {
+  final GlobalKey _todayHeaderKey = GlobalKey();
+  bool _didScrollToToday = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _scheduleInitialTodayScroll();
+  }
+
+  @override
+  void didUpdateWidget(covariant _HorizontalGanttChart oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.startDate != widget.startDate ||
+        oldWidget.getViewDays() != widget.getViewDays()) {
+      _didScrollToToday = false;
+      _scheduleInitialTodayScroll();
     }
-    return chartContent;
+  }
+
+  void _scheduleInitialTodayScroll() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || _didScrollToToday) return;
+      if (!widget.shouldScrollToToday) return;
+      final todayContext = _todayHeaderKey.currentContext;
+      if (todayContext == null) return;
+      _didScrollToToday = true;
+      widget.onScrolledToToday();
+      Scrollable.ensureVisible(
+        todayContext,
+        alignment: 0.5,
+        duration: Duration.zero,
+      );
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final displayDays = widget.getViewDays();
+    final visibleDates = _buildWorkDates(widget.startDate, displayDays);
+    final tasksByEmployee = {
+      for (final member in widget.teamMembers)
+        member.id: widget.tasks
+            .where((task) => task.assigneeId == member.id)
+            .toList(),
+    };
+    final chartWidth = 200.0 + (displayDays * 60.0);
+    final chartContent = SizedBox(
+      width: chartWidth,
+      child: Column(
+        children: [
+          _HorizontalDateHeader(
+            visibleDates: visibleDates,
+            isToday: widget.isToday,
+            todayKey: _todayHeaderKey,
+          ),
+          Expanded(
+            child: ListView.builder(
+              itemCount: widget.teamMembers.length,
+              itemBuilder: (context, index) {
+                final member = widget.teamMembers[index];
+                final memberTasks = tasksByEmployee[member.id] ?? const [];
+                return GanttEmployeeRow(
+                  member: member,
+                  tasks: memberTasks,
+                  startDate: widget.startDate,
+                  visibleDates: visibleDates,
+                  isToday: widget.isToday,
+                  calculateTaskLanes: widget.calculateTaskLanes,
+                  onAppointmentDetails: widget.onAppointmentDetails,
+                  onEditTask: widget.onEditTask,
+                  onTaskDropped: widget.onTaskDropped,
+                  onTaskResized: widget.onTaskResized,
+                  toJulianDay: widget.toJulianDay,
+                  timeToFraction: widget.timeToFraction,
+                );
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+    return Scrollbar(
+      controller: widget.horizontalTimelineScrollController,
+      thumbVisibility: true,
+      trackVisibility: true,
+      child: SingleChildScrollView(
+        key: const PageStorageKey<String>('gantt-horizontal-timeline-scroll'),
+        controller: widget.horizontalTimelineScrollController,
+        scrollDirection: Axis.horizontal,
+        child: chartContent,
+      ),
+    );
+  }
+
+  List<DateTime> _buildWorkDates(DateTime startDate, int count) {
+    final dates = <DateTime>[];
+    var offset = 0;
+    while (dates.length < count) {
+      final date = DateTime(
+        startDate.year,
+        startDate.month,
+        startDate.day + offset,
+      );
+      if (date.weekday != DateTime.friday) {
+        dates.add(date);
+      }
+      offset++;
+    }
+    return dates;
   }
 }
 
@@ -310,14 +390,14 @@ class _VerticalGanttChart extends StatelessWidget {
 
 class _HorizontalDateHeader extends StatelessWidget {
   const _HorizontalDateHeader({
-    required this.startDate,
-    required this.displayDays,
+    required this.visibleDates,
     required this.isToday,
+    required this.todayKey,
   });
 
-  final DateTime startDate;
-  final int displayDays;
+  final List<DateTime> visibleDates;
   final bool Function(DateTime date) isToday;
+  final GlobalKey todayKey;
 
   @override
   Widget build(BuildContext context) {
@@ -347,24 +427,23 @@ class _HorizontalDateHeader extends StatelessWidget {
           ),
           Expanded(
             child: Row(
-              children: List.generate(displayDays, (i) {
-                final date = DateTime(
-                  startDate.year,
-                  startDate.month,
-                  startDate.day + i,
-                );
+              children: visibleDates.map((date) {
                 final today = isToday(date);
-                final weekend = date.weekday == DateTime.friday;
+                final weekStart = _isVisibleWeekStart(date);
                 return Expanded(
                   child: Container(
+                    key: today ? todayKey : null,
                     decoration: BoxDecoration(
                       color: today
                           ? AppColors.primary.withValues(alpha: 0.1)
-                          : (weekend
-                                ? AppColors.surfaceColor.withValues(alpha: 0.3)
-                                : null),
-                      border: const Border(
-                        left: BorderSide(color: AppColors.border, width: 1),
+                          : null,
+                      border: Border(
+                        left: BorderSide(
+                          color: weekStart
+                              ? AppColors.primary.withValues(alpha: 0.3)
+                              : AppColors.border,
+                          width: weekStart ? 2 : 1,
+                        ),
                       ),
                     ),
                     padding: const EdgeInsets.symmetric(vertical: 4),
@@ -408,12 +487,16 @@ class _HorizontalDateHeader extends StatelessWidget {
                     ),
                   ),
                 );
-              }),
+              }).toList(),
             ),
           ),
         ],
       ),
     );
+  }
+
+  bool _isVisibleWeekStart(DateTime date) {
+    return date.weekday == DateTime.thursday;
   }
 }
 

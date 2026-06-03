@@ -116,9 +116,10 @@ class _AddTaskDialogSimpleState extends State<AddTaskDialogSimple>
                         if (_currentTaskType == TaskType.appointment)
                           _buildAppointmentFields(),
 
-                        // Date and time fields
-                        _buildDateTimeFields(),
-                        const SizedBox(height: 16),
+                        if (_currentTaskType == TaskType.appointment) ...[
+                          _buildDateTimeFields(),
+                          const SizedBox(height: 16),
+                        ],
                         _buildNotesField(),
                       ],
                     ),
@@ -270,7 +271,7 @@ class _AddTaskDialogSimpleState extends State<AddTaskDialogSimple>
             border: Border.all(color: AppColors.inputBorder),
           ),
           child: DropdownButtonFormField<String>(
-            value: _selectedProjectId,
+            initialValue: _selectedProjectId,
             decoration: const InputDecoration(
               contentPadding: EdgeInsets.symmetric(horizontal: 12),
               border: InputBorder.none,
@@ -331,14 +332,12 @@ class _AddTaskDialogSimpleState extends State<AddTaskDialogSimple>
   }
 
   Widget _buildDateTimeFields() {
-    final isAppointment = _currentTaskType == TaskType.appointment;
-
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         // Start Date & Time
         Text(
-          isAppointment ? 'تاريخ ووقت الموعد *' : 'تاريخ ووقت البداية *',
+          'تاريخ ووقت الموعد *',
           style: AppTextStyles.inputLabel.copyWith(fontWeight: FontWeight.w600),
         ),
         const SizedBox(height: 8),
@@ -361,37 +360,6 @@ class _AddTaskDialogSimpleState extends State<AddTaskDialogSimple>
             ),
           ],
         ),
-
-        // End Date & Time (only for non-appointments)
-        if (!isAppointment) ...[
-          const SizedBox(height: 16),
-          Text(
-            'تاريخ ووقت النهاية *',
-            style: AppTextStyles.inputLabel.copyWith(
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Row(
-            children: [
-              Expanded(
-                flex: 3,
-                child: _buildDatePickerField(
-                  value: _endDate,
-                  onTap: () => _selectDate(false),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                flex: 2,
-                child: _buildTimePickerField(
-                  value: _endTime,
-                  onTap: () => _selectTime(false),
-                ),
-              ),
-            ],
-          ),
-        ],
       ],
     );
   }
@@ -629,16 +597,16 @@ class _AddTaskDialogSimpleState extends State<AddTaskDialogSimple>
   void _submitForm() {
     if (!_formKey.currentState!.validate()) return;
 
-    // Validation
-    if (_startDate == null || _startTime == null) {
-      _showError('يرجى اختيار تاريخ ووقت البداية');
+    final defaultStart = DateTime.now();
+    _startDate ??= defaultStart;
+    _startTime ??= const TimeOfDay(hour: 9, minute: 0);
+    _endDate ??= _startDate;
+    _endTime ??= const TimeOfDay(hour: 17, minute: 0);
+
+    if (_currentTaskType == TaskType.appointment &&
+        (_startDate == null || _startTime == null)) {
+      _showError('يرجى اختيار تاريخ ووقت الموعد');
       return;
-    }
-    if (_currentTaskType != TaskType.appointment) {
-      if (_endDate == null || _endTime == null) {
-        _showError('يرجى اختيار تاريخ ووقت النهاية');
-        return;
-      }
     }
     if (_currentTaskType == TaskType.workTask && _selectedProjectId == null) {
       _showError('يرجى اختيار المشروع');

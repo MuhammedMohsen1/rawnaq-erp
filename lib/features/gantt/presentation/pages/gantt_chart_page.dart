@@ -21,8 +21,14 @@ class GanttChartPage extends StatefulWidget {
 }
 
 class _GanttChartPageState extends State<GanttChartPage> {
+  static const int _timelinePastDays = 90;
+  static const int _timelineDisplayWorkDays = 365;
+  static const int _timelineFetchCalendarDays = 520;
+
   final TasksApiDataSource _dataSource = TasksApiDataSource();
   final ProjectsApiDataSource _projectsDataSource = ProjectsApiDataSource();
+  final ScrollController _horizontalTimelineScrollController =
+      ScrollController();
 
   GanttTimePeriod _selectedPeriod = GanttTimePeriod.week;
   GanttLayoutOrientation _selectedOrientation =
@@ -30,6 +36,7 @@ class _GanttChartPageState extends State<GanttChartPage> {
   bool _showTeamTasks = true;
   String? _selectedMemberId;
   bool _isDraftPanelExpanded = true;
+  bool _didAutoScrollTimelineToToday = false;
   bool _isLoading = true;
   String? _errorMessage;
 
@@ -44,6 +51,12 @@ class _GanttChartPageState extends State<GanttChartPage> {
   void initState() {
     super.initState();
     _loadData();
+  }
+
+  @override
+  void dispose() {
+    _horizontalTimelineScrollController.dispose();
+    super.dispose();
   }
 
   Future<void> _loadData() async {
@@ -97,7 +110,7 @@ class _GanttChartPageState extends State<GanttChartPage> {
       final endDate = DateTime(
         startDate.year,
         startDate.month,
-        startDate.day + _getViewDays(),
+        startDate.day + _timelineFetchCalendarDays,
       );
       final assigneeId = _showTeamTasks ? _selectedMemberId : null;
       final tasks = _showTeamTasks
@@ -166,48 +179,11 @@ class _GanttChartPageState extends State<GanttChartPage> {
 
   DateTime _getStartDate() {
     final now = DateTime.now();
-    switch (_selectedPeriod) {
-      case GanttTimePeriod.today:
-        return DateTime(now.year, now.month, now.day);
-      case GanttTimePeriod.week:
-        int daysToSubtract = (now.weekday + 1) % 7;
-        return DateTime(now.year, now.month, now.day - daysToSubtract);
-      case GanttTimePeriod.month:
-        return DateTime(now.year, now.month, 1);
-      case GanttTimePeriod.threeMonths:
-        return DateTime(now.year, now.month - 2, 1);
-    }
+    return DateTime(now.year, now.month, now.day - _timelinePastDays);
   }
 
   int _getViewDays() {
-    final now = DateTime.now();
-    switch (_selectedPeriod) {
-      case GanttTimePeriod.today:
-        return 1;
-      case GanttTimePeriod.week:
-        return 7;
-      case GanttTimePeriod.month:
-        // Calculate actual days in current month
-        return _daysInMonth(now.year, now.month);
-      case GanttTimePeriod.threeMonths:
-        // Calculate actual days in 3-month period
-        final startMonth = now.month - 2;
-        final startYear = startMonth <= 0 ? now.year - 1 : now.year;
-        final adjustedStartMonth = startMonth <= 0
-            ? startMonth + 12
-            : startMonth;
-        int totalDays = 0;
-        for (int i = 0; i < 3; i++) {
-          int m = adjustedStartMonth + i;
-          int y = startYear;
-          if (m > 12) {
-            m -= 12;
-            y++;
-          }
-          totalDays += _daysInMonth(y, m);
-        }
-        return totalDays;
-    }
+    return _timelineDisplayWorkDays;
   }
 
   void _showAddTaskDialog() {
@@ -427,6 +403,12 @@ class _GanttChartPageState extends State<GanttChartPage> {
           isLoading: _isLoading,
           errorMessage: _errorMessage,
           startDate: startDate,
+          horizontalTimelineScrollController:
+              _horizontalTimelineScrollController,
+          shouldScrollTimelineToToday: !_didAutoScrollTimelineToToday,
+          onTimelineScrolledToToday: () {
+            _didAutoScrollTimelineToToday = true;
+          },
           tasks: _tasks,
           onPeriodChanged: (period) {
             setState(() => _selectedPeriod = period);
@@ -452,7 +434,7 @@ class _GanttChartPageState extends State<GanttChartPage> {
           onTaskResized: _onTaskResized,
           onTaskUpdated: _applyFilters,
           onTaskCreated: _dataSource.createTask,
-          onTaskDeleted: _dataSource.deleteTask,
+          onTaskDeleted: _deleteTaskAndRefresh,
           onUpdateTask: _dataSource.updateTask,
           datePreservingTaskTime: _datePreservingTaskTime,
           isToday: _isToday,
@@ -468,11 +450,17 @@ class _GanttChartPageState extends State<GanttChartPage> {
       ),
     );
   }
+
   bool _isToday(DateTime date) {
     final now = DateTime.now();
     return date.year == now.year &&
         date.month == now.month &&
         date.day == now.day;
+  }
+
+  Future<void> _deleteTaskAndRefresh(String taskId) async {
+    await _dataSource.deleteTask(taskId);
+    await _applyFilters();
   }
 
   bool _isSameDate(DateTime a, DateTime b) {

@@ -150,6 +150,19 @@ class DesignWorkspace {
               dueDate:
                   DateTime.tryParse('${item['dueDate']}') ?? DateTime.now(),
               isPaid: item['isPaid'] as bool? ?? false,
+              captures: _maps(item['captures'])
+                  .map(
+                    (capture) => ProjectInstallmentCapture(
+                      id: '${capture['id']}',
+                      url: '${capture['url'] ?? ''}',
+                      fileName:
+                          '${capture['fileName'] ?? capture['originalName'] ?? ''}',
+                      mimeType: capture['mimeType'] as String?,
+                      createdAt: DateTime.tryParse('${capture['createdAt']}'),
+                    ),
+                  )
+                  .where((capture) => capture.url.isNotEmpty)
+                  .toList(),
             ),
           )
           .toList(),

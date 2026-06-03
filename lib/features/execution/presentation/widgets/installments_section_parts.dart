@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_text_styles.dart';
 import '../../data/models/execution_models.dart';
+import 'transaction_attachments.dart';
 
 class InstallmentsSectionHeader extends StatelessWidget {
   final bool isAdminOrManager;
@@ -10,6 +11,7 @@ class InstallmentsSectionHeader extends StatelessWidget {
   final double totalCost;
   final double totalProfit;
   final double profitPercentage;
+  final VoidCallback? onOpenDialog;
 
   const InstallmentsSectionHeader({
     super.key,
@@ -18,6 +20,7 @@ class InstallmentsSectionHeader extends StatelessWidget {
     required this.totalCost,
     required this.totalProfit,
     required this.profitPercentage,
+    this.onOpenDialog,
   });
 
   @override
@@ -34,24 +37,35 @@ class InstallmentsSectionHeader extends StatelessWidget {
                 'جدول الدفعات',
                 style: AppTextStyles.h3.copyWith(fontWeight: FontWeight.bold),
               ),
-              if (isAdminOrManager)
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 6,
-                  ),
-                  decoration: BoxDecoration(
-                    color: AppColors.success.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Text(
-                    'الربح: ${profitPercentage.toStringAsFixed(1)}%',
-                    style: AppTextStyles.bodySmall.copyWith(
-                      color: AppColors.success,
-                      fontWeight: FontWeight.bold,
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (onOpenDialog != null)
+                    IconButton(
+                      onPressed: onOpenDialog,
+                      icon: const Icon(Icons.open_in_new),
+                      tooltip: 'فتح جدول الدفعات',
                     ),
-                  ),
-                ),
+                  if (isAdminOrManager)
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 6,
+                      ),
+                      decoration: BoxDecoration(
+                        color: AppColors.success.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Text(
+                        'الربح: ${profitPercentage.toStringAsFixed(1)}%',
+                        style: AppTextStyles.bodySmall.copyWith(
+                          color: AppColors.success,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                ],
+              ),
             ],
           ),
           const SizedBox(height: 16),
@@ -127,12 +141,14 @@ class InstallmentsSectionTable extends StatelessWidget {
   final bool isAdminOrManager;
   final Function(int phaseIndex, String? requestId, bool currentlyCollected)?
   onToggleCollected;
+  final void Function(PaymentPhaseModel phase)? onRequestPaymentPhase;
 
   const InstallmentsSectionTable({
     super.key,
     required this.paymentSchedule,
     required this.isAdminOrManager,
     required this.onToggleCollected,
+    this.onRequestPaymentPhase,
   });
 
   @override
@@ -146,23 +162,28 @@ class InstallmentsSectionTable extends StatelessWidget {
                 1: FlexColumnWidth(1),
                 2: FlexColumnWidth(1.5),
                 3: FlexColumnWidth(1.5),
-                4: FlexColumnWidth(1.5),
+                4: FlexColumnWidth(1.3),
                 5: FlexColumnWidth(1),
+                6: FlexColumnWidth(1),
               }
             : const {
                 0: FlexColumnWidth(2),
                 1: FlexColumnWidth(1),
                 2: FlexColumnWidth(1.5),
                 3: FlexColumnWidth(1.5),
+                4: FlexColumnWidth(1),
+                5: FlexColumnWidth(1),
               },
         children: [
-          InstallmentsTableHeader(isAdminOrManager: isAdminOrManager)
-              .toTableRow(),
+          InstallmentsTableHeader(
+            isAdminOrManager: isAdminOrManager,
+          ).toTableRow(),
           ...paymentSchedule.map(
             (phase) => InstallmentsTableRow(
               phase: phase,
               isAdminOrManager: isAdminOrManager,
               onToggleCollected: onToggleCollected,
+              onRequestPaymentPhase: onRequestPaymentPhase,
             ).toTableRow(),
           ),
         ],
@@ -178,8 +199,16 @@ class InstallmentsTableHeader {
 
   TableRow toTableRow() {
     final headers = isAdminOrManager
-        ? ['الدفعة', 'النسبة', 'السعر', 'التكلفة', 'الحالة', 'إجراء']
-        : ['الدفعة', 'النسبة', 'التكلفة', 'الحالة'];
+        ? [
+            'بند الجدول',
+            'النسبة',
+            'السعر',
+            'التكلفة',
+            'الحالة',
+            'التقاط',
+            'إجراء',
+          ]
+        : ['بند الجدول', 'النسبة', 'التكلفة', 'الحالة', 'التقاط', 'إجراء'];
 
     return TableRow(
       decoration: BoxDecoration(
@@ -209,20 +238,26 @@ class InstallmentsTableRow {
   final PaymentPhaseModel phase;
   final bool isAdminOrManager;
   final Function(int phaseIndex, String? requestId, bool currentlyCollected)?
-      onToggleCollected;
+  onToggleCollected;
+  final void Function(PaymentPhaseModel phase)? onRequestPaymentPhase;
 
   const InstallmentsTableRow({
     required this.phase,
     required this.isAdminOrManager,
     required this.onToggleCollected,
+    this.onRequestPaymentPhase,
   });
 
   TableRow toTableRow() {
     final statusWidget = InstallmentStatusBadge(phase: phase);
+    final attachmentsWidget = phase.attachments.isEmpty
+        ? const Text('-', style: TextStyle(color: AppColors.textSecondary))
+        : TransactionAttachments(attachments: phase.attachments, compact: true);
     final actionWidget = InstallmentActionButton(
       phase: phase,
       isAdminOrManager: isAdminOrManager,
       onToggleCollected: onToggleCollected,
+      onRequestPaymentPhase: onRequestPaymentPhase,
     );
 
     final cells = isAdminOrManager
@@ -261,7 +296,6 @@ class InstallmentsTableRow {
               ),
             ),
             const InstallmentsTableCell(child: Center(child: SizedBox())),
-            const InstallmentsTableCell(child: Center(child: SizedBox())),
           ]
         : [
             InstallmentsTableCell(
@@ -288,6 +322,11 @@ class InstallmentsTableRow {
               ),
             ),
             InstallmentsTableCell(child: Center(child: statusWidget)),
+            InstallmentsTableCell(child: Center(child: attachmentsWidget)),
+            InstallmentsTableCell(
+              padding: const EdgeInsets.all(8),
+              child: Center(child: actionWidget),
+            ),
           ];
 
     final rowCells = isAdminOrManager
@@ -297,6 +336,7 @@ class InstallmentsTableRow {
             cells[2],
             cells[3],
             InstallmentsTableCell(child: Center(child: statusWidget)),
+            InstallmentsTableCell(child: Center(child: attachmentsWidget)),
             InstallmentsTableCell(
               padding: const EdgeInsets.all(8),
               child: Center(child: actionWidget),
@@ -392,22 +432,61 @@ class InstallmentActionButton extends StatelessWidget {
   final bool isAdminOrManager;
   final Function(int phaseIndex, String? requestId, bool currentlyCollected)?
   onToggleCollected;
+  final void Function(PaymentPhaseModel phase)? onRequestPaymentPhase;
 
   const InstallmentActionButton({
     super.key,
     required this.phase,
     required this.isAdminOrManager,
     required this.onToggleCollected,
+    this.onRequestPaymentPhase,
   });
 
   @override
   Widget build(BuildContext context) {
-    if (!isAdminOrManager) return const SizedBox.shrink();
-    if (!phase.isApproved) {
-      return const SizedBox(
+    if (!isAdminOrManager) {
+      if (phase.isRequested || phase.isApproved) {
+        return const SizedBox(
+          height: 36,
+          child: Center(
+            child: Text('-', style: TextStyle(color: AppColors.textSecondary)),
+          ),
+        );
+      }
+      return SizedBox(
         height: 36,
-        child: Center(
-          child: Text('-', style: TextStyle(color: AppColors.textSecondary)),
+        child: TextButton.icon(
+          onPressed: onRequestPaymentPhase == null
+              ? null
+              : () => onRequestPaymentPhase!(phase),
+          icon: const Icon(Icons.upload_file_outlined, size: 15),
+          label: const Text('طلب'),
+          style: TextButton.styleFrom(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+            backgroundColor: AppColors.primary.withValues(alpha: 0.08),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8),
+            ),
+          ),
+        ),
+      );
+    }
+    if (!phase.isApproved || !phase.isCollected) {
+      return SizedBox(
+        height: 36,
+        child: TextButton.icon(
+          onPressed: onRequestPaymentPhase == null
+              ? null
+              : () => onRequestPaymentPhase!(phase),
+          icon: const Icon(Icons.payments_outlined, size: 15),
+          label: const Text('دفع'),
+          style: TextButton.styleFrom(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+            backgroundColor: AppColors.success.withValues(alpha: 0.1),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8),
+            ),
+          ),
         ),
       );
     }

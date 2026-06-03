@@ -8,6 +8,7 @@ class DesignWorkspaceInstallmentsEditorDialog extends StatefulWidget {
   final String title;
   final String description;
   final String confirmLabel;
+  final Future<void> Function(ProjectInstallment installment)? onUploadCapture;
 
   const DesignWorkspaceInstallmentsEditorDialog({
     super.key,
@@ -15,6 +16,7 @@ class DesignWorkspaceInstallmentsEditorDialog extends StatefulWidget {
     this.title = 'تعديل الدفعات',
     this.description = 'يمكنك إضافة أو تعديل أو حذف أي دفعة.',
     this.confirmLabel = 'حفظ التعديلات',
+    this.onUploadCapture,
   });
 
   @override
@@ -27,12 +29,14 @@ class _InstallmentDraft {
   final TextEditingController amountController;
   DateTime dueDate;
   bool isPaid;
+  final List<ProjectInstallmentCapture> captures;
 
   _InstallmentDraft({
     required this.id,
     required this.amountController,
     required this.dueDate,
     required this.isPaid,
+    required this.captures,
   });
 
   factory _InstallmentDraft.fromInstallment(ProjectInstallment installment) {
@@ -43,6 +47,7 @@ class _InstallmentDraft {
       ),
       dueDate: installment.dueDate,
       isPaid: installment.isPaid,
+      captures: installment.captures,
     );
   }
 
@@ -52,6 +57,7 @@ class _InstallmentDraft {
       amountController: TextEditingController(),
       dueDate: DateTime.now().add(Duration(days: index * 30)),
       isPaid: false,
+      captures: const [],
     );
   }
 
@@ -140,6 +146,7 @@ class _DesignWorkspaceInstallmentsEditorDialogState
           amount: amount,
           dueDate: draft.dueDate,
           isPaid: draft.isPaid,
+          captures: draft.captures,
         ),
       );
     }
@@ -318,6 +325,33 @@ class _DesignWorkspaceInstallmentsEditorDialogState
                                     ),
                                   ],
                                 ),
+                                if (draft.captures.isNotEmpty ||
+                                    widget.onUploadCapture != null) ...[
+                                  const SizedBox(height: 10),
+                                  Wrap(
+                                    spacing: 8,
+                                    runSpacing: 8,
+                                    crossAxisAlignment:
+                                        WrapCrossAlignment.center,
+                                    children: [
+                                      ...draft.captures.map(
+                                        (capture) => _InstallmentCaptureChip(
+                                          capture: capture,
+                                        ),
+                                      ),
+                                      if (widget.onUploadCapture != null)
+                                        OutlinedButton.icon(
+                                          onPressed: () =>
+                                              _uploadCapture(draft),
+                                          icon: const Icon(
+                                            Icons.upload_file_outlined,
+                                            size: 18,
+                                          ),
+                                          label: const Text('رفع إيصال'),
+                                        ),
+                                    ],
+                                  ),
+                                ],
                               ],
                             ),
                           );
@@ -356,6 +390,92 @@ class _DesignWorkspaceInstallmentsEditorDialogState
                     child: Text(widget.confirmLabel),
                   ),
                 ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _uploadCapture(_InstallmentDraft draft) async {
+    final amount = double.tryParse(draft.amountController.text.trim());
+    if (amount == null || amount <= 0) {
+      setState(() {
+        _errorMessage = 'أدخل قيمة الدفعة قبل رفع الإيصال';
+      });
+      return;
+    }
+    await widget.onUploadCapture?.call(
+      ProjectInstallment(
+        id: draft.id,
+        amount: amount,
+        dueDate: draft.dueDate,
+        isPaid: draft.isPaid,
+        captures: draft.captures,
+      ),
+    );
+  }
+}
+
+class _InstallmentCaptureChip extends StatelessWidget {
+  final ProjectInstallmentCapture capture;
+
+  const _InstallmentCaptureChip({required this.capture});
+
+  @override
+  Widget build(BuildContext context) {
+    final label = capture.fileName.trim().isEmpty
+        ? 'إيصال'
+        : capture.fileName.trim();
+    return ActionChip(
+      avatar: const Icon(Icons.receipt_long_outlined, size: 16),
+      label: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 160),
+        child: Text(label, maxLines: 1, overflow: TextOverflow.ellipsis),
+      ),
+      onPressed: () => _preview(context),
+    );
+  }
+
+  void _preview(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (dialogContext) => Dialog(
+        backgroundColor: AppColors.cardBackground,
+        insetPadding: const EdgeInsets.all(24),
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 900, maxHeight: 720),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Row(
+                children: [
+                  const SizedBox(width: 12),
+                  const Icon(Icons.receipt_long_outlined),
+                  const SizedBox(width: 8),
+                  Expanded(child: Text(capture.fileName)),
+                  IconButton(
+                    onPressed: () => Navigator.of(dialogContext).pop(),
+                    icon: const Icon(Icons.close),
+                    tooltip: 'إغلاق',
+                  ),
+                ],
+              ),
+              Flexible(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
+                  child: Image.network(
+                    capture.url,
+                    fit: BoxFit.contain,
+                    errorBuilder: (context, error, stackTrace) =>
+                        const SizedBox(
+                          width: 420,
+                          height: 220,
+                          child: Center(child: Text('تعذر عرض الإيصال')),
+                        ),
+                  ),
+                ),
               ),
             ],
           ),

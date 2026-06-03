@@ -159,13 +159,54 @@ class ExecutionCubit extends Cubit<ExecutionState> {
     String projectId, {
     required int phaseIndex,
     required String phaseName,
+    List<MultipartFile> attachments = const [],
   }) async {
     try {
       await _apiDataSource.requestInstallment(
         projectId,
         phaseIndex: phaseIndex,
         phaseName: phaseName,
+        attachments: attachments,
       );
+      await refreshDashboard(projectId);
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  /// Pay a payment schedule item directly (Admin)
+  Future<void> payPaymentScheduleItem(
+    String projectId, {
+    required int phaseIndex,
+    required String phaseName,
+    String? requestId,
+    bool isApproved = false,
+    List<MultipartFile> attachments = const [],
+  }) async {
+    try {
+      var activeRequestId = requestId;
+      var createdRequest = false;
+      if (activeRequestId == null || activeRequestId.isEmpty) {
+        final request = await _apiDataSource.requestInstallment(
+          projectId,
+          phaseIndex: phaseIndex,
+          phaseName: phaseName,
+          attachments: attachments,
+        );
+        activeRequestId = request.id;
+        createdRequest = true;
+      }
+
+      if (!createdRequest && attachments.isNotEmpty) {
+        await _apiDataSource.uploadInstallmentCaptures(
+          activeRequestId,
+          attachments: attachments,
+        );
+      }
+      if (!isApproved) {
+        await _apiDataSource.approveInstallment(activeRequestId);
+      }
+      await _apiDataSource.collectInstallment(activeRequestId);
       await refreshDashboard(projectId);
     } catch (e) {
       rethrow;

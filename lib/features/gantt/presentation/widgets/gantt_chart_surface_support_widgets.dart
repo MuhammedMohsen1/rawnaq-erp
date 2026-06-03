@@ -7,10 +7,30 @@ import '../../../tasks/domain/enums/task_status.dart';
 import '../../../tasks/domain/enums/task_type.dart';
 import '../widgets/appointment_widgets.dart';
 
+double _workdayOffset(
+  DateTime dateTime,
+  List<DateTime> visibleDates,
+  double timeFraction,
+) {
+  final date = DateTime(dateTime.year, dateTime.month, dateTime.day);
+  final index = visibleDates.indexWhere((visibleDate) {
+    return visibleDate.year == date.year &&
+        visibleDate.month == date.month &&
+        visibleDate.day == date.day;
+  });
+  if (index != -1) return index + timeFraction;
+
+  return visibleDates
+      .where((visibleDate) => visibleDate.isBefore(date))
+      .length
+      .toDouble();
+}
+
 class GanttDraftTaskChip extends StatelessWidget {
-  const GanttDraftTaskChip({super.key, required this.task});
+  const GanttDraftTaskChip({super.key, required this.task, this.onDelete});
 
   final TaskEntity task;
+  final VoidCallback? onDelete;
 
   @override
   Widget build(BuildContext context) {
@@ -23,18 +43,23 @@ class GanttDraftTaskChip extends StatelessWidget {
       ),
       childWhenDragging: Opacity(
         opacity: 0.3,
-        child: _DraftTaskChipContent(task: task),
+        child: _DraftTaskChipContent(task: task, onDelete: onDelete),
       ),
-      child: _DraftTaskChipContent(task: task),
+      child: _DraftTaskChipContent(task: task, onDelete: onDelete),
     );
   }
 }
 
 class _DraftTaskChipContent extends StatelessWidget {
-  const _DraftTaskChipContent({required this.task, this.isDragging = false});
+  const _DraftTaskChipContent({
+    required this.task,
+    this.isDragging = false,
+    this.onDelete,
+  });
 
   final TaskEntity task;
   final bool isDragging;
+  final VoidCallback? onDelete;
 
   @override
   Widget build(BuildContext context) {
@@ -94,6 +119,20 @@ class _DraftTaskChipContent extends StatelessWidget {
             size: 14,
             color: isDragging ? AppColors.primary : AppColors.textMuted,
           ),
+          if (!isDragging && onDelete != null) ...[
+            const SizedBox(width: 4),
+            IconButton(
+              onPressed: onDelete,
+              icon: const Icon(Icons.delete_outline, size: 16),
+              tooltip: 'حذف المهمة',
+              visualDensity: VisualDensity.compact,
+              padding: EdgeInsets.zero,
+              constraints: const BoxConstraints(minWidth: 24, minHeight: 24),
+              style: IconButton.styleFrom(
+                foregroundColor: AppColors.statusDelayed,
+              ),
+            ),
+          ],
         ],
       ),
     );
@@ -338,7 +377,7 @@ class GanttBarsForEmployee extends StatelessWidget {
     required this.member,
     required this.tasks,
     required this.startDate,
-    required this.displayDays,
+    required this.visibleDates,
     required this.taskLanes,
     required this.onAppointmentDetails,
     required this.onEditTask,
@@ -351,7 +390,7 @@ class GanttBarsForEmployee extends StatelessWidget {
   final TeamMemberEntity member;
   final List<TaskEntity> tasks;
   final DateTime startDate;
-  final int displayDays;
+  final List<DateTime> visibleDates;
   final Map<String, int> taskLanes;
   final void Function(TaskEntity task) onAppointmentDetails;
   final void Function(TaskEntity task) onEditTask;
@@ -368,10 +407,11 @@ class GanttBarsForEmployee extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final displayDays = visibleDates.length;
     final endDate = DateTime(
-      startDate.year,
-      startDate.month,
-      startDate.day + displayDays,
+      visibleDates.last.year,
+      visibleDates.last.month,
+      visibleDates.last.day + 1,
     );
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -379,17 +419,12 @@ class GanttBarsForEmployee extends StatelessWidget {
         return Stack(
           children: [
             Row(
-              children: List.generate(displayDays, (i) {
-                final columnDate = DateTime(
-                  startDate.year,
-                  startDate.month,
-                  startDate.day + i,
-                );
+              children: visibleDates.map((columnDate) {
                 final today =
                     columnDate.year == DateTime.now().year &&
                     columnDate.month == DateTime.now().month &&
                     columnDate.day == DateTime.now().day;
-                final weekend = columnDate.weekday == DateTime.friday;
+                final weekStart = _isVisibleWeekStart(columnDate);
                 return Expanded(
                   child: DragTarget<TaskEntity>(
                     onWillAcceptWithDetails: (_) => true,
@@ -403,13 +438,14 @@ class GanttBarsForEmployee extends StatelessWidget {
                               ? AppColors.primary.withValues(alpha: 0.2)
                               : (today
                                     ? AppColors.primary.withValues(alpha: 0.05)
-                                    : (weekend
-                                          ? AppColors.surfaceColor.withValues(
-                                              alpha: 0.2,
-                                            )
-                                          : null)),
-                          border: const Border(
-                            left: BorderSide(color: AppColors.border, width: 1),
+                                    : null),
+                          border: Border(
+                            left: BorderSide(
+                              color: weekStart
+                                  ? AppColors.primary.withValues(alpha: 0.3)
+                                  : AppColors.border,
+                              width: weekStart ? 2 : 1,
+                            ),
                           ),
                         ),
                         child: hovering
@@ -432,7 +468,7 @@ class GanttBarsForEmployee extends StatelessWidget {
                     },
                   ),
                 );
-              }),
+              }).toList(),
             ),
             ...tasks.map((task) {
               final taskStartJulian = toJulianDay(
@@ -461,24 +497,17 @@ class GanttBarsForEmployee extends StatelessWidget {
               }
               final startTimeFraction = timeToFraction(task.startDate);
               final endTimeFraction = timeToFraction(task.endDate);
-              final visibleStartJulian = taskStartJulian < chartStartJulian
-                  ? chartStartJulian
-                  : taskStartJulian;
-              final visibleEndJulian = taskEndJulian > chartEndJulian
-                  ? chartEndJulian
-                  : taskEndJulian;
-              final visibleStartTimeFraction =
-                  taskStartJulian < chartStartJulian ? 0.0 : startTimeFraction;
-              final visibleEndTimeFraction = taskEndJulian > chartEndJulian
-                  ? 1.0
-                  : endTimeFraction;
-              final startOffset =
-                  (visibleStartJulian - chartStartJulian) +
-                  visibleStartTimeFraction;
-              final duration =
-                  ((visibleEndJulian - visibleStartJulian) +
-                          (visibleEndTimeFraction - visibleStartTimeFraction))
-                      .clamp(0.1, 9999.0);
+              final startOffset = _workdayOffset(
+                task.startDate,
+                visibleDates,
+                taskStartJulian < chartStartJulian ? 0.0 : startTimeFraction,
+              );
+              final endOffset = _workdayOffset(
+                task.endDate,
+                visibleDates,
+                taskEndJulian > chartEndJulian ? 1.0 : endTimeFraction,
+              );
+              final duration = (endOffset - startOffset).clamp(0.1, 9999.0);
               if (task.isAppointment) {
                 return Positioned(
                   right: startOffset * dayWidth,
@@ -511,6 +540,10 @@ class GanttBarsForEmployee extends StatelessWidget {
       },
     );
   }
+}
+
+bool _isVisibleWeekStart(DateTime date) {
+  return date.weekday == DateTime.thursday;
 }
 
 class _GanttResizableTaskBarState extends State<GanttResizableTaskBar> {

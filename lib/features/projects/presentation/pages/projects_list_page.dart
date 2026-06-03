@@ -7,6 +7,7 @@ import 'package:go_router/go_router.dart';
 import 'package:infinite_scroll_pagination/infinite_scroll_pagination.dart';
 
 import '../../../../core/routing/app_router.dart';
+import '../../../auth/presentation/bloc/auth_bloc.dart';
 import '../../../contracts/data/datasources/contracts_api_datasource.dart';
 import '../../domain/entities/project_entity.dart';
 import '../../domain/enums/project_status.dart';
@@ -80,6 +81,9 @@ class _ProjectsListPageState extends State<ProjectsListPage> {
     return BlocConsumer<ProjectsBloc, ProjectsState>(
       listener: _onProjectsStateChanged,
       builder: (context, state) {
+        final authState = context.watch<AuthBloc>().state;
+        final isAdmin =
+            authState is AuthAuthenticated && authState.user.isAdmin;
         return Scaffold(
           backgroundColor: Colors.transparent,
           body: SafeArea(
@@ -113,9 +117,13 @@ class _ProjectsListPageState extends State<ProjectsListPage> {
                 onFetchPage: _fetchPage,
                 onNavigate: (project) => _navigate(context, project),
                 onEdit: (project) => _showEditDialog(context, project),
-                onArchive: widget.showArchiveActions
+                onArchive: widget.showArchiveActions && isAdmin
                     ? (project) =>
                           _showArchiveDialog(context, project.id, project.name)
+                    : null,
+                onDelete: widget.showArchiveActions && isAdmin
+                    ? (project) =>
+                          _showDeleteDialog(context, project.id, project.name)
                     : null,
                 onRestore: widget.showRestoreActions
                     ? (project) =>
@@ -345,11 +353,28 @@ class _ProjectsListPageState extends State<ProjectsListPage> {
       builder: (_) {
         return ProjectsConfirmActionDialog(
           icon: Icons.archive_outlined,
-          iconColor: Colors.red,
-          title: 'تأكيد الأرشفة',
+          iconColor: Colors.orange,
+          title: 'تأكيد أرشفة المشروع',
           message:
-              'هل تريد أرشفة "$name"؟ سيتم إخفاء المشروع والتسعير المرتبط به من القوائم النشطة.',
-          confirmLabel: 'أرشفة',
+              'هل تريد أرشفة "$name"؟ سيتم إخفاؤه من القوائم النشطة ويمكن استعادته لاحقًا.',
+          confirmLabel: 'أرشفة المشروع',
+          onConfirm: () => context.read<ProjectsBloc>().add(DeleteProject(id)),
+        );
+      },
+    );
+  }
+
+  void _showDeleteDialog(BuildContext context, String id, String name) {
+    showDialog(
+      context: context,
+      builder: (_) {
+        return ProjectsConfirmActionDialog(
+          icon: Icons.delete_outline_rounded,
+          iconColor: Colors.red,
+          title: 'تأكيد حذف المشروع',
+          message:
+              'هل تريد حذف "$name"؟ سيتم نقله إلى المحذوفات وإخفاء المشروع والتسعير المرتبط به من القوائم النشطة.',
+          confirmLabel: 'حذف المشروع',
           onConfirm: () => context.read<ProjectsBloc>().add(DeleteProject(id)),
         );
       },

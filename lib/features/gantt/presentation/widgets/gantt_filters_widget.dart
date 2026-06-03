@@ -79,13 +79,6 @@ class GanttFiltersWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        // Time period selector (compact segmented buttons)
-        _buildPeriodSelector(),
-
-        const SizedBox(width: 12),
-        Container(width: 1, height: 28, color: AppColors.divider),
-        const SizedBox(width: 12),
-
         // Team/My toggle (compact)
         _buildTeamToggle(),
 
@@ -104,9 +97,7 @@ class GanttFiltersWidget extends StatelessWidget {
         const Spacer(),
 
         // Clear filters (icon only when filters applied)
-        if (selectedMemberId != null ||
-            selectedPeriod != GanttTimePeriod.week ||
-            !showTeamTasks)
+        if (selectedMemberId != null || !showTeamTasks)
           IconButton(
             onPressed: onClearFilters,
             icon: const Icon(Icons.filter_alt_off, size: 20),
@@ -114,48 +105,6 @@ class GanttFiltersWidget extends StatelessWidget {
             style: IconButton.styleFrom(foregroundColor: AppColors.textMuted),
           ),
       ],
-    );
-  }
-
-  Widget _buildPeriodSelector() {
-    return Container(
-      height: 36,
-      decoration: BoxDecoration(
-        color: AppColors.surfaceColor,
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: GanttTimePeriod.values.map((period) {
-          final isSelected = selectedPeriod == period;
-          return InkWell(
-            onTap: () {
-              onPeriodChanged(period);
-              onApplyFilters();
-            },
-            borderRadius: BorderRadius.circular(8),
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 150),
-              padding: const EdgeInsets.symmetric(horizontal: 12),
-              decoration: BoxDecoration(
-                color: isSelected ? AppColors.primary : Colors.transparent,
-                borderRadius: BorderRadius.circular(8),
-              ),
-              alignment: Alignment.center,
-              child: Text(
-                period.arabicName,
-                style: TextStyle(
-                  color: isSelected
-                      ? AppColors.scaffoldBackground
-                      : AppColors.textSecondary,
-                  fontSize: 13,
-                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
-                ),
-              ),
-            ),
-          );
-        }).toList(),
-      ),
     );
   }
 

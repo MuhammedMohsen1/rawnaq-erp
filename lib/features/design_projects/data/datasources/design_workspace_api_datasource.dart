@@ -109,6 +109,22 @@ class DesignWorkspaceApiDataSource {
     );
   }
 
+  Future<void> uploadInstallmentCapture(
+    String projectId,
+    String installmentId, {
+    required String fileName,
+    String? filePath,
+    List<int>? bytes,
+  }) async {
+    final file = filePath != null
+        ? await MultipartFile.fromFile(filePath, filename: fileName)
+        : MultipartFile.fromBytes(bytes!, filename: fileName);
+    await _apiClient.uploadFile(
+      ApiEndpoints.designInstallmentCapture(projectId, installmentId),
+      formData: FormData.fromMap({'files': file}),
+    );
+  }
+
   Future<void> replaceInstallments(
     String projectId,
     List<Map<String, dynamic>> paymentSchedule,

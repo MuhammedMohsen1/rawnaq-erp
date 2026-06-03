@@ -184,6 +184,7 @@ class PaymentPhaseModel {
   final bool isApproved;
   final bool isCollected;
   final String? requestId;
+  final List<TransactionAttachmentModel> attachments;
 
   PaymentPhaseModel({
     required this.index,
@@ -197,6 +198,7 @@ class PaymentPhaseModel {
     required this.isApproved,
     required this.isCollected,
     this.requestId,
+    this.attachments = const [],
   });
 
   factory PaymentPhaseModel.fromJson(Map<String, dynamic> json) {
@@ -205,6 +207,7 @@ class PaymentPhaseModel {
     final amountAfterDeduction = json.containsKey('amountAfterDeduction')
         ? _toDoubleOrZero(json['amountAfterDeduction'])
         : (originalAmount - deductionAmount);
+    final attachmentsJson = json['attachments'];
 
     return PaymentPhaseModel(
       index: _toIntOrZero(json['index']),
@@ -218,6 +221,17 @@ class PaymentPhaseModel {
       isApproved: json['isApproved'] as bool? ?? false,
       isCollected: json['isCollected'] as bool? ?? false,
       requestId: _toStringOrNull(json['requestId']),
+      attachments: attachmentsJson is List
+          ? attachmentsJson
+                .whereType<Map>()
+                .map(
+                  (attachment) => TransactionAttachmentModel.fromJson(
+                    Map<String, dynamic>.from(attachment),
+                  ),
+                )
+                .where((attachment) => attachment.url.isNotEmpty)
+                .toList()
+          : const [],
     );
   }
 }
@@ -239,6 +253,7 @@ class InstallmentRequestModel {
   final bool isCollected;
   final DateTime? collectedAt;
   final String? collectedByName;
+  final List<TransactionAttachmentModel> attachments;
 
   InstallmentRequestModel({
     required this.id,
@@ -256,6 +271,7 @@ class InstallmentRequestModel {
     required this.isCollected,
     this.collectedAt,
     this.collectedByName,
+    this.attachments = const [],
   });
 
   factory InstallmentRequestModel.fromJson(Map<String, dynamic> json) {
@@ -270,6 +286,8 @@ class InstallmentRequestModel {
           return InstallmentRequestStatus.pending;
       }
     }
+
+    final attachmentsJson = json['attachments'];
 
     return InstallmentRequestModel(
       id: _toStringOrEmpty(json['id']),
@@ -293,6 +311,17 @@ class InstallmentRequestModel {
           ? DateTime.tryParse(json['collectedAt'].toString())
           : null,
       collectedByName: _toStringOrNull(json['collectedByName']),
+      attachments: attachmentsJson is List
+          ? attachmentsJson
+                .whereType<Map>()
+                .map(
+                  (attachment) => TransactionAttachmentModel.fromJson(
+                    Map<String, dynamic>.from(attachment),
+                  ),
+                )
+                .where((attachment) => attachment.url.isNotEmpty)
+                .toList()
+          : const [],
     );
   }
 }

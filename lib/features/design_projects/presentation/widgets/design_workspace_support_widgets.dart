@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:file_picker/file_picker.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/constants/app_colors.dart';
@@ -8,6 +9,7 @@ import '../../../projects/data/datasources/projects_api_datasource.dart';
 import '../../../projects/domain/entities/project_entity.dart';
 import '../../../projects/domain/enums/project_status.dart';
 import '../cubit/design_workspace_cubit.dart';
+import 'design_workspace_installments_editor.dart';
 
 class DesignWorkspaceProjectHeader extends StatelessWidget {
   final ProjectEntity project;
@@ -24,7 +26,6 @@ class DesignWorkspaceProjectHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final clientName = project.clientName ?? 'عميل غير محدد';
-    final lastEdit = project.lastEditAt ?? project.updatedAt;
 
     return Container(
       padding: const EdgeInsets.all(12),
@@ -237,11 +238,34 @@ class DesignInstallmentsPanel extends StatelessWidget {
     final updated = await showDialog<List<ProjectInstallment>>(
       context: context,
       barrierDismissible: false,
-      builder: (dialogContext) =>
-          _InstallmentsEditorDialog(initialInstallments: installments),
+      builder: (dialogContext) => DesignWorkspaceInstallmentsEditorDialog(
+        initialInstallments: installments,
+        onUploadCapture: (installment) =>
+            _uploadInstallmentCapture(context, installment),
+      ),
     );
     if (updated == null || !context.mounted) return;
     await context.read<DesignWorkspaceCubit>().replaceInstallments(updated);
+  }
+
+  Future<void> _uploadInstallmentCapture(
+    BuildContext context,
+    ProjectInstallment installment,
+  ) async {
+    final result = await FilePicker.platform.pickFiles(
+      type: FileType.custom,
+      allowedExtensions: ['jpg', 'jpeg', 'png', 'pdf'],
+      withData: true,
+    );
+    if (result == null || result.files.isEmpty || !context.mounted) return;
+
+    final file = result.files.single;
+    await context.read<DesignWorkspaceCubit>().uploadInstallmentCapture(
+      installment.id,
+      fileName: file.name,
+      filePath: file.path,
+      bytes: file.path == null ? file.bytes : null,
+    );
   }
 
   @override
@@ -360,6 +384,29 @@ class DesignInstallmentsPanel extends StatelessWidget {
                                 'تاريخ الاستحقاق: ${installment.dueDate.toLocal().toString().split(' ').first}',
                                 style: Theme.of(context).textTheme.bodySmall,
                               ),
+                              if (installment.captures.isNotEmpty) ...[
+                                const SizedBox(height: 6),
+                                Wrap(
+                                  spacing: 6,
+                                  runSpacing: 4,
+                                  children: installment.captures
+                                      .map(
+                                        (capture) => Chip(
+                                          avatar: const Icon(
+                                            Icons.receipt_long_outlined,
+                                            size: 15,
+                                          ),
+                                          label: Text(
+                                            capture.fileName.isEmpty
+                                                ? 'إيصال'
+                                                : capture.fileName,
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+                                        ),
+                                      )
+                                      .toList(),
+                                ),
+                              ],
                             ],
                           ),
                         ),

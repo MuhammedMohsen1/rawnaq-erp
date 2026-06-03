@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:dio/dio.dart';
+import 'package:file_picker/file_picker.dart';
 import 'package:go_router/go_router.dart';
 import 'package:rawnaq/features/projects/domain/entities/project_entity.dart';
 import '../../../../core/constants/app_colors.dart';
@@ -131,6 +133,17 @@ class _ExecutionLayout extends StatelessWidget {
                 _CompactExecutionHeader(
                   project: project,
                   onOpenPastPricing: () => _handleOpenPastPricing(context),
+                  onOpenPaymentSchedule:
+                      isAdminOrManager &&
+                          canEditExecution &&
+                          state.dashboard.paymentSchedule.isNotEmpty
+                      ? () => _handleOpenPaymentScheduleDialog(
+                          context,
+                          state,
+                          true,
+                          true,
+                        )
+                      : null,
                   onMarkComplete: isAdminOrManager && canEditExecution
                       ? () => _handleMarkComplete(context)
                       : null,
@@ -140,27 +153,6 @@ class _ExecutionLayout extends StatelessWidget {
                 ),
 
                 const SizedBox(height: 16),
-
-                // ── Installments ────────────────────────────────────────────
-                if (state.dashboard.paymentSchedule.isNotEmpty)
-                  InstallmentsSection(
-                    paymentSchedule: state.dashboard.paymentSchedule,
-                    totalPrice: state.dashboard.totalPrice,
-                    totalCost: state.dashboard.totalBudget,
-                    totalProfit: state.dashboard.totalProfit,
-                    profitPercentage: state.dashboard.profitPercentage,
-                    isAdminOrManager: isAdminOrManager && canEditExecution,
-                    onToggleCollected: isAdminOrManager && canEditExecution
-                        ? (phaseIndex, requestId, isCollected) =>
-                              _handleToggleCollected(
-                                context,
-                                requestId,
-                                isCollected,
-                              )
-                        : null,
-                  ),
-                if (state.dashboard.paymentSchedule.isNotEmpty)
-                  const SizedBox(height: 16),
 
                 // ── Pending approvals (Admin/Manager only) ──────────────────
                 if (isAdminOrManager &&
@@ -268,6 +260,36 @@ class _ExecutionLayout extends StatelessWidget {
     }
   }
 
+  void _handleOpenPaymentScheduleDialog(
+    BuildContext context,
+    ExecutionLoaded state,
+    bool isAdminOrManager,
+    bool canRequestInstallments,
+  ) {
+    showDialog(
+      context: context,
+      builder: (dialogContext) => PaymentScheduleDialog(
+        paymentSchedule: state.dashboard.paymentSchedule,
+        totalPrice: state.dashboard.totalPrice,
+        totalCost: state.dashboard.totalBudget,
+        totalProfit: state.dashboard.totalProfit,
+        profitPercentage: state.dashboard.profitPercentage,
+        isAdminOrManager: isAdminOrManager,
+        onToggleCollected: isAdminOrManager
+            ? (phaseIndex, requestId, isCollected) =>
+                  _handleToggleCollected(context, requestId, isCollected)
+            : null,
+        onRequestPaymentPhase: canRequestInstallments
+            ? (phase) => _handleRequestInstallmentPhase(
+                context,
+                phase,
+                state.dashboard.profitPercentage,
+              )
+            : null,
+      ),
+    );
+  }
+
   Future<void> _handleReturnToExecution(BuildContext context) async {
     final confirmed = await showDialog<bool>(
       context: context,
@@ -322,7 +344,7 @@ class _ExecutionLayout extends StatelessWidget {
         );
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('تم إلغاء تحصيل الدفعة')),
+            const SnackBar(content: Text('تم إلغاء تحصيل بند جدول الدفعات')),
           );
         }
       } else {
@@ -331,9 +353,9 @@ class _ExecutionLayout extends StatelessWidget {
           requestId,
         );
         if (context.mounted) {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(const SnackBar(content: Text('تم تحصيل الدفعة')));
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('تم تحصيل بند جدول الدفعات')),
+          );
         }
       }
     } catch (e) {
@@ -363,12 +385,12 @@ class _ExecutionLayout extends StatelessWidget {
 
     if (availablePhases.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('لا توجد دفعات متاحة للطلب')),
+        const SnackBar(content: Text('لا توجد بنود متاحة في جدول الدفعات')),
       );
       return;
     }
 
-    final selectedPhase = await showDialog<PaymentPhaseModel>(
+    final selectedRequest = await showDialog<_RequestInstallmentResult>(
       context: context,
       builder: (context) => _RequestInstallmentDialog(
         availablePhases: availablePhases,
@@ -376,16 +398,19 @@ class _ExecutionLayout extends StatelessWidget {
       ),
     );
 
-    if (selectedPhase != null && context.mounted) {
+    if (selectedRequest != null && context.mounted) {
       try {
         await context.read<ExecutionCubit>().requestInstallment(
           project.id,
-          phaseIndex: selectedPhase.index,
-          phaseName: selectedPhase.phaseName,
+          phaseIndex: selectedRequest.phase.index,
+          phaseName: selectedRequest.phase.phaseName,
+          attachments: selectedRequest.attachments,
         );
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('تم إرسال طلب الدفعة للموافقة')),
+            const SnackBar(
+              content: Text('تم إرسال طلب بند جدول الدفعات للموافقة'),
+            ),
           );
         }
       } catch (e) {
@@ -394,6 +419,64 @@ class _ExecutionLayout extends StatelessWidget {
             SnackBar(content: Text('فشل إرسال الطلب: ${e.toString()}')),
           );
         }
+      }
+    }
+  }
+
+  Future<void> _handleRequestInstallmentPhase(
+    BuildContext context,
+    PaymentPhaseModel phase,
+    double profitPercentage,
+  ) async {
+    final authState = context.read<AuthBloc>().state;
+    final isAdmin = authState is AuthAuthenticated && authState.user.isAdmin;
+    if (!isAdmin && (phase.isRequested || phase.isApproved)) return;
+
+    final selectedRequest = await showDialog<_RequestInstallmentResult>(
+      context: context,
+      builder: (context) => _RequestInstallmentDialog(
+        availablePhases: [phase],
+        profitPercentage: profitPercentage,
+        initialPhase: phase,
+      ),
+    );
+
+    if (selectedRequest == null || !context.mounted) return;
+
+    try {
+      if (isAdmin) {
+        await context.read<ExecutionCubit>().payPaymentScheduleItem(
+          project.id,
+          phaseIndex: selectedRequest.phase.index,
+          phaseName: selectedRequest.phase.phaseName,
+          requestId: phase.requestId,
+          isApproved: phase.isApproved,
+          attachments: selectedRequest.attachments,
+        );
+      } else {
+        await context.read<ExecutionCubit>().requestInstallment(
+          project.id,
+          phaseIndex: selectedRequest.phase.index,
+          phaseName: selectedRequest.phase.phaseName,
+          attachments: selectedRequest.attachments,
+        );
+      }
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              isAdmin
+                  ? 'تم دفع بند جدول الدفعات'
+                  : 'تم إرسال طلب بند جدول الدفعات للموافقة',
+            ),
+          ),
+        );
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('فشل إرسال الطلب: ${e.toString()}')),
+        );
       }
     }
   }
@@ -408,9 +491,9 @@ class _ExecutionLayout extends StatelessWidget {
         requestId,
       );
       if (context.mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('تم قبول طلب الدفعة')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('تم قبول طلب بند جدول الدفعات')),
+        );
       }
     } catch (e) {
       if (context.mounted) {
@@ -433,9 +516,9 @@ class _ExecutionLayout extends StatelessWidget {
         reason: reason,
       );
       if (context.mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('تم رفض طلب الدفعة')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('تم رفض طلب بند جدول الدفعات')),
+        );
       }
     } catch (e) {
       if (context.mounted) {
@@ -458,12 +541,14 @@ class _ExecutionLayout extends StatelessWidget {
 class _CompactExecutionHeader extends StatelessWidget {
   final ProjectEntity project;
   final VoidCallback onOpenPastPricing;
+  final VoidCallback? onOpenPaymentSchedule;
   final VoidCallback? onMarkComplete;
   final VoidCallback? onReturnToExecution;
 
   const _CompactExecutionHeader({
     required this.project,
     required this.onOpenPastPricing,
+    this.onOpenPaymentSchedule,
     this.onMarkComplete,
     this.onReturnToExecution,
   });
@@ -491,6 +576,24 @@ class _CompactExecutionHeader extends StatelessWidget {
 
         ProjectContactActionsLoader(project: project),
         const SizedBox(width: 8),
+
+        if (onOpenPaymentSchedule != null) ...[
+          Tooltip(
+            message: 'جدول الدفعات',
+            child: IconButton(
+              onPressed: onOpenPaymentSchedule,
+              icon: const Icon(Icons.payments_outlined),
+              color: AppColors.success,
+              style: IconButton.styleFrom(
+                backgroundColor: AppColors.success.withValues(alpha: 0.08),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(width: 8),
+        ],
 
         // Past-pricing icon button
         Tooltip(
@@ -625,38 +728,187 @@ class _AttachmentsDialogButton extends StatelessWidget {
 // OTHER UNCHANGED WIDGETS
 // ══════════════════════════════════════════════════════════════════════════════
 
-class _RequestInstallmentDialog extends StatelessWidget {
+class _RequestInstallmentResult {
+  final PaymentPhaseModel phase;
+  final List<MultipartFile> attachments;
+
+  const _RequestInstallmentResult({
+    required this.phase,
+    required this.attachments,
+  });
+}
+
+class _RequestInstallmentDialog extends StatefulWidget {
   final List<PaymentPhaseModel> availablePhases;
   final double profitPercentage;
+  final PaymentPhaseModel? initialPhase;
 
   const _RequestInstallmentDialog({
     required this.availablePhases,
     required this.profitPercentage,
+    this.initialPhase,
   });
+
+  @override
+  State<_RequestInstallmentDialog> createState() =>
+      _RequestInstallmentDialogState();
+}
+
+class _RequestInstallmentDialogState extends State<_RequestInstallmentDialog> {
+  final List<PlatformFile> _attachments = [];
+  PaymentPhaseModel? _selectedPhase;
+  bool _isPreparing = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _selectedPhase = widget.initialPhase;
+  }
+
+  Future<void> _pickAttachments() async {
+    final result = await FilePicker.platform.pickFiles(
+      allowMultiple: true,
+      type: FileType.image,
+      withData: true,
+    );
+    if (result == null || result.files.isEmpty) return;
+
+    setState(() {
+      _attachments
+        ..clear()
+        ..addAll(result.files);
+    });
+  }
+
+  Future<List<MultipartFile>> _buildMultipartAttachments() async {
+    final files = <MultipartFile>[];
+    for (final file in _attachments) {
+      if (file.path != null) {
+        files.add(
+          await MultipartFile.fromFile(file.path!, filename: file.name),
+        );
+      } else if (file.bytes != null) {
+        files.add(MultipartFile.fromBytes(file.bytes!, filename: file.name));
+      }
+    }
+    return files;
+  }
+
+  Future<void> _submit() async {
+    final selectedPhase = _selectedPhase;
+    if (selectedPhase == null) return;
+
+    setState(() => _isPreparing = true);
+    final attachments = await _buildMultipartAttachments();
+    if (!mounted) return;
+
+    Navigator.of(context).pop(
+      _RequestInstallmentResult(phase: selectedPhase, attachments: attachments),
+    );
+  }
+
+  Widget _attachmentsPicker() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        OutlinedButton.icon(
+          onPressed: _isPreparing ? null : _pickAttachments,
+          icon: const Icon(Icons.add_photo_alternate_outlined, size: 16),
+          label: Text(
+            _attachments.isEmpty
+                ? 'إرفاق التقاط شاشة'
+                : '${_attachments.length} التقاط',
+          ),
+        ),
+        if (_attachments.isNotEmpty) ...[
+          const SizedBox(height: 8),
+          Wrap(
+            spacing: 6,
+            runSpacing: 6,
+            children: _attachments.asMap().entries.map((entry) {
+              final file = entry.value;
+              return Container(
+                constraints: const BoxConstraints(maxWidth: 180),
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withValues(alpha: 0.08),
+                  borderRadius: BorderRadius.circular(999),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(
+                      Icons.image_outlined,
+                      size: 13,
+                      color: AppColors.primary,
+                    ),
+                    const SizedBox(width: 4),
+                    Flexible(
+                      child: Text(
+                        file.name,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: AppTextStyles.caption.copyWith(
+                          color: AppColors.primary,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 2),
+                    InkWell(
+                      onTap: _isPreparing
+                          ? null
+                          : () => setState(
+                              () => _attachments.removeAt(entry.key),
+                            ),
+                      child: const Icon(
+                        Icons.close,
+                        size: 13,
+                        color: AppColors.textMuted,
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            }).toList(),
+          ),
+        ],
+      ],
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: const Text('طلب دفعة'),
+      title: const Text('طلب بند من جدول الدفعات'),
       content: SizedBox(
-        width: 400,
+        width: 460,
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('اختر الدفعة المراد طلبها:'),
+            const Text('اختر بند جدول الدفعات المطلوب:'),
             const SizedBox(height: 8),
             Text(
-              'سيتم خصم نسبة الربح (${profitPercentage.toStringAsFixed(1)}%) من المبلغ',
+              'سيتم خصم نسبة الربح (${widget.profitPercentage.toStringAsFixed(1)}%) من المبلغ',
               style: AppTextStyles.bodySmall.copyWith(
                 color: AppColors.textSecondary,
               ),
             ),
             const SizedBox(height: 16),
-            ...availablePhases.map((phase) {
+            ...widget.availablePhases.map((phase) {
+              final selected = phase.index == _selectedPhase?.index;
               return Card(
                 margin: const EdgeInsets.only(bottom: 8),
                 child: ListTile(
+                  selected: selected,
+                  leading: Icon(
+                    selected
+                        ? Icons.radio_button_checked
+                        : Icons.radio_button_unchecked,
+                    color: selected
+                        ? AppColors.primary
+                        : AppColors.textSecondary,
+                  ),
                   title: Text(phase.phaseName),
                   subtitle: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -673,13 +925,14 @@ class _RequestInstallmentDialog extends StatelessWidget {
                       ),
                     ],
                   ),
-                  trailing: ElevatedButton(
-                    onPressed: () => Navigator.of(context).pop(phase),
-                    child: const Text('طلب'),
-                  ),
+                  onTap: _isPreparing
+                      ? null
+                      : () => setState(() => _selectedPhase = phase),
                 ),
               );
             }),
+            const SizedBox(height: 8),
+            _attachmentsPicker(),
           ],
         ),
       ),
@@ -687,6 +940,16 @@ class _RequestInstallmentDialog extends StatelessWidget {
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
           child: const Text('إغلاق'),
+        ),
+        ElevatedButton(
+          onPressed: _selectedPhase == null || _isPreparing ? null : _submit,
+          child: _isPreparing
+              ? const SizedBox(
+                  width: 18,
+                  height: 18,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                )
+              : const Text('إرسال الطلب'),
         ),
       ],
     );

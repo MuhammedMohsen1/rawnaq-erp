@@ -23,6 +23,9 @@ class GanttChartPageBody extends StatelessWidget {
     required this.isLoading,
     required this.errorMessage,
     required this.startDate,
+    required this.horizontalTimelineScrollController,
+    required this.shouldScrollTimelineToToday,
+    required this.onTimelineScrolledToToday,
     required this.tasks,
     required this.onPeriodChanged,
     required this.onOrientationChanged,
@@ -65,6 +68,9 @@ class GanttChartPageBody extends StatelessWidget {
   final bool isLoading;
   final String? errorMessage;
   final DateTime startDate;
+  final ScrollController horizontalTimelineScrollController;
+  final bool shouldScrollTimelineToToday;
+  final VoidCallback onTimelineScrolledToToday;
   final List<TaskEntity> tasks;
   final ValueChanged<GanttTimePeriod> onPeriodChanged;
   final ValueChanged<GanttLayoutOrientation> onOrientationChanged;
@@ -134,6 +140,7 @@ class GanttChartPageBody extends StatelessWidget {
           isExpanded: isDraftPanelExpanded,
           onToggleExpanded: onToggleDraftPanel,
           onAddTaskPressed: onAddTaskPressed,
+          onTaskDeleted: onTaskDeleted,
         ),
         const SizedBox(height: 12),
         Expanded(
@@ -157,6 +164,10 @@ class GanttChartPageBody extends StatelessWidget {
                     teamMembers: teamMembers,
                     tasks: tasks,
                     startDate: startDate,
+                    horizontalTimelineScrollController:
+                        horizontalTimelineScrollController,
+                    shouldScrollToToday: shouldScrollTimelineToToday,
+                    onScrolledToToday: onTimelineScrolledToToday,
                     isToday: isToday,
                     calculateTaskLanes: calculateTaskLanes,
                     laneCount: laneCount,
@@ -247,6 +258,7 @@ class GanttCompactInfoBar extends StatelessWidget {
     required this.isExpanded,
     required this.onToggleExpanded,
     required this.onAddTaskPressed,
+    required this.onTaskDeleted,
   });
 
   final List<TaskEntity> draftTasks;
@@ -255,6 +267,7 @@ class GanttCompactInfoBar extends StatelessWidget {
   final bool isExpanded;
   final VoidCallback onToggleExpanded;
   final VoidCallback onAddTaskPressed;
+  final Future<void> Function(String taskId) onTaskDeleted;
 
   @override
   Widget build(BuildContext context) {
@@ -384,7 +397,10 @@ class GanttCompactInfoBar extends StatelessWidget {
                           .map(
                             (task) => Padding(
                               padding: const EdgeInsets.only(left: 10),
-                              child: GanttDraftTaskChip(task: task),
+                              child: GanttDraftTaskChip(
+                                task: task,
+                                onDelete: () => _confirmDelete(context, task),
+                              ),
                             ),
                           )
                           .toList(),
@@ -434,6 +450,33 @@ class GanttCompactInfoBar extends StatelessWidget {
           ),
         )
         .toList();
+  }
+
+  void _confirmDelete(BuildContext context, TaskEntity task) {
+    showDialog(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        backgroundColor: AppColors.cardBackground,
+        title: const Text('حذف المهمة'),
+        content: const Text('هل أنت متأكد من حذف هذه المهمة؟'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: const Text('إلغاء'),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              Navigator.pop(dialogContext);
+              await onTaskDeleted(task.id);
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.statusDelayed,
+            ),
+            child: const Text('حذف'),
+          ),
+        ],
+      ),
+    );
   }
 }
 

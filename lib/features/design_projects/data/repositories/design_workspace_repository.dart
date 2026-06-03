@@ -48,6 +48,19 @@ class DesignWorkspaceRepository {
     amount: amount,
     dueDate: dueDate,
   );
+  Future<void> uploadInstallmentCapture(
+    String projectId,
+    String installmentId, {
+    required String fileName,
+    String? filePath,
+    List<int>? bytes,
+  }) => _dataSource.uploadInstallmentCapture(
+    projectId,
+    installmentId,
+    fileName: fileName,
+    filePath: filePath,
+    bytes: bytes,
+  );
   Future<void> replaceInstallments(
     String projectId,
     List<ProjectInstallment> installments,
@@ -60,6 +73,18 @@ class DesignWorkspaceRepository {
             'amount': installment.amount,
             'dueDate': installment.dueDate.toIso8601String(),
             'isPaid': installment.isPaid,
+            'captures': installment.captures
+                .map(
+                  (capture) => {
+                    'id': capture.id,
+                    'url': capture.url,
+                    'fileName': capture.fileName,
+                    if (capture.mimeType != null) 'mimeType': capture.mimeType,
+                    if (capture.createdAt != null)
+                      'createdAt': capture.createdAt!.toIso8601String(),
+                  },
+                )
+                .toList(),
           },
         )
         .toList(),

@@ -18,6 +18,7 @@ class ProjectListItemCard extends StatefulWidget {
   final ValueChanged<ProjectEntity> onNavigate;
   final ValueChanged<ProjectEntity> onEdit;
   final ValueChanged<ProjectEntity>? onArchive;
+  final ValueChanged<ProjectEntity>? onDelete;
   final ValueChanged<ProjectEntity>? onRestore;
   final ValueChanged<ProjectEntity>? onMoveToExecution;
 
@@ -32,6 +33,7 @@ class ProjectListItemCard extends StatefulWidget {
     required this.onNavigate,
     required this.onEdit,
     required this.onArchive,
+    required this.onDelete,
     required this.onRestore,
     required this.onMoveToExecution,
   });
@@ -148,6 +150,10 @@ class _ProjectListItemCardState extends State<ProjectListItemCard> {
                                 onArchive: widget.showArchiveActions
                                     ? () =>
                                           widget.onArchive?.call(widget.project)
+                                    : null,
+                                onDelete: widget.showArchiveActions
+                                    ? () =>
+                                          widget.onDelete?.call(widget.project)
                                     : null,
                                 onRestore: widget.showRestoreActions
                                     ? () =>

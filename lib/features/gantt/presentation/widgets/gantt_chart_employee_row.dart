@@ -12,7 +12,7 @@ class GanttEmployeeRow extends StatelessWidget {
     required this.member,
     required this.tasks,
     required this.startDate,
-    required this.displayDays,
+    required this.visibleDates,
     required this.isToday,
     required this.calculateTaskLanes,
     required this.onAppointmentDetails,
@@ -26,7 +26,7 @@ class GanttEmployeeRow extends StatelessWidget {
   final TeamMemberEntity member;
   final List<TaskEntity> tasks;
   final DateTime startDate;
-  final int displayDays;
+  final List<DateTime> visibleDates;
   final bool Function(DateTime date) isToday;
   final Map<String, int> Function(
     List<TaskEntity> tasks, {
@@ -50,9 +50,9 @@ class GanttEmployeeRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final endDate = DateTime(
-      startDate.year,
-      startDate.month,
-      startDate.day + displayDays,
+      visibleDates.last.year,
+      visibleDates.last.month,
+      visibleDates.last.day + 1,
     );
     final visibleTasks = tasks
         .where(
@@ -132,7 +132,7 @@ class GanttEmployeeRow extends StatelessWidget {
               member: member,
               tasks: visibleTasks,
               startDate: startDate,
-              displayDays: displayDays,
+              visibleDates: visibleDates,
               taskLanes: taskLanes,
               onAppointmentDetails: onAppointmentDetails,
               onEditTask: onEditTask,

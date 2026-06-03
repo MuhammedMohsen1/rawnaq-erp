@@ -145,6 +145,7 @@ class MainLayout extends StatelessWidget {
     if (currentPath == AppRoutes.notifications) return 'الإشعارات';
     if (currentPath == AppRoutes.reminders) return 'التذكيرات';
     if (currentPath == AppRoutes.adminUsers) return 'إدارة المستخدمين';
+    if (currentPath == AppRoutes.recentlyDeleted) return 'المحذوفات';
     if (currentPath == AppRoutes.financial) return 'المالية';
     if (currentPath.startsWith('/financial/projects/')) {
       return 'نظرة مالية للمشروع';
@@ -173,6 +174,7 @@ class MainLayout extends StatelessWidget {
         currentPath != AppRoutes.completedProjects &&
         currentPath != AppRoutes.siteEngineerPricingProjects &&
         currentPath != AppRoutes.adminUsers &&
+        currentPath != AppRoutes.recentlyDeleted &&
         currentPath != AppRoutes.gantt &&
         currentPath != AppRoutes.settings;
   }
@@ -454,6 +456,16 @@ class _SidebarState extends State<_Sidebar> {
                         path: AppRoutes.completedProjects,
                         isActive:
                             widget.currentPath == AppRoutes.completedProjects,
+                      ),
+                    ],
+                    if (isAdmin) ...[
+                      _buildCollapsedNavItem(
+                        context: context,
+                        icon: Icons.restore_from_trash_outlined,
+                        activeIcon: Icons.restore_from_trash,
+                        path: AppRoutes.recentlyDeleted,
+                        isActive:
+                            widget.currentPath == AppRoutes.recentlyDeleted,
                       ),
                     ],
                     _buildCollapsedNavItem(
@@ -770,6 +782,17 @@ class _SidebarState extends State<_Sidebar> {
                       isActive:
                           widget.currentPath == AppRoutes.archivedProjects,
                     ),
+                    if (isAdmin) ...[
+                      _buildNavItem(
+                        context: context,
+                        icon: Icons.restore_from_trash_outlined,
+                        activeIcon: Icons.restore_from_trash,
+                        label: 'المحذوفات',
+                        path: AppRoutes.recentlyDeleted,
+                        isActive:
+                            widget.currentPath == AppRoutes.recentlyDeleted,
+                      ),
+                    ],
                     _buildNavItem(
                       context: context,
                       icon: Icons.check_circle_outline,

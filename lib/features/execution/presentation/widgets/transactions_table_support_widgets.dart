@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
+import 'package:rawnaq/features/auth/presentation/bloc/auth_bloc.dart';
 
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_text_styles.dart';
@@ -183,14 +185,17 @@ class _StatsDetailsPanel extends StatelessWidget {
             double.infinity,
           );
           final items = [
-            _ExpenseSummaryTile(
-              title: 'إجمالي الدخل',
-              value: _formatMoney(totalReceived),
-              detail: totalCost > 0
-                  ? 'الباقي ${_formatMoney(remainingFromCost)} من ${_formatMoney(totalCost)}'
-                  : 'لا توجد تكلفة إجمالية',
-              icon: Icons.south_west_rounded,
-              color: AppColors.success,
+            BlocBuilder<AuthBloc, AuthState>(
+              builder: (context, state) => _ExpenseSummaryTile(
+                title: 'إجمالي الدخل',
+                value: _formatMoney(totalReceived),
+                detail:
+                    (state as AuthAuthenticated).user.isAdmin && totalCost > 0
+                    ? 'الباقي ${_formatMoney(remainingFromCost)} من ${_formatMoney(totalCost)}'
+                    : 'لا توجد تكلفة إجمالية',
+                icon: Icons.south_west_rounded,
+                color: AppColors.success,
+              ),
             ),
             _ExpenseSummaryTile(
               title: 'إجمالي المصروفات',

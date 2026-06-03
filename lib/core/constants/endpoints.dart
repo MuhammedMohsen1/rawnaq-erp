@@ -20,6 +20,9 @@ abstract class ApiEndpoints {
   // Admin Endpoints
   static const String adminDashboard = '/admin/dashboard';
   static const String adminUsers = '/admin/users';
+  static const String recentlyDeleted = '/admin/recently-deleted';
+  static const String restoreRecentlyDeleted =
+      '/admin/recently-deleted/restore';
   static String adminUserById(String id) => '/admin/users/$id';
   static String updateAdminUserStatus(String id) => '/admin/users/$id/status';
   static const String adminRestaurantsByZones = '/admin/restaurants/by-zones';
@@ -259,6 +262,10 @@ abstract class ApiEndpoints {
       '/design-projects/$projectId/tasks/$taskId/status';
   static String designInstallment(String projectId, String installmentId) =>
       '/design-projects/$projectId/installments/$installmentId';
+  static String designInstallmentCapture(
+    String projectId,
+    String installmentId,
+  ) => '/design-projects/$projectId/installments/$installmentId/captures';
   static String designInstallments(String projectId) =>
       '/design-projects/$projectId/installments';
 
@@ -441,6 +448,8 @@ abstract class ApiEndpoints {
       '/execution/installments/$requestId/uncollect';
   static String updateInstallment(String requestId) =>
       '/execution/installments/$requestId';
+  static String uploadInstallmentCaptures(String requestId) =>
+      '/execution/installments/$requestId/captures';
   static String deleteInstallment(String requestId) =>
       '/execution/installments/$requestId';
 

@@ -20,6 +20,7 @@ import '../../features/execution/presentation/pages/execution_page.dart';
 import '../../features/financial/presentation/pages/financial_page.dart';
 import '../../features/financial/presentation/pages/project_financial_overview_page.dart';
 import '../../features/admin/presentation/pages/admin_users_page.dart';
+import '../../features/admin/presentation/pages/recently_deleted_page.dart';
 import '../../features/auth/presentation/bloc/auth_bloc.dart';
 import '../widgets/error_page.dart';
 import '../widgets/unauthorized_page.dart';
@@ -66,6 +67,8 @@ class AppRoutes {
 
   // Admin
   static const String adminUsers = '/admin/users';
+  static const String recentlyDeleted = '/admin/recently-deleted';
+  static const String recentlyDeletedLegacy = '/recently-deleted';
 
   // Pricing
   static String pricing(
@@ -446,6 +449,19 @@ class AppRouter {
               key: state.pageKey,
               child: const AdminUsersPage(),
             ),
+          ),
+
+          GoRoute(
+            path: AppRoutes.recentlyDeleted,
+            pageBuilder: (context, state) => FadePageTransition(
+              key: state.pageKey,
+              child: const RecentlyDeletedPage(),
+            ),
+          ),
+
+          GoRoute(
+            path: AppRoutes.recentlyDeletedLegacy,
+            redirect: (_, __) => AppRoutes.recentlyDeleted,
           ),
 
           // Pricing

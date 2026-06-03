@@ -71,7 +71,26 @@ class ExecutionApiDataSource {
     String projectId, {
     required int phaseIndex,
     required String phaseName,
+    List<MultipartFile> attachments = const [],
   }) async {
+    if (attachments.isNotEmpty) {
+      final formData = FormData.fromMap({
+        'phaseIndex': phaseIndex,
+        'phaseName': phaseName,
+        'attachments': attachments,
+      });
+
+      final response = await _apiClient.uploadFile(
+        ApiEndpoints.executionRequestInstallment(projectId),
+        formData: formData,
+      );
+
+      final responseData = response.data as Map<String, dynamic>;
+      final data =
+          responseData['data'] as Map<String, dynamic>? ?? responseData;
+      return InstallmentRequestModel.fromJson(data);
+    }
+
     final response = await _apiClient.post(
       ApiEndpoints.executionRequestInstallment(projectId),
       data: {'phaseIndex': phaseIndex, 'phaseName': phaseName},
@@ -119,6 +138,20 @@ class ExecutionApiDataSource {
 
     final responseData = response.data as Map<String, dynamic>;
     // Extract nested data from API response wrapper
+    final data = responseData['data'] as Map<String, dynamic>? ?? responseData;
+    return InstallmentRequestModel.fromJson(data);
+  }
+
+  Future<InstallmentRequestModel> uploadInstallmentCaptures(
+    String requestId, {
+    required List<MultipartFile> attachments,
+  }) async {
+    final response = await _apiClient.uploadFile(
+      ApiEndpoints.uploadInstallmentCaptures(requestId),
+      formData: FormData.fromMap({'attachments': attachments}),
+    );
+
+    final responseData = response.data as Map<String, dynamic>;
     final data = responseData['data'] as Map<String, dynamic>? ?? responseData;
     return InstallmentRequestModel.fromJson(data);
   }

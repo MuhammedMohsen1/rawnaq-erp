@@ -565,7 +565,8 @@ class _EditTaskDialogState extends State<EditTaskDialog> {
 
   Future<void> _saveChanges() async {
     if (_isSaving) return;
-    if (_assigneeId == null) {
+    final remainsDraft = widget.task.isDraft || widget.task.assigneeId == null;
+    if (_assigneeId == null && !remainsDraft) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('يرجى اختيار الموظف المسؤول'),
@@ -611,7 +612,7 @@ class _EditTaskDialogState extends State<EditTaskDialog> {
       assigneeId: _assigneeId,
       assignee: assignee,
       status: _status,
-      isDraft: false,
+      isDraft: _assigneeId == null ? remainsDraft : false,
     );
 
     setState(() => _isSaving = true);

@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_text_styles.dart';
 import '../../data/models/execution_models.dart';
+import 'transaction_attachments.dart';
 
 class PendingApprovalsCard extends StatelessWidget {
   final List<InstallmentRequestModel> pendingRequests;
@@ -33,7 +34,7 @@ class PendingApprovalsCard extends StatelessWidget {
               Icon(Icons.pending_actions, color: AppColors.warning, size: 24),
               const SizedBox(width: 12),
               Text(
-                'طلبات الدفعات المعلقة (${pendingRequests.length})',
+                'طلبات بنود جدول الدفعات المعلقة (${pendingRequests.length})',
                 style: AppTextStyles.sectionTitle.copyWith(
                   color: AppColors.warning,
                 ),
@@ -41,11 +42,13 @@ class PendingApprovalsCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 16),
-          ...pendingRequests.map((request) => _PendingRequestItem(
-                request: request,
-                onApprove: () => onApprove(request.id),
-                onReject: () => _showRejectDialog(context, request.id),
-              )),
+          ...pendingRequests.map(
+            (request) => _PendingRequestItem(
+              request: request,
+              onApprove: () => onApprove(request.id),
+              onReject: () => _showRejectDialog(context, request.id),
+            ),
+          ),
         ],
       ),
     );
@@ -57,7 +60,7 @@ class PendingApprovalsCard extends StatelessWidget {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('رفض طلب الدفعة'),
+        title: const Text('رفض طلب بند جدول الدفعات'),
         content: TextField(
           controller: reasonController,
           decoration: const InputDecoration(
@@ -78,9 +81,7 @@ class PendingApprovalsCard extends StatelessWidget {
                 onReject(requestId, reasonController.text);
               }
             },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.error,
-            ),
+            style: ElevatedButton.styleFrom(backgroundColor: AppColors.error),
             child: const Text('رفض'),
           ),
         ],
@@ -118,10 +119,7 @@ class _PendingRequestItem extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  request.phaseName,
-                  style: AppTextStyles.tableCellBold,
-                ),
+                Text(request.phaseName, style: AppTextStyles.tableCellBold),
                 const SizedBox(height: 4),
                 Text(
                   'مقدم من: ${request.requestedByName}',
@@ -132,6 +130,13 @@ class _PendingRequestItem extends StatelessWidget {
                   'التاريخ: ${dateFormat.format(request.createdAt)}',
                   style: AppTextStyles.bodySmall,
                 ),
+                if (request.attachments.isNotEmpty) ...[
+                  const SizedBox(height: 8),
+                  TransactionAttachments(
+                    attachments: request.attachments,
+                    compact: false,
+                  ),
+                ],
               ],
             ),
           ),
