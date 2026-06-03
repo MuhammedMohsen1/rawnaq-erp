@@ -45,12 +45,14 @@ class DesignWorkspaceCubit extends Cubit<DesignWorkspaceState> {
     required String fileName,
     String? filePath,
     List<int>? bytes,
+    DesignVideoQuality videoQuality = DesignVideoQuality.p720,
   }) => _perform(
     () => _repository.uploadAttachment(
       projectId,
       fileName: fileName,
       filePath: filePath,
       bytes: bytes,
+      videoQuality: videoQuality,
     ),
   );
 

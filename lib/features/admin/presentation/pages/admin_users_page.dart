@@ -513,12 +513,22 @@ class _RoleBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      width: 140,
+      width: 220,
       child: Align(
         alignment: Alignment.centerRight,
-        child: _Badge(
-          text: _roleLabel(user.role),
-          color: user.isAdmin ? AppColors.info : AppColors.primaryDark,
+        child: Wrap(
+          spacing: 6,
+          runSpacing: 6,
+          children: user.effectiveRoles
+              .map(
+                (role) => _Badge(
+                  text: _roleLabel(role),
+                  color: role == AppConstants.adminRole
+                      ? AppColors.info
+                      : AppColors.primaryDark,
+                ),
+              )
+              .toList(),
         ),
       ),
     );
@@ -640,7 +650,7 @@ class _UserFormDialogState extends State<_UserFormDialog> {
   late final TextEditingController _emailController;
   late final TextEditingController _phoneController;
   late final TextEditingController _passwordController;
-  late String _role;
+  late Set<String> _roles;
   late String _accountStatus;
   late Set<String> _adminSubRoles;
 
@@ -654,7 +664,10 @@ class _UserFormDialogState extends State<_UserFormDialog> {
     _emailController = TextEditingController(text: user?.email ?? '');
     _phoneController = TextEditingController(text: user?.phone ?? '');
     _passwordController = TextEditingController();
-    _role = user?.role ?? AppConstants.siteEngineerRole;
+    _roles = {
+      ...(user?.roles ?? [AppConstants.siteEngineerRole]),
+    };
+    if (_roles.isEmpty) _roles.add(AppConstants.siteEngineerRole);
     _accountStatus = user?.isActive ?? true ? 'ACTIVE' : 'SUSPENDED';
     _adminSubRoles = {...?user?.adminSubRoles};
   }
@@ -725,41 +738,24 @@ class _UserFormDialogState extends State<_UserFormDialog> {
                     },
                   ),
                   const SizedBox(height: 12),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: _DialogDropdown(
-                          value: _role,
-                          label: 'الدور',
-                          items: const {
-                            AppConstants.adminRole: 'مدير نظام',
-                            AppConstants.managerRole: 'مدير',
-                            AppConstants.seniorEngineerRole: 'مهندس أول',
-                            AppConstants.juniorEngineerRole: 'مهندس',
-                            AppConstants.siteEngineerRole: 'مهندس موقع',
-                            'designer': 'مصمم',
-                          },
-                          onChanged: (value) => setState(() => _role = value),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: _DialogDropdown(
-                          value: _accountStatus,
-                          label: 'الحالة',
-                          items: const {
-                            'ACTIVE': 'نشط',
-                            'SUSPENDED': 'موقوف',
-                            'PENDING': 'بانتظار التفعيل',
-                            'BANNED': 'محظور',
-                          },
-                          onChanged: (value) =>
-                              setState(() => _accountStatus = value),
-                        ),
-                      ),
-                    ],
+                  _RolesSelector(
+                    selected: _roles,
+                    onChanged: (selected) => setState(() => _roles = selected),
                   ),
-                  if (_role == AppConstants.adminRole) ...[
+                  const SizedBox(height: 12),
+                  _DialogDropdown(
+                    value: _accountStatus,
+                    label: 'الحالة',
+                    items: const {
+                      'ACTIVE': 'نشط',
+                      'SUSPENDED': 'موقوف',
+                      'PENDING': 'بانتظار التفعيل',
+                      'BANNED': 'محظور',
+                    },
+                    onChanged: (value) =>
+                        setState(() => _accountStatus = value),
+                  ),
+                  if (_roles.contains(AppConstants.adminRole)) ...[
                     const SizedBox(height: 16),
                     _AdminSubRolesSelector(
                       selected: _adminSubRoles,
@@ -796,7 +792,7 @@ class _UserFormDialogState extends State<_UserFormDialog> {
         user: widget.user!,
         name: _nameController.text.trim(),
         phone: _phoneController.text,
-        role: _role,
+        roles: _roles.toList(),
         accountStatus: _accountStatus,
         password: _passwordController.text,
         adminSubRoles: _adminSubRoles.toList(),
@@ -807,7 +803,7 @@ class _UserFormDialogState extends State<_UserFormDialog> {
         name: _nameController.text.trim(),
         phone: _phoneController.text,
         password: _passwordController.text,
-        role: _role,
+        roles: _roles.toList(),
         accountStatus: _accountStatus,
         adminSubRoles: _adminSubRoles.toList(),
       );
@@ -845,6 +841,58 @@ class _DialogDropdown extends StatelessWidget {
       onChanged: (value) {
         if (value != null) onChanged(value);
       },
+    );
+  }
+}
+
+class _RolesSelector extends StatelessWidget {
+  final Set<String> selected;
+  final ValueChanged<Set<String>> onChanged;
+
+  const _RolesSelector({required this.selected, required this.onChanged});
+
+  @override
+  Widget build(BuildContext context) {
+    const items = {
+      AppConstants.adminRole: 'مدير نظام',
+      AppConstants.managerRole: 'مدير',
+      AppConstants.seniorEngineerRole: 'مهندس أول',
+      AppConstants.juniorEngineerRole: 'مهندس',
+      AppConstants.siteEngineerRole: 'مهندس موقع',
+      'designer': 'مصمم',
+    };
+
+    return Align(
+      alignment: Alignment.centerRight,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'الأدوار',
+            style: AppTextStyles.caption.copyWith(
+              color: AppColors.textSecondary,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: items.entries.map((entry) {
+              final isSelected = selected.contains(entry.key);
+              return FilterChip(
+                label: Text(entry.value),
+                selected: isSelected,
+                onSelected: (value) {
+                  final next = {...selected};
+                  value ? next.add(entry.key) : next.remove(entry.key);
+                  if (next.isNotEmpty) onChanged(next);
+                },
+              );
+            }).toList(),
+          ),
+        ],
+      ),
     );
   }
 }

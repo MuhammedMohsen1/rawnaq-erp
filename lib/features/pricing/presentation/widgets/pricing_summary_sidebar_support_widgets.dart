@@ -434,6 +434,9 @@ class PricingSummaryExportActions extends StatelessWidget {
   final VoidCallback? onConfirmPricing;
   final ValueChanged<PricingExportOptions>? onExportPdf;
   final ValueChanged<PricingExportOptions>? onExportImages;
+  final VoidCallback? onExportContractPdf;
+  final VoidCallback? onConfirmContract;
+  final VoidCallback? onReturnContractToPricing;
   final PricingExportOptions exportOptions;
 
   const PricingSummaryExportActions({
@@ -451,6 +454,9 @@ class PricingSummaryExportActions extends StatelessWidget {
     required this.onConfirmPricing,
     required this.onExportPdf,
     required this.onExportImages,
+    required this.onExportContractPdf,
+    required this.onConfirmContract,
+    required this.onReturnContractToPricing,
     required this.exportOptions,
   });
 
@@ -501,10 +507,35 @@ class PricingSummaryExportActions extends StatelessWidget {
     }
 
     if (isProfitPending) {
-      if (onConfirmPricing != null && isAdminOrManager) {
+      if (onExportContractPdf != null && isAdminOrManager) {
         buttons.add(
           buildButton(
-            onPressed: onConfirmPricing,
+            onPressed: onExportContractPdf,
+            backgroundColor: const Color(0xFF6366F1),
+            isOutlined: true,
+            borderColor: const Color(0xFF6366F1),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.picture_as_pdf, size: iconSize),
+                SizedBox(width: isMobile ? 6 : 8),
+                Text(
+                  'تصدير العقد',
+                  style: AppTextStyles.buttonLarge.copyWith(
+                    fontSize: buttonFontSize,
+                    fontWeight: FontWeight.w700,
+                    color: const Color(0xFF6366F1),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      }
+      if (onConfirmContract != null && isAdminOrManager) {
+        buttons.add(
+          buildButton(
+            onPressed: onConfirmContract,
             backgroundColor: const Color(0xFF10B981),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -512,7 +543,7 @@ class PricingSummaryExportActions extends StatelessWidget {
                 Icon(Icons.check_circle, size: iconSize),
                 SizedBox(width: isMobile ? 6 : 8),
                 Text(
-                  'تأكيد وإنشاء العقد',
+                  'تأكيد العقد',
                   style: AppTextStyles.buttonLarge.copyWith(
                     fontSize: buttonFontSize,
                     fontWeight: FontWeight.w700,
@@ -523,6 +554,7 @@ class PricingSummaryExportActions extends StatelessWidget {
           ),
         );
       }
+
       if (onExportPdf != null) {
         buttons.add(
           buildButton(

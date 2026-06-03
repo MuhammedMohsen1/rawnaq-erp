@@ -15,8 +15,8 @@ class AuthAuthenticated extends AuthState {
   final User user;
   final String token;
 
-  bool get isManager => user.role == 'manager';
-  bool get isAdmin => user.role == 'admin';
+  bool get isManager => user.isManager;
+  bool get isAdmin => user.isAdmin;
 
   const AuthAuthenticated({required this.user, required this.token});
 

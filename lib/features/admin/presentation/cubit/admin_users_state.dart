@@ -28,7 +28,7 @@ sealed class AdminUsersState extends Equatable {
           user.name.toLowerCase().contains(query) ||
           user.email.toLowerCase().contains(query) ||
           (user.phone?.toLowerCase().contains(query) ?? false);
-      final matchesRole = roleFilter == 'all' || user.role == roleFilter;
+      final matchesRole = roleFilter == 'all' || user.hasRole(roleFilter);
       final matchesStatus =
           statusFilter == 'all' ||
           (statusFilter == 'ACTIVE' && user.isActive) ||

@@ -5,10 +5,16 @@ import '../../../projects/domain/entities/project_entity.dart';
 
 class DesignWorkspaceInstallmentsEditorDialog extends StatefulWidget {
   final List<ProjectInstallment> initialInstallments;
+  final String title;
+  final String description;
+  final String confirmLabel;
 
   const DesignWorkspaceInstallmentsEditorDialog({
     super.key,
     required this.initialInstallments,
+    this.title = 'تعديل الدفعات',
+    this.description = 'يمكنك إضافة أو تعديل أو حذف أي دفعة.',
+    this.confirmLabel = 'حفظ التعديلات',
   });
 
   @override
@@ -175,12 +181,12 @@ class _DesignWorkspaceInstallmentsEditorDialogState
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'تعديل الدفعات',
+                          widget.title,
                           style: Theme.of(context).textTheme.titleMedium,
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          'يمكنك إضافة أو تعديل أو حذف أي دفعة.',
+                          widget.description,
                           style: Theme.of(context).textTheme.bodySmall,
                         ),
                       ],
@@ -347,7 +353,7 @@ class _DesignWorkspaceInstallmentsEditorDialogState
                   FilledButton(
                     onPressed: _save,
                     style: buttonStyle,
-                    child: const Text('حفظ التعديلات'),
+                    child: Text(widget.confirmLabel),
                   ),
                 ],
               ),

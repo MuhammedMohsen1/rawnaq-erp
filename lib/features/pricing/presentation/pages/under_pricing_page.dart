@@ -16,7 +16,9 @@ import '../../../../core/error/exceptions.dart';
 import '../../../../core/layout/top_bar_title_controller.dart';
 import '../../../auth/presentation/bloc/auth_bloc.dart';
 import '../../../projects/data/datasources/projects_api_datasource.dart';
+import '../../../projects/domain/entities/project_entity.dart';
 import '../../../contracts/data/datasources/contracts_api_datasource.dart';
+import '../../../design_projects/presentation/widgets/design_workspace_installments_editor.dart';
 import '../cubit/pricing_cubit.dart';
 import '../cubit/pricing_state.dart';
 import '../utils/pricing_status_utils.dart';
@@ -542,6 +544,9 @@ class _UnderPricingContentState extends State<_UnderPricingContent> {
   }
 
   Future<void> _handleConfirmContract(BuildContext context) async {
+    final state = context.read<PricingCubit>().state;
+    if (state is! PricingLoaded) return;
+
     // Fetch the contract to get the payment schedule
     final contractsApi = ContractsApiDataSource();
     List<Map<String, dynamic>>? paymentSchedule;
@@ -563,31 +568,111 @@ class _UnderPricingContentState extends State<_UnderPricingContent> {
 
     if (!context.mounted) return;
 
-    final confirmed =
-        await PricingConfirmationDialogs.showConfirmContractDialog(
-          context,
-          paymentSchedule: paymentSchedule,
-        );
+    final installments = await showDialog<List<ProjectInstallment>>(
+      context: context,
+      builder: (_) => DesignWorkspaceInstallmentsEditorDialog(
+        initialInstallments: _initialContractInstallments(
+          paymentSchedule,
+          state.pricingVersion.totalAmountAfterDeduction,
+        ),
+        title: 'تأكيد دفعات العقد',
+        description: 'راجع الدفعات وتأكد من صحتها قبل تحويل المشروع للتنفيذ.',
+        confirmLabel: 'تأكيد الدفعات والعقد',
+      ),
+    );
+    if (installments == null || installments.isEmpty || !context.mounted) {
+      return;
+    }
 
-    if (confirmed) {
-      try {
-        await context.read<PricingCubit>().confirmContract(projectId);
-        if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text(
-                'تم تأكيد العقد بنجاح. تم نقل المشروع إلى مرحلة التنفيذ.',
-              ),
-              duration: Duration(seconds: 4),
+    try {
+      await context.read<PricingCubit>().confirmContract(
+        projectId,
+        paymentSchedule: _toContractPaymentSchedule(installments),
+      );
+      if (context.mounted) {
+        context.go(AppRoutes.execution(projectId));
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'تم تأكيد العقد بنجاح. تم نقل المشروع إلى مرحلة التنفيذ.',
             ),
-          );
-        }
-      } catch (e) {
-        if (context.mounted) {
-          _showErrorMessage(context, 'فشل تأكيد العقد', e);
-        }
+            duration: Duration(seconds: 4),
+          ),
+        );
+      }
+    } catch (e) {
+      if (context.mounted) {
+        _showErrorMessage(context, 'فشل تأكيد العقد', e);
       }
     }
+  }
+
+  List<ProjectInstallment> _initialContractInstallments(
+    List<Map<String, dynamic>>? paymentSchedule,
+    double totalAmount,
+  ) {
+    if (paymentSchedule != null && paymentSchedule.isNotEmpty) {
+      return paymentSchedule.asMap().entries.map((entry) {
+        final index = entry.key;
+        final phase = entry.value;
+        final amount = (phase['amount'] as num?)?.toDouble();
+        final percentage = (phase['percentage'] as num?)?.toDouble() ?? 0;
+        final calculatedAmount = totalAmount > 0 && percentage > 0
+            ? totalAmount * percentage / 100
+            : 0.0;
+        final dueDateValue = phase['dueDate'];
+        final dueDate = dueDateValue is String
+            ? DateTime.tryParse(dueDateValue) ?? DateTime.now()
+            : DateTime.now().add(Duration(days: index * 30));
+
+        return ProjectInstallment(
+          id: 'installment-${index + 1}',
+          amount: amount != null && amount > 0 ? amount : calculatedAmount,
+          dueDate: dueDate,
+          isPaid: phase['isPaid'] == true || phase['paid'] == true,
+        );
+      }).toList();
+    }
+
+    final now = DateTime.now();
+    if (totalAmount <= 0) {
+      return [ProjectInstallment(id: 'installment-1', amount: 0, dueDate: now)];
+    }
+
+    return [
+      ProjectInstallment(
+        id: 'installment-1',
+        amount: totalAmount * 0.5,
+        dueDate: now,
+      ),
+      ProjectInstallment(
+        id: 'installment-2',
+        amount: totalAmount * 0.5,
+        dueDate: now.add(const Duration(days: 30)),
+      ),
+    ];
+  }
+
+  List<Map<String, dynamic>> _toContractPaymentSchedule(
+    List<ProjectInstallment> installments,
+  ) {
+    final total = installments.fold<double>(
+      0,
+      (sum, installment) => sum + installment.amount,
+    );
+
+    return installments.asMap().entries.map((entry) {
+      final index = entry.key;
+      final installment = entry.value;
+      final percentage = total > 0 ? installment.amount / total * 100 : 0;
+      return {
+        'phase': 'دفعة ${index + 1}',
+        'percentage': percentage,
+        'amount': installment.amount,
+        'dueDate': installment.dueDate.toIso8601String(),
+        'isPaid': installment.isPaid,
+      };
+    }).toList();
   }
 
   Future<void> _handleReturnContractToPricing(BuildContext context) async {

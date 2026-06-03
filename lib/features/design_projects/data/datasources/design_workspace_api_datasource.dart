@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:dio/dio.dart';
 import '../../../../core/constants/endpoints.dart';
 import '../../../../core/network/api_client.dart';
+import '../../domain/entities/design_workspace_entities.dart';
 
 const int _maxDesignAttachmentBytes = 1024 * 1024 * 1024;
 
@@ -31,6 +32,7 @@ class DesignWorkspaceApiDataSource {
     required String fileName,
     String? filePath,
     List<int>? bytes,
+    DesignVideoQuality videoQuality = DesignVideoQuality.p720,
   }) async {
     final fileSize =
         bytes?.length ??
@@ -60,7 +62,10 @@ class DesignWorkspaceApiDataSource {
         : MultipartFile.fromBytes(bytes!, filename: fileName);
     await _apiClient.uploadFile(
       ApiEndpoints.designAttachments(projectId),
-      formData: FormData.fromMap({'files': file}),
+      formData: FormData.fromMap({
+        'files': file,
+        'videoQuality': videoQuality.apiValue,
+      }),
     );
   }
 

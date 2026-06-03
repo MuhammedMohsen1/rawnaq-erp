@@ -8,17 +8,16 @@ class ContractsApiDataSource {
   final ApiClient _apiClient;
 
   ContractsApiDataSource({ApiClient? apiClient})
-      : _apiClient = apiClient ?? ApiClient();
+    : _apiClient = apiClient ?? ApiClient();
 
   /// Get contract for a project
   Future<Map<String, dynamic>?> getContract(String projectId) async {
     try {
-      final response = await _apiClient.get(
-        ApiEndpoints.contract(projectId),
-      );
+      final response = await _apiClient.get(ApiEndpoints.contract(projectId));
       final responseData = response.data as Map<String, dynamic>;
       // Extract nested data from API response wrapper
-      final data = responseData['data'] as Map<String, dynamic>? ?? responseData;
+      final data =
+          responseData['data'] as Map<String, dynamic>? ?? responseData;
       return data;
     } catch (e) {
       // Contract may not exist yet
@@ -53,9 +52,16 @@ class ContractsApiDataSource {
   }
 
   /// Confirm contract (move to EXECUTION)
-  Future<void> confirmContract(String projectId) async {
+  Future<void> confirmContract(
+    String projectId, {
+    List<Map<String, dynamic>>? paymentSchedule,
+  }) async {
     await _apiClient.post(
       ApiEndpoints.confirmContract(projectId),
+      data: {
+        if (paymentSchedule != null && paymentSchedule.isNotEmpty)
+          'paymentSchedule': paymentSchedule,
+      },
     );
   }
 
@@ -66,10 +72,7 @@ class ContractsApiDataSource {
   }) async {
     await _apiClient.post(
       ApiEndpoints.returnContractToPricing(projectId),
-      data: {
-        if (reason != null && reason.isNotEmpty) 'reason': reason,
-      },
+      data: {if (reason != null && reason.isNotEmpty) 'reason': reason},
     );
   }
 }
-

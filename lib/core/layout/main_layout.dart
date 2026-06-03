@@ -111,18 +111,32 @@ class MainLayout extends StatelessWidget {
   ) {
     if (currentPath == AppRoutes.dashboard) {
       final authState = context.read<AuthBloc>().state;
-      if (authState is AuthAuthenticated && authState.user.isDesigner) {
+      if (authState is AuthAuthenticated &&
+          authState.user.isSiteEngineer &&
+          !authState.user.isAdmin &&
+          !authState.user.isManager) {
+        return 'مشاريع التنفيذ';
+      }
+      if (authState is AuthAuthenticated &&
+          authState.user.isDesigner &&
+          !authState.user.isSiteEngineer &&
+          !authState.user.isAdmin &&
+          !authState.user.isManager) {
         return 'مشاريع التصميم';
       }
       return 'نظرة عامة';
     }
     if (currentPath == AppRoutes.projects) {
       final authState = context.read<AuthBloc>().state;
-      if (authState is AuthAuthenticated && authState.user.isDesigner) {
+      if (authState is AuthAuthenticated &&
+          authState.user.isDesigner &&
+          !authState.user.isAdmin &&
+          !authState.user.isManager) {
         return 'مشاريع التصميم';
       }
-      return 'المشاريع';
+      return 'مشاريع التنفيذ';
     }
+    if (currentPath == AppRoutes.designProjects) return 'مشاريع التصميم';
     if (currentPath == AppRoutes.archivedProjects) return 'الأرشيف';
     if (currentPath == AppRoutes.completedProjects) return 'المشاريع المكتملة';
     if (currentPath == AppRoutes.gantt) return 'مخطط جانت';
@@ -154,6 +168,7 @@ class MainLayout extends StatelessWidget {
   bool _shouldShowBackButton(String currentPath) {
     return currentPath != AppRoutes.dashboard &&
         currentPath != AppRoutes.projects &&
+        currentPath != AppRoutes.designProjects &&
         currentPath != AppRoutes.archivedProjects &&
         currentPath != AppRoutes.completedProjects &&
         currentPath != AppRoutes.siteEngineerPricingProjects &&
@@ -268,8 +283,12 @@ class _SidebarState extends State<_Sidebar> {
                   authState is AuthAuthenticated && authState.user.isDesigner;
               final isAdmin =
                   authState is AuthAuthenticated && authState.user.isAdmin;
+              final isManager =
+                  authState is AuthAuthenticated && authState.user.isManager;
+              final isSpecialistCombo =
+                  isSiteEngineer && isDesigner && !isAdmin && !isManager;
 
-              if (isSiteEngineer) {
+              if (isSiteEngineer && !isDesigner && !isAdmin && !isManager) {
                 return Column(
                   children: [
                     _buildCollapsedNavItem(
@@ -304,7 +323,10 @@ class _SidebarState extends State<_Sidebar> {
                     ),
                   ],
                 );
-              } else if (isDesigner) {
+              } else if (isDesigner &&
+                  !isSiteEngineer &&
+                  !isAdmin &&
+                  !isManager) {
                 return Column(
                   children: [
                     _buildCollapsedNavItem(
@@ -312,9 +334,14 @@ class _SidebarState extends State<_Sidebar> {
                       icon: Icons.design_services_outlined,
                       activeIcon: Icons.design_services,
                       path: AppRoutes.projects,
-                      isActive:
-                          widget.currentPath == AppRoutes.projects ||
-                          widget.currentPath == AppRoutes.dashboard,
+                      isActive: widget.currentPath == AppRoutes.projects,
+                    ),
+                    _buildCollapsedNavItem(
+                      context: context,
+                      icon: Icons.rocket_launch_outlined,
+                      activeIcon: Icons.rocket_launch,
+                      path: AppRoutes.dashboard,
+                      isActive: widget.currentPath == AppRoutes.dashboard,
                     ),
                     _buildCollapsedNavItem(
                       context: context,
@@ -322,6 +349,48 @@ class _SidebarState extends State<_Sidebar> {
                       activeIcon: Icons.check_circle,
                       path: AppRoutes.tasks,
                       isActive: widget.currentPath == AppRoutes.tasks,
+                    ),
+                  ],
+                );
+              } else if (isSpecialistCombo) {
+                return Column(
+                  children: [
+                    _buildCollapsedNavItem(
+                      context: context,
+                      icon: Icons.design_services_outlined,
+                      activeIcon: Icons.design_services,
+                      path: AppRoutes.projects,
+                      isActive: widget.currentPath == AppRoutes.projects,
+                    ),
+                    _buildCollapsedNavItem(
+                      context: context,
+                      icon: Icons.rocket_launch_outlined,
+                      activeIcon: Icons.rocket_launch,
+                      path: AppRoutes.dashboard,
+                      isActive: widget.currentPath == AppRoutes.dashboard,
+                    ),
+                    _buildCollapsedNavItem(
+                      context: context,
+                      icon: Icons.edit_note_outlined,
+                      activeIcon: Icons.edit_note,
+                      path: AppRoutes.siteEngineerPricingProjects,
+                      isActive:
+                          widget.currentPath ==
+                          AppRoutes.siteEngineerPricingProjects,
+                    ),
+                    _buildCollapsedNavItem(
+                      context: context,
+                      icon: Icons.check_circle_outline,
+                      activeIcon: Icons.check_circle,
+                      path: AppRoutes.tasks,
+                      isActive: widget.currentPath == AppRoutes.tasks,
+                    ),
+                    _buildCollapsedNavItem(
+                      context: context,
+                      icon: Icons.settings_outlined,
+                      activeIcon: Icons.settings,
+                      path: AppRoutes.settings,
+                      isActive: widget.currentPath == AppRoutes.settings,
                     ),
                   ],
                 );
@@ -342,6 +411,24 @@ class _SidebarState extends State<_Sidebar> {
                       path: AppRoutes.projects,
                       isActive: widget.currentPath == AppRoutes.projects,
                     ),
+                    _buildCollapsedNavItem(
+                      context: context,
+                      icon: Icons.design_services_outlined,
+                      activeIcon: Icons.design_services,
+                      path: AppRoutes.designProjects,
+                      isActive: widget.currentPath == AppRoutes.designProjects,
+                    ),
+                    if (isSiteEngineer) ...[
+                      _buildCollapsedNavItem(
+                        context: context,
+                        icon: Icons.edit_note_outlined,
+                        activeIcon: Icons.edit_note,
+                        path: AppRoutes.siteEngineerPricingProjects,
+                        isActive:
+                            widget.currentPath ==
+                            AppRoutes.siteEngineerPricingProjects,
+                      ),
+                    ],
                     if (isAdmin) ...[
                       _buildCollapsedNavItem(
                         context: context,
@@ -412,7 +499,10 @@ class _SidebarState extends State<_Sidebar> {
               builder: (context, authState) {
                 final isDesigner =
                     authState is AuthAuthenticated && authState.user.isDesigner;
-                if (isDesigner) {
+                final isAdminOrManager =
+                    authState is AuthAuthenticated &&
+                    (authState.user.isAdmin || authState.user.isManager);
+                if (isDesigner && !isAdminOrManager) {
                   return _buildCollapsedActionItem(
                     context: context,
                     icon: Icons.logout,
@@ -503,8 +593,12 @@ class _SidebarState extends State<_Sidebar> {
                   authState is AuthAuthenticated && authState.user.isDesigner;
               final isAdmin =
                   authState is AuthAuthenticated && authState.user.isAdmin;
+              final isManager =
+                  authState is AuthAuthenticated && authState.user.isManager;
+              final isSpecialistCombo =
+                  isSiteEngineer && isDesigner && !isAdmin && !isManager;
 
-              if (isSiteEngineer) {
+              if (isSiteEngineer && !isDesigner && !isAdmin && !isManager) {
                 // Site Engineer menu items
                 return Column(
                   children: [
@@ -556,7 +650,10 @@ class _SidebarState extends State<_Sidebar> {
                     ],
                   ],
                 );
-              } else if (isDesigner) {
+              } else if (isDesigner &&
+                  !isSiteEngineer &&
+                  !isAdmin &&
+                  !isManager) {
                 return Column(
                   children: [
                     _buildNavItem(
@@ -565,9 +662,7 @@ class _SidebarState extends State<_Sidebar> {
                       activeIcon: Icons.design_services,
                       label: 'مشاريع التصميم',
                       path: AppRoutes.projects,
-                      isActive:
-                          widget.currentPath == AppRoutes.projects ||
-                          widget.currentPath == AppRoutes.dashboard,
+                      isActive: widget.currentPath == AppRoutes.projects,
                     ),
                     _buildNavItem(
                       context: context,
@@ -576,6 +671,53 @@ class _SidebarState extends State<_Sidebar> {
                       label: 'مهامي',
                       path: AppRoutes.tasks,
                       isActive: widget.currentPath == AppRoutes.tasks,
+                    ),
+                  ],
+                );
+              } else if (isSpecialistCombo) {
+                return Column(
+                  children: [
+                    _buildNavItem(
+                      context: context,
+                      icon: Icons.design_services_outlined,
+                      activeIcon: Icons.design_services,
+                      label: 'مشاريع التصميم',
+                      path: AppRoutes.projects,
+                      isActive: widget.currentPath == AppRoutes.projects,
+                    ),
+                    _buildNavItem(
+                      context: context,
+                      icon: Icons.rocket_launch_outlined,
+                      activeIcon: Icons.rocket_launch,
+                      label: 'مشاريع التنفيذ',
+                      path: AppRoutes.dashboard,
+                      isActive: widget.currentPath == AppRoutes.dashboard,
+                    ),
+                    _buildNavItem(
+                      context: context,
+                      icon: Icons.edit_note_outlined,
+                      activeIcon: Icons.edit_note,
+                      label: 'التسعير والتوقيع',
+                      path: AppRoutes.siteEngineerPricingProjects,
+                      isActive:
+                          widget.currentPath ==
+                          AppRoutes.siteEngineerPricingProjects,
+                    ),
+                    _buildNavItem(
+                      context: context,
+                      icon: Icons.check_circle_outline,
+                      activeIcon: Icons.check_circle,
+                      label: 'مهامي',
+                      path: AppRoutes.tasks,
+                      isActive: widget.currentPath == AppRoutes.tasks,
+                    ),
+                    _buildNavItem(
+                      context: context,
+                      icon: Icons.settings_outlined,
+                      activeIcon: Icons.settings,
+                      label: 'الإعدادات',
+                      path: AppRoutes.settings,
+                      isActive: widget.currentPath == AppRoutes.settings,
                     ),
                   ],
                 );
@@ -595,10 +737,30 @@ class _SidebarState extends State<_Sidebar> {
                       context: context,
                       icon: Icons.folder_outlined,
                       activeIcon: Icons.folder,
-                      label: 'المشاريع',
+                      label: 'مشاريع التنفيذ',
                       path: AppRoutes.projects,
                       isActive: widget.currentPath == AppRoutes.projects,
                     ),
+                    _buildNavItem(
+                      context: context,
+                      icon: Icons.design_services_outlined,
+                      activeIcon: Icons.design_services,
+                      label: 'مشاريع التصميم',
+                      path: AppRoutes.designProjects,
+                      isActive: widget.currentPath == AppRoutes.designProjects,
+                    ),
+                    if (isSiteEngineer) ...[
+                      _buildNavItem(
+                        context: context,
+                        icon: Icons.edit_note_outlined,
+                        activeIcon: Icons.edit_note,
+                        label: 'التسعير والتوقيع',
+                        path: AppRoutes.siteEngineerPricingProjects,
+                        isActive:
+                            widget.currentPath ==
+                            AppRoutes.siteEngineerPricingProjects,
+                      ),
+                    ],
                     _buildNavItem(
                       context: context,
                       icon: Icons.archive_outlined,
@@ -671,7 +833,10 @@ class _SidebarState extends State<_Sidebar> {
               builder: (context, authState) {
                 final isDesigner =
                     authState is AuthAuthenticated && authState.user.isDesigner;
-                if (isDesigner) {
+                final isAdminOrManager =
+                    authState is AuthAuthenticated &&
+                    (authState.user.isAdmin || authState.user.isManager);
+                if (isDesigner && !isAdminOrManager) {
                   return _buildActionItem(
                     context: context,
                     icon: Icons.logout,
@@ -890,7 +1055,8 @@ class _SidebarState extends State<_Sidebar> {
 
   String _getNavItemLabel(String path) {
     if (path == AppRoutes.dashboard) return 'لوحة التحكم';
-    if (path == AppRoutes.projects) return 'المشاريع';
+    if (path == AppRoutes.projects) return 'مشاريع التنفيذ';
+    if (path == AppRoutes.designProjects) return 'مشاريع التصميم';
     if (path == AppRoutes.archivedProjects) return 'الأرشيف';
     if (path == AppRoutes.completedProjects) return 'المكتملة';
     if (path == AppRoutes.gantt) return 'مخطط جانت';

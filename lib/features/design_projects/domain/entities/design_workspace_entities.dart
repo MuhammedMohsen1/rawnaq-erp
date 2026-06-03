@@ -4,6 +4,17 @@ enum DesignTaskStatus { pending, inProgress, completed }
 
 enum DesignMediaType { image, pdf, video, technical }
 
+enum DesignVideoQuality {
+  p480('480', '480p'),
+  p720('720', '720p'),
+  p1080('1080', '1080p');
+
+  final String apiValue;
+  final String label;
+
+  const DesignVideoQuality(this.apiValue, this.label);
+}
+
 class DesignUser {
   final String id;
   final String name;

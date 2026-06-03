@@ -7,8 +7,10 @@ import 'package:go_router/go_router.dart';
 import 'package:infinite_scroll_pagination/infinite_scroll_pagination.dart';
 
 import '../../../../core/routing/app_router.dart';
+import '../../../contracts/data/datasources/contracts_api_datasource.dart';
 import '../../domain/entities/project_entity.dart';
 import '../../domain/enums/project_status.dart';
+import '../../domain/enums/project_type.dart';
 import '../bloc/projects_bloc.dart';
 import '../bloc/projects_event.dart';
 import '../bloc/projects_state.dart';
@@ -281,8 +283,17 @@ class _ProjectsListPageState extends State<ProjectsListPage> {
   }
 
   void _navigate(BuildContext context, ProjectEntity project) {
-    if (project.status == ProjectStatus.underPricing ||
-        project.status == ProjectStatus.pendingSignature) {
+    if (project.type == ProjectType.design) {
+      context.push(AppRoutes.projectDetails(project.id));
+      return;
+    }
+
+    if (project.status == ProjectStatus.pendingSignature) {
+      context.push(AppRoutes.pricing(project.id, readOnly: project.archived));
+      return;
+    }
+
+    if (project.status == ProjectStatus.underPricing) {
       context.push(AppRoutes.pricing(project.id, readOnly: project.archived));
       return;
     }
@@ -372,16 +383,56 @@ class _ProjectsListPageState extends State<ProjectsListPage> {
           message: 'هل تريد نقل "${project.name}" إلى مرحلة التنفيذ؟',
           confirmLabel: 'بدء التنفيذ',
           onConfirm: () {
-            context.read<ProjectsBloc>().add(
-              UpdateProjectStatus(
-                projectId: project.id,
-                status: ProjectStatus.execution,
-                notes: 'Started execution from pending signature',
-              ),
-            );
+            _confirmPendingSignatureProject(context, project);
           },
         );
       },
     );
+  }
+
+  Future<void> _confirmPendingSignatureProject(
+    BuildContext context,
+    ProjectEntity project,
+  ) async {
+    try {
+      if (project.type == ProjectType.design) {
+        if (!context.mounted) return;
+        context.push(AppRoutes.projectDetails(project.id));
+        return;
+      }
+
+      if (project.status == ProjectStatus.pendingSignature) {
+        if (!context.mounted) return;
+        context.push(AppRoutes.pricing(project.id, readOnly: project.archived));
+        return;
+      }
+
+      await ContractsApiDataSource().confirmContract(project.id);
+
+      if (!context.mounted) return;
+
+      context.read<ProjectsBloc>().add(const RefreshProjects());
+      context.push(
+        project.type == ProjectType.design
+            ? AppRoutes.projectDetails(project.id)
+            : AppRoutes.execution(project.id),
+      );
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('تم نقل المشروع إلى مرحلة التنفيذ بنجاح.'),
+          duration: Duration(seconds: 3),
+        ),
+      );
+    } catch (e) {
+      if (!context.mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('فشل نقل المشروع إلى التنفيذ: $e'),
+          duration: const Duration(seconds: 5),
+        ),
+      );
+    }
   }
 }

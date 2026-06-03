@@ -542,7 +542,10 @@ class PricingCubit extends Cubit<PricingState> {
   }
 
   /// Confirm contract
-  Future<void> confirmContract(String projectId) async {
+  Future<void> confirmContract(
+    String projectId, {
+    List<Map<String, dynamic>>? paymentSchedule,
+  }) async {
     final currentState = state;
     if (currentState is! PricingLoaded) return;
 
@@ -553,7 +556,10 @@ class PricingCubit extends Cubit<PricingState> {
     }
 
     try {
-      await contractsApiDataSource.confirmContract(projectId);
+      await contractsApiDataSource.confirmContract(
+        projectId,
+        paymentSchedule: paymentSchedule,
+      );
       await loadPricingData(projectId);
     } catch (e) {
       rethrow;

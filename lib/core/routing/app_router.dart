@@ -36,6 +36,7 @@ class AppRoutes {
 
   // Projects
   static const String projects = '/projects';
+  static const String designProjects = '/projects/design';
   static const String siteEngineerPricingProjects = '/projects/site-pricing';
   static const String archivedProjects = '/projects/archived';
   static const String completedProjects = '/projects/completed';
@@ -149,8 +150,16 @@ class AppRouter {
                 key: state.pageKey,
                 child: BlocBuilder<AuthBloc, AuthState>(
                   builder: (context, authState) {
-                    if (authState is AuthAuthenticated &&
-                        authState.user.isSiteEngineer) {
+                    final user = authState is AuthAuthenticated
+                        ? authState.user
+                        : null;
+                    final isAdminOrManager =
+                        user != null && (user.isAdmin || user.isManager);
+                    final isSpecialistCombo =
+                        user != null && user.isSiteEngineer && user.isDesigner;
+                    if (user != null &&
+                        user.isSiteEngineer &&
+                        !isAdminOrManager) {
                       return BlocProvider(
                         create: (context) =>
                             ProjectsBloc(repository: ProjectsRepositoryImpl())
@@ -169,8 +178,10 @@ class AppRouter {
                         ),
                       );
                     }
-                    if (authState is AuthAuthenticated &&
-                        authState.user.isDesigner) {
+                    if (user != null &&
+                        user.isDesigner &&
+                        !user.isSiteEngineer &&
+                        !isAdminOrManager) {
                       return BlocProvider(
                         create: (context) => ProjectsBloc(
                           repository: ProjectsRepositoryImpl(),
@@ -184,8 +195,7 @@ class AppRouter {
                         ),
                       );
                     }
-                    if (authState is AuthAuthenticated &&
-                        !authState.user.isAdmin) {
+                    if (user != null && (!user.isAdmin || isSpecialistCombo)) {
                       return BlocProvider(
                         create: (context) =>
                             ProjectsBloc(repository: ProjectsRepositoryImpl())
@@ -268,6 +278,28 @@ class AppRouter {
             ),
           ),
 
+          GoRoute(
+            path: AppRoutes.designProjects,
+            pageBuilder: (context, state) => FadePageTransition(
+              key: state.pageKey,
+              child: BlocProvider(
+                create: (context) =>
+                    ProjectsBloc(repository: ProjectsRepositoryImpl())
+                      ..add(LoadProjects(type: ProjectType.design.apiValue)),
+                child: ProjectsListPage(
+                  key: ValueKey(
+                    'design-projects-${state.uri.queryParameters['refresh'] ?? 'initial'}',
+                  ),
+                  title: 'مشاريع التصميم',
+                  emptyMessage: 'لا توجد مشاريع تصميم',
+                  showCreateButton: true,
+                  showArchiveActions: true,
+                  showStatusActions: true,
+                ),
+              ),
+            ),
+          ),
+
           // Project Details (must come before /projects to avoid route conflict)
           GoRoute(
             path: '/projects/:projectId',
@@ -293,27 +325,30 @@ class AppRouter {
                 key: state.pageKey,
                 child: BlocBuilder<AuthBloc, AuthState>(
                   builder: (context, authState) {
+                    final user = authState is AuthAuthenticated
+                        ? authState.user
+                        : null;
+                    final isAdminOrManager =
+                        user != null && (user.isAdmin || user.isManager);
                     final isDesigner =
-                        authState is AuthAuthenticated &&
-                        authState.user.isDesigner;
+                        user != null && user.isDesigner && !isAdminOrManager;
+                    final type = isDesigner
+                        ? ProjectType.design.apiValue
+                        : isAdminOrManager
+                        ? ProjectType.execution.apiValue
+                        : null;
                     return BlocProvider(
                       create: (context) =>
                           ProjectsBloc(repository: ProjectsRepositoryImpl())
-                            ..add(
-                              LoadProjects(
-                                type: isDesigner
-                                    ? ProjectType.design.apiValue
-                                    : null,
-                              ),
-                            ),
+                            ..add(LoadProjects(type: type)),
                       child: ProjectsListPage(
                         key: ValueKey(
                           'projects-${state.uri.queryParameters['refresh'] ?? 'initial'}-${isDesigner ? 'designer' : 'all'}',
                         ),
-                        title: isDesigner ? 'مشاريع التصميم' : 'المشاريع',
+                        title: isDesigner ? 'مشاريع التصميم' : 'مشاريع التنفيذ',
                         emptyMessage: isDesigner
                             ? 'لا توجد مشاريع تصميم'
-                            : 'لا توجد مشاريع',
+                            : 'لا توجد مشاريع تنفيذ',
                         showCreateButton: !isDesigner,
                         showArchiveActions: !isDesigner,
                         showStatusActions: !isDesigner,

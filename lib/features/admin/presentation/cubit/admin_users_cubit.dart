@@ -60,11 +60,12 @@ class AdminUsersCubit extends Cubit<AdminUsersState> {
     required String email,
     required String name,
     required String password,
-    required String role,
+    required List<String> roles,
     required String accountStatus,
     String? phone,
     List<String>? adminSubRoles,
   }) async {
+    final primaryRole = roles.first;
     await _mutate(
       successMessage: AppConstants.createSuccess,
       action: () => _dataSource.createUser({
@@ -72,8 +73,9 @@ class AdminUsersCubit extends Cubit<AdminUsersState> {
         'name': name,
         if (phone != null && phone.trim().isNotEmpty) 'phone': phone.trim(),
         'password': password,
-        'role': _toApiEnum(role),
-        if (role == AppConstants.adminRole)
+        'role': _toApiEnum(primaryRole),
+        'roles': roles.map(_toApiEnum).toList(),
+        if (roles.contains(AppConstants.adminRole))
           'adminSubRoles': adminSubRoles?.map(_toApiEnum).toList() ?? [],
         'accountStatus': accountStatus,
       }),
@@ -83,21 +85,24 @@ class AdminUsersCubit extends Cubit<AdminUsersState> {
   Future<void> updateUser({
     required User user,
     required String name,
-    required String role,
+    required List<String> roles,
     required String accountStatus,
     String? phone,
     String? password,
     List<String>? adminSubRoles,
   }) async {
+    final primaryRole = roles.first;
     await _mutate(
       successMessage: AppConstants.updateSuccess,
       action: () => _dataSource.updateUser(user.id, {
         'name': name,
         'phone': phone?.trim().isEmpty ?? true ? null : phone!.trim(),
-        'role': _toApiEnum(role),
-        if (role == AppConstants.adminRole)
+        'role': _toApiEnum(primaryRole),
+        'roles': roles.map(_toApiEnum).toList(),
+        if (roles.contains(AppConstants.adminRole))
           'adminSubRoles': adminSubRoles?.map(_toApiEnum).toList() ?? [],
-        if (role != AppConstants.adminRole) 'adminSubRoles': <String>[],
+        if (!roles.contains(AppConstants.adminRole))
+          'adminSubRoles': <String>[],
         'accountStatus': accountStatus,
         if (password != null && password.isNotEmpty) 'password': password,
       }),

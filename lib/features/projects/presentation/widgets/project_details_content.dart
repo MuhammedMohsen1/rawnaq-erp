@@ -6,9 +6,13 @@ import '../../../../core/constants/app_colors.dart';
 import '../../../../core/layout/top_bar_title_controller.dart';
 import '../../../../core/utils/responsive_layout.dart';
 import '../../../auth/presentation/bloc/auth_bloc.dart';
+import '../../../contracts/data/datasources/contracts_api_datasource.dart';
 import '../../../design_projects/presentation/pages/design_project_workspace.dart';
+import '../../../design_projects/presentation/widgets/design_workspace_installments_editor.dart';
 import '../../../financial/data/models/transaction_model.dart';
 import '../../../financial/domain/entities/transaction_entity.dart' as tx;
+import '../../../pricing/presentation/widgets/contract_export_dialog.dart';
+import '../../domain/entities/project_entity.dart';
 import '../../domain/entities/project_attachment_entity.dart';
 import '../../domain/enums/project_status.dart';
 import '../../domain/enums/project_type.dart';
@@ -19,6 +23,10 @@ import 'financial_summary_cards_row.dart';
 import 'project_attachments_section.dart';
 import 'project_header.dart';
 import 'transactions_table.dart';
+
+bool _isDesignWorkspaceOpen(ProjectStatus status) {
+  return status == ProjectStatus.execution || status == ProjectStatus.completed;
+}
 
 class ProjectDetailsContent extends StatefulWidget {
   final String projectId;
@@ -69,7 +77,8 @@ class _ProjectDetailsLayout extends StatelessWidget {
     return BlocBuilder<ProjectFinancialCubit, ProjectFinancialState>(
       builder: (context, state) {
         if (state is ProjectFinancialLoaded &&
-            state.project.type == ProjectType.design) {
+            state.project.type == ProjectType.design &&
+            _isDesignWorkspaceOpen(state.project.status)) {
           return SizedBox(
             height: MediaQuery.sizeOf(context).height,
             child: Padding(
@@ -107,15 +116,24 @@ class _LoadedContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (state.project.type == ProjectType.design) {
+    if (state.project.type == ProjectType.design &&
+        _isDesignWorkspaceOpen(state.project.status)) {
       return DesignProjectWorkspace(project: state.project);
     }
+    final isContractStage = _canManageContract(state.project);
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         ProjectHeader(project: state.project),
-        const SizedBox(height: 24),
-        FinancialSummaryCardsRow(financialSummary: state.financialSummary),
+        if (isContractStage) ...[
+          const SizedBox(height: 16),
+          _ContractActions(project: state.project),
+        ],
+        if (!isContractStage) ...[
+          const SizedBox(height: 24),
+          FinancialSummaryCardsRow(financialSummary: state.financialSummary),
+        ],
         const SizedBox(height: 24),
         ProjectAttachmentsSection(
           attachments: state.attachments,
@@ -136,27 +154,31 @@ class _LoadedContent extends StatelessWidget {
               : (attachment, bytes) =>
                     _replacePdfAttachment(context, attachment, bytes),
         ),
-        const SizedBox(height: 24),
-        TransactionsTable(
-          transactions: state.transactions,
-          onDelete: (transaction) {
-            if (!state.project.archived && transaction.canDelete) {
-              _showDeleteConfirmation(context, transaction);
-            }
-          },
-          onUpdate: (transaction) {
-            if (state.project.archived) return;
-            context.read<ProjectFinancialCubit>().updateTransaction(transaction);
-          },
-          onAddNew: state.project.archived
-              ? null
-              : () => _addNewExpense(context),
-          onLoadMore: () {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('تحميل المزيد - قريباً')),
-            );
-          },
-        ),
+        if (!isContractStage) ...[
+          const SizedBox(height: 24),
+          TransactionsTable(
+            transactions: state.transactions,
+            onDelete: (transaction) {
+              if (!state.project.archived && transaction.canDelete) {
+                _showDeleteConfirmation(context, transaction);
+              }
+            },
+            onUpdate: (transaction) {
+              if (state.project.archived) return;
+              context.read<ProjectFinancialCubit>().updateTransaction(
+                transaction,
+              );
+            },
+            onAddNew: state.project.archived
+                ? null
+                : () => _addNewExpense(context),
+            onLoadMore: () {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('تحميل المزيد - قريباً')),
+              );
+            },
+          ),
+        ],
       ],
     );
   }
@@ -295,6 +317,140 @@ class _LoadedContent extends StatelessWidget {
         ).showSnackBar(const SnackBar(content: Text('تم حذف المعاملة')));
       },
     );
+  }
+}
+
+bool _canManageContract(ProjectEntity project) {
+  return project.type == ProjectType.design &&
+      (project.status == ProjectStatus.pendingSignature ||
+          project.status == ProjectStatus.draft);
+}
+
+class _ContractActions extends StatelessWidget {
+  final ProjectEntity project;
+
+  const _ContractActions({required this.project});
+
+  @override
+  Widget build(BuildContext context) {
+    return Align(
+      alignment: Alignment.centerRight,
+      child: Wrap(
+        spacing: 10,
+        runSpacing: 10,
+        children: [
+          OutlinedButton.icon(
+            onPressed: () => showDialog<bool>(
+              context: context,
+              builder: (_) => ContractExportDialog(
+                projectId: project.id,
+                projectName: project.name,
+                totalAmount: project.projectTotalPrice,
+              ),
+            ),
+            icon: const Icon(Icons.picture_as_pdf_outlined),
+            label: const Text('إصدار العقد PDF'),
+          ),
+          ElevatedButton.icon(
+            onPressed: () => _confirmContractAndStart(context),
+            icon: const Icon(Icons.play_circle_outline_rounded),
+            label: Text(
+              project.type == ProjectType.design ? 'بدء العمل' : 'تأكيد العقد',
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _confirmContractAndStart(BuildContext context) async {
+    try {
+      final installments = await showDialog<List<ProjectInstallment>>(
+        context: context,
+        builder: (_) => DesignWorkspaceInstallmentsEditorDialog(
+          initialInstallments: _initialInstallments(project),
+          title: 'تأكيد دفعات العقد',
+          description: 'راجع الدفعات وحدد ما تم تحصيله قبل تأكيد العقد.',
+          confirmLabel: project.type == ProjectType.design
+              ? 'تأكيد الدفعات وبدء العمل'
+              : 'تأكيد الدفعات والعقد',
+        ),
+      );
+      if (installments == null || installments.isEmpty || !context.mounted) {
+        return;
+      }
+
+      await ContractsApiDataSource().confirmContract(
+        project.id,
+        paymentSchedule: _toContractPaymentSchedule(installments),
+      );
+      if (!context.mounted) return;
+      await context.read<ProjectFinancialCubit>().loadProjectFinancialData(
+        project.id,
+      );
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            project.type == ProjectType.design
+                ? 'تم فتح مرحلة العمل على مشروع التصميم'
+                : 'تم تأكيد العقد ونقل المشروع إلى التنفيذ',
+          ),
+        ),
+      );
+    } catch (e) {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('فشل تأكيد العقد: $e')));
+    }
+  }
+
+  List<ProjectInstallment> _initialInstallments(ProjectEntity project) {
+    if (project.installments.isNotEmpty) {
+      return project.installments;
+    }
+
+    final total = project.projectTotalPrice;
+    final now = DateTime.now();
+    if (total <= 0) {
+      return [ProjectInstallment(id: 'installment-1', amount: 0, dueDate: now)];
+    }
+
+    return [
+      ProjectInstallment(
+        id: 'installment-1',
+        amount: total * 0.5,
+        dueDate: now,
+      ),
+      ProjectInstallment(
+        id: 'installment-2',
+        amount: total * 0.5,
+        dueDate: now.add(const Duration(days: 30)),
+      ),
+    ];
+  }
+
+  List<Map<String, dynamic>> _toContractPaymentSchedule(
+    List<ProjectInstallment> installments,
+  ) {
+    final total = installments.fold<double>(
+      0,
+      (sum, installment) => sum + installment.amount,
+    );
+
+    return installments.asMap().entries.map((entry) {
+      final index = entry.key;
+      final installment = entry.value;
+      final percentage = total > 0 ? installment.amount / total * 100 : 0;
+      return {
+        'phase': 'دفعة ${index + 1}',
+        'percentage': percentage,
+        'amount': installment.amount,
+        'dueDate': installment.dueDate.toIso8601String(),
+        'isPaid': installment.isPaid,
+      };
+    }).toList();
   }
 }
 

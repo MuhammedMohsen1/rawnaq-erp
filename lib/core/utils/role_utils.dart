@@ -40,11 +40,18 @@ class RoleUtils {
 
   /// Get user's display role name
   static String getRoleDisplayName(User user) {
-    switch (user.role) {
+    final roleNames = user.effectiveRoles.map(_roleName).join(', ');
+    if (user.isAdmin &&
+        user.adminSubRoles != null &&
+        user.adminSubRoles!.isNotEmpty) {
+      return '$roleNames (${user.adminSubRoles!.join(', ')})';
+    }
+    return roleNames.isEmpty ? _roleName(user.role) : roleNames;
+  }
+
+  static String _roleName(String role) {
+    switch (role) {
       case AppConstants.adminRole:
-        if (user.adminSubRoles != null && user.adminSubRoles!.isNotEmpty) {
-          return 'Admin (${user.adminSubRoles!.join(', ')})';
-        }
         return 'System Admin';
       case AppConstants.managerRole:
         return 'Manager';
@@ -52,10 +59,12 @@ class RoleUtils {
         return 'Senior Engineer';
       case AppConstants.juniorEngineerRole:
         return 'Junior Engineer';
+      case AppConstants.siteEngineerRole:
+        return 'Site Engineer';
       case 'designer':
         return 'Designer';
       default:
-        return user.role;
+        return role;
     }
   }
 }

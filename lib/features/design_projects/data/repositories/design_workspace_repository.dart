@@ -16,11 +16,13 @@ class DesignWorkspaceRepository {
     required String fileName,
     String? filePath,
     List<int>? bytes,
+    DesignVideoQuality videoQuality = DesignVideoQuality.p720,
   }) => _dataSource.uploadAttachment(
     projectId,
     fileName: fileName,
     filePath: filePath,
     bytes: bytes,
+    videoQuality: videoQuality,
   );
   Future<void> assignTask(String projectId, String taskId, String assigneeId) =>
       _dataSource.assignTask(projectId, taskId, assigneeId);

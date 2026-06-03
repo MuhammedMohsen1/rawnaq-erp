@@ -37,6 +37,7 @@ class MockAuthRepository implements AuthRepository {
         'phone': '+966501234567',
         'avatar': null,
         'role': role,
+        'roles': [role],
         'isActive': true,
         'createdAt': DateTime.now().toIso8601String(),
       };
@@ -83,6 +84,7 @@ class MockAuthRepository implements AuthRepository {
       phone: '+966501234567',
       avatar: null,
       role: 'manager',
+      roles: const ['manager'],
       isActive: true,
       createdAt: DateTime.now(),
     );

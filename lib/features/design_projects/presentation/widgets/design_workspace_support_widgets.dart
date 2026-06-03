@@ -54,17 +54,7 @@ class DesignWorkspaceProjectHeader extends StatelessWidget {
                   style: Theme.of(context).textTheme.titleMedium,
                 ),
                 const SizedBox(height: 3),
-                Text(
-                  'مساحة التصميم • $clientName',
-                  style: Theme.of(context).textTheme.bodySmall,
-                ),
-                if (lastEdit != null) ...[
-                  const SizedBox(height: 3),
-                  Text(
-                    'آخر تحديث ${relativeTime(lastEdit)}',
-                    style: Theme.of(context).textTheme.labelSmall,
-                  ),
-                ],
+                Text(clientName, style: Theme.of(context).textTheme.bodySmall),
               ],
             ),
           ),

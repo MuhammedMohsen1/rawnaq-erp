@@ -161,6 +161,8 @@ class ProjectListItemCardMenu extends StatelessWidget {
         color: AppColors.cardBackground,
         itemBuilder: (_) => [
           const PopupMenuItem(value: 'edit', child: Text('تعديل')),
+          if (onMoveToExecution != null)
+            const PopupMenuItem(value: 'execution', child: Text('بدء التنفيذ')),
           if (onRestore != null)
             const PopupMenuItem(value: 'restore', child: Text('استعادة')),
           if (onArchive != null)

@@ -7,6 +7,7 @@ class User extends Equatable {
   final String? phone;
   final String? avatar;
   final String role;
+  final List<String> roles;
   final List<String>? adminSubRoles; // Admin can have sub-roles
   final bool isActive;
   final DateTime createdAt;
@@ -21,13 +22,14 @@ class User extends Equatable {
     this.phone,
     this.avatar,
     required this.role,
+    List<String>? roles,
     this.adminSubRoles,
     required this.isActive,
     required this.createdAt,
     this.lastLoginAt,
     this.openingTime,
     this.closingTime,
-  });
+  }) : roles = roles ?? const [];
 
   factory User.fromJson(Map<String, dynamic> json) {
     // Map accountStatus enum to isActive boolean
@@ -39,6 +41,12 @@ class User extends Equatable {
     // Normalize role to lowercase (backend returns uppercase like "SITE_ENGINEER")
     final rawRole = json['role'] as String;
     final normalizedRole = rawRole.toLowerCase();
+    final normalizedRoles =
+        (json['roles'] as List?)
+            ?.map((role) => (role as String).toLowerCase())
+            .toSet()
+            .toList() ??
+        [normalizedRole];
 
     // Normalize adminSubRoles to lowercase if they exist
     final List<String>? normalizedAdminSubRoles = json['adminSubRoles'] != null
@@ -54,6 +62,7 @@ class User extends Equatable {
       phone: json['phone'] as String?,
       avatar: json['avatar'] as String?,
       role: normalizedRole,
+      roles: normalizedRoles.isEmpty ? [normalizedRole] : normalizedRoles,
       adminSubRoles: normalizedAdminSubRoles,
       isActive: json['isActive'] as bool? ?? isActive,
       createdAt: DateTime.parse(json['createdAt'] as String),
@@ -73,6 +82,7 @@ class User extends Equatable {
       'phone': phone,
       'avatar': avatar,
       'role': role,
+      'roles': roles,
       'adminSubRoles': adminSubRoles,
       'isActive': isActive,
       'createdAt': createdAt.toIso8601String(),
@@ -90,6 +100,7 @@ class User extends Equatable {
     String? phone,
     String? avatar,
     String? role,
+    List<String>? roles,
     List<String>? adminSubRoles,
     bool? isActive,
     DateTime? createdAt,
@@ -105,6 +116,7 @@ class User extends Equatable {
       phone: phone ?? this.phone,
       avatar: avatar ?? this.avatar,
       role: role ?? this.role,
+      roles: roles ?? this.roles,
       adminSubRoles: adminSubRoles ?? this.adminSubRoles,
       isActive: isActive ?? this.isActive,
       createdAt: createdAt ?? this.createdAt,
@@ -115,13 +127,15 @@ class User extends Equatable {
   }
 
   // Role checking methods
-  bool get isAdmin => role == 'admin';
-  bool get isManager => role == 'manager';
-  bool get isSeniorEngineer => role == 'senior_engineer';
-  bool get isJuniorEngineer => role == 'junior_engineer';
-  bool get isSiteEngineer => role == 'site_engineer';
-  bool get isEngineer => role == 'engineer';
-  bool get isDesigner => role == 'designer';
+  List<String> get effectiveRoles => roles.isEmpty ? [role] : roles;
+  bool hasRole(String value) => effectiveRoles.contains(value) || role == value;
+  bool get isAdmin => hasRole('admin');
+  bool get isManager => hasRole('manager');
+  bool get isSeniorEngineer => hasRole('senior_engineer');
+  bool get isJuniorEngineer => hasRole('junior_engineer');
+  bool get isSiteEngineer => hasRole('site_engineer');
+  bool get isEngineer => hasRole('engineer');
+  bool get isDesigner => hasRole('designer');
 
   /// Returns true if user is any type of engineer that can request installments
   bool get canRequestInstallments =>
@@ -160,6 +174,7 @@ class User extends Equatable {
     phone,
     avatar,
     role,
+    roles,
     adminSubRoles,
     isActive,
     createdAt,
