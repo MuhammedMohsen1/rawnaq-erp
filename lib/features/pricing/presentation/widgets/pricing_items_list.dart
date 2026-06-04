@@ -21,7 +21,7 @@ class PricingItemsList extends StatelessWidget {
   final VoidCallback onDataChanged;
   final Function(String subItemId, double profitMargin)
   onSubItemProfitMarginChanged;
-  final Function(String itemId) onAddSubItem;
+  final VoidCallback Function(String itemId) onAddSubItem;
   final Future<void> Function(int oldIndex, int newIndex)? onReorderItems;
   final Future<void> Function(String itemId, int oldIndex, int newIndex)?
   onReorderSubItems;
@@ -131,9 +131,7 @@ class PricingItemsList extends StatelessWidget {
                           updatedSubItem.profitMargin,
                         );
                       },
-                      onAddSubItem: readOnly
-                          ? null
-                          : () => onAddSubItem(item.id),
+                      onAddSubItem: readOnly ? null : onAddSubItem(item.id),
                       canReorderItem: canReorder,
                       itemReorderIndex: index,
                       canReorderSubItems: canReorder,

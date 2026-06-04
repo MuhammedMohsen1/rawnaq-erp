@@ -48,7 +48,7 @@ class PricingSubItemBody extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          if (hasImagesOrUploading) ...[
+          if (hasImagesOrUploading)
             Flexible(
               flex: 1,
               fit: FlexFit.loose,
@@ -64,97 +64,33 @@ class PricingSubItemBody extends StatelessWidget {
                   minWidth: 100,
                   maxHeight: 300,
                 ),
-                child: Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    border: Border.all(color: const Color(0xFF363C4A)),
-                    borderRadius: BorderRadius.circular(8),
-                    color: const Color(0xFF1C212B),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(12),
-                        decoration: const BoxDecoration(
-                          border: Border(
-                            bottom: BorderSide(color: Color(0xFF363C4A)),
-                          ),
-                        ),
-                        child: Row(
-                          children: [
-                            Text(
-                              subItem.images.isEmpty
-                                  ? '0/0 Photos'
-                                  : '${selectedImageIndex[subItem.id] != null ? (selectedImageIndex[subItem.id]!.clamp(0, subItem.images.length - 1) + 1) : 1}/${subItem.images.length} Photos',
-                              style: AppTextStyles.bodyMedium.copyWith(
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                            const Spacer(),
-                            if (isUploadingImage)
-                              const SizedBox(
-                                width: 16,
-                                height: 16,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                  color: AppColors.primary,
-                                ),
-                              )
-                            else
-                              Material(
-                                color: Colors.transparent,
-                                child: InkWell(
-                                  onTap: onPickImages,
-                                  onLongPress: onPickImagesWithFilePicker,
-                                  borderRadius: BorderRadius.circular(4),
-                                  child: Container(
-                                    padding: const EdgeInsets.all(4),
-                                    child: const Icon(
-                                      Icons.add_photo_alternate,
-                                      size: 18,
-                                      color: AppColors.primary,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                          ],
-                        ),
-                      ),
-                      Expanded(
-                        child: subItem.images.isEmpty
-                            ? const Center(
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                  color: AppColors.primary,
-                                ),
-                              )
-                            : PricingImagePreview(
-                                subItem: subItem,
-                                showFinancials: showFinancials,
-                                selectedImageIndex: selectedImageIndex,
-                                deletingImages: deletingImages,
-                                uploadingImages: uploadingImages,
-                                onDeleteCurrentImage: onDeleteCurrentImage,
-                                onCropCurrentImage: onCropCurrentImage,
-                                onShowFullScreenImage: onShowFullScreenImage,
-                                onPickImages: onPickImages,
-                                onPickImagesWithFilePicker:
-                                    onPickImagesWithFilePicker,
-                              ),
-                      ),
-                    ],
-                  ),
+                child: PricingSubItemImagesPanel(
+                  subItem: subItem,
+                  showFinancials: showFinancials,
+                  isUploadingImage: isUploadingImage,
+                  selectedImageIndex: selectedImageIndex,
+                  deletingImages: deletingImages,
+                  uploadingImages: uploadingImages,
+                  onPickImages: onPickImages,
+                  onPickImagesWithFilePicker: onPickImagesWithFilePicker,
+                  onDeleteCurrentImage: onDeleteCurrentImage,
+                  onCropCurrentImage: onCropCurrentImage,
+                  onShowFullScreenImage: onShowFullScreenImage,
                 ),
               ),
             ),
-          ],
           Expanded(
             flex: 2,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                if (!hasImagesOrUploading) ...[
+                  PricingSubItemAddImagesButton(
+                    onPickImages: onPickImages,
+                    onPickImagesWithFilePicker: onPickImagesWithFilePicker,
+                  ),
+                  const SizedBox(height: 12),
+                ],
                 if (elementRows.isNotEmpty) ...[
                   Container(
                     height: 41.5,
@@ -298,6 +234,168 @@ class PricingSubItemBody extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class PricingSubItemImagesPanel extends StatelessWidget {
+  const PricingSubItemImagesPanel({
+    super.key,
+    required this.subItem,
+    required this.showFinancials,
+    required this.isUploadingImage,
+    required this.selectedImageIndex,
+    required this.deletingImages,
+    required this.uploadingImages,
+    required this.onPickImages,
+    required this.onPickImagesWithFilePicker,
+    required this.onDeleteCurrentImage,
+    required this.onCropCurrentImage,
+    required this.onShowFullScreenImage,
+  });
+
+  final PricingSubItemModel subItem;
+  final bool showFinancials;
+  final bool isUploadingImage;
+  final Map<String, int> selectedImageIndex;
+  final Map<String, bool> deletingImages;
+  final Map<String, bool> uploadingImages;
+  final VoidCallback onPickImages;
+  final VoidCallback onPickImagesWithFilePicker;
+  final VoidCallback onDeleteCurrentImage;
+  final VoidCallback onCropCurrentImage;
+  final VoidCallback onShowFullScreenImage;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        border: Border.all(color: AppColors.border),
+        borderRadius: BorderRadius.circular(8),
+        color: AppColors.cardBackground,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: const BoxDecoration(
+              border: Border(bottom: BorderSide(color: AppColors.border)),
+            ),
+            child: Row(
+              children: [
+                Text(
+                  subItem.images.isEmpty
+                      ? '0/0 Photos'
+                      : '${selectedImageIndex[subItem.id] != null ? (selectedImageIndex[subItem.id]!.clamp(0, subItem.images.length - 1) + 1) : 1}/${subItem.images.length} Photos',
+                  style: AppTextStyles.bodyMedium.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const Spacer(),
+                if (isUploadingImage)
+                  const SizedBox(
+                    width: 16,
+                    height: 16,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: AppColors.primary,
+                    ),
+                  )
+                else
+                  Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      onTap: onPickImages,
+                      onLongPress: onPickImagesWithFilePicker,
+                      borderRadius: BorderRadius.circular(4),
+                      child: const Padding(
+                        padding: EdgeInsets.all(4),
+                        child: Icon(
+                          Icons.add_photo_alternate,
+                          size: 18,
+                          color: AppColors.primary,
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+          Expanded(
+            child: subItem.images.isEmpty
+                ? const Center(
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: AppColors.primary,
+                    ),
+                  )
+                : PricingImagePreview(
+                    subItem: subItem,
+                    showFinancials: showFinancials,
+                    selectedImageIndex: selectedImageIndex,
+                    deletingImages: deletingImages,
+                    uploadingImages: uploadingImages,
+                    onDeleteCurrentImage: onDeleteCurrentImage,
+                    onCropCurrentImage: onCropCurrentImage,
+                    onShowFullScreenImage: onShowFullScreenImage,
+                    onPickImages: onPickImages,
+                    onPickImagesWithFilePicker: onPickImagesWithFilePicker,
+                  ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class PricingSubItemAddImagesButton extends StatelessWidget {
+  const PricingSubItemAddImagesButton({
+    super.key,
+    required this.onPickImages,
+    required this.onPickImagesWithFilePicker,
+  });
+
+  final VoidCallback onPickImages;
+  final VoidCallback onPickImagesWithFilePicker;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.transparent,
+      borderRadius: BorderRadius.circular(8),
+      child: InkWell(
+        onTap: onPickImages,
+        onLongPress: onPickImagesWithFilePicker,
+        borderRadius: BorderRadius.circular(8),
+        child: Container(
+          height: 46,
+          decoration: BoxDecoration(
+            border: Border.all(color: AppColors.border),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(
+                Icons.add_photo_alternate_outlined,
+                color: AppColors.textSecondary,
+                size: 20,
+              ),
+              const SizedBox(width: 8),
+              Text(
+                'إضافة صورة',
+                style: AppTextStyles.bodyMedium.copyWith(
+                  color: AppColors.textSecondary,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
