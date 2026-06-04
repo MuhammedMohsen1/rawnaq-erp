@@ -32,7 +32,7 @@ class PricingItemCardSubItemsList extends StatelessWidget {
     required this.onDeleteCurrentImage,
     required this.onCropCurrentImage,
     required this.onShowFullScreenImage,
-    required this.onAddSubItem,
+    required this.onAddElement,
     required this.onReorderSubItems,
     required this.onReorderElements,
     required this.onToggleElementVisibility,
@@ -67,7 +67,7 @@ class PricingItemCardSubItemsList extends StatelessWidget {
   final void Function(String subItemId, String imageUrl, int imageIndex)
   onCropCurrentImage;
   final void Function(String subItemId, String imageUrl) onShowFullScreenImage;
-  final VoidCallback onAddSubItem;
+  final ValueChanged<String> onAddElement;
   final Future<void> Function(int oldIndex, int newIndex)? onReorderSubItems;
   final Future<void> Function(
     String subItemId,
@@ -182,6 +182,7 @@ class PricingItemCardSubItemsList extends StatelessWidget {
           );
 
           return PricingElementRowShell(
+            key: ValueKey(element.id),
             subItemId: subItem.id,
             elementId: element.id,
             index: index,
@@ -229,6 +230,7 @@ class PricingItemCardSubItemsList extends StatelessWidget {
         }).toList();
 
         return PricingSubItemSection(
+          key: ValueKey(subItem.id),
           subItemId: subItem.id,
           index: index,
           subItem: subItem,
@@ -285,7 +287,7 @@ class PricingItemCardSubItemsList extends StatelessWidget {
 
             await onReorderElements!(subItem.id, movedElement.id, targetOrder);
           },
-          onAddSubItem: onAddSubItem,
+          onAddElement: () => onAddElement(subItem.id),
           hasImagesOrUploading:
               subItem.images.isNotEmpty || uploadingImages[subItem.id] == true,
           isUploadingImage: uploadingImages[subItem.id] == true,

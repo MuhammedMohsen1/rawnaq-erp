@@ -49,9 +49,9 @@ class ProjectListItemGlowOrb extends StatelessWidget {
           shape: BoxShape.circle,
           gradient: RadialGradient(
             colors: [
-              color.withOpacity(opacity),
-              color.withOpacity(opacity * 0.26),
-              color.withOpacity(0),
+              color.withValues(alpha: opacity),
+              color.withValues(alpha: opacity * 0.26),
+              color.withValues(alpha: 0),
             ],
             stops: const [0, 0.45, 1],
           ),
@@ -82,9 +82,11 @@ class ProjectListItemStatusIconBox extends StatelessWidget {
       width: compact ? 31 : 38,
       height: compact ? 31 : 38,
       decoration: BoxDecoration(
-        color: accent.withOpacity(hovered ? 0.16 : 0.11),
+        color: accent.withValues(alpha: hovered ? 0.16 : 0.11),
         borderRadius: BorderRadius.circular(compact ? 10 : 13),
-        border: Border.all(color: accent.withOpacity(hovered ? 0.34 : 0.20)),
+        border: Border.all(
+          color: accent.withValues(alpha: hovered ? 0.34 : 0.20),
+        ),
       ),
       child: Icon(icon, size: compact ? 15 : 18, color: accent),
     );
@@ -111,9 +113,9 @@ class ProjectListItemPipelineLabel extends StatelessWidget {
         vertical: compact ? 2 : 3,
       ),
       decoration: BoxDecoration(
-        color: AppColors.black.withOpacity(0.14),
+        color: AppColors.black.withValues(alpha: 0.14),
         borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: AppColors.border.withOpacity(0.80)),
+        border: Border.all(color: AppColors.border.withValues(alpha: 0.80)),
       ),
       child: Text(
         groupLabel,
@@ -162,15 +164,64 @@ class ProjectListItemCardMenu extends StatelessWidget {
         ),
         color: AppColors.cardBackground,
         itemBuilder: (_) => [
-          const PopupMenuItem(value: 'edit', child: Text('تعديل')),
+          const PopupMenuItem(
+            value: 'edit',
+            child: Row(
+              children: [
+                Icon(Icons.edit_outlined, size: 18),
+                SizedBox(width: 8),
+                Text('تعديل'),
+              ],
+            ),
+          ),
           if (onMoveToExecution != null)
-            const PopupMenuItem(value: 'execution', child: Text('بدء التنفيذ')),
+            const PopupMenuItem(
+              value: 'execution',
+              child: Row(
+                children: [
+                  Icon(Icons.play_circle_outline_rounded, size: 18),
+                  SizedBox(width: 8),
+                  Text('بدء التنفيذ'),
+                ],
+              ),
+            ),
           if (onRestore != null)
-            const PopupMenuItem(value: 'restore', child: Text('استعادة')),
+            const PopupMenuItem(
+              value: 'restore',
+              child: Row(
+                children: [
+                  Icon(Icons.unarchive_outlined, size: 18),
+                  SizedBox(width: 8),
+                  Text('استعادة'),
+                ],
+              ),
+            ),
           if (onArchive != null)
-            const PopupMenuItem(value: 'archive', child: Text('أرشفة المشروع')),
+            const PopupMenuItem(
+              value: 'archive',
+              child: Row(
+                children: [
+                  Icon(Icons.archive_outlined, size: 18),
+                  SizedBox(width: 8),
+                  Text('أرشفة المشروع'),
+                ],
+              ),
+            ),
           if (onDelete != null)
-            const PopupMenuItem(value: 'delete', child: Text('حذف المشروع')),
+            const PopupMenuItem(
+              value: 'delete',
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.delete_outline_rounded,
+                    size: 18,
+                    color: AppColors.error,
+                  ),
+                  SizedBox(width: 8),
+                  Text('حذف المشروع', style: TextStyle(color: AppColors.error)),
+                ],
+              ),
+            ),
         ],
         onSelected: (value) {
           switch (value) {
@@ -416,7 +467,7 @@ class _DualProgressTrack extends StatelessWidget {
       height: compact ? 5 : 8,
       clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
-        color: AppColors.border.withOpacity(0.4),
+        color: AppColors.border.withValues(alpha: 0.4),
         borderRadius: BorderRadius.circular(10),
       ),
       child: Stack(
@@ -431,7 +482,7 @@ class _DualProgressTrack extends StatelessWidget {
                 child: DecoratedBox(
                   decoration: BoxDecoration(
                     color: index == 0 && segments.length > 1
-                        ? segments[index].color.withOpacity(0.38)
+                        ? segments[index].color.withValues(alpha: 0.38)
                         : segments[index].color,
                     borderRadius: BorderRadius.circular(10),
                   ),

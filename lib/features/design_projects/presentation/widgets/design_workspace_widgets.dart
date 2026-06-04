@@ -1,7 +1,11 @@
+import 'dart:io' as io;
+
 import 'package:file_picker/file_picker.dart';
 import 'package:desktop_drop/desktop_drop.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter/services.dart';
+import 'package:pasteboard/pasteboard.dart';
 
 import '../../../../core/constants/app_colors.dart';
 import '../../../auth/presentation/bloc/auth_bloc.dart';
@@ -140,6 +144,7 @@ class _DesignTimelinePanelState extends State<DesignTimelinePanel> {
                   DesignWorkspaceComposer(
                     controller: controller,
                     onAttach: _pickFile,
+                    onPaste: _pasteClipboardContents,
                     onSend: () {
                       final message = controller.text.trim();
                       if (message.isEmpty) return;
@@ -172,6 +177,69 @@ class _DesignTimelinePanelState extends State<DesignTimelinePanel> {
     for (final file in files) {
       await _uploadPickedFile(file, quality);
     }
+  }
+
+  Future<void> _pasteClipboardContents() async {
+    final filePaths = await Pasteboard.files();
+    if (filePaths.isNotEmpty) {
+      await _uploadPastedFiles(filePaths);
+      return;
+    }
+
+    final imageBytes = await Pasteboard.image;
+    if (imageBytes != null && imageBytes.isNotEmpty) {
+      await _uploadPastedImage(imageBytes);
+      return;
+    }
+
+    final text = (await Clipboard.getData(Clipboard.kTextPlain))?.text;
+    if (text == null || text.isEmpty) return;
+
+    final selection = controller.selection;
+    final currentText = controller.text;
+    final start = selection.isValid ? selection.start : currentText.length;
+    final end = selection.isValid ? selection.end : currentText.length;
+    final nextText = currentText.replaceRange(start, end, text);
+    controller.value = TextEditingValue(
+      text: nextText,
+      selection: TextSelection.collapsed(offset: start + text.length),
+    );
+  }
+
+  Future<void> _uploadPastedFiles(List<String> filePaths) async {
+    final quality = await _qualityForUpload(filePaths.any(_isVideoFile));
+    if (quality == null) return;
+
+    for (final path in filePaths) {
+      final file = io.File(path);
+      if (!await file.exists()) continue;
+      final size = await file.length();
+      if (!mounted) return;
+
+      if (size > _maxDesignAttachmentBytes) {
+        _showOversizedFileMessage();
+        continue;
+      }
+
+      await context.read<DesignWorkspaceCubit>().upload(
+        fileName: path.split(io.Platform.pathSeparator).last,
+        filePath: path,
+        videoQuality: quality,
+      );
+    }
+  }
+
+  Future<void> _uploadPastedImage(Uint8List imageBytes) async {
+    if (imageBytes.lengthInBytes > _maxDesignAttachmentBytes) {
+      _showOversizedFileMessage();
+      return;
+    }
+
+    await context.read<DesignWorkspaceCubit>().upload(
+      fileName: 'pasted_image_${DateTime.now().millisecondsSinceEpoch}.png',
+      bytes: imageBytes,
+      videoQuality: DesignVideoQuality.p720,
+    );
   }
 
   Future<void> _uploadPickedFile(

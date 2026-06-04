@@ -103,7 +103,7 @@ class _ProjectListItemCardState extends State<ProjectListItemCard> {
                       }
                     },
                     borderRadius: BorderRadius.circular(borderRadius),
-                    splashColor: meta.accent.withOpacity(0.05),
+                    splashColor: meta.accent.withValues(alpha: 0.05),
                     child: Padding(
                       padding: compact
                           ? const EdgeInsets.fromLTRB(11, 10, 8, 9)
@@ -147,11 +147,15 @@ class _ProjectListItemCardState extends State<ProjectListItemCard> {
                               ),
                               ProjectListItemCardMenu(
                                 onEdit: () => widget.onEdit(widget.project),
-                                onArchive: widget.showArchiveActions
+                                onArchive:
+                                    widget.showArchiveActions &&
+                                        widget.onArchive != null
                                     ? () =>
                                           widget.onArchive?.call(widget.project)
                                     : null,
-                                onDelete: widget.showArchiveActions
+                                onDelete:
+                                    widget.showArchiveActions &&
+                                        widget.onDelete != null
                                     ? () =>
                                           widget.onDelete?.call(widget.project)
                                     : null,

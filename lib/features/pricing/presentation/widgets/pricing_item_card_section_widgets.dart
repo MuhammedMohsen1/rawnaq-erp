@@ -31,7 +31,7 @@ class PricingSubItemSection extends StatelessWidget {
     required this.onCropCurrentImage,
     required this.onShowFullScreenImage,
     required this.onReorderElements,
-    required this.onAddSubItem,
+    required this.onAddElement,
     required this.hasImagesOrUploading,
     required this.isUploadingImage,
     required this.selectedImageIndex,
@@ -59,7 +59,7 @@ class PricingSubItemSection extends StatelessWidget {
   final VoidCallback onCropCurrentImage;
   final VoidCallback onShowFullScreenImage;
   final ReorderCallback onReorderElements;
-  final VoidCallback onAddSubItem;
+  final VoidCallback onAddElement;
   final bool hasImagesOrUploading;
   final bool isUploadingImage;
   final Map<String, int> selectedImageIndex;
@@ -91,22 +91,29 @@ class PricingSubItemSection extends StatelessWidget {
             onToggleVisibility: onToggleVisibility,
             onShowMenu: onShowMenu,
           ),
-          PricingSubItemBody(
-            subItem: subItem,
-            showFinancials: showFinancials,
-            hasImagesOrUploading: hasImagesOrUploading,
-            isUploadingImage: isUploadingImage,
-            selectedImageIndex: selectedImageIndex,
-            deletingImages: deletingImages,
-            uploadingImages: uploadingImages,
-            onPickImages: onPickImages,
-            onPickImagesWithFilePicker: onPickImagesWithFilePicker,
-            onDeleteCurrentImage: onDeleteCurrentImage,
-            onCropCurrentImage: onCropCurrentImage,
-            onShowFullScreenImage: onShowFullScreenImage,
-            elementRows: elementRows,
-            onReorderElements: onReorderElements,
-            onAddSubItem: onAddSubItem,
+          AnimatedCrossFade(
+            firstChild: const SizedBox.shrink(),
+            secondChild: PricingSubItemBody(
+              subItem: subItem,
+              showFinancials: showFinancials,
+              hasImagesOrUploading: hasImagesOrUploading,
+              isUploadingImage: isUploadingImage,
+              selectedImageIndex: selectedImageIndex,
+              deletingImages: deletingImages,
+              uploadingImages: uploadingImages,
+              onPickImages: onPickImages,
+              onPickImagesWithFilePicker: onPickImagesWithFilePicker,
+              onDeleteCurrentImage: onDeleteCurrentImage,
+              onCropCurrentImage: onCropCurrentImage,
+              onShowFullScreenImage: onShowFullScreenImage,
+              elementRows: elementRows,
+              onReorderElements: onReorderElements,
+              onAddElement: onAddElement,
+            ),
+            crossFadeState: isExpanded
+                ? CrossFadeState.showSecond
+                : CrossFadeState.showFirst,
+            duration: const Duration(milliseconds: 200),
           ),
         ],
       ),

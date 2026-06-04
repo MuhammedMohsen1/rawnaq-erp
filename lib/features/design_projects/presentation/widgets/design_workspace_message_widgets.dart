@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:video_player/video_player.dart';
 
@@ -277,13 +278,16 @@ class _DesignVideoPreviewState extends State<DesignVideoPreview> {
     _controller = VideoPlayerController.networkUrl(
       Uri.parse(widget.media.downloadUrl!),
     );
-    _controller.initialize().then((_) {
-      if (!mounted) return;
-      setState(() => _isReady = true);
-    }).catchError((_) {
-      if (!mounted) return;
-      setState(() => _hasError = true);
-    });
+    _controller
+        .initialize()
+        .then((_) {
+          if (!mounted) return;
+          setState(() => _isReady = true);
+        })
+        .catchError((_) {
+          if (!mounted) return;
+          setState(() => _hasError = true);
+        });
   }
 
   @override
@@ -354,7 +358,9 @@ class _DesignVideoPreviewState extends State<DesignVideoPreview> {
                     icon: const Icon(Icons.open_in_full, color: Colors.white),
                     iconSize: 18,
                     tooltip: 'معاينة',
-                    onPressed: _isReady ? () => _openVideoDialog(context) : null,
+                    onPressed: _isReady
+                        ? () => _openVideoDialog(context)
+                        : null,
                   ),
                 ),
               ),
@@ -391,10 +397,7 @@ class _FullscreenVideoDialog extends StatefulWidget {
   final DesignMedia media;
   final VoidCallback onClose;
 
-  const _FullscreenVideoDialog({
-    required this.media,
-    required this.onClose,
-  });
+  const _FullscreenVideoDialog({required this.media, required this.onClose});
 
   @override
   State<_FullscreenVideoDialog> createState() => _FullscreenVideoDialogState();
@@ -530,70 +533,82 @@ class _VideoFallbackTile extends StatelessWidget {
 class DesignWorkspaceComposer extends StatelessWidget {
   final TextEditingController controller;
   final VoidCallback onAttach;
+  final Future<void> Function()? onPaste;
   final VoidCallback onSend;
 
   const DesignWorkspaceComposer({
     super.key,
     required this.controller,
     required this.onAttach,
+    this.onPaste,
     required this.onSend,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(10),
-      decoration: BoxDecoration(
-        color: AppColors.surfaceColor.withValues(alpha: 0.60),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: AppColors.border),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.end,
-        children: [
-          _ChatActionButton(
-            icon: Icons.attach_file,
-            tooltip: 'إرفاق ملف',
-            onPressed: onAttach,
-            enabledColor: AppColors.primary,
-            disabledColor: AppColors.textDisabled,
-            backgroundColor: AppColors.primary.withValues(alpha: 0.14),
-            disabledBackgroundColor: AppColors.surfaceColor.withValues(
-              alpha: 0.65,
-            ),
-          ),
-          const SizedBox(width: 8),
-          Expanded(
-            child: TextField(
-              controller: controller,
-              minLines: 1,
-              maxLines: 5,
-              textInputAction: TextInputAction.newline,
-              decoration: const InputDecoration(
-                hintText: 'اكتب رسالة...',
-                border: InputBorder.none,
+    return CallbackShortcuts(
+      bindings: {
+        if (onPaste != null)
+          const SingleActivator(LogicalKeyboardKey.keyV, control: true): () =>
+              onPaste!.call(),
+        if (onPaste != null)
+          const SingleActivator(LogicalKeyboardKey.keyV, meta: true): () =>
+              onPaste!.call(),
+      },
+      child: Container(
+        padding: const EdgeInsets.all(10),
+        decoration: BoxDecoration(
+          color: AppColors.surfaceColor.withValues(alpha: 0.60),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: AppColors.border),
+        ),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: [
+            _ChatActionButton(
+              icon: Icons.attach_file,
+              tooltip: 'إرفاق ملف',
+              onPressed: onAttach,
+              enabledColor: AppColors.primary,
+              disabledColor: AppColors.textDisabled,
+              backgroundColor: AppColors.primary.withValues(alpha: 0.14),
+              disabledBackgroundColor: AppColors.surfaceColor.withValues(
+                alpha: 0.65,
               ),
             ),
-          ),
-          const SizedBox(width: 8),
-          ValueListenableBuilder<TextEditingValue>(
-            valueListenable: controller,
-            builder: (context, value, _) {
-              final canSend = value.text.trim().isNotEmpty;
-              return _ChatActionButton(
-                icon: Icons.send,
-                tooltip: 'إرسال',
-                onPressed: canSend ? onSend : null,
-                enabledColor: AppColors.white,
-                disabledColor: AppColors.textDisabled,
-                backgroundColor: AppColors.secondary,
-                disabledBackgroundColor: AppColors.surfaceColor.withValues(
-                  alpha: 0.65,
+            const SizedBox(width: 8),
+            Expanded(
+              child: TextField(
+                controller: controller,
+                minLines: 1,
+                maxLines: 5,
+                textInputAction: TextInputAction.newline,
+                decoration: const InputDecoration(
+                  hintText: 'اكتب رسالة...',
+                  border: InputBorder.none,
                 ),
-              );
-            },
-          ),
-        ],
+              ),
+            ),
+            const SizedBox(width: 8),
+            ValueListenableBuilder<TextEditingValue>(
+              valueListenable: controller,
+              builder: (context, value, _) {
+                final canSend = value.text.trim().isNotEmpty;
+                return _ChatActionButton(
+                  icon: Icons.send,
+                  tooltip: 'إرسال',
+                  onPressed: canSend ? onSend : null,
+                  enabledColor: AppColors.white,
+                  disabledColor: AppColors.textDisabled,
+                  backgroundColor: AppColors.secondary,
+                  disabledBackgroundColor: AppColors.surfaceColor.withValues(
+                    alpha: 0.65,
+                  ),
+                );
+              },
+            ),
+          ],
+        ),
       ),
     );
   }

@@ -22,7 +22,7 @@ class PricingSubItemBody extends StatelessWidget {
     required this.onShowFullScreenImage,
     required this.elementRows,
     required this.onReorderElements,
-    required this.onAddSubItem,
+    required this.onAddElement,
   });
 
   final PricingSubItemModel subItem;
@@ -39,7 +39,7 @@ class PricingSubItemBody extends StatelessWidget {
   final VoidCallback onShowFullScreenImage;
   final List<Widget> elementRows;
   final ReorderCallback onReorderElements;
-  final VoidCallback onAddSubItem;
+  final VoidCallback onAddElement;
 
   @override
   Widget build(BuildContext context) {
@@ -230,7 +230,7 @@ class PricingSubItemBody extends StatelessWidget {
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: InkWell(
-                    onTap: onAddSubItem,
+                    onTap: onAddElement,
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [

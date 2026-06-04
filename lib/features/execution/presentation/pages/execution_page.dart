@@ -330,6 +330,14 @@ class _ExecutionLayout extends StatelessWidget {
     }
   }
 
+  void _handleAddExpense(BuildContext context) {
+    context.read<ExecutionCubit>().startAddingExpense();
+  }
+
+  void _handleAddIncome(BuildContext context) {
+    context.read<ExecutionCubit>().startAddingIncome();
+  }
+
   Future<void> _handleToggleCollected(
     BuildContext context,
     String? requestId,
@@ -365,14 +373,6 @@ class _ExecutionLayout extends StatelessWidget {
         );
       }
     }
-  }
-
-  void _handleAddExpense(BuildContext context) {
-    context.read<ExecutionCubit>().startAddingExpense();
-  }
-
-  void _handleAddIncome(BuildContext context) {
-    context.read<ExecutionCubit>().startAddingIncome();
   }
 
   Future<void> _handleRequestInstallment(

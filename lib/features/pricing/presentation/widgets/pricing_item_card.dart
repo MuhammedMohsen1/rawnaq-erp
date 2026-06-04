@@ -19,7 +19,6 @@ import 'image_crop_dialog.dart';
 import 'pricing_item_card_local_element.dart';
 import 'pricing_item_card_visuals.dart';
 import 'pricing_item_card_section_widgets.dart';
-import 'pricing_item_card_subitem_widgets.dart';
 import 'pricing_item_card_subitems_list.dart';
 part 'pricing_item_card_image_actions.dart';
 
@@ -214,13 +213,18 @@ class _PricingItemCardState extends State<PricingItemCard>
       {}; // subItemId -> debounce timer for notes saving
   final Map<String, int> _selectedImageIndex =
       {}; // subItemId -> selected image index
-  bool _isRestoringState =
+  final bool _isRestoringState =
       false; // Flag to prevent state reset during restoration
 
+  @override
   PricingApiDataSource get apiDataSource => _apiDataSource;
+  @override
   ImagePicker get imagePicker => _imagePicker;
+  @override
   Map<String, bool> get uploadingImages => _uploadingImages;
+  @override
   Map<String, bool> get deletingImages => _deletingImages;
+  @override
   Map<String, int> get selectedImageIndex => _selectedImageIndex;
 
   @override
@@ -380,37 +384,6 @@ class _PricingItemCardState extends State<PricingItemCard>
     await widget.onReorderSubItems!(oldIndex, newIndex);
   }
 
-  Future<void> _handleElementReorder(
-    PricingSubItemModel subItem,
-    List<PricingElementModel> allElements,
-    int oldIndex,
-    int newIndex,
-  ) async {
-    if (!widget.canReorderElements || widget.onReorderElements == null) {
-      return;
-    }
-
-    final normalizedNewIndex = oldIndex < newIndex ? newIndex - 1 : newIndex;
-    if (oldIndex < 0 ||
-        normalizedNewIndex < 0 ||
-        oldIndex >= allElements.length ||
-        normalizedNewIndex >= allElements.length) {
-      return;
-    }
-
-    final movedElement = allElements[oldIndex];
-    if (movedElement.id.startsWith('temp-')) return;
-
-    final targetOrder =
-        allElements
-            .take(normalizedNewIndex)
-            .where((element) => !element.id.startsWith('temp-'))
-            .length +
-        1;
-
-    await widget.onReorderElements!(subItem.id, movedElement.id, targetOrder);
-  }
-
   //                         IconButton(
   //                           onPressed: hasImages ? cropCurrentImage : null,
   //                           tooltip: 'قص',
@@ -465,6 +438,7 @@ class _PricingItemCardState extends State<PricingItemCard>
   //   );
   // }
 
+  @override
   Future<void> _cropPickedImagesThenUpload(
     String subItemId,
     List<MapEntry<String, Uint8List>> pickedImages,
@@ -496,6 +470,7 @@ class _PricingItemCardState extends State<PricingItemCard>
     await _uploadSelectedImages(subItemId, croppedImages);
   }
 
+  @override
   String _croppedFileName(String originalName) {
     final dotIndex = originalName.lastIndexOf('.');
 
@@ -1873,7 +1848,7 @@ class _PricingItemCardState extends State<PricingItemCard>
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.2),
+            color: Colors.black.withValues(alpha: 0.2),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -1899,6 +1874,7 @@ class _PricingItemCardState extends State<PricingItemCard>
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   PricingItemCardSubItemsList(
+                    key: ValueKey('subitems-${widget.item.id}'),
                     item: widget.item,
                     showFinancials: widget.showFinancials,
                     canViewFinancials: widget.canViewFinancials,
@@ -1922,7 +1898,7 @@ class _PricingItemCardState extends State<PricingItemCard>
                     onCropCurrentImage: (subItemId, imageUrl, imageIndex) =>
                         _cropExistingImage(subItemId, imageUrl, imageIndex),
                     onShowFullScreenImage: _showFullScreenImage,
-                    onAddSubItem: widget.onAddSubItem ?? () {},
+                    onAddElement: _addLocalElement,
                     onReorderSubItems: _handleSubItemReorder,
                     onReorderElements: widget.onReorderElements,
                     onToggleElementVisibility: _toggleElementVisibility,
