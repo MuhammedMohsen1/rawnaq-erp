@@ -85,6 +85,7 @@ extension TaskStatusExtension on TaskStatus {
       case 'IN_PROGRESS':
         return TaskStatus.inProgress;
       case 'COMPLETED':
+      case 'DONE':
         return TaskStatus.completed;
       case 'DELAYED':
         return TaskStatus.delayed;

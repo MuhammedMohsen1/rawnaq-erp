@@ -7,6 +7,8 @@ import '../../../tasks/domain/enums/task_status.dart';
 import '../../../tasks/domain/enums/task_type.dart';
 import '../widgets/appointment_widgets.dart';
 
+Color ganttTaskColor(TaskEntity task) => task.status.color;
+
 double _workdayOffset(
   DateTime dateTime,
   List<DateTime> visibleDates,
@@ -555,9 +557,7 @@ class _GanttResizableTaskBarState extends State<GanttResizableTaskBar> {
   static const double _handleWidth = 8.0;
   static const double _minBarWidth = 20.0;
 
-  Color get _color => widget.task.taskType == TaskType.generalTask
-      ? TaskType.generalTask.color
-      : widget.task.status.color;
+  Color get _color => ganttTaskColor(widget.task);
 
   @override
   Widget build(BuildContext context) {

@@ -33,7 +33,7 @@ class TaskModel extends TaskEntity {
       name: json['name'] as String? ?? '',
       taskType: TaskTypeExtension.fromApiString(json['type'] as String? ?? ''),
       status: TaskStatusExtension.fromApiString(
-        json['displayStatus'] as String? ?? json['status'] as String? ?? '',
+        json['status'] as String? ?? json['displayStatus'] as String? ?? '',
       ),
       assigneeId: json['assigneeId'] as String?,
       assignee: assigneeJson == null
@@ -60,9 +60,7 @@ class TaskModel extends TaskEntity {
       id: task.id,
       name: task.name,
       taskType: task.taskType,
-      status: task.status == TaskStatus.delayed
-          ? TaskStatus.waiting
-          : task.status,
+      status: task.status,
       assigneeId: task.assigneeId,
       assignee: task.assignee,
       startDate: task.startDate,

@@ -5,8 +5,6 @@ import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_text_styles.dart';
 import '../../../projects/domain/entities/team_member_entity.dart';
 import '../../../tasks/domain/entities/task_entity.dart';
-import '../../../tasks/domain/enums/task_status.dart';
-import '../../../tasks/domain/enums/task_type.dart';
 import '../widgets/appointment_widgets.dart';
 import '../widgets/gantt_filters_widget.dart';
 import '../widgets/gantt_chart_surface_support_widgets.dart';
@@ -822,9 +820,7 @@ class _VerticalEmployeeTimeline extends StatelessWidget {
                       height: height,
                       child: GanttVerticalResizableTaskChip(
                         task: task,
-                        color: task.taskType == TaskType.generalTask
-                            ? TaskType.generalTask.color
-                            : task.status.color,
+                        color: ganttTaskColor(task),
                         compactMeta:
                             '${task.formattedStartTime} - ${task.formattedEndTime}',
                         rowHeight: rowHeight,
@@ -847,9 +843,7 @@ class _VerticalEmployeeTimeline extends StatelessWidget {
                       message: 'اسحب لنقل • انقر مرتين للتعديل',
                       child: GanttVerticalResizableTaskChip(
                         task: task,
-                        color: task.taskType == TaskType.generalTask
-                            ? TaskType.generalTask.color
-                            : task.status.color,
+                        color: ganttTaskColor(task),
                         compactMeta:
                             '${task.formattedStartTime} - ${task.formattedEndTime}',
                         rowHeight: rowHeight,

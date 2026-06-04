@@ -146,6 +146,25 @@ class _GanttChartPageState extends State<GanttChartPage> {
     }
   }
 
+  Future<void> _refreshTasksPreservingTimeline() async {
+    final offset = _horizontalTimelineScrollController.hasClients
+        ? _horizontalTimelineScrollController.offset
+        : null;
+
+    await _applyFilters(setLoading: false);
+
+    if (offset == null || !mounted) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || !_horizontalTimelineScrollController.hasClients) return;
+      final position = _horizontalTimelineScrollController.position;
+      final target = offset.clamp(
+        position.minScrollExtent,
+        position.maxScrollExtent,
+      );
+      _horizontalTimelineScrollController.jumpTo(target);
+    });
+  }
+
   void _clearFilters() {
     setState(() {
       _selectedPeriod = GanttTimePeriod.week;
@@ -195,7 +214,7 @@ class _GanttChartPageState extends State<GanttChartPage> {
           bool wasAdjusted = false;
           _dataSource.createTask(task).then((createdTask) {
             wasAdjusted = createdTask.wasAdjusted;
-            _applyFilters();
+            _refreshTasksPreservingTimeline();
 
             if (!mounted) return;
             if (wasAdjusted) {
@@ -246,7 +265,7 @@ class _GanttChartPageState extends State<GanttChartPage> {
             assigneeId: assigneeId,
           );
 
-    await _applyFilters();
+    await _refreshTasksPreservingTimeline();
 
     final action = (task.isDraft || task.assigneeId == null)
         ? 'تم تعيين المهمة'
@@ -289,7 +308,7 @@ class _GanttChartPageState extends State<GanttChartPage> {
         startDate: newStart,
         endDate: newEnd,
       );
-      await _applyFilters();
+      await _refreshTasksPreservingTimeline();
 
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -307,7 +326,7 @@ class _GanttChartPageState extends State<GanttChartPage> {
       endDate: newEnd,
       assigneeId: task.assigneeId,
     );
-    await _applyFilters();
+    await _refreshTasksPreservingTimeline();
 
     final wasAdjusted = updatedTask.wasAdjusted;
     if (wasAdjusted) {
@@ -351,7 +370,7 @@ class _GanttChartPageState extends State<GanttChartPage> {
         teamMembers: _teamMembers,
         onTaskUpdated: (updatedTask) async {
           final savedTask = await _dataSource.updateTask(updatedTask);
-          await _applyFilters();
+          await _refreshTasksPreservingTimeline();
           if (!mounted) return;
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
@@ -370,7 +389,9 @@ class _GanttChartPageState extends State<GanttChartPage> {
           );
         },
         onTaskDeleted: () {
-          _dataSource.deleteTask(task.id).then((_) => _applyFilters());
+          _dataSource
+              .deleteTask(task.id)
+              .then((_) => _refreshTasksPreservingTimeline());
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text('تم حذف المهمة: ${task.name}'),
@@ -460,7 +481,7 @@ class _GanttChartPageState extends State<GanttChartPage> {
 
   Future<void> _deleteTaskAndRefresh(String taskId) async {
     await _dataSource.deleteTask(taskId);
-    await _applyFilters();
+    await _refreshTasksPreservingTimeline();
   }
 
   bool _isSameDate(DateTime a, DateTime b) {
