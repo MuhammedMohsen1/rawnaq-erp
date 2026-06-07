@@ -53,10 +53,14 @@ class GanttFiltersWidget extends StatelessWidget {
   final bool showTeamTasks;
   final String? selectedMemberId;
   final List<TeamMemberEntity> teamMembers;
+  final double zoomLevel;
   final ValueChanged<GanttTimePeriod> onPeriodChanged;
   final ValueChanged<GanttLayoutOrientation> onOrientationChanged;
   final ValueChanged<bool> onTeamTasksChanged;
   final ValueChanged<String?> onMemberChanged;
+  final VoidCallback onZoomIn;
+  final VoidCallback onZoomOut;
+  final VoidCallback onResetZoom;
   final VoidCallback onApplyFilters;
   final VoidCallback onClearFilters;
 
@@ -67,10 +71,14 @@ class GanttFiltersWidget extends StatelessWidget {
     required this.showTeamTasks,
     required this.selectedMemberId,
     required this.teamMembers,
+    required this.zoomLevel,
     required this.onPeriodChanged,
     required this.onOrientationChanged,
     required this.onTeamTasksChanged,
     required this.onMemberChanged,
+    required this.onZoomIn,
+    required this.onZoomOut,
+    required this.onResetZoom,
     required this.onApplyFilters,
     required this.onClearFilters,
   });
@@ -96,6 +104,10 @@ class GanttFiltersWidget extends StatelessWidget {
 
         const Spacer(),
 
+        _buildZoomControls(),
+
+        const SizedBox(width: 8),
+
         // Clear filters (icon only when filters applied)
         if (selectedMemberId != null || !showTeamTasks)
           IconButton(
@@ -105,6 +117,58 @@ class GanttFiltersWidget extends StatelessWidget {
             style: IconButton.styleFrom(foregroundColor: AppColors.textMuted),
           ),
       ],
+    );
+  }
+
+  Widget _buildZoomControls() {
+    final zoomPercent = (zoomLevel * 100).round();
+    return Container(
+      height: 36,
+      decoration: BoxDecoration(
+        color: AppColors.surfaceColor,
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          IconButton(
+            onPressed: onZoomOut,
+            icon: const Icon(Icons.remove, size: 16),
+            tooltip: 'تصغير',
+            style: IconButton.styleFrom(
+              foregroundColor: AppColors.textSecondary,
+              minimumSize: const Size(34, 34),
+              padding: EdgeInsets.zero,
+            ),
+          ),
+          InkWell(
+            onTap: onResetZoom,
+            borderRadius: BorderRadius.circular(6),
+            child: SizedBox(
+              width: 52,
+              child: Text(
+                '$zoomPercent%',
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  color: AppColors.textPrimary,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ),
+          IconButton(
+            onPressed: onZoomIn,
+            icon: const Icon(Icons.add, size: 16),
+            tooltip: 'تكبير',
+            style: IconButton.styleFrom(
+              foregroundColor: AppColors.textSecondary,
+              minimumSize: const Size(34, 34),
+              padding: EdgeInsets.zero,
+            ),
+          ),
+        ],
+      ),
     );
   }
 

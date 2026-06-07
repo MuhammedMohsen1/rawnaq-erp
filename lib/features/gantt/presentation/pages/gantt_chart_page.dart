@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/gestures.dart';
+import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../projects/data/datasources/projects_api_datasource.dart';
 import '../../../tasks/domain/entities/task_entity.dart';
@@ -20,7 +23,23 @@ class GanttChartPage extends StatefulWidget {
   State<GanttChartPage> createState() => _GanttChartPageState();
 }
 
-class _GanttChartPageState extends State<GanttChartPage> {
+class _ZoomInIntent extends Intent {
+  const _ZoomInIntent();
+}
+
+class _ZoomOutIntent extends Intent {
+  const _ZoomOutIntent();
+}
+
+class _ResetZoomIntent extends Intent {
+  const _ResetZoomIntent();
+}
+
+class _GanttChartPageState extends State<GanttChartPage>
+    with WidgetsBindingObserver {
+  static const MethodChannel _desktopZoomChannel = MethodChannel(
+    'rawnaq/gantt_zoom',
+  );
   static const int _timelinePastDays = 90;
   static const int _timelineDisplayWorkDays = 365;
   static const int _timelineFetchCalendarDays = 520;
@@ -30,15 +49,56 @@ class _GanttChartPageState extends State<GanttChartPage> {
   final ScrollController _horizontalTimelineScrollController =
       ScrollController();
 
+  static final Map<ShortcutActivator, Intent> _zoomShortcuts = {
+    const SingleActivator(LogicalKeyboardKey.equal, control: true):
+        const _ZoomInIntent(),
+    const SingleActivator(LogicalKeyboardKey.equal, control: true, shift: true):
+        const _ZoomInIntent(),
+    const SingleActivator(LogicalKeyboardKey.add, control: true):
+        const _ZoomInIntent(),
+    const SingleActivator(LogicalKeyboardKey.numpadAdd, control: true):
+        const _ZoomInIntent(),
+    const SingleActivator(LogicalKeyboardKey.minus, control: true):
+        const _ZoomOutIntent(),
+    const SingleActivator(LogicalKeyboardKey.numpadSubtract, control: true):
+        const _ZoomOutIntent(),
+    const SingleActivator(LogicalKeyboardKey.digit0, control: true):
+        const _ResetZoomIntent(),
+    const SingleActivator(LogicalKeyboardKey.numpad0, control: true):
+        const _ResetZoomIntent(),
+    const SingleActivator(LogicalKeyboardKey.equal, meta: true):
+        const _ZoomInIntent(),
+    const SingleActivator(LogicalKeyboardKey.equal, meta: true, shift: true):
+        const _ZoomInIntent(),
+    const SingleActivator(LogicalKeyboardKey.add, meta: true):
+        const _ZoomInIntent(),
+    const SingleActivator(LogicalKeyboardKey.numpadAdd, meta: true):
+        const _ZoomInIntent(),
+    const SingleActivator(LogicalKeyboardKey.minus, meta: true):
+        const _ZoomOutIntent(),
+    const SingleActivator(LogicalKeyboardKey.numpadSubtract, meta: true):
+        const _ZoomOutIntent(),
+    const SingleActivator(LogicalKeyboardKey.digit0, meta: true):
+        const _ResetZoomIntent(),
+    const SingleActivator(LogicalKeyboardKey.numpad0, meta: true):
+        const _ResetZoomIntent(),
+  };
+
   GanttTimePeriod _selectedPeriod = GanttTimePeriod.week;
   GanttLayoutOrientation _selectedOrientation =
       GanttLayoutOrientation.horizontal;
+  double _horizontalZoom = 1.0;
   bool _showTeamTasks = true;
   String? _selectedMemberId;
   bool _isDraftPanelExpanded = true;
   bool _didAutoScrollTimelineToToday = false;
+  bool _rawMetaHeld = false;
+  bool _rawControlHeld = false;
+  double _gestureBaseZoom = 1.0;
+  double? _touchPinchBaseDistance;
   bool _isLoading = true;
   String? _errorMessage;
+  final Map<int, Offset> _activeTouchPoints = {};
 
   List<TaskEntity> _tasks = [];
   List<TaskEntity> _draftTasks = [];
@@ -50,13 +110,31 @@ class _GanttChartPageState extends State<GanttChartPage> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    HardwareKeyboard.instance.addHandler(_handleGlobalZoomShortcut);
+    RawKeyboard.instance.addListener(_handleRawZoomShortcut);
+    _desktopZoomChannel.setMethodCallHandler(_handleDesktopZoomMethodCall);
     _loadData();
   }
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    HardwareKeyboard.instance.removeHandler(_handleGlobalZoomShortcut);
+    RawKeyboard.instance.removeListener(_handleRawZoomShortcut);
+    _desktopZoomChannel.setMethodCallHandler(null);
     _horizontalTimelineScrollController.dispose();
     super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.inactive ||
+        state == AppLifecycleState.paused ||
+        state == AppLifecycleState.detached) {
+      _rawMetaHeld = false;
+      _rawControlHeld = false;
+    }
   }
 
   Future<void> _loadData() async {
@@ -172,6 +250,24 @@ class _GanttChartPageState extends State<GanttChartPage> {
       _selectedMemberId = null;
     });
     _applyFilters();
+  }
+
+  void _zoomIn() {
+    _setHorizontalZoom(_horizontalZoom + 0.15);
+  }
+
+  void _zoomOut() {
+    _setHorizontalZoom(_horizontalZoom - 0.15);
+  }
+
+  void _resetZoom() {
+    setState(() => _horizontalZoom = 1.0);
+  }
+
+  void _setHorizontalZoom(double zoom) {
+    final nextZoom = zoom.clamp(0.75, 2.2).toDouble();
+    if (nextZoom == _horizontalZoom) return;
+    setState(() => _horizontalZoom = nextZoom);
   }
 
   List<TeamMemberEntity> _calculateOverloadedMembers(List<TaskEntity> tasks) {
@@ -409,68 +505,387 @@ class _GanttChartPageState extends State<GanttChartPage> {
 
     return Scaffold(
       backgroundColor: AppColors.sidebarBackground,
-      body: Padding(
-        padding: const EdgeInsets.all(24),
-        child: GanttChartPageBody(
-          selectedPeriod: _selectedPeriod,
-          selectedOrientation: _selectedOrientation,
-          showTeamTasks: _showTeamTasks,
-          selectedMemberId: _selectedMemberId,
-          teamMembers: _teamMembers,
-          draftTasks: _draftTasks,
-          overloadedMembers: _overloadedMembers,
-          delayedProjects: _delayedProjects,
-          isDraftPanelExpanded: _isDraftPanelExpanded,
-          isLoading: _isLoading,
-          errorMessage: _errorMessage,
-          startDate: startDate,
-          horizontalTimelineScrollController:
-              _horizontalTimelineScrollController,
-          shouldScrollTimelineToToday: !_didAutoScrollTimelineToToday,
-          onTimelineScrolledToToday: () {
-            _didAutoScrollTimelineToToday = true;
+      body: Shortcuts(
+        shortcuts: _zoomShortcuts,
+        child: Actions(
+          actions: {
+            _ZoomInIntent: CallbackAction<_ZoomInIntent>(
+              onInvoke: (_) {
+                _zoomIn();
+                return null;
+              },
+            ),
+            _ZoomOutIntent: CallbackAction<_ZoomOutIntent>(
+              onInvoke: (_) {
+                _zoomOut();
+                return null;
+              },
+            ),
+            _ResetZoomIntent: CallbackAction<_ResetZoomIntent>(
+              onInvoke: (_) {
+                _resetZoom();
+                return null;
+              },
+            ),
           },
-          tasks: _tasks,
-          onPeriodChanged: (period) {
-            setState(() => _selectedPeriod = period);
-          },
-          onOrientationChanged: (orientation) {
-            setState(() => _selectedOrientation = orientation);
-          },
-          onTeamTasksChanged: (showTeam) {
-            setState(() => _showTeamTasks = showTeam);
-          },
-          onMemberChanged: (memberId) {
-            setState(() => _selectedMemberId = memberId);
-          },
-          onApplyFilters: _applyFilters,
-          onClearFilters: _clearFilters,
-          onToggleDraftPanel: () =>
-              setState(() => _isDraftPanelExpanded = !_isDraftPanelExpanded),
-          onAddTaskPressed: _showAddTaskDialog,
-          onRetry: _loadData,
-          onAppointmentDetails: _showAppointmentDetails,
-          onEditTask: _showEditTaskDialog,
-          onTaskDropped: _onTaskDropped,
-          onTaskResized: _onTaskResized,
-          onTaskUpdated: _applyFilters,
-          onTaskCreated: _dataSource.createTask,
-          onTaskDeleted: _deleteTaskAndRefresh,
-          onUpdateTask: _dataSource.updateTask,
-          datePreservingTaskTime: _datePreservingTaskTime,
-          isToday: _isToday,
-          isSameDate: _isSameDate,
-          getViewDays: _getViewDays,
-          getStartDate: _getStartDate,
-          calculateTaskLanes: _calculateTaskLanes,
-          laneCount: _laneCount,
-          daysInMonth: _daysInMonth,
-          toJulianDay: _toJulianDay,
-          timeToFraction: _timeToFraction,
+          child: Focus(
+            autofocus: true,
+            onKeyEvent: _handleZoomShortcut,
+            child: Listener(
+              behavior: HitTestBehavior.translucent,
+              onPointerSignal: _handleZoomWheel,
+              onPointerPanZoomStart: _handlePointerPanZoomStart,
+              onPointerPanZoomUpdate: _handlePointerPanZoomUpdate,
+              onPointerDown: _handleTouchPointerDown,
+              onPointerMove: _handleTouchPointerMove,
+              onPointerUp: _handleTouchPointerUp,
+              onPointerCancel: _handleTouchPointerCancel,
+              child: Padding(
+                padding: const EdgeInsets.all(24),
+                child: GanttChartPageBody(
+                  selectedPeriod: _selectedPeriod,
+                  selectedOrientation: _selectedOrientation,
+                  horizontalZoom: _horizontalZoom,
+                  onPointerSignal: _handleZoomWheel,
+                  showTeamTasks: _showTeamTasks,
+                  selectedMemberId: _selectedMemberId,
+                  teamMembers: _teamMembers,
+                  draftTasks: _draftTasks,
+                  overloadedMembers: _overloadedMembers,
+                  delayedProjects: _delayedProjects,
+                  isDraftPanelExpanded: _isDraftPanelExpanded,
+                  isLoading: _isLoading,
+                  errorMessage: _errorMessage,
+                  startDate: startDate,
+                  horizontalTimelineScrollController:
+                      _horizontalTimelineScrollController,
+                  shouldScrollTimelineToToday: !_didAutoScrollTimelineToToday,
+                  onTimelineScrolledToToday: () {
+                    _didAutoScrollTimelineToToday = true;
+                  },
+                  tasks: _tasks,
+                  onPeriodChanged: (period) {
+                    setState(() => _selectedPeriod = period);
+                  },
+                  onOrientationChanged: (orientation) {
+                    setState(() => _selectedOrientation = orientation);
+                  },
+                  onTeamTasksChanged: (showTeam) {
+                    setState(() => _showTeamTasks = showTeam);
+                  },
+                  onMemberChanged: (memberId) {
+                    setState(() => _selectedMemberId = memberId);
+                  },
+                  onZoomIn: _zoomIn,
+                  onZoomOut: _zoomOut,
+                  onResetZoom: _resetZoom,
+                  onApplyFilters: _applyFilters,
+                  onClearFilters: _clearFilters,
+                  onToggleDraftPanel: () => setState(
+                    () => _isDraftPanelExpanded = !_isDraftPanelExpanded,
+                  ),
+                  onAddTaskPressed: _showAddTaskDialog,
+                  onRetry: _loadData,
+                  onAppointmentDetails: _showAppointmentDetails,
+                  onEditTask: _showEditTaskDialog,
+                  onTaskDropped: _onTaskDropped,
+                  onTaskResized: _onTaskResized,
+                  onTaskUpdated: _applyFilters,
+                  onTaskCreated: _dataSource.createTask,
+                  onTaskDeleted: _deleteTaskAndRefresh,
+                  onUpdateTask: _dataSource.updateTask,
+                  datePreservingTaskTime: _datePreservingTaskTime,
+                  isToday: _isToday,
+                  isSameDate: _isSameDate,
+                  getViewDays: _getViewDays,
+                  getStartDate: _getStartDate,
+                  calculateTaskLanes: _calculateTaskLanes,
+                  laneCount: _laneCount,
+                  daysInMonth: _daysInMonth,
+                  toJulianDay: _toJulianDay,
+                  timeToFraction: _timeToFraction,
+                ),
+              ),
+            ),
+          ),
         ),
       ),
     );
   }
+
+  KeyEventResult _handleZoomShortcut(FocusNode node, KeyEvent event) {
+    _trackHardwareZoomModifier(event);
+    return _handleZoomKeyEvent(event)
+        ? KeyEventResult.handled
+        : KeyEventResult.ignored;
+  }
+
+  bool _handleGlobalZoomShortcut(KeyEvent event) {
+    _trackHardwareZoomModifier(event);
+    return _handleZoomKeyEvent(event);
+  }
+
+  void _handleRawZoomShortcut(RawKeyEvent event) {
+    _trackRawZoomModifier(event);
+    if (event is! RawKeyDownEvent) return;
+    if (!_isRawZoomModifierPressed(event)) return;
+
+    final key = event.logicalKey;
+    final keyLabel = key.keyLabel;
+    final data = event.data;
+    final macKeyCode = data is RawKeyEventDataMacOs ? data.keyCode : null;
+
+    if (key == LogicalKeyboardKey.equal ||
+        key == LogicalKeyboardKey.add ||
+        key == LogicalKeyboardKey.numpadAdd ||
+        keyLabel == '+' ||
+        keyLabel == '=' ||
+        macKeyCode == 24) {
+      _zoomIn();
+      return;
+    }
+    if (key == LogicalKeyboardKey.minus ||
+        key == LogicalKeyboardKey.numpadSubtract ||
+        keyLabel == '-' ||
+        keyLabel == '_' ||
+        macKeyCode == 27) {
+      _zoomOut();
+      return;
+    }
+    if (key == LogicalKeyboardKey.digit0 ||
+        key == LogicalKeyboardKey.numpad0 ||
+        keyLabel == '0' ||
+        macKeyCode == 29) {
+      _resetZoom();
+    }
+  }
+
+  bool _handleZoomKeyEvent(KeyEvent event) {
+    if (event is! KeyDownEvent) return false;
+    if (!_isZoomModifierPressed()) return false;
+
+    final key = event.logicalKey;
+    final character = event.character;
+    if (key == LogicalKeyboardKey.equal ||
+        key == LogicalKeyboardKey.add ||
+        key == LogicalKeyboardKey.numpadAdd ||
+        character == '+' ||
+        character == '=') {
+      _zoomIn();
+      return true;
+    }
+    if (key == LogicalKeyboardKey.minus ||
+        key == LogicalKeyboardKey.numpadSubtract ||
+        character == '-' ||
+        character == '_') {
+      _zoomOut();
+      return true;
+    }
+    if (key == LogicalKeyboardKey.digit0 ||
+        key == LogicalKeyboardKey.numpad0 ||
+        character == '0') {
+      _resetZoom();
+      return true;
+    }
+    return false;
+  }
+
+  Future<void> _handleDesktopZoomMethodCall(MethodCall call) async {
+    final arguments = call.arguments;
+    if (arguments is! Map) return;
+
+    if (call.method == 'modifierChanged') {
+      _handleNativeModifierChanged(arguments);
+      return;
+    }
+    if (call.method != 'commandScroll') return;
+
+    if (_usesMetaZoomModifier && arguments['commandPressed'] == false) {
+      return;
+    }
+    if (!_usesMetaZoomModifier && arguments['controlPressed'] == false) {
+      return;
+    }
+
+    final delta = arguments['delta'];
+    final scrollAmount = delta is num ? delta.toDouble() : 0;
+    if (scrollAmount > 0) {
+      _zoomIn();
+    } else if (scrollAmount < 0) {
+      _zoomOut();
+    }
+  }
+
+  void _handleNativeModifierChanged(Map<dynamic, dynamic> arguments) {
+    final commandPressed = arguments['commandPressed'];
+    if (commandPressed is bool) {
+      _rawMetaHeld = commandPressed;
+    }
+
+    final controlPressed = arguments['controlPressed'];
+    if (controlPressed is bool) {
+      _rawControlHeld = controlPressed;
+    }
+  }
+
+  void _handleZoomWheel(PointerSignalEvent event) {
+    if (event is! PointerScrollEvent) return;
+
+    _syncZoomModifierFromHardwareKeyboard();
+    final modifierPressed = _isWheelZoomModifierPressed();
+    if (!modifierPressed) return;
+
+    GestureBinding.instance.pointerSignalResolver.register(event, (
+      PointerSignalEvent resolvedEvent,
+    ) {
+      if (resolvedEvent is! PointerScrollEvent) return;
+      final scrollAmount = resolvedEvent.scrollDelta.dy != 0
+          ? resolvedEvent.scrollDelta.dy
+          : resolvedEvent.scrollDelta.dx;
+      if (scrollAmount < 0) {
+        _zoomIn();
+      } else if (scrollAmount > 0) {
+        _zoomOut();
+      }
+    });
+  }
+
+  void _handlePointerPanZoomStart(PointerPanZoomStartEvent event) {
+    _gestureBaseZoom = _horizontalZoom;
+  }
+
+  void _handlePointerPanZoomUpdate(PointerPanZoomUpdateEvent event) {
+    if (event.scale == 1.0) return;
+    _setHorizontalZoom(_gestureBaseZoom * event.scale);
+  }
+
+  void _handleTouchPointerDown(PointerDownEvent event) {
+    if (event.kind != PointerDeviceKind.touch) return;
+    _activeTouchPoints[event.pointer] = event.position;
+    _startTouchPinchIfReady();
+  }
+
+  void _handleTouchPointerMove(PointerMoveEvent event) {
+    if (event.kind != PointerDeviceKind.touch) return;
+    if (!_activeTouchPoints.containsKey(event.pointer)) return;
+    _activeTouchPoints[event.pointer] = event.position;
+    _updateTouchPinchZoom();
+  }
+
+  void _handleTouchPointerUp(PointerUpEvent event) {
+    if (event.kind != PointerDeviceKind.touch) return;
+    _activeTouchPoints.remove(event.pointer);
+    _resetTouchPinchIfNeeded();
+  }
+
+  void _handleTouchPointerCancel(PointerCancelEvent event) {
+    if (event.kind != PointerDeviceKind.touch) return;
+    _activeTouchPoints.remove(event.pointer);
+    _resetTouchPinchIfNeeded();
+  }
+
+  void _startTouchPinchIfReady() {
+    if (_activeTouchPoints.length != 2) return;
+    _touchPinchBaseDistance = _currentTouchPinchDistance();
+    _gestureBaseZoom = _horizontalZoom;
+  }
+
+  void _updateTouchPinchZoom() {
+    if (_activeTouchPoints.length != 2) return;
+    final baseDistance = _touchPinchBaseDistance;
+    final currentDistance = _currentTouchPinchDistance();
+    if (baseDistance == null || baseDistance <= 0 || currentDistance <= 0) {
+      _startTouchPinchIfReady();
+      return;
+    }
+    _setHorizontalZoom(_gestureBaseZoom * (currentDistance / baseDistance));
+  }
+
+  double _currentTouchPinchDistance() {
+    if (_activeTouchPoints.length < 2) return 0;
+    final points = _activeTouchPoints.values.take(2).toList();
+    return (points[0] - points[1]).distance;
+  }
+
+  void _resetTouchPinchIfNeeded() {
+    if (_activeTouchPoints.length >= 2) {
+      _startTouchPinchIfReady();
+      return;
+    }
+    _touchPinchBaseDistance = null;
+  }
+
+  bool _isZoomModifierPressed() {
+    final keyboard = HardwareKeyboard.instance;
+    return _usesMetaZoomModifier
+        ? keyboard.isMetaPressed
+        : keyboard.isControlPressed;
+  }
+
+  bool _isRawZoomModifierPressed(RawKeyEvent event) {
+    if (_usesMetaZoomModifier) {
+      return event.isMetaPressed;
+    }
+    return event.isControlPressed;
+  }
+
+  void _trackHardwareZoomModifier(KeyEvent event) {
+    final key = event.logicalKey;
+    final isDown = event is KeyDownEvent || event is KeyRepeatEvent;
+    final isUp = event is KeyUpEvent;
+    if (!isDown && !isUp) return;
+
+    if (_isMetaKey(key)) {
+      _rawMetaHeld = isDown;
+    }
+    if (_isControlKey(key)) {
+      _rawControlHeld = isDown;
+    }
+  }
+
+  void _trackRawZoomModifier(RawKeyEvent event) {
+    final key = event.logicalKey;
+    final isDown = event is RawKeyDownEvent;
+    final isUp = event is RawKeyUpEvent;
+    if (!isDown && !isUp) return;
+
+    if (_isMetaKey(key)) {
+      _rawMetaHeld = isDown;
+    }
+    if (_isControlKey(key)) {
+      _rawControlHeld = isDown;
+    }
+  }
+
+  void _syncZoomModifierFromHardwareKeyboard() {
+    final pressed = HardwareKeyboard.instance.logicalKeysPressed;
+    _rawMetaHeld = _rawMetaHeld || pressed.any(_isMetaKey);
+    _rawControlHeld = _rawControlHeld || pressed.any(_isControlKey);
+  }
+
+  bool _isMetaKey(LogicalKeyboardKey key) {
+    return key == LogicalKeyboardKey.meta ||
+        key == LogicalKeyboardKey.metaLeft ||
+        key == LogicalKeyboardKey.metaRight;
+  }
+
+  bool _isControlKey(LogicalKeyboardKey key) {
+    return key == LogicalKeyboardKey.control ||
+        key == LogicalKeyboardKey.controlLeft ||
+        key == LogicalKeyboardKey.controlRight;
+  }
+
+  bool _isWheelZoomModifierPressed() {
+    final keyboard = HardwareKeyboard.instance;
+    if (_usesMetaZoomModifier) {
+      return keyboard.isMetaPressed || _rawMetaHeld;
+    }
+    return keyboard.isControlPressed || _rawControlHeld;
+  }
+
+  bool get _usesMetaZoomModifier =>
+      defaultTargetPlatform == TargetPlatform.macOS ||
+      defaultTargetPlatform == TargetPlatform.iOS;
 
   bool _isToday(DateTime date) {
     final now = DateTime.now();

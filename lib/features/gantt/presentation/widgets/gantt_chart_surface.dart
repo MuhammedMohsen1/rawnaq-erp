@@ -1,3 +1,4 @@
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
@@ -8,7 +9,6 @@ import '../../../tasks/domain/entities/task_entity.dart';
 import '../widgets/appointment_widgets.dart';
 import '../widgets/gantt_filters_widget.dart';
 import '../widgets/gantt_chart_surface_support_widgets.dart';
-import '../widgets/gantt_chart_employee_row.dart';
 
 class GanttChartSurface extends StatelessWidget {
   const GanttChartSurface({
@@ -18,6 +18,8 @@ class GanttChartSurface extends StatelessWidget {
     required this.teamMembers,
     required this.tasks,
     required this.startDate,
+    required this.horizontalZoom,
+    required this.onPointerSignal,
     required this.horizontalTimelineScrollController,
     required this.shouldScrollToToday,
     required this.onScrolledToToday,
@@ -39,6 +41,8 @@ class GanttChartSurface extends StatelessWidget {
   final List<TeamMemberEntity> teamMembers;
   final List<TaskEntity> tasks;
   final DateTime startDate;
+  final double horizontalZoom;
+  final void Function(PointerSignalEvent event) onPointerSignal;
   final ScrollController horizontalTimelineScrollController;
   final bool shouldScrollToToday;
   final VoidCallback onScrolledToToday;
@@ -86,6 +90,8 @@ class GanttChartSurface extends StatelessWidget {
             teamMembers: teamMembers,
             tasks: tasks,
             startDate: startDate,
+            horizontalZoom: horizontalZoom,
+            onPointerSignal: onPointerSignal,
             horizontalTimelineScrollController:
                 horizontalTimelineScrollController,
             shouldScrollToToday: shouldScrollToToday,
@@ -108,6 +114,8 @@ class _HorizontalGanttChart extends StatefulWidget {
     required this.teamMembers,
     required this.tasks,
     required this.startDate,
+    required this.horizontalZoom,
+    required this.onPointerSignal,
     required this.horizontalTimelineScrollController,
     required this.shouldScrollToToday,
     required this.onScrolledToToday,
@@ -125,6 +133,8 @@ class _HorizontalGanttChart extends StatefulWidget {
   final List<TeamMemberEntity> teamMembers;
   final List<TaskEntity> tasks;
   final DateTime startDate;
+  final double horizontalZoom;
+  final void Function(PointerSignalEvent event) onPointerSignal;
   final ScrollController horizontalTimelineScrollController;
   final bool shouldScrollToToday;
   final VoidCallback onScrolledToToday;
@@ -155,22 +165,75 @@ class _HorizontalGanttChart extends StatefulWidget {
 
 class _HorizontalGanttChartState extends State<_HorizontalGanttChart> {
   final GlobalKey _todayHeaderKey = GlobalKey();
+  final ScrollController _headerScrollController = ScrollController();
   bool _didScrollToToday = false;
+  bool _isSyncingHorizontalScroll = false;
 
   @override
   void initState() {
     super.initState();
+    widget.horizontalTimelineScrollController.addListener(_syncHeaderToBody);
+    _headerScrollController.addListener(_syncBodyToHeader);
     _scheduleInitialTodayScroll();
+  }
+
+  @override
+  void dispose() {
+    widget.horizontalTimelineScrollController.removeListener(_syncHeaderToBody);
+    _headerScrollController.removeListener(_syncBodyToHeader);
+    _headerScrollController.dispose();
+    super.dispose();
   }
 
   @override
   void didUpdateWidget(covariant _HorizontalGanttChart oldWidget) {
     super.didUpdateWidget(oldWidget);
+    if (oldWidget.horizontalTimelineScrollController !=
+        widget.horizontalTimelineScrollController) {
+      oldWidget.horizontalTimelineScrollController.removeListener(
+        _syncHeaderToBody,
+      );
+      widget.horizontalTimelineScrollController.addListener(_syncHeaderToBody);
+    }
     if (oldWidget.startDate != widget.startDate ||
         oldWidget.getViewDays() != widget.getViewDays()) {
       _didScrollToToday = false;
       _scheduleInitialTodayScroll();
     }
+  }
+
+  void _syncHeaderToBody() {
+    _syncHorizontalControllers(
+      source: widget.horizontalTimelineScrollController,
+      target: _headerScrollController,
+    );
+  }
+
+  void _syncBodyToHeader() {
+    _syncHorizontalControllers(
+      source: _headerScrollController,
+      target: widget.horizontalTimelineScrollController,
+    );
+  }
+
+  void _syncHorizontalControllers({
+    required ScrollController source,
+    required ScrollController target,
+  }) {
+    if (_isSyncingHorizontalScroll ||
+        !source.hasClients ||
+        !target.hasClients) {
+      return;
+    }
+    final targetPosition = target.position;
+    final nextOffset = source.offset.clamp(
+      targetPosition.minScrollExtent,
+      targetPosition.maxScrollExtent,
+    );
+    if ((target.offset - nextOffset).abs() < 0.5) return;
+    _isSyncingHorizontalScroll = true;
+    target.jumpTo(nextOffset);
+    _isSyncingHorizontalScroll = false;
   }
 
   void _scheduleInitialTodayScroll() {
@@ -193,58 +256,123 @@ class _HorizontalGanttChartState extends State<_HorizontalGanttChart> {
   Widget build(BuildContext context) {
     final displayDays = widget.getViewDays();
     final visibleDates = _buildWorkDates(widget.startDate, displayDays);
+    const employeeColumnWidth = 220.0;
+    final dayWidth = 60.0 * widget.horizontalZoom;
+    final timelineWidth = displayDays * dayWidth;
     final tasksByEmployee = {
       for (final member in widget.teamMembers)
         member.id: widget.tasks
             .where((task) => task.assigneeId == member.id)
             .toList(),
     };
-    final chartWidth = 200.0 + (displayDays * 60.0);
-    final chartContent = SizedBox(
-      width: chartWidth,
-      child: Column(
-        children: [
-          _HorizontalDateHeader(
-            visibleDates: visibleDates,
-            isToday: widget.isToday,
-            todayKey: _todayHeaderKey,
-          ),
-          Expanded(
-            child: ListView.builder(
-              itemCount: widget.teamMembers.length,
-              itemBuilder: (context, index) {
-                final member = widget.teamMembers[index];
-                final memberTasks = tasksByEmployee[member.id] ?? const [];
-                return GanttEmployeeRow(
-                  member: member,
-                  tasks: memberTasks,
-                  startDate: widget.startDate,
-                  visibleDates: visibleDates,
-                  isToday: widget.isToday,
-                  calculateTaskLanes: widget.calculateTaskLanes,
-                  onAppointmentDetails: widget.onAppointmentDetails,
-                  onEditTask: widget.onEditTask,
-                  onTaskDropped: widget.onTaskDropped,
-                  onTaskResized: widget.onTaskResized,
-                  toJulianDay: widget.toJulianDay,
-                  timeToFraction: widget.timeToFraction,
-                );
-              },
+
+    final rows = widget.teamMembers.map((member) {
+      final memberTasks = tasksByEmployee[member.id] ?? const <TaskEntity>[];
+      final rowMetrics = _HorizontalRowMetrics.calculate(
+        memberTasks,
+        widget.startDate,
+        visibleDates,
+        widget.calculateTaskLanes,
+      );
+      return _HorizontalRowData(
+        member: member,
+        tasks: rowMetrics.visibleTasks,
+        taskLanes: rowMetrics.taskLanes,
+        height: rowMetrics.height,
+      );
+    }).toList();
+
+    return Column(
+      children: [
+        Row(
+          children: [
+            _HorizontalEmployeeHeader(width: employeeColumnWidth),
+            Expanded(
+              child: SingleChildScrollView(
+                key: const PageStorageKey<String>(
+                  'gantt-horizontal-timeline-header-scroll',
+                ),
+                controller: _headerScrollController,
+                scrollDirection: Axis.horizontal,
+                child: Listener(
+                  onPointerSignal: widget.onPointerSignal,
+                  child: SizedBox(
+                    width: timelineWidth,
+                    child: _HorizontalDateHeader(
+                      visibleDates: visibleDates,
+                      dayWidth: dayWidth,
+                      isToday: widget.isToday,
+                      todayKey: _todayHeaderKey,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+        Expanded(
+          child: SingleChildScrollView(
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                SizedBox(
+                  width: employeeColumnWidth,
+                  child: Column(
+                    children: rows
+                        .map(
+                          (row) => _HorizontalEmployeeCell(
+                            member: row.member,
+                            height: row.height,
+                          ),
+                        )
+                        .toList(),
+                  ),
+                ),
+                Expanded(
+                  child: Scrollbar(
+                    controller: widget.horizontalTimelineScrollController,
+                    thumbVisibility: true,
+                    trackVisibility: true,
+                    child: SingleChildScrollView(
+                      controller: widget.horizontalTimelineScrollController,
+                      scrollDirection: Axis.horizontal,
+                      child: Listener(
+                        onPointerSignal: widget.onPointerSignal,
+                        child: SizedBox(
+                          width: timelineWidth,
+                          child: Column(
+                            children: rows
+                                .map(
+                                  (row) => SizedBox(
+                                    height: row.height,
+                                    child: GanttBarsForEmployee(
+                                      member: row.member,
+                                      tasks: row.tasks,
+                                      startDate: widget.startDate,
+                                      visibleDates: visibleDates,
+                                      taskLanes: row.taskLanes,
+                                      onAppointmentDetails:
+                                          widget.onAppointmentDetails,
+                                      onEditTask: widget.onEditTask,
+                                      onTaskDropped: widget.onTaskDropped,
+                                      onTaskResized: widget.onTaskResized,
+                                      toJulianDay: widget.toJulianDay,
+                                      timeToFraction: widget.timeToFraction,
+                                    ),
+                                  ),
+                                )
+                                .toList(),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
-        ],
-      ),
-    );
-    return Scrollbar(
-      controller: widget.horizontalTimelineScrollController,
-      thumbVisibility: true,
-      trackVisibility: true,
-      child: SingleChildScrollView(
-        key: const PageStorageKey<String>('gantt-horizontal-timeline-scroll'),
-        controller: widget.horizontalTimelineScrollController,
-        scrollDirection: Axis.horizontal,
-        child: chartContent,
-      ),
+        ),
+      ],
     );
   }
 
@@ -263,6 +391,154 @@ class _HorizontalGanttChartState extends State<_HorizontalGanttChart> {
       offset++;
     }
     return dates;
+  }
+}
+
+class _HorizontalRowData {
+  const _HorizontalRowData({
+    required this.member,
+    required this.tasks,
+    required this.taskLanes,
+    required this.height,
+  });
+
+  final TeamMemberEntity member;
+  final List<TaskEntity> tasks;
+  final Map<String, int> taskLanes;
+  final double height;
+}
+
+class _HorizontalRowMetrics {
+  const _HorizontalRowMetrics({
+    required this.visibleTasks,
+    required this.taskLanes,
+    required this.height,
+  });
+
+  final List<TaskEntity> visibleTasks;
+  final Map<String, int> taskLanes;
+  final double height;
+
+  static _HorizontalRowMetrics calculate(
+    List<TaskEntity> tasks,
+    DateTime startDate,
+    List<DateTime> visibleDates,
+    Map<String, int> Function(
+      List<TaskEntity> tasks, {
+      DateTime? visibleStart,
+      DateTime? visibleEnd,
+    })
+    calculateTaskLanes,
+  ) {
+    final endDate = DateTime(
+      visibleDates.last.year,
+      visibleDates.last.month,
+      visibleDates.last.day + 1,
+    );
+    final visibleTasks = tasks
+        .where(
+          (task) =>
+              task.endDate.isAfter(startDate) &&
+              task.startDate.isBefore(endDate),
+        )
+        .toList();
+    final taskLanes = calculateTaskLanes(
+      visibleTasks,
+      visibleStart: startDate,
+      visibleEnd: endDate,
+    );
+    final laneCount = taskLanes.isEmpty
+        ? 1
+        : taskLanes.values.reduce((a, b) => a > b ? a : b) + 1;
+    return _HorizontalRowMetrics(
+      visibleTasks: visibleTasks,
+      taskLanes: taskLanes,
+      height: 72.0 + ((laneCount - 1) * 38),
+    );
+  }
+}
+
+class _HorizontalEmployeeHeader extends StatelessWidget {
+  const _HorizontalEmployeeHeader({required this.width});
+
+  final double width;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: width,
+      height: 56,
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      alignment: Alignment.centerRight,
+      decoration: const BoxDecoration(
+        color: AppColors.tableHeader,
+        borderRadius: BorderRadius.only(topRight: Radius.circular(12)),
+        border: Border(left: BorderSide(color: AppColors.border, width: 1)),
+      ),
+      child: Text('الموظفين', style: AppTextStyles.tableHeader),
+    );
+  }
+}
+
+class _HorizontalEmployeeCell extends StatelessWidget {
+  const _HorizontalEmployeeCell({required this.member, required this.height});
+
+  final TeamMemberEntity member;
+  final double height;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: height,
+      padding: const EdgeInsets.all(12),
+      decoration: const BoxDecoration(
+        color: AppColors.cardBackground,
+        border: Border(
+          left: BorderSide(color: AppColors.border, width: 1),
+          bottom: BorderSide(color: AppColors.divider),
+        ),
+      ),
+      child: Row(
+        children: [
+          CircleAvatar(
+            radius: 18,
+            backgroundColor: AppColors.primary.withValues(alpha: 0.2),
+            child: Text(
+              member.name.isEmpty ? '-' : member.name.substring(0, 1),
+              style: const TextStyle(
+                color: AppColors.primary,
+                fontSize: 14,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  member.name,
+                  style: AppTextStyles.tableCellBold,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  member.role,
+                  style: AppTextStyles.caption.copyWith(
+                    color: AppColors.textMuted,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }
 
@@ -389,11 +665,13 @@ class _VerticalGanttChart extends StatelessWidget {
 class _HorizontalDateHeader extends StatelessWidget {
   const _HorizontalDateHeader({
     required this.visibleDates,
+    required this.dayWidth,
     required this.isToday,
     required this.todayKey,
   });
 
   final List<DateTime> visibleDates;
+  final double dayWidth;
   final bool Function(DateTime date) isToday;
   final GlobalKey todayKey;
 
@@ -411,84 +689,66 @@ class _HorizontalDateHeader extends StatelessWidget {
         ),
       ),
       child: Row(
-        children: [
-          Container(
-            width: 200,
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            alignment: Alignment.centerRight,
-            decoration: const BoxDecoration(
-              border: Border(
-                left: BorderSide(color: AppColors.border, width: 1),
+        children: visibleDates.map((date) {
+          final today = isToday(date);
+          final weekStart = _isVisibleWeekStart(date);
+          return SizedBox(
+            width: dayWidth,
+            child: Container(
+              key: today ? todayKey : null,
+              decoration: BoxDecoration(
+                color: today ? AppColors.primary.withValues(alpha: 0.1) : null,
+                border: Border(
+                  left: BorderSide(
+                    color: weekStart
+                        ? AppColors.primary.withValues(alpha: 0.3)
+                        : AppColors.border,
+                    width: weekStart ? 2 : 1,
+                  ),
+                ),
               ),
-            ),
-            child: Text('الموظفين', style: AppTextStyles.tableHeader),
-          ),
-          Expanded(
-            child: Row(
-              children: visibleDates.map((date) {
-                final today = isToday(date);
-                final weekStart = _isVisibleWeekStart(date);
-                return Expanded(
-                  child: Container(
-                    key: today ? todayKey : null,
-                    decoration: BoxDecoration(
+              padding: const EdgeInsets.symmetric(vertical: 4),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    dayFormat.format(date),
+                    style: AppTextStyles.labelSmall.copyWith(
                       color: today
-                          ? AppColors.primary.withValues(alpha: 0.1)
-                          : null,
-                      border: Border(
-                        left: BorderSide(
-                          color: weekStart
-                              ? AppColors.primary.withValues(alpha: 0.3)
-                              : AppColors.border,
-                          width: weekStart ? 2 : 1,
+                          ? AppColors.primary
+                          : AppColors.textSecondary,
+                      fontWeight: today ? FontWeight.bold : FontWeight.normal,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 2),
+                  Container(
+                    width: 28,
+                    height: 28,
+                    decoration: BoxDecoration(
+                      color: today ? AppColors.primary : null,
+                      shape: BoxShape.circle,
+                    ),
+                    child: Center(
+                      child: Text(
+                        dateFormat.format(date),
+                        style: TextStyle(
+                          color: today
+                              ? AppColors.scaffoldBackground
+                              : AppColors.textPrimary,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
                         ),
                       ),
                     ),
-                    padding: const EdgeInsets.symmetric(vertical: 4),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          dayFormat.format(date),
-                          style: AppTextStyles.labelSmall.copyWith(
-                            color: today
-                                ? AppColors.primary
-                                : AppColors.textSecondary,
-                            fontWeight: today
-                                ? FontWeight.bold
-                                : FontWeight.normal,
-                          ),
-                          textAlign: TextAlign.center,
-                        ),
-                        const SizedBox(height: 2),
-                        Container(
-                          width: 28,
-                          height: 28,
-                          decoration: BoxDecoration(
-                            color: today ? AppColors.primary : null,
-                            shape: BoxShape.circle,
-                          ),
-                          child: Center(
-                            child: Text(
-                              dateFormat.format(date),
-                              style: TextStyle(
-                                color: today
-                                    ? AppColors.scaffoldBackground
-                                    : AppColors.textPrimary,
-                                fontSize: 13,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
                   ),
-                );
-              }).toList(),
+                ],
+              ),
             ),
-          ),
-        ],
+          );
+        }).toList(),
       ),
     );
   }

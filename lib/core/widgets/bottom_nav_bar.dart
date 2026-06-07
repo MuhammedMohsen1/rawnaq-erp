@@ -29,6 +29,7 @@ class AppBottomNavBar extends StatelessWidget {
         return 0;
       }
       if (currentPath == AppRoutes.tasks) return 1;
+      if (currentPath == AppRoutes.gantt) return 2;
       return 0;
     } else {
       if (currentPath == AppRoutes.dashboard) return 0;
@@ -143,6 +144,16 @@ class AppBottomNavBar extends StatelessWidget {
                           isSiteEngineer: false,
                           isDesigner: true,
                         ),
+                        _buildNavItem(
+                          context: context,
+                          icon: Icons.bar_chart_outlined,
+                          activeIcon: Icons.bar_chart,
+                          label: 'مخطط جانت',
+                          path: AppRoutes.gantt,
+                          index: 2,
+                          isSiteEngineer: false,
+                          isDesigner: true,
+                        ),
                         _buildLogoutItem(context),
                       ]
                     : useSpecialistComboMenu
@@ -183,6 +194,15 @@ class AppBottomNavBar extends StatelessWidget {
                           label: 'مهامي',
                           path: AppRoutes.tasks,
                           index: 3,
+                          isSiteEngineer: false,
+                        ),
+                        _buildNavItem(
+                          context: context,
+                          icon: Icons.bar_chart_outlined,
+                          activeIcon: Icons.bar_chart,
+                          label: 'مخطط جانت',
+                          path: AppRoutes.gantt,
+                          index: 4,
                           isSiteEngineer: false,
                         ),
                         _buildNavItem(

@@ -1,3 +1,4 @@
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_text_styles.dart';
@@ -13,6 +14,7 @@ class GanttChartPageBody extends StatelessWidget {
     super.key,
     required this.selectedPeriod,
     required this.selectedOrientation,
+    required this.horizontalZoom,
     required this.showTeamTasks,
     required this.selectedMemberId,
     required this.teamMembers,
@@ -31,6 +33,10 @@ class GanttChartPageBody extends StatelessWidget {
     required this.onOrientationChanged,
     required this.onTeamTasksChanged,
     required this.onMemberChanged,
+    required this.onZoomIn,
+    required this.onZoomOut,
+    required this.onResetZoom,
+    required this.onPointerSignal,
     required this.onApplyFilters,
     required this.onClearFilters,
     required this.onToggleDraftPanel,
@@ -58,6 +64,7 @@ class GanttChartPageBody extends StatelessWidget {
 
   final GanttTimePeriod selectedPeriod;
   final GanttLayoutOrientation selectedOrientation;
+  final double horizontalZoom;
   final bool showTeamTasks;
   final String? selectedMemberId;
   final List<TeamMemberEntity> teamMembers;
@@ -76,6 +83,10 @@ class GanttChartPageBody extends StatelessWidget {
   final ValueChanged<GanttLayoutOrientation> onOrientationChanged;
   final ValueChanged<bool> onTeamTasksChanged;
   final ValueChanged<String?> onMemberChanged;
+  final VoidCallback onZoomIn;
+  final VoidCallback onZoomOut;
+  final VoidCallback onResetZoom;
+  final void Function(PointerSignalEvent event) onPointerSignal;
   final VoidCallback onApplyFilters;
   final VoidCallback onClearFilters;
   final VoidCallback onToggleDraftPanel;
@@ -125,10 +136,14 @@ class GanttChartPageBody extends StatelessWidget {
           showTeamTasks: showTeamTasks,
           selectedMemberId: selectedMemberId,
           teamMembers: teamMembers,
+          zoomLevel: horizontalZoom,
           onPeriodChanged: onPeriodChanged,
           onOrientationChanged: onOrientationChanged,
           onTeamTasksChanged: onTeamTasksChanged,
           onMemberChanged: onMemberChanged,
+          onZoomIn: onZoomIn,
+          onZoomOut: onZoomOut,
+          onResetZoom: onResetZoom,
           onApplyFilters: onApplyFilters,
           onClearFilters: onClearFilters,
         ),
@@ -164,6 +179,8 @@ class GanttChartPageBody extends StatelessWidget {
                     teamMembers: teamMembers,
                     tasks: tasks,
                     startDate: startDate,
+                    horizontalZoom: horizontalZoom,
+                    onPointerSignal: onPointerSignal,
                     horizontalTimelineScrollController:
                         horizontalTimelineScrollController,
                     shouldScrollToToday: shouldScrollTimelineToToday,

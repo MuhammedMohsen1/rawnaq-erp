@@ -352,6 +352,13 @@ class _SidebarState extends State<_Sidebar> {
                       path: AppRoutes.tasks,
                       isActive: widget.currentPath == AppRoutes.tasks,
                     ),
+                    _buildCollapsedNavItem(
+                      context: context,
+                      icon: Icons.bar_chart_outlined,
+                      activeIcon: Icons.bar_chart,
+                      path: AppRoutes.gantt,
+                      isActive: widget.currentPath == AppRoutes.gantt,
+                    ),
                   ],
                 );
               } else if (isSpecialistCombo) {
@@ -386,6 +393,13 @@ class _SidebarState extends State<_Sidebar> {
                       activeIcon: Icons.check_circle,
                       path: AppRoutes.tasks,
                       isActive: widget.currentPath == AppRoutes.tasks,
+                    ),
+                    _buildCollapsedNavItem(
+                      context: context,
+                      icon: Icons.bar_chart_outlined,
+                      activeIcon: Icons.bar_chart,
+                      path: AppRoutes.gantt,
+                      isActive: widget.currentPath == AppRoutes.gantt,
                     ),
                     _buildCollapsedNavItem(
                       context: context,
@@ -684,6 +698,14 @@ class _SidebarState extends State<_Sidebar> {
                       path: AppRoutes.tasks,
                       isActive: widget.currentPath == AppRoutes.tasks,
                     ),
+                    _buildNavItem(
+                      context: context,
+                      icon: Icons.bar_chart_outlined,
+                      activeIcon: Icons.bar_chart,
+                      label: 'مخطط جانت',
+                      path: AppRoutes.gantt,
+                      isActive: widget.currentPath == AppRoutes.gantt,
+                    ),
                   ],
                 );
               } else if (isSpecialistCombo) {
@@ -722,6 +744,14 @@ class _SidebarState extends State<_Sidebar> {
                       label: 'مهامي',
                       path: AppRoutes.tasks,
                       isActive: widget.currentPath == AppRoutes.tasks,
+                    ),
+                    _buildNavItem(
+                      context: context,
+                      icon: Icons.bar_chart_outlined,
+                      activeIcon: Icons.bar_chart,
+                      label: 'مخطط جانت',
+                      path: AppRoutes.gantt,
+                      isActive: widget.currentPath == AppRoutes.gantt,
                     ),
                     _buildNavItem(
                       context: context,
