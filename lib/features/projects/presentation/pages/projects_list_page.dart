@@ -35,6 +35,7 @@ class ProjectsListPage extends StatefulWidget {
   final bool showStatusActions;
   final bool enableNavigation;
   final Set<ProjectStatus>? visibleStatuses;
+  final bool useDesignStatusLabels;
 
   const ProjectsListPage({
     super.key,
@@ -46,6 +47,7 @@ class ProjectsListPage extends StatefulWidget {
     this.showStatusActions = true,
     this.enableNavigation = true,
     this.visibleStatuses,
+    this.useDesignStatusLabels = false,
   });
 
   @override
@@ -98,6 +100,7 @@ class _ProjectsListPageState extends State<ProjectsListPage> {
                 showStatusActions: widget.showStatusActions,
                 enableNavigation: widget.enableNavigation,
                 visibleStatuses: widget.visibleStatuses,
+                useDesignStatusLabels: widget.useDesignStatusLabels,
                 selectedStatus: _selectedStatus,
                 searchController: _searchController,
                 onSearchChanged: _onSearchChanged,

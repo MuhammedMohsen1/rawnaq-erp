@@ -195,6 +195,7 @@ class AppRouter {
                           showCreateButton: false,
                           showArchiveActions: false,
                           showStatusActions: false,
+                          useDesignStatusLabels: true,
                         ),
                       );
                     }
@@ -298,6 +299,7 @@ class AppRouter {
                   showCreateButton: true,
                   showArchiveActions: true,
                   showStatusActions: true,
+                  useDesignStatusLabels: true,
                 ),
               ),
             ),
@@ -355,6 +357,7 @@ class AppRouter {
                         showCreateButton: !isDesigner,
                         showArchiveActions: !isDesigner,
                         showStatusActions: !isDesigner,
+                        useDesignStatusLabels: isDesigner,
                       ),
                     );
                   },

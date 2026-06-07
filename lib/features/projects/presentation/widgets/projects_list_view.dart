@@ -31,6 +31,7 @@ class ProjectsListView extends StatelessWidget {
   final bool showStatusActions;
   final bool enableNavigation;
   final Set<ProjectStatus>? visibleStatuses;
+  final bool useDesignStatusLabels;
   final ProjectStatus? selectedStatus;
   final TextEditingController searchController;
   final ValueChanged<String> onSearchChanged;
@@ -60,6 +61,7 @@ class ProjectsListView extends StatelessWidget {
     required this.showStatusActions,
     required this.enableNavigation,
     required this.visibleStatuses,
+    required this.useDesignStatusLabels,
     required this.selectedStatus,
     required this.searchController,
     required this.onSearchChanged,
@@ -112,6 +114,7 @@ class ProjectsListView extends StatelessWidget {
           totalCount: allProjects.length,
           counts: counts,
           availableStatuses: _availableStatuses(counts),
+          useDesignStatusLabels: useDesignStatusLabels,
           onSelected: onSelectStatus,
           onCreateTap: onCreateTap,
         ),

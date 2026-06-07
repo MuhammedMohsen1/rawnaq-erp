@@ -52,6 +52,7 @@ class ProjectListStatusFilterBar extends StatelessWidget {
   final int totalCount;
   final Map<ProjectStatus, int> counts;
   final List<ProjectStatus> availableStatuses;
+  final bool useDesignStatusLabels;
   final ValueChanged<ProjectStatus?> onSelected;
   final VoidCallback? onCreateTap;
 
@@ -61,6 +62,7 @@ class ProjectListStatusFilterBar extends StatelessWidget {
     required this.totalCount,
     required this.counts,
     required this.availableStatuses,
+    this.useDesignStatusLabels = false,
     required this.onSelected,
     this.onCreateTap,
   });
@@ -90,7 +92,10 @@ class ProjectListStatusFilterBar extends StatelessWidget {
                 }
 
                 final status = availableStatuses[index - 1];
-                final meta = _statusMetaOf(status);
+                final meta = _statusMetaOf(
+                  status,
+                  useDesignStatusLabels: useDesignStatusLabels,
+                );
                 return _StatusFilterChip(
                   label: meta.label,
                   count: counts[status] ?? 0,
@@ -239,7 +244,10 @@ class _PrimaryGlowButton extends StatelessWidget {
   }
 }
 
-_StatusMeta _statusMetaOf(ProjectStatus status) {
+_StatusMeta _statusMetaOf(
+  ProjectStatus status, {
+  bool useDesignStatusLabels = false,
+}) {
   switch (status) {
     case ProjectStatus.underPricing:
       return const _StatusMeta(
@@ -254,9 +262,11 @@ _StatusMeta _statusMetaOf(ProjectStatus status) {
         accent: AppColors.statusOnHold,
       );
     case ProjectStatus.execution:
-      return const _StatusMeta(
-        label: 'قيد التنفيذ',
-        icon: Icons.rocket_launch_rounded,
+      return _StatusMeta(
+        label: useDesignStatusLabels ? 'قيد التصميم' : 'قيد التنفيذ',
+        icon: useDesignStatusLabels
+            ? Icons.design_services_rounded
+            : Icons.rocket_launch_rounded,
         accent: AppColors.secondary,
       );
     case ProjectStatus.completed:
