@@ -453,10 +453,16 @@ class _UnderPricingContentState extends State<_UnderPricingContent> {
   }
 
   Future<void> _handleAddSubItem(BuildContext context, String itemId) async {
-    final name = await AddItemDialog.showAddSubItemDialog(context);
-    if (name != null && name.isNotEmpty) {
+    final pricingCubit = context.read<PricingCubit>();
+    final result = await AddItemDialog.showAddSubItemDialog(context);
+    if (result != null && result.name.isNotEmpty) {
       try {
-        await context.read<PricingCubit>().addSubItem(projectId, itemId, name);
+        await pricingCubit.addSubItem(
+          projectId,
+          itemId,
+          result.name,
+          description: result.description,
+        );
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('تم إضافة البند الفرعية بنجاح')),

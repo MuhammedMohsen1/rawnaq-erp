@@ -248,7 +248,12 @@ class PricingCubit extends Cubit<PricingState> {
   }
 
   /// Add a new sub-item
-  Future<void> addSubItem(String projectId, String itemId, String name) async {
+  Future<void> addSubItem(
+    String projectId,
+    String itemId,
+    String name, {
+    String? description,
+  }) async {
     final currentState = state;
     if (currentState is! PricingLoaded) return;
 
@@ -260,6 +265,7 @@ class PricingCubit extends Cubit<PricingState> {
         currentState.pricingVersion.version,
         itemId,
         name: name,
+        description: description,
       );
 
       await loadPricingData(projectId);

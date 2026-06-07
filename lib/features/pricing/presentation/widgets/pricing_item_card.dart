@@ -248,7 +248,9 @@ class _PricingItemCardState extends State<PricingItemCard>
         _notesControllers[subItem.id] = TextEditingController(
           text: subItem.description,
         );
-        _notesFocusNodes[subItem.id] = FocusNode();
+        _notesFocusNodes[subItem.id] = _createSubItemDescriptionFocusNode(
+          subItem.id,
+        );
       }
       setState(() {});
     }
@@ -288,7 +290,9 @@ class _PricingItemCardState extends State<PricingItemCard>
         final hasPendingNoteSave = _notesTimers[subItem.id]?.isActive ?? false;
         if (existingController == null) {
           _notesControllers[subItem.id] = TextEditingController(text: newNotes);
-          _notesFocusNodes[subItem.id] = FocusNode();
+          _notesFocusNodes[subItem.id] = _createSubItemDescriptionFocusNode(
+            subItem.id,
+          );
         } else if (existingController.text != newNotes &&
             !hasPendingNoteSave &&
             !(notesFocusNode?.hasFocus ?? false)) {
@@ -616,7 +620,7 @@ class _PricingItemCardState extends State<PricingItemCard>
             ListTile(
               leading: const Icon(Icons.edit, color: AppColors.primary),
               title: const Text(
-                'تعديل الاسم',
+                'تعديل البند الفرعية',
                 style: TextStyle(color: AppColors.textPrimary),
               ),
               onTap: () => Navigator.pop(context, 'edit'),
@@ -982,6 +986,7 @@ class _PricingItemCardState extends State<PricingItemCard>
         );
       },
     );
+    nameController.dispose();
 
     if (result != null && result['name'] != null) {
       try {
@@ -1095,6 +1100,7 @@ class _PricingItemCardState extends State<PricingItemCard>
         );
       },
     );
+    nameController.dispose();
 
     if (result != null && result['name'] != null) {
       try {
@@ -1104,9 +1110,6 @@ class _PricingItemCardState extends State<PricingItemCard>
           widget.item.id,
           subItem.id,
           name: result['name'],
-          description: result['description']?.isEmpty == true
-              ? null
-              : result['description'],
         );
 
         // Refresh data
@@ -1133,6 +1136,98 @@ class _PricingItemCardState extends State<PricingItemCard>
             SnackBar(content: Text('فشل تحديث البند الفرعية: ${e.toString()}')),
           );
         }
+      }
+    }
+  }
+
+  void _scheduleSubItemDescriptionUpdate(
+    PricingSubItemModel subItem,
+    String description,
+  ) {
+    final normalizedDescription = description.trim();
+    final currentDescription = (subItem.description ?? '').trim();
+
+    _notesTimers[subItem.id]?.cancel();
+    if (normalizedDescription == currentDescription) {
+      _notesTimers.remove(subItem.id);
+      return;
+    }
+
+    _notesTimers[subItem.id] = Timer(const Duration(milliseconds: 800), () {
+      _flushSubItemDescription(subItem.id);
+    });
+  }
+
+  FocusNode _createSubItemDescriptionFocusNode(String subItemId) {
+    final focusNode = FocusNode();
+    focusNode.addListener(() {
+      if (!focusNode.hasFocus) {
+        _flushSubItemDescription(subItemId);
+      }
+    });
+    return focusNode;
+  }
+
+  PricingSubItemModel? _findSubItem(String subItemId) {
+    final subItems = widget.item.subItems;
+    if (subItems == null) return null;
+
+    for (final subItem in subItems) {
+      if (subItem.id == subItemId) {
+        return subItem;
+      }
+    }
+
+    return null;
+  }
+
+  void _flushSubItemDescription(String subItemId) {
+    final subItem = _findSubItem(subItemId);
+    final controller = _notesControllers[subItemId];
+    if (subItem == null || controller == null) return;
+
+    final description = controller.text.trim();
+    final currentDescription = (subItem.description ?? '').trim();
+
+    _notesTimers[subItemId]?.cancel();
+    _notesTimers.remove(subItemId);
+
+    if (description == currentDescription) return;
+
+    _saveSubItemDescription(subItem, description);
+  }
+
+  Future<void> _saveSubItemDescription(
+    PricingSubItemModel subItem,
+    String description,
+  ) async {
+    try {
+      await _apiDataSource.updatePricingSubItem(
+        widget.projectId,
+        widget.version,
+        widget.item.id,
+        subItem.id,
+        description: description,
+      );
+
+      final updatedVersion = await _apiDataSource.getPricingVersion(
+        widget.projectId,
+        widget.version,
+      );
+      final updatedItem = updatedVersion.items?.firstWhere(
+        (i) => i.id == widget.item.id,
+      );
+
+      if (updatedItem != null && mounted) {
+        widget.onItemChanged?.call(updatedItem);
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('فشل تحديث وصف البند الفرعية: ${e.toString()}'),
+          ),
+        );
       }
     }
   }
@@ -1888,8 +1983,12 @@ class _PricingItemCardState extends State<PricingItemCard>
                     deletingImages: _deletingImages,
                     selectedImageIndex: _selectedImageIndex,
                     localElementFocusNodes: _localElementFocusNodes,
+                    subItemDescriptionControllers: _notesControllers,
+                    subItemDescriptionFocusNodes: _notesFocusNodes,
                     onToggleSubItem: _toggleSubItem,
                     onToggleSubItemVisibility: _toggleSubItemVisibility,
+                    onSubItemDescriptionChanged:
+                        _scheduleSubItemDescriptionUpdate,
                     onShowSubItemContextMenu: _showSubItemContextMenu,
                     onPickImages: _pickImages,
                     onPickImagesWithFilePicker: _pickImagesWithFilePicker,

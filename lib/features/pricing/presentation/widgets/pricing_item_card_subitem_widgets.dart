@@ -73,6 +73,8 @@ class PricingSubItemHeader extends StatelessWidget {
             Expanded(
               child: Text(
                 subItem.name,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
                 style: AppTextStyles.bodyLarge.copyWith(
                   fontWeight: FontWeight.w600,
                 ),

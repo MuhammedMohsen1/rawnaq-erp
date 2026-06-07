@@ -24,8 +24,11 @@ class PricingItemCardSubItemsList extends StatelessWidget {
     required this.deletingImages,
     required this.selectedImageIndex,
     required this.localElementFocusNodes,
+    required this.subItemDescriptionControllers,
+    required this.subItemDescriptionFocusNodes,
     required this.onToggleSubItem,
     required this.onToggleSubItemVisibility,
+    required this.onSubItemDescriptionChanged,
     required this.onShowSubItemContextMenu,
     required this.onPickImages,
     required this.onPickImagesWithFilePicker,
@@ -56,9 +59,13 @@ class PricingItemCardSubItemsList extends StatelessWidget {
   final Map<String, bool> deletingImages;
   final Map<String, int> selectedImageIndex;
   final Map<String, FocusNode> localElementFocusNodes;
+  final Map<String, TextEditingController> subItemDescriptionControllers;
+  final Map<String, FocusNode> subItemDescriptionFocusNodes;
   final void Function(String subItemId) onToggleSubItem;
   final Future<void> Function(PricingSubItemModel subItem, bool newValue)
   onToggleSubItemVisibility;
+  final void Function(PricingSubItemModel subItem, String description)
+  onSubItemDescriptionChanged;
   final void Function(PricingSubItemModel subItem) onShowSubItemContextMenu;
   final void Function(String subItemId) onPickImages;
   final void Function(String subItemId) onPickImagesWithFilePicker;
@@ -294,6 +301,10 @@ class PricingItemCardSubItemsList extends StatelessWidget {
           selectedImageIndex: selectedImageIndex,
           deletingImages: deletingImages,
           uploadingImages: uploadingImages,
+          descriptionController: subItemDescriptionControllers[subItem.id],
+          descriptionFocusNode: subItemDescriptionFocusNodes[subItem.id],
+          onDescriptionChanged: (description) =>
+              onSubItemDescriptionChanged(subItem, description),
         );
       }).toList(),
     );

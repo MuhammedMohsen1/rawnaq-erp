@@ -37,6 +37,9 @@ class PricingSubItemSection extends StatelessWidget {
     required this.selectedImageIndex,
     required this.deletingImages,
     required this.uploadingImages,
+    this.descriptionController,
+    this.descriptionFocusNode,
+    this.onDescriptionChanged,
   });
 
   final String subItemId;
@@ -65,6 +68,9 @@ class PricingSubItemSection extends StatelessWidget {
   final Map<String, int> selectedImageIndex;
   final Map<String, bool> deletingImages;
   final Map<String, bool> uploadingImages;
+  final TextEditingController? descriptionController;
+  final FocusNode? descriptionFocusNode;
+  final ValueChanged<String>? onDescriptionChanged;
 
   @override
   Widget build(BuildContext context) {
@@ -109,6 +115,9 @@ class PricingSubItemSection extends StatelessWidget {
               elementRows: elementRows,
               onReorderElements: onReorderElements,
               onAddElement: onAddElement,
+              descriptionController: descriptionController,
+              descriptionFocusNode: descriptionFocusNode,
+              onDescriptionChanged: onDescriptionChanged,
             ),
             crossFadeState: isExpanded
                 ? CrossFadeState.showSecond

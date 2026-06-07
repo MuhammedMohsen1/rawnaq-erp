@@ -2,6 +2,13 @@ import 'package:flutter/material.dart';
 
 import '../../../../core/widgets/dialog_keyboard_actions.dart';
 
+class AddSubItemDialogResult {
+  const AddSubItemDialogResult({required this.name, this.description});
+
+  final String name;
+  final String? description;
+}
+
 /// Dialog for adding a new pricing item or sub-item
 class AddItemDialog extends StatelessWidget {
   final String title;
@@ -59,14 +66,77 @@ class AddItemDialog extends StatelessWidget {
   }
 
   /// Show dialog for adding a sub-item
-  static Future<String?> showAddSubItemDialog(BuildContext context) {
-    return showDialog<String>(
+  static Future<AddSubItemDialogResult?> showAddSubItemDialog(
+    BuildContext context,
+  ) {
+    final nameController = TextEditingController();
+    final descriptionController = TextEditingController();
+
+    final dialog = showDialog<AddSubItemDialogResult>(
       context: context,
-      builder: (context) => const AddItemDialog(
-        title: 'إضافة عنصر جديدة',
-        labelText: 'اسم العنصر',
-        hintText: 'أدخل اسم العنصر',
-      ),
+      builder: (context) {
+        void submit() {
+          final name = nameController.text.trim();
+          final description = descriptionController.text.trim();
+
+          if (name.isNotEmpty) {
+            Navigator.pop(
+              context,
+              AddSubItemDialogResult(
+                name: name,
+                description: description.isEmpty ? null : description,
+              ),
+            );
+          }
+        }
+
+        return DialogKeyboardActions(
+          onSubmit: submit,
+          onClose: () => Navigator.pop(context),
+          child: AlertDialog(
+            title: const Text('إضافة بند فرعي جديد'),
+            content: SizedBox(
+              width: 420,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  TextField(
+                    controller: nameController,
+                    decoration: const InputDecoration(
+                      labelText: 'عنوان البند الفرعي',
+                      hintText: 'أدخل عنوان البند الفرعي',
+                    ),
+                    autofocus: true,
+                  ),
+                  const SizedBox(height: 16),
+                  TextField(
+                    controller: descriptionController,
+                    decoration: const InputDecoration(
+                      labelText: 'وصف البند الفرعي',
+                      hintText: 'أدخل وصف البند الفرعي',
+                    ),
+                    minLines: 2,
+                    maxLines: 4,
+                    textInputAction: TextInputAction.newline,
+                  ),
+                ],
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('إلغاء'),
+              ),
+              TextButton(onPressed: submit, child: const Text('إضافة')),
+            ],
+          ),
+        );
+      },
     );
+
+    return dialog.whenComplete(() {
+      nameController.dispose();
+      descriptionController.dispose();
+    });
   }
 }

@@ -39,17 +39,37 @@ class _PricingCategoryCardState extends State<PricingCategoryCard> {
 
   Future<void> _addSubItem() async {
     final nameController = TextEditingController();
-    final result = await showDialog<String>(
+    final descriptionController = TextEditingController();
+    final result = await showDialog<Map<String, String>>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('إضافة عنصر جديد'),
-        content: TextField(
-          controller: nameController,
-          decoration: const InputDecoration(
-            labelText: 'اسم عنصر جديد',
-            hintText: 'أدخل اسم عنصر جديد',
+        title: const Text('إضافة بند فرعي جديد'),
+        content: SizedBox(
+          width: 420,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: nameController,
+                decoration: const InputDecoration(
+                  labelText: 'عنوان البند الفرعي',
+                  hintText: 'أدخل عنوان البند الفرعي',
+                ),
+                autofocus: true,
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: descriptionController,
+                decoration: const InputDecoration(
+                  labelText: 'وصف البند الفرعي',
+                  hintText: 'أدخل وصف البند الفرعي',
+                ),
+                minLines: 2,
+                maxLines: 4,
+                textInputAction: TextInputAction.newline,
+              ),
+            ],
           ),
-          autofocus: true,
         ),
         actions: [
           TextButton(
@@ -57,20 +77,28 @@ class _PricingCategoryCardState extends State<PricingCategoryCard> {
             child: const Text('إلغاء'),
           ),
           TextButton(
-            onPressed: () => Navigator.pop(context, nameController.text),
+            onPressed: () => Navigator.pop(context, {
+              'name': nameController.text.trim(),
+              'description': descriptionController.text.trim(),
+            }),
             child: const Text('إضافة'),
           ),
         ],
       ),
     );
+    nameController.dispose();
+    descriptionController.dispose();
 
-    if (result != null && result.isNotEmpty) {
+    if (result != null && (result['name']?.isNotEmpty ?? false)) {
       try {
         await _apiDataSource.addPricingSubItem(
           widget.projectId,
           widget.version,
           widget.item.id,
-          name: result,
+          name: result['name']!,
+          description: result['description']?.isEmpty == true
+              ? null
+              : result['description'],
         );
         widget.onItemChanged();
         if (mounted) {
@@ -327,6 +355,8 @@ class _PricingCategoryCardState extends State<PricingCategoryCard> {
                           Expanded(
                             child: Text(
                               subItem.name,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
                               style: AppTextStyles.bodyLarge.copyWith(
                                 fontWeight: FontWeight.w600,
                               ),
