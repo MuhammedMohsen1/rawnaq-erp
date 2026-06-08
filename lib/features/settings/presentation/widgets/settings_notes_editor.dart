@@ -106,10 +106,11 @@ class _PricingNotesEditorState extends State<PricingNotesEditor> {
     return Padding(
       padding: const EdgeInsets.all(16),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.end,
         children: [
           Text(
             'كل سطر سيظهر كملاحظة منفصلة في PDF عرض السعر. يمكن تعديل هذه الملاحظات لاحقا داخل كل عرض سعر بدون تغيير الافتراضي.',
+            textAlign: TextAlign.right,
             style: AppTextStyles.caption.copyWith(color: AppColors.textMuted),
           ),
           const SizedBox(height: 14),
@@ -117,12 +118,15 @@ class _PricingNotesEditorState extends State<PricingNotesEditor> {
             controller: _notesController,
             minLines: 4,
             maxLines: 8,
+            textAlign: TextAlign.right,
+            textDirection: TextDirection.rtl,
             style: AppTextStyles.bodyMedium.copyWith(
               color: AppColors.textPrimary,
             ),
             decoration: InputDecoration(
               labelText: 'ملاحظات عرض السعر الافتراضية',
               hintText: 'اكتب كل ملاحظة في سطر منفصل',
+              alignLabelWithHint: true,
               prefixIcon: const Icon(
                 Icons.notes_outlined,
                 size: 20,
@@ -184,6 +188,7 @@ class _PricingNotesEditorState extends State<PricingNotesEditor> {
                   : const Icon(Icons.save_outlined, size: 19),
               label: Text(
                 _isSaving ? 'جار الحفظ...' : 'حفظ الملاحظات الافتراضية',
+                textAlign: TextAlign.right,
                 style: AppTextStyles.tableCellBold.copyWith(
                   color: AppColors.white,
                 ),

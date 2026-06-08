@@ -26,9 +26,12 @@ class PricingItemCardSubItemsList extends StatelessWidget {
     required this.localElementFocusNodes,
     required this.subItemDescriptionControllers,
     required this.subItemDescriptionFocusNodes,
+    required this.subItemProfitControllers,
     required this.onToggleSubItem,
     required this.onToggleSubItemVisibility,
     required this.onSubItemDescriptionChanged,
+    required this.onSubItemProfitMarginChanged,
+    required this.onSubItemProfitMarginEditingComplete,
     required this.onShowSubItemContextMenu,
     required this.onPickImages,
     required this.onPickImagesWithFilePicker,
@@ -61,11 +64,15 @@ class PricingItemCardSubItemsList extends StatelessWidget {
   final Map<String, FocusNode> localElementFocusNodes;
   final Map<String, TextEditingController> subItemDescriptionControllers;
   final Map<String, FocusNode> subItemDescriptionFocusNodes;
+  final Map<String, TextEditingController> subItemProfitControllers;
   final void Function(String subItemId) onToggleSubItem;
   final Future<void> Function(PricingSubItemModel subItem, bool newValue)
   onToggleSubItemVisibility;
   final void Function(PricingSubItemModel subItem, String description)
   onSubItemDescriptionChanged;
+  final void Function(PricingSubItemModel subItem, String value)
+  onSubItemProfitMarginChanged;
+  final void Function(String subItemId) onSubItemProfitMarginEditingComplete;
   final void Function(PricingSubItemModel subItem) onShowSubItemContextMenu;
   final void Function(String subItemId) onPickImages;
   final void Function(String subItemId) onPickImagesWithFilePicker;
@@ -305,6 +312,11 @@ class PricingItemCardSubItemsList extends StatelessWidget {
           descriptionFocusNode: subItemDescriptionFocusNodes[subItem.id],
           onDescriptionChanged: (description) =>
               onSubItemDescriptionChanged(subItem, description),
+          profitMarginController: subItemProfitControllers[subItem.id],
+          onProfitMarginChanged: (value) =>
+              onSubItemProfitMarginChanged(subItem, value),
+          onProfitMarginEditingComplete: () =>
+              onSubItemProfitMarginEditingComplete(subItem.id),
         );
       }).toList(),
     );

@@ -28,9 +28,15 @@ class ContractsApiDataSource {
   /// Export contract PDF
   Future<Uint8List> exportContractPdf(
     String projectId, {
+    String? contractType,
     String? civilId,
     String? projectAddress,
     List<Map<String, String>>? contractTerms,
+    List<Map<String, String>>? designScopeItems,
+    List<String>? designNotes,
+    List<String>? executionNotes,
+    int? executionDurationDays,
+    String? companySignerName,
     required List<Map<String, dynamic>> paymentSchedule,
   }) async {
     final endpoint = ApiEndpoints.exportContractPdf(projectId);
@@ -38,11 +44,23 @@ class ContractsApiDataSource {
     final response = await _apiClient.post(
       endpoint,
       data: {
+        if (contractType != null && contractType.isNotEmpty)
+          'contractType': contractType,
         if (civilId != null && civilId.isNotEmpty) 'civilId': civilId,
         if (projectAddress != null && projectAddress.isNotEmpty)
           'projectAddress': projectAddress,
         if (contractTerms != null && contractTerms.isNotEmpty)
           'contractTerms': contractTerms,
+        if (designScopeItems != null && designScopeItems.isNotEmpty)
+          'designScopeItems': designScopeItems,
+        if (designNotes != null && designNotes.isNotEmpty)
+          'designNotes': designNotes,
+        if (executionNotes != null && executionNotes.isNotEmpty)
+          'executionNotes': executionNotes,
+        if (executionDurationDays != null)
+          'executionDurationDays': executionDurationDays,
+        if (companySignerName != null && companySignerName.isNotEmpty)
+          'companySignerName': companySignerName,
         'paymentSchedule': paymentSchedule,
       },
       options: Options(responseType: ResponseType.bytes),

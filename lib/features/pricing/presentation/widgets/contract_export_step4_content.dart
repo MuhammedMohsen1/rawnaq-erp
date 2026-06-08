@@ -3,19 +3,23 @@ import 'contract_export_review_item.dart';
 
 class ContractExportStep4Content extends StatelessWidget {
   final bool isExporting;
+  final String projectType;
   final TextEditingController civilIdController;
   final TextEditingController projectAddressController;
   final int contractTermsCount;
   final int paymentPhasesCount;
+  final int designScopeCount;
   final VoidCallback onExportPdf;
 
   const ContractExportStep4Content({
     super.key,
     required this.isExporting,
+    required this.projectType,
     required this.civilIdController,
     required this.projectAddressController,
     required this.contractTermsCount,
     required this.paymentPhasesCount,
+    required this.designScopeCount,
     required this.onExportPdf,
   });
 
@@ -42,9 +46,18 @@ class ContractExportStep4Content extends StatelessWidget {
           style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 16),
+        ContractExportReviewItem(
+          label: 'نوع العقد',
+          value: projectType == 'DESIGN' ? 'عقد تصميم' : 'عقد تنفيذ',
+        ),
         ContractExportReviewItem(label: 'الرقم المدني', value: civilIdController.text),
         ContractExportReviewItem(label: 'عنوان المشروع', value: projectAddressController.text),
         ContractExportReviewItem(label: 'عدد البنود', value: '$contractTermsCount بند'),
+        if (projectType == 'DESIGN')
+          ContractExportReviewItem(
+            label: 'عدد عناصر المساحة',
+            value: '$designScopeCount عنصر',
+          ),
         ContractExportReviewItem(label: 'عدد الدفعات', value: '$paymentPhasesCount دفعة'),
         const SizedBox(height: 24),
         SizedBox(

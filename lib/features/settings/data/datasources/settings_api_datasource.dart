@@ -8,35 +8,53 @@ class SettingsApiDataSource {
   SettingsApiDataSource({ApiClient? apiClient})
     : _apiClient = apiClient ?? ApiClient();
 
-  /// Get default contract terms (returns list of terms with title and description)
-  Future<List<Map<String, String>>> getDefaultContractTerms() async {
+  Future<Map<String, List<Map<String, String>>>> getDefaultContractTerms() async {
     final response = await _apiClient.get(ApiEndpoints.contractTerms);
 
     final responseData = response.data as Map<String, dynamic>;
-    // Extract data from standard response format
     final data = responseData['data'] as Map<String, dynamic>?;
-    final terms = data?['terms'] as List?;
-
-    if (terms == null) {
-      return [];
+    List<Map<String, String>> mapTerms(String key) {
+      final terms = data?[key] as List?;
+      if (terms == null) {
+        return [];
+      }
+      return terms.map((term) {
+        return {
+          'title': (term as Map<String, dynamic>)['title'] as String? ?? '',
+          'description': term['description'] as String? ?? '',
+        };
+      }).toList();
     }
 
-    return terms.map((term) {
-      return {
-        'title': (term as Map<String, dynamic>)['title'] as String? ?? '',
-        'description': term['description'] as String? ?? '',
-      };
-    }).toList();
+    return {
+      'designTerms': mapTerms('designTerms'),
+      'executionTerms': mapTerms('executionTerms'),
+    };
   }
 
-  /// Update default contract terms (admin/manager only)
-  Future<void> updateDefaultContractTerms(
-    List<Map<String, String>> terms,
+  Future<List<Map<String, String>>> getDefaultContractTermsForType(
+    String contractType,
   ) async {
+    final terms = await getDefaultContractTerms();
+    return contractType == 'DESIGN'
+        ? (terms['designTerms'] ?? [])
+        : (terms['executionTerms'] ?? []);
+  }
+
+  Future<void> updateDefaultContractTerms({
+    required List<Map<String, String>> designTerms,
+    required List<Map<String, String>> executionTerms,
+  }) async {
     await _apiClient.put(
       ApiEndpoints.contractTerms,
       data: {
-        'terms': terms.map((term) {
+        'designTerms': designTerms.map((term) {
+          return {
+            'title': term['title'] ?? '',
+            'description': term['description'] ?? '',
+          };
+        }).toList(),
+        'executionTerms': executionTerms.map((term) {
           return {
             'title': term['title'] ?? '',
             'description': term['description'] ?? '',

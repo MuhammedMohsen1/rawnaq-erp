@@ -40,6 +40,8 @@ class _ContractExportDialogState extends State<ContractExportDialog> {
       TextEditingController();
   String? _existingCivilId;
   String? _existingProjectAddress;
+  String? _clientName;
+  String _projectType = 'EXECUTION';
   bool _isLoadingProject = true;
 
   // Step 2: Terms
@@ -50,6 +52,14 @@ class _ContractExportDialogState extends State<ContractExportDialog> {
   // Step 3: Payment Schedule
   late List<Map<String, dynamic>> _paymentPhases;
   List<Map<String, TextEditingController>> _paymentControllers = [];
+  final TextEditingController _companySignerNameController =
+      TextEditingController(text: 'محمود محسن');
+  final TextEditingController _designNotesController = TextEditingController();
+  final TextEditingController _executionNotesController =
+      TextEditingController();
+  final TextEditingController _executionDurationDaysController =
+      TextEditingController();
+  List<Map<String, TextEditingController>> _designScopeControllers = [];
 
   @override
   void initState() {
@@ -69,7 +79,6 @@ class _ContractExportDialogState extends State<ContractExportDialog> {
     ];
     _initializePaymentControllers();
     _loadProjectData();
-    _loadDefaultTerms();
   }
 
   void _initializePaymentControllers() {
@@ -92,9 +101,17 @@ class _ContractExportDialogState extends State<ContractExportDialog> {
   void dispose() {
     _civilIdController.dispose();
     _projectAddressController.dispose();
+    _companySignerNameController.dispose();
+    _designNotesController.dispose();
+    _executionNotesController.dispose();
+    _executionDurationDaysController.dispose();
     for (var term in _contractTerms) {
       term['title']?.dispose();
       term['description']?.dispose();
+    }
+    for (var scope in _designScopeControllers) {
+      scope['item']?.dispose();
+      scope['description']?.dispose();
     }
     for (var payment in _paymentControllers) {
       payment['phase']?.dispose();
@@ -112,10 +129,15 @@ class _ContractExportDialogState extends State<ContractExportDialog> {
   Future<void> _loadProjectData() async {
     try {
       final project = await _projectsApi.getProjectById(widget.projectId);
+      final projectType = project['type'] as String? ?? 'EXECUTION';
+      _ensureDefaultScopeRow(projectType);
+      await _loadDefaultTerms(projectType);
       if (mounted) {
         setState(() {
           _existingCivilId = project['clientCivilId'] as String?;
           _existingProjectAddress = project['projectAddress'] as String?;
+          _clientName = project['clientName'] as String?;
+          _projectType = projectType;
           _civilIdController.text = _existingCivilId ?? '';
           _projectAddressController.text = _existingProjectAddress ?? '';
           _isLoadingProject = false;
@@ -125,14 +147,17 @@ class _ContractExportDialogState extends State<ContractExportDialog> {
       if (mounted) {
         setState(() {
           _isLoadingProject = false;
+          _isLoadingTerms = false;
         });
       }
     }
   }
 
-  Future<void> _loadDefaultTerms() async {
+  Future<void> _loadDefaultTerms(String contractType) async {
     try {
-      final terms = await _settingsApi.getDefaultContractTerms();
+      final terms = await _settingsApi.getDefaultContractTermsForType(
+        contractType,
+      );
       if (mounted) {
         setState(() {
           _contractTerms = terms.map((term) {
@@ -143,7 +168,7 @@ class _ContractExportDialogState extends State<ContractExportDialog> {
               ),
             };
           }).toList();
-          _termsApproved = List.filled(terms.length, false);
+          _termsApproved = List.filled(terms.length, true);
           _isLoadingTerms = false;
         });
       }
@@ -155,6 +180,17 @@ class _ContractExportDialogState extends State<ContractExportDialog> {
         });
       }
     }
+  }
+
+  bool get _isDesignProject => _projectType == 'DESIGN';
+
+  void _ensureDefaultScopeRow(String projectType) {
+    if (projectType != 'DESIGN' || _designScopeControllers.isNotEmpty) {
+      return;
+    }
+    _designScopeControllers = [
+      {'item': TextEditingController(), 'description': TextEditingController()},
+    ];
   }
 
   bool _validateStep1() {
@@ -171,6 +207,18 @@ class _ContractExportDialogState extends State<ContractExportDialog> {
         _errorMessage = 'الرقم المدني يجب أن يكون 12 رقم';
       });
       return false;
+    }
+    if (_isDesignProject) {
+      final validScopeRows = _designScopeControllers.where((row) {
+        return (row['item']?.text.trim().isNotEmpty ?? false) &&
+            (row['description']?.text.trim().isNotEmpty ?? false);
+      }).length;
+      if (validScopeRows == 0) {
+        setState(() {
+          _errorMessage = 'الرجاء إدخال مساحة واحدة على الأقل لعقد التصميم';
+        });
+        return false;
+      }
     }
     return true;
   }
@@ -254,6 +302,34 @@ class _ContractExportDialogState extends State<ContractExportDialog> {
     }
   }
 
+  void _addDesignScopeItem() {
+    setState(() {
+      _designScopeControllers.add({
+        'item': TextEditingController(),
+        'description': TextEditingController(),
+      });
+    });
+  }
+
+  void _removeDesignScopeItem(int index) {
+    if (_designScopeControllers.length <= 1) {
+      return;
+    }
+    setState(() {
+      _designScopeControllers[index]['item']?.dispose();
+      _designScopeControllers[index]['description']?.dispose();
+      _designScopeControllers.removeAt(index);
+    });
+  }
+
+  List<String> _splitNotes(TextEditingController controller) {
+    return controller.text
+        .split('\n')
+        .map((line) => line.trim())
+        .where((line) => line.isNotEmpty)
+        .toList();
+  }
+
   void _onPercentageChanged(int index, double value) {
     setState(() {
       final percentage = value.clamp(0.0, 100.0);
@@ -328,18 +404,52 @@ class _ContractExportDialogState extends State<ContractExportDialog> {
           'percentage': (phase['percentage'] as num).toDouble(),
         };
       }).toList();
+      final designScopeItems = _designScopeControllers
+          .map(
+            (scope) => {
+              'item': scope['item']?.text.trim() ?? '',
+              'description': scope['description']?.text.trim() ?? '',
+            },
+          )
+          .where(
+            (scope) =>
+                (scope['item']?.isNotEmpty ?? false) &&
+                (scope['description']?.isNotEmpty ?? false),
+          )
+          .toList();
+      final executionDurationDays = int.tryParse(
+        _executionDurationDaysController.text.trim(),
+      );
 
       final pdfBytes = await _contractsApi.exportContractPdf(
         widget.projectId,
+        contractType: _projectType,
         civilId: _civilIdController.text.trim(),
         projectAddress: _projectAddressController.text.trim(),
         contractTerms: contractTerms,
+        designScopeItems: _isDesignProject ? designScopeItems : null,
+        designNotes: _isDesignProject
+            ? _splitNotes(_designNotesController)
+            : null,
+        executionNotes: !_isDesignProject
+            ? _splitNotes(_executionNotesController)
+            : null,
+        executionDurationDays: !_isDesignProject ? executionDurationDays : null,
+        companySignerName: _companySignerNameController.text.trim(),
         paymentSchedule: paymentSchedule,
       );
 
-      // Save PDF file
+      final filePrefix = _isDesignProject ? 'عقد تصميم' : 'عقد تنفيذ';
+      final safeProjectName = widget.projectName
+          .replaceAll(RegExp(r'[\\/:*?"<>|]'), ' ')
+          .replaceAll(RegExp(r'\s+'), ' ')
+          .trim();
+      final safeClientName = (_clientName ?? '')
+          .replaceAll(RegExp(r'[\\/:*?"<>|]'), ' ')
+          .replaceAll(RegExp(r'\s+'), ' ')
+          .trim();
       final fileName =
-          'contract-${widget.projectName}-${DateTime.now().toIso8601String().split('T')[0]}.pdf';
+          '$filePrefix للسيد ${safeClientName.isEmpty ? 'العميل' : safeClientName} - ${safeProjectName.isEmpty ? 'المشروع' : safeProjectName}.pdf';
 
       if (mounted) {
         File savedFile;
@@ -476,8 +586,18 @@ class _ContractExportDialogState extends State<ContractExportDialog> {
                       title: const Text('الرقم المدني للعميل'),
                       content: ContractExportStep1Content(
                         isLoadingProject: _isLoadingProject,
+                        projectType: _projectType,
                         civilIdController: _civilIdController,
                         projectAddressController: _projectAddressController,
+                        companySignerNameController:
+                            _companySignerNameController,
+                        designScopeControllers: _designScopeControllers,
+                        designNotesController: _designNotesController,
+                        executionNotesController: _executionNotesController,
+                        executionDurationDaysController:
+                            _executionDurationDaysController,
+                        onAddDesignScopeItem: _addDesignScopeItem,
+                        onRemoveDesignScopeItem: _removeDesignScopeItem,
                       ),
                       isActive: _currentStep >= 0,
                       state: _currentStep > 0
@@ -537,10 +657,17 @@ class _ContractExportDialogState extends State<ContractExportDialog> {
                       title: const Text('تصدير PDF'),
                       content: ContractExportStep4Content(
                         isExporting: _isExporting,
+                        projectType: _projectType,
                         civilIdController: _civilIdController,
                         projectAddressController: _projectAddressController,
                         contractTermsCount: _contractTerms.length,
                         paymentPhasesCount: _paymentPhases.length,
+                        designScopeCount: _designScopeControllers.where((row) {
+                          return (row['item']?.text.trim().isNotEmpty ??
+                                  false) &&
+                              (row['description']?.text.trim().isNotEmpty ??
+                                  false);
+                        }).length,
                         onExportPdf: _exportPdf,
                       ),
                       isActive: _currentStep >= 3,

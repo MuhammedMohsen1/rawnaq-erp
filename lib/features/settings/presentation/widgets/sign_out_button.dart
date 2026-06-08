@@ -88,6 +88,7 @@ class SignOutButton extends StatelessWidget {
             child: Padding(
               padding: const EdgeInsets.all(16),
               child: Row(
+                textDirection: TextDirection.rtl,
                 children: [
                   Container(
                     width: 38,
@@ -105,10 +106,11 @@ class SignOutButton extends StatelessWidget {
                   const SizedBox(width: 12),
                   Expanded(
                     child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                      crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
                         Text(
                           'تسجيل الخروج',
+                          textAlign: TextAlign.right,
                           style: AppTextStyles.tableCellBold.copyWith(
                             color: Colors.red,
                           ),
@@ -116,6 +118,7 @@ class SignOutButton extends StatelessWidget {
                         const SizedBox(height: 4),
                         Text(
                           'إنهاء الجلسة الحالية والعودة إلى صفحة الدخول',
+                          textAlign: TextAlign.right,
                           style: AppTextStyles.caption.copyWith(
                             color: AppColors.textMuted,
                           ),
@@ -131,7 +134,7 @@ class SignOutButton extends StatelessWidget {
                     )
                   else
                     Icon(
-                      Icons.chevron_left,
+                      Icons.chevron_right,
                       color: Colors.red.withValues(alpha: 0.7),
                       size: 22,
                     ),

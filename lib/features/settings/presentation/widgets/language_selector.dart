@@ -13,24 +13,27 @@ class LanguageSelector extends StatelessWidget {
     final localeProvider = Provider.of<LocaleProvider>(context);
     final isArabic = localeProvider.locale.languageCode == 'ar';
 
-    return Column(
-      children: [
-        LanguageOption(
-          title: 'العربية',
-          subtitle: 'Arabic',
-          badge: 'ع',
-          isSelected: isArabic,
-          onTap: () => localeProvider.setLocale(const Locale('ar')),
-        ),
-        const Divider(color: AppColors.divider, height: 1),
-        LanguageOption(
-          title: 'English',
-          subtitle: 'الإنجليزية',
-          badge: 'En',
-          isSelected: !isArabic,
-          onTap: () => localeProvider.setLocale(const Locale('en')),
-        ),
-      ],
+    return Directionality(
+      textDirection: TextDirection.rtl,
+      child: Column(
+        children: [
+          LanguageOption(
+            title: 'العربية',
+            subtitle: 'Arabic',
+            badge: 'ع',
+            isSelected: isArabic,
+            onTap: () => localeProvider.setLocale(const Locale('ar')),
+          ),
+          const Divider(color: AppColors.divider, height: 1),
+          LanguageOption(
+            title: 'English',
+            subtitle: 'الإنجليزية',
+            badge: 'En',
+            isSelected: !isArabic,
+            onTap: () => localeProvider.setLocale(const Locale('en')),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -53,87 +56,93 @@ class LanguageOption extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      color: isSelected
-          ? AppColors.primary.withValues(alpha: 0.06)
-          : Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Row(
-            children: [
-              Container(
-                width: 42,
-                height: 42,
-                decoration: BoxDecoration(
-                  color: isSelected
-                      ? AppColors.primary.withValues(alpha: 0.14)
-                      : AppColors.surfaceColor,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
+    return Directionality(
+      textDirection: TextDirection.rtl,
+      child: Material(
+        color: isSelected
+            ? AppColors.primary.withValues(alpha: 0.06)
+            : Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Row(
+              textDirection: TextDirection.rtl,
+              children: [
+                Container(
+                  width: 42,
+                  height: 42,
+                  decoration: BoxDecoration(
                     color: isSelected
-                        ? AppColors.primary.withValues(alpha: 0.24)
-                        : AppColors.border,
-                  ),
-                ),
-                child: Center(
-                  child: Text(
-                    badge,
-                    style: AppTextStyles.tableCellBold.copyWith(
+                        ? AppColors.primary.withValues(alpha: 0.14)
+                        : AppColors.surfaceColor,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
                       color: isSelected
-                          ? AppColors.primary
-                          : AppColors.textMuted,
+                          ? AppColors.primary.withValues(alpha: 0.24)
+                          : AppColors.border,
                     ),
                   ),
-                ),
-              ),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      title,
+                  child: Center(
+                    child: Text(
+                      badge,
                       style: AppTextStyles.tableCellBold.copyWith(
                         color: isSelected
                             ? AppColors.primary
-                            : AppColors.textPrimary,
+                            : AppColors.textMuted,
                       ),
                     ),
-                    const SizedBox(height: 3),
-                    Text(
-                      subtitle,
-                      style: AppTextStyles.caption.copyWith(
-                        color: AppColors.textMuted,
-                      ),
-                    ),
-                  ],
+                  ),
                 ),
-              ),
-              AnimatedSwitcher(
-                duration: const Duration(milliseconds: 180),
-                child: isSelected
-                    ? Container(
-                        key: const ValueKey('selected'),
-                        padding: const EdgeInsets.all(5),
-                        decoration: const BoxDecoration(
-                          color: AppColors.primary,
-                          shape: BoxShape.circle,
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        title,
+                        textAlign: TextAlign.right,
+                        style: AppTextStyles.tableCellBold.copyWith(
+                          color: isSelected
+                              ? AppColors.primary
+                              : AppColors.textPrimary,
                         ),
-                        child: const Icon(
-                          Icons.check,
-                          color: Colors.white,
-                          size: 15,
-                        ),
-                      )
-                    : const SizedBox(
-                        key: ValueKey('not-selected'),
-                        width: 25,
-                        height: 25,
                       ),
-              ),
-            ],
+                      const SizedBox(height: 3),
+                      Text(
+                        subtitle,
+                        textAlign: TextAlign.right,
+                        style: AppTextStyles.caption.copyWith(
+                          color: AppColors.textMuted,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 180),
+                  child: isSelected
+                      ? Container(
+                          key: const ValueKey('selected'),
+                          padding: const EdgeInsets.all(5),
+                          decoration: const BoxDecoration(
+                            color: AppColors.primary,
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(
+                            Icons.check,
+                            color: Colors.white,
+                            size: 15,
+                          ),
+                        )
+                      : const SizedBox(
+                          key: ValueKey('not-selected'),
+                          width: 25,
+                          height: 25,
+                        ),
+                ),
+              ],
+            ),
           ),
         ),
       ),

@@ -40,6 +40,9 @@ class PricingSubItemSection extends StatelessWidget {
     this.descriptionController,
     this.descriptionFocusNode,
     this.onDescriptionChanged,
+    this.profitMarginController,
+    this.onProfitMarginChanged,
+    this.onProfitMarginEditingComplete,
   });
 
   final String subItemId;
@@ -71,6 +74,9 @@ class PricingSubItemSection extends StatelessWidget {
   final TextEditingController? descriptionController;
   final FocusNode? descriptionFocusNode;
   final ValueChanged<String>? onDescriptionChanged;
+  final TextEditingController? profitMarginController;
+  final ValueChanged<String>? onProfitMarginChanged;
+  final VoidCallback? onProfitMarginEditingComplete;
 
   @override
   Widget build(BuildContext context) {
@@ -118,6 +124,9 @@ class PricingSubItemSection extends StatelessWidget {
               descriptionController: descriptionController,
               descriptionFocusNode: descriptionFocusNode,
               onDescriptionChanged: onDescriptionChanged,
+              profitMarginController: profitMarginController,
+              onProfitMarginChanged: onProfitMarginChanged,
+              onProfitMarginEditingComplete: onProfitMarginEditingComplete,
             ),
             crossFadeState: isExpanded
                 ? CrossFadeState.showSecond

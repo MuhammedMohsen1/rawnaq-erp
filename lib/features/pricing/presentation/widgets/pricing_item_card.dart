@@ -237,13 +237,12 @@ class _PricingItemCardState extends State<PricingItemCard>
         _expandedSubItems[subItem.id] =
             widget.initialSubItemExpandedStates[subItem.id] ?? false;
         _localElements[subItem.id] = [];
-        // Initialize profit margin controllers
-        if (widget.pricingStatus?.toUpperCase() == 'APPROVED') {
-          _profitMargins[subItem.id] = subItem.profitMargin;
-          _profitControllers[subItem.id] = TextEditingController(
-            text: subItem.profitMargin.toStringAsFixed(2),
-          );
-        }
+        // Initialize profit margin controllers for every sub-item so the
+        // per-sub-item percentage field is always available when rendered.
+        _profitMargins[subItem.id] = subItem.profitMargin;
+        _profitControllers[subItem.id] = TextEditingController(
+          text: subItem.profitMargin.toStringAsFixed(2),
+        );
         // Initialize notes controller
         _notesControllers[subItem.id] = TextEditingController(
           text: subItem.description,
@@ -283,6 +282,12 @@ class _PricingItemCardState extends State<PricingItemCard>
         if (!_localElements.containsKey(subItem.id)) {
           _localElements[subItem.id] = [];
         }
+        if (!_profitControllers.containsKey(subItem.id)) {
+          _profitMargins[subItem.id] = subItem.profitMargin;
+          _profitControllers[subItem.id] = TextEditingController(
+            text: subItem.profitMargin.toStringAsFixed(2),
+          );
+        }
         // Sync notes controller with latest data (only if no pending save)
         final newNotes = subItem.description ?? '';
         final existingController = _notesControllers[subItem.id];
@@ -309,9 +314,7 @@ class _PricingItemCardState extends State<PricingItemCard>
         // Only sync if there's no pending profit margin save (user isn't actively editing)
         final hasPendingProfitSave =
             _profitMarginTimers[subItem.id]?.isActive ?? false;
-        if (widget.externalProfitMargins != null &&
-            widget.pricingStatus?.toUpperCase() == 'APPROVED' &&
-            !hasPendingProfitSave) {
+        if (widget.externalProfitMargins != null && !hasPendingProfitSave) {
           final externalMargin = widget.externalProfitMargins![subItem.id];
           if (externalMargin != null &&
               externalMargin != _profitMargins[subItem.id]) {
@@ -319,6 +322,15 @@ class _PricingItemCardState extends State<PricingItemCard>
             final profitController = _profitControllers[subItem.id];
             if (profitController != null) {
               profitController.text = externalMargin.toStringAsFixed(2);
+            }
+          }
+        } else if (!hasPendingProfitSave) {
+          final latestMargin = subItem.profitMargin;
+          if (latestMargin != _profitMargins[subItem.id]) {
+            _profitMargins[subItem.id] = latestMargin;
+            final profitController = _profitControllers[subItem.id];
+            if (profitController != null) {
+              profitController.text = latestMargin.toStringAsFixed(2);
             }
           }
         }
@@ -1197,6 +1209,74 @@ class _PricingItemCardState extends State<PricingItemCard>
     _saveSubItemDescription(subItem, description);
   }
 
+  void _scheduleSubItemProfitMarginUpdate(
+    PricingSubItemModel subItem,
+    String value,
+  ) {
+    final parsedMargin = double.tryParse(value.trim());
+    if (parsedMargin == null) {
+      _profitMarginTimers[subItem.id]?.cancel();
+      _profitMarginTimers.remove(subItem.id);
+      return;
+    }
+
+    _profitMargins[subItem.id] = parsedMargin;
+    _profitMarginTimers[subItem.id]?.cancel();
+    _profitMarginTimers[subItem.id] = Timer(
+      const Duration(milliseconds: 800),
+      () {
+        _flushSubItemProfitMargin(subItem.id);
+      },
+    );
+  }
+
+  void _flushSubItemProfitMargin(String subItemId) {
+    final subItem = _findSubItem(subItemId);
+    final controller = _profitControllers[subItemId];
+    if (subItem == null || controller == null) return;
+
+    final profitMargin = double.tryParse(controller.text.trim());
+    _profitMarginTimers[subItemId]?.cancel();
+    _profitMarginTimers.remove(subItemId);
+
+    if (profitMargin == null || profitMargin == subItem.profitMargin) {
+      return;
+    }
+
+    _saveSubItemProfitMargin(subItem, profitMargin);
+  }
+
+  Future<void> _saveSubItemProfitMargin(
+    PricingSubItemModel subItem,
+    double profitMargin,
+  ) async {
+    try {
+      final updatedSubItem = await _apiDataSource.updateSubItemProfitMargin(
+        widget.projectId,
+        widget.version,
+        widget.item.id,
+        subItem.id,
+        profitMargin,
+      );
+
+      if (mounted) {
+        widget.onSubItemChanged?.call(updatedSubItem);
+        widget.onItemChanged?.call(widget.item);
+      }
+    } catch (e) {
+      if (mounted) {
+        final controller = _profitControllers[subItem.id];
+        if (controller != null) {
+          controller.text = subItem.profitMargin.toStringAsFixed(2);
+        }
+        _profitMargins[subItem.id] = subItem.profitMargin;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('فشل تحديث نسبة الربح: ${e.toString()}')),
+        );
+      }
+    }
+  }
+
   Future<void> _saveSubItemDescription(
     PricingSubItemModel subItem,
     String description,
@@ -1985,10 +2065,15 @@ class _PricingItemCardState extends State<PricingItemCard>
                     localElementFocusNodes: _localElementFocusNodes,
                     subItemDescriptionControllers: _notesControllers,
                     subItemDescriptionFocusNodes: _notesFocusNodes,
+                    subItemProfitControllers: _profitControllers,
                     onToggleSubItem: _toggleSubItem,
                     onToggleSubItemVisibility: _toggleSubItemVisibility,
                     onSubItemDescriptionChanged:
                         _scheduleSubItemDescriptionUpdate,
+                    onSubItemProfitMarginChanged:
+                        _scheduleSubItemProfitMarginUpdate,
+                    onSubItemProfitMarginEditingComplete:
+                        _flushSubItemProfitMargin,
                     onShowSubItemContextMenu: _showSubItemContextMenu,
                     onPickImages: _pickImages,
                     onPickImagesWithFilePicker: _pickImagesWithFilePicker,

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_text_styles.dart';
 import '../../data/models/pricing_version_model.dart';
+import 'profit_margin_input.dart';
 import 'pricing_item_card_support_widgets.dart';
 
 class PricingSubItemBody extends StatelessWidget {
@@ -26,6 +27,9 @@ class PricingSubItemBody extends StatelessWidget {
     this.descriptionController,
     this.descriptionFocusNode,
     this.onDescriptionChanged,
+    this.profitMarginController,
+    this.onProfitMarginChanged,
+    this.onProfitMarginEditingComplete,
   });
 
   final PricingSubItemModel subItem;
@@ -46,6 +50,9 @@ class PricingSubItemBody extends StatelessWidget {
   final TextEditingController? descriptionController;
   final FocusNode? descriptionFocusNode;
   final ValueChanged<String>? onDescriptionChanged;
+  final TextEditingController? profitMarginController;
+  final ValueChanged<String>? onProfitMarginChanged;
+  final VoidCallback? onProfitMarginEditingComplete;
 
   @override
   Widget build(BuildContext context) {
@@ -101,45 +108,95 @@ class PricingSubItemBody extends StatelessWidget {
                   ],
                   if (descriptionController != null &&
                       descriptionFocusNode != null) ...[
-                    TextField(
-                      controller: descriptionController,
-                      focusNode: descriptionFocusNode,
-                      onChanged: onDescriptionChanged,
-                      minLines: 2,
-                      maxLines: 4,
-                      textInputAction: TextInputAction.newline,
-                      style: AppTextStyles.bodyMedium.copyWith(
-                        color: AppColors.textPrimary,
-                        height: 1.35,
-                      ),
-                      decoration: InputDecoration(
-                        labelText: 'وصف البند الفرعي',
-                        hintText: 'اكتب وصف البند الفرعي',
-                        labelStyle: AppTextStyles.caption.copyWith(
-                          color: AppColors.textSecondary,
-                        ),
-                        hintStyle: AppTextStyles.bodySmall.copyWith(
-                          color: AppColors.textMuted,
-                        ),
-                        filled: true,
-                        fillColor: const Color(0xFF202632),
-                        contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 10,
-                        ),
-                        enabledBorder: OutlineInputBorder(
-                          borderSide: const BorderSide(
-                            color: Color(0xFF363C4A),
+                    LayoutBuilder(
+                      builder: (context, constraints) {
+                        final showCompactProfitInput =
+                            profitMarginController != null &&
+                            constraints.maxWidth >= 560;
+
+                        final descriptionField = Center(
+                          child: TextField(
+                            controller: descriptionController,
+                            focusNode: descriptionFocusNode,
+                            onChanged: onDescriptionChanged,
+                            minLines: 2,
+                            maxLines: 4,
+                            textInputAction: TextInputAction.newline,
+                            style: AppTextStyles.bodyMedium.copyWith(
+                              color: AppColors.textPrimary,
+                              height: 1.35,
+                            ),
+                            decoration: InputDecoration(
+                              labelText: 'وصف البند الفرعي',
+                              hintText: 'اكتب وصف البند الفرعي',
+                              labelStyle: AppTextStyles.caption.copyWith(
+                                color: AppColors.textSecondary,
+                              ),
+                              hintStyle: AppTextStyles.bodySmall.copyWith(
+                                color: AppColors.textMuted,
+                              ),
+                              filled: true,
+                              fillColor: const Color(0xFF202632),
+                              contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 10,
+                              ),
+                              enabledBorder: OutlineInputBorder(
+                                borderSide: const BorderSide(
+                                  color: Color(0xFF363C4A),
+                                ),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                borderSide: const BorderSide(
+                                  color: AppColors.primary,
+                                ),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                            ),
                           ),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderSide: const BorderSide(
-                            color: AppColors.primary,
-                          ),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                      ),
+                        );
+
+                        if (showCompactProfitInput) {
+                          return IntrinsicHeight(
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Expanded(flex: 3, child: descriptionField),
+                                const SizedBox(width: 12),
+                                SizedBox(
+                                  width: 150,
+                                  child: ProfitMarginInput(
+                                    controller: profitMarginController!,
+                                    onChanged: onProfitMarginChanged ?? (_) {},
+                                    onEditingComplete:
+                                        onProfitMarginEditingComplete,
+                                    compact: true,
+                                    fillHeight: true,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          );
+                        }
+
+                        return Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            descriptionField,
+                            if (profitMarginController != null) ...[
+                              const SizedBox(height: 12),
+                              ProfitMarginInput(
+                                controller: profitMarginController!,
+                                onChanged: onProfitMarginChanged ?? (_) {},
+                                onEditingComplete:
+                                    onProfitMarginEditingComplete,
+                                compact: true,
+                              ),
+                            ],
+                          ],
+                        );
+                      },
                     ),
                     const SizedBox(height: 12),
                   ],
