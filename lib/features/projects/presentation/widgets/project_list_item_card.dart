@@ -6,6 +6,7 @@ import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_text_styles.dart';
 import '../../domain/entities/project_entity.dart';
 import '../../domain/enums/project_status.dart';
+import '../../domain/enums/project_type.dart';
 import '../widgets/project_list_item_card_support_widgets.dart';
 
 class ProjectListItemCard extends StatefulWidget {
@@ -56,7 +57,11 @@ class _ProjectListItemCardState extends State<ProjectListItemCard> {
 
   @override
   Widget build(BuildContext context) {
-    final meta = _metaOf(widget.project.status, widget.project.lastEditAt);
+    final meta = _metaOf(
+      widget.project.status,
+      widget.project.lastEditAt,
+      widget.project.type,
+    );
     final dateProgress = _dateProgress(widget.project);
     final projectTotalPrice = widget.project.projectTotalPrice;
     final receivedProgress = projectTotalPrice > 0
@@ -218,7 +223,11 @@ class _StatusMeta {
   });
 }
 
-_StatusMeta _metaOf(ProjectStatus status, DateTime? lastEditAt) {
+_StatusMeta _metaOf(
+  ProjectStatus status,
+  DateTime? lastEditAt,
+  ProjectType projectType,
+) {
   final daysSinceEdit = lastEditAt != null
       ? DateTime.now().difference(lastEditAt).inDays
       : 0;
@@ -239,7 +248,7 @@ _StatusMeta _metaOf(ProjectStatus status, DateTime? lastEditAt) {
       return _StatusMeta(
         accent: daysSinceEdit > 20 ? Colors.red : AppColors.secondary,
         icon: Icons.rocket_launch_rounded,
-        groupLabel: 'التنفيذ',
+        groupLabel: projectType == ProjectType.design ? 'تصميم' : 'التنفيذ',
       );
     case ProjectStatus.completed:
       return _StatusMeta(
