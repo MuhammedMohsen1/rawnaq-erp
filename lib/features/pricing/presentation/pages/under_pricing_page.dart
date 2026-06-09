@@ -172,9 +172,17 @@ class _UnderPricingContentState extends State<_UnderPricingContent> {
         }
 
         if (state is PricingLoaded) {
+          final authState = context.read<AuthBloc>().state;
+          final adminCanEditReadOnly =
+              state.readOnly &&
+              authState is AuthAuthenticated &&
+              authState.user.isAdmin;
+          final canEditPricing = !state.readOnly || adminCanEditReadOnly;
+
           return PricingLoadedLayout(
             projectId: widget.projectId,
             state: state,
+            canEditPricing: canEditPricing,
             hideFinancials: widget.hideFinancials,
             showFinancials: _showFinancials,
             onToggleFinancials: _toggleFinancialVisibility,
@@ -182,7 +190,7 @@ class _UnderPricingContentState extends State<_UnderPricingContent> {
             onAddItem: () => _handleAddItem(context),
             onAddSubItem: (itemId) =>
                 () => _handleAddSubItem(context, itemId),
-            onReorderItems: state.readOnly
+            onReorderItems: !canEditPricing
                 ? null
                 : (oldIndex, newIndex) async {
                     await context.read<PricingCubit>().reorderItems(
@@ -191,7 +199,7 @@ class _UnderPricingContentState extends State<_UnderPricingContent> {
                       newIndex,
                     );
                   },
-            onReorderSubItems: state.readOnly
+            onReorderSubItems: !canEditPricing
                 ? null
                 : (itemId, oldIndex, newIndex) async {
                     await context.read<PricingCubit>().reorderSubItems(
@@ -201,7 +209,7 @@ class _UnderPricingContentState extends State<_UnderPricingContent> {
                       newIndex,
                     );
                   },
-            onReorderElements: state.readOnly
+            onReorderElements: !canEditPricing
                 ? null
                 : (itemId, subItemId, elementId, targetOrder) async {
                     await context.read<PricingCubit>().reorderElement(

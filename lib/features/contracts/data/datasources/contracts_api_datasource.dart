@@ -25,6 +25,16 @@ class ContractsApiDataSource {
     }
   }
 
+  Future<Map<String, dynamic>> getContractExportDefaults(
+    String projectId,
+  ) async {
+    final response = await _apiClient.get(
+      ApiEndpoints.contractExportDefaults(projectId),
+    );
+    final responseData = response.data as Map<String, dynamic>;
+    return responseData['data'] as Map<String, dynamic>? ?? responseData;
+  }
+
   /// Export contract PDF
   Future<Uint8List> exportContractPdf(
     String projectId, {

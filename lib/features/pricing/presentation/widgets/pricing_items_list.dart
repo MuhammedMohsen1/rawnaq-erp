@@ -72,8 +72,9 @@ class PricingItemsList extends StatelessWidget {
         }
 
         final status = pricingStatus?.toUpperCase();
+        final canEditPricing = !readOnly;
         final canReorder =
-            !readOnly &&
+            canEditPricing &&
             (isAdminOrManager ||
                 status == 'DRAFT' ||
                 status == 'PENDING_SIGNATURE');
@@ -110,7 +111,7 @@ class PricingItemsList extends StatelessWidget {
                       version: version,
                       item: item,
                       pricingStatus: pricingStatus,
-                      isAdminOrManager: isAdminOrManager && !readOnly,
+                      isAdminOrManager: isAdminOrManager && canEditPricing,
                       canViewFinancials: isAdminOrManager && showFinancials,
                       initialIsExpanded: itemExpandedStates[item.id] ?? false,
                       initialSubItemExpandedStates:
@@ -120,18 +121,22 @@ class PricingItemsList extends StatelessWidget {
                           onItemExpandedChanged(item.id, isExpanded),
                       onSubItemExpandedChanged: (subItemStates) =>
                           onSubItemExpandedChanged(item.id, subItemStates),
-                      onItemDeleted: readOnly ? null : onDataChanged,
-                      onSubItemDeleted: readOnly
+                      onItemDeleted: !canEditPricing ? null : onDataChanged,
+                      onSubItemDeleted: !canEditPricing
                           ? null
                           : (_) => onDataChanged(),
-                      onItemChanged: readOnly ? null : (_) => onDataChanged(),
+                      onItemChanged: !canEditPricing
+                          ? null
+                          : (_) => onDataChanged(),
                       onSubItemChanged: (updatedSubItem) {
                         onSubItemProfitMarginChanged(
                           updatedSubItem.id,
                           updatedSubItem.profitMargin,
                         );
                       },
-                      onAddSubItem: readOnly ? null : onAddSubItem(item.id),
+                      onAddSubItem: !canEditPricing
+                          ? null
+                          : onAddSubItem(item.id),
                       canReorderItem: canReorder,
                       itemReorderIndex: index,
                       canReorderSubItems: canReorder,

@@ -413,6 +413,8 @@ abstract class ApiEndpoints {
 
   // Contract Endpoints
   static String contract(String projectId) => '/projects/$projectId/contract';
+  static String contractExportDefaults(String projectId) =>
+      '/projects/$projectId/contract/export-defaults';
   static String exportContractPdf(String projectId) =>
       '/projects/$projectId/contract/export-pdf';
   static String confirmContract(String projectId) =>

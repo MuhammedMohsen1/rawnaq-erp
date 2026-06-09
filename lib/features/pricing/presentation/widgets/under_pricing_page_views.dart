@@ -103,6 +103,7 @@ class PricingEmptyReadOnlyView extends StatelessWidget {
 class PricingLoadedLayout extends StatelessWidget {
   final String projectId;
   final PricingLoaded state;
+  final bool canEditPricing;
   final bool hideFinancials;
   final bool showFinancials;
   final VoidCallback onToggleFinancials;
@@ -130,6 +131,7 @@ class PricingLoadedLayout extends StatelessWidget {
     super.key,
     required this.projectId,
     required this.state,
+    required this.canEditPricing,
     required this.hideFinancials,
     required this.showFinancials,
     required this.onToggleFinancials,
@@ -152,6 +154,7 @@ class PricingLoadedLayout extends StatelessWidget {
         projectId: projectId,
         state: state,
         padding: 16,
+        canEditPricing: canEditPricing,
         hideFinancialsInitially: hideFinancials,
         showFinancials: showFinancials,
         onToggleFinancials: onToggleFinancials,
@@ -170,6 +173,7 @@ class PricingLoadedLayout extends StatelessWidget {
         projectId: projectId,
         state: state,
         padding: 24,
+        canEditPricing: canEditPricing,
         hideFinancialsInitially: hideFinancials,
         showFinancials: showFinancials,
         onToggleFinancials: onToggleFinancials,
@@ -188,6 +192,7 @@ class PricingLoadedLayout extends StatelessWidget {
         projectId: projectId,
         state: state,
         padding: 32,
+        canEditPricing: canEditPricing,
         hideFinancialsInitially: hideFinancials,
         showFinancials: showFinancials,
         onToggleFinancials: onToggleFinancials,
@@ -210,6 +215,7 @@ class _PricingLayout extends StatelessWidget {
   final String projectId;
   final PricingLoaded state;
   final double padding;
+  final bool canEditPricing;
   final bool hideFinancialsInitially;
   final bool showFinancials;
   final VoidCallback onToggleFinancials;
@@ -237,6 +243,7 @@ class _PricingLayout extends StatelessWidget {
     required this.projectId,
     required this.state,
     required this.padding,
+    required this.canEditPricing,
     required this.hideFinancialsInitially,
     required this.showFinancials,
     required this.onToggleFinancials,
@@ -304,11 +311,11 @@ class _PricingLayout extends StatelessWidget {
             onReorderItems: onReorderItems,
             onReorderSubItems: onReorderSubItems,
             onReorderElements: onReorderElements,
-            readOnly: state.readOnly,
+            readOnly: !canEditPricing,
             showFinancials: showFinancials,
           ),
           const SizedBox(height: 24),
-          if (!state.readOnly) ...[
+          if (canEditPricing) ...[
             AddPricingItemButton(onTap: onAddItem),
             const SizedBox(height: 24),
           ],

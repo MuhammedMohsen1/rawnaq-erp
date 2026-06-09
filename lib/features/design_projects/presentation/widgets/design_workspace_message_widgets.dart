@@ -1,9 +1,14 @@
+import 'package:dio/dio.dart';
+import 'package:file_picker/file_picker.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:open_file/open_file.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:video_player/video_player.dart';
 
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/network/dio_helper.dart';
 import '../../domain/entities/design_workspace_entities.dart';
 
 class DesignChatBubble extends StatelessWidget {
@@ -104,26 +109,41 @@ class DesignAttachmentBubble extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (media.type == DesignMediaType.image && media.previewUrl != null) {
-      return InkWell(
+      return ClipRRect(
         borderRadius: BorderRadius.circular(14),
-        onTap: () => _openFullscreenImage(context),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(14),
-          child: Container(
-            constraints: const BoxConstraints(
-              maxWidth: 240,
-              maxHeight: 180,
-              minWidth: 120,
-              minHeight: 90,
-            ),
-            color: AppColors.inputBackground.withValues(alpha: 0.65),
-            child: Image.network(
-              media.previewUrl!,
-              fit: BoxFit.contain,
-              width: double.infinity,
-              height: double.infinity,
-              errorBuilder: (_, _, _) => _fileTile(context),
-            ),
+        child: Container(
+          constraints: const BoxConstraints(
+            maxWidth: 240,
+            maxHeight: 180,
+            minWidth: 120,
+            minHeight: 90,
+          ),
+          color: AppColors.inputBackground.withValues(alpha: 0.65),
+          child: Stack(
+            children: [
+              Positioned.fill(
+                child: InkWell(
+                  onTap: () => _openFullscreenImage(context),
+                  child: Image.network(
+                    media.previewUrl!,
+                    fit: BoxFit.contain,
+                    width: double.infinity,
+                    height: double.infinity,
+                    errorBuilder: (_, _, _) => _fileTile(context),
+                  ),
+                ),
+              ),
+              if (media.downloadUrl != null)
+                PositionedDirectional(
+                  end: 8,
+                  top: 8,
+                  child: _MediaOverlayButton(
+                    icon: Icons.download_outlined,
+                    tooltip: 'تحميل',
+                    onPressed: () => downloadDesignMedia(context, media),
+                  ),
+                ),
+            ],
           ),
         ),
       );
@@ -186,14 +206,23 @@ class DesignAttachmentBubble extends StatelessWidget {
               PositionedDirectional(
                 top: 16,
                 end: 16,
-                child: Material(
-                  color: AppColors.cardBackground.withValues(alpha: 0.9),
-                  shape: const CircleBorder(),
-                  child: IconButton(
-                    onPressed: () => Navigator.of(dialogContext).pop(),
-                    icon: const Icon(Icons.close),
-                    tooltip: 'إغلاق',
-                  ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    if (media.downloadUrl != null) ...[
+                      _FullscreenActionButton(
+                        icon: Icons.download_outlined,
+                        tooltip: 'تحميل',
+                        onPressed: () => downloadDesignMedia(context, media),
+                      ),
+                      const SizedBox(width: 8),
+                    ],
+                    _FullscreenActionButton(
+                      icon: Icons.close,
+                      tooltip: 'إغلاق',
+                      onPressed: () => Navigator.of(dialogContext).pop(),
+                    ),
+                  ],
                 ),
               ),
             ],
@@ -207,7 +236,7 @@ class DesignAttachmentBubble extends StatelessWidget {
     return InkWell(
       onTap: media.downloadUrl == null
           ? null
-          : () => launchUrl(Uri.parse(media.downloadUrl!)),
+          : () => downloadDesignMedia(context, media),
       child: Container(
         width: double.infinity,
         padding: const EdgeInsets.all(10),
@@ -250,7 +279,16 @@ class DesignAttachmentBubble extends StatelessWidget {
               ),
             ),
             const SizedBox(width: 8),
-            const Icon(Icons.download_outlined, color: AppColors.primaryLight),
+            IconButton(
+              icon: const Icon(
+                Icons.download_outlined,
+                color: AppColors.primaryLight,
+              ),
+              tooltip: 'تحميل',
+              onPressed: media.downloadUrl == null
+                  ? null
+                  : () => downloadDesignMedia(context, media),
+            ),
           ],
         ),
       ),
@@ -351,17 +389,24 @@ class _DesignVideoPreviewState extends State<DesignVideoPreview> {
               PositionedDirectional(
                 end: 8,
                 top: 8,
-                child: Material(
-                  color: Colors.black.withValues(alpha: 0.45),
-                  shape: const CircleBorder(),
-                  child: IconButton(
-                    icon: const Icon(Icons.open_in_full, color: Colors.white),
-                    iconSize: 18,
-                    tooltip: 'معاينة',
-                    onPressed: _isReady
-                        ? () => _openVideoDialog(context)
-                        : null,
-                  ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    _MediaOverlayButton(
+                      icon: Icons.download_outlined,
+                      tooltip: 'تحميل',
+                      onPressed: () =>
+                          downloadDesignMedia(context, widget.media),
+                    ),
+                    const SizedBox(width: 6),
+                    _MediaOverlayButton(
+                      icon: Icons.open_in_full,
+                      tooltip: 'معاينة',
+                      onPressed: _isReady
+                          ? () => _openVideoDialog(context)
+                          : null,
+                    ),
+                  ],
                 ),
               ),
             ],
@@ -482,14 +527,21 @@ class _FullscreenVideoDialogState extends State<_FullscreenVideoDialog> {
           PositionedDirectional(
             top: 16,
             end: 16,
-            child: Material(
-              color: AppColors.cardBackground.withValues(alpha: 0.9),
-              shape: const CircleBorder(),
-              child: IconButton(
-                onPressed: widget.onClose,
-                icon: const Icon(Icons.close),
-                tooltip: 'إغلاق',
-              ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                _FullscreenActionButton(
+                  icon: Icons.download_outlined,
+                  tooltip: 'تحميل',
+                  onPressed: () => downloadDesignMedia(context, widget.media),
+                ),
+                const SizedBox(width: 8),
+                _FullscreenActionButton(
+                  icon: Icons.close,
+                  tooltip: 'إغلاق',
+                  onPressed: widget.onClose,
+                ),
+              ],
             ),
           ),
         ],
@@ -505,26 +557,41 @@ class _VideoFallbackTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(10),
-      decoration: BoxDecoration(
-        color: AppColors.inputBackground.withValues(alpha: 0.72),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.border),
-      ),
-      child: Row(
-        children: [
-          const Icon(Icons.play_circle_outline, color: AppColors.primaryLight),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Text(
-              media.name,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
+    return InkWell(
+      onTap: () => downloadDesignMedia(context, media),
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(10),
+        decoration: BoxDecoration(
+          color: AppColors.inputBackground.withValues(alpha: 0.72),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: AppColors.border),
+        ),
+        child: Row(
+          children: [
+            const Icon(
+              Icons.play_circle_outline,
+              color: AppColors.primaryLight,
             ),
-          ),
-        ],
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                media.name,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+            IconButton(
+              icon: const Icon(
+                Icons.download_outlined,
+                color: AppColors.primaryLight,
+              ),
+              tooltip: 'تحميل',
+              onPressed: () => downloadDesignMedia(context, media),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -656,6 +723,132 @@ class _ChatActionButton extends StatelessWidget {
       ),
     );
   }
+}
+
+class _MediaOverlayButton extends StatelessWidget {
+  final IconData icon;
+  final String tooltip;
+  final VoidCallback? onPressed;
+
+  const _MediaOverlayButton({
+    required this.icon,
+    required this.tooltip,
+    required this.onPressed,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.black.withValues(alpha: 0.50),
+      shape: const CircleBorder(),
+      child: IconButton(
+        icon: Icon(icon, color: Colors.white),
+        iconSize: 18,
+        tooltip: tooltip,
+        onPressed: onPressed,
+      ),
+    );
+  }
+}
+
+class _FullscreenActionButton extends StatelessWidget {
+  final IconData icon;
+  final String tooltip;
+  final VoidCallback onPressed;
+
+  const _FullscreenActionButton({
+    required this.icon,
+    required this.tooltip,
+    required this.onPressed,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: AppColors.cardBackground.withValues(alpha: 0.9),
+      shape: const CircleBorder(),
+      child: IconButton(
+        onPressed: onPressed,
+        icon: Icon(icon),
+        tooltip: tooltip,
+      ),
+    );
+  }
+}
+
+Future<void> downloadDesignMedia(
+  BuildContext context,
+  DesignMedia media,
+) async {
+  final url = media.downloadUrl;
+  if (url == null || url.isEmpty) {
+    _showDesignMediaSnackBar(context, 'لا يوجد رابط تحميل لهذا الملف');
+    return;
+  }
+
+  if (kIsWeb) {
+    await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
+    return;
+  }
+
+  try {
+    final fileName = _safeDesignMediaFileName(media.name);
+    final targetPath = await FilePicker.platform.saveFile(
+      dialogTitle: 'حفظ الملف',
+      fileName: fileName,
+    );
+    if (targetPath == null) return;
+
+    await DioHelper.dio.download(
+      url,
+      targetPath,
+      options: Options(responseType: ResponseType.bytes),
+    );
+
+    if (!context.mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        content: Row(
+          children: [
+            const Icon(
+              Icons.check_circle_outline,
+              color: Colors.white,
+              size: 18,
+            ),
+            const SizedBox(width: 8),
+            Expanded(child: Text('تم تحميل: $fileName')),
+          ],
+        ),
+        action: SnackBarAction(
+          label: 'فتح',
+          onPressed: () => OpenFile.open(targetPath),
+        ),
+      ),
+    );
+  } catch (_) {
+    if (!context.mounted) return;
+    _showDesignMediaSnackBar(context, 'تعذر تحميل الملف');
+  }
+}
+
+void _showDesignMediaSnackBar(BuildContext context, String message) {
+  ScaffoldMessenger.of(context).showSnackBar(
+    SnackBar(
+      behavior: SnackBarBehavior.floating,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+      content: Text(message),
+    ),
+  );
+}
+
+String _safeDesignMediaFileName(String fileName) {
+  final sanitized = fileName
+      .replaceAll(RegExp(r'[\\/:*?"<>|]'), '_')
+      .replaceAll(RegExp(r'\s+'), ' ')
+      .trim();
+  return sanitized.isEmpty ? 'design-media' : sanitized;
 }
 
 IconData iconFor(DesignMediaType type) => switch (type) {

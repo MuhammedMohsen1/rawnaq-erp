@@ -128,6 +128,47 @@ class _ContractExportDialogState extends State<ContractExportDialog> {
 
   Future<void> _loadProjectData() async {
     try {
+      final defaults = await _contractsApi.getContractExportDefaults(
+        widget.projectId,
+      );
+      final projectType =
+          defaults['projectType'] as String? ??
+          defaults['contractType'] as String? ??
+          'EXECUTION';
+      _replaceTerms(_asMapList(defaults['contractTerms']));
+      _replacePaymentSchedule(_asMapList(defaults['paymentSchedule']));
+      _replaceDesignScopeItems(_asMapList(defaults['designScopeItems']));
+      if (mounted) {
+        setState(() {
+          _existingCivilId = defaults['civilId'] as String?;
+          _existingProjectAddress = defaults['projectAddress'] as String?;
+          _clientName = defaults['clientName'] as String?;
+          _projectType = projectType;
+          _civilIdController.text = _existingCivilId ?? '';
+          _projectAddressController.text = _existingProjectAddress ?? '';
+          _companySignerNameController.text =
+              defaults['companySignerName'] as String? ?? 'محمود محسن';
+          _designNotesController.text = _asStringList(
+            defaults['designNotes'],
+          ).join('\n');
+          _executionNotesController.text = _asStringList(
+            defaults['executionNotes'],
+          ).join('\n');
+          _executionDurationDaysController.text =
+              (defaults['executionDurationDays'] as num?)?.toInt().toString() ??
+              '';
+          _ensureDefaultScopeRow(projectType);
+          _isLoadingProject = false;
+          _isLoadingTerms = false;
+        });
+      }
+    } catch (e) {
+      await _loadProjectDataFallback();
+    }
+  }
+
+  Future<void> _loadProjectDataFallback() async {
+    try {
       final project = await _projectsApi.getProjectById(widget.projectId);
       final projectType = project['type'] as String? ?? 'EXECUTION';
       _ensureDefaultScopeRow(projectType);
@@ -151,6 +192,83 @@ class _ContractExportDialogState extends State<ContractExportDialog> {
         });
       }
     }
+  }
+
+  List<Map<String, dynamic>> _asMapList(dynamic value) {
+    if (value is! List) return const [];
+    return value.whereType<Map>().map((item) {
+      return item.map((key, value) => MapEntry(key.toString(), value));
+    }).toList();
+  }
+
+  List<String> _asStringList(dynamic value) {
+    if (value is! List) return const [];
+    return value.map((item) => item.toString()).toList();
+  }
+
+  void _replaceTerms(List<Map<String, dynamic>> terms) {
+    for (final term in _contractTerms) {
+      term['title']?.dispose();
+      term['description']?.dispose();
+    }
+    _contractTerms = terms.map((term) {
+      return {
+        'title': TextEditingController(text: term['title']?.toString() ?? ''),
+        'description': TextEditingController(
+          text: term['description']?.toString() ?? '',
+        ),
+      };
+    }).toList();
+    _termsApproved = List.filled(_contractTerms.length, true);
+  }
+
+  void _replacePaymentSchedule(List<Map<String, dynamic>> phases) {
+    for (final payment in _paymentControllers) {
+      payment['phase']?.dispose();
+      payment['percentage']?.dispose();
+      payment['amount']?.dispose();
+    }
+    final source = phases.isNotEmpty
+        ? phases
+        : [
+            {
+              'phase': 'دفعة أولى',
+              'percentage': 50.0,
+              'amount': widget.totalAmount * 0.5,
+            },
+            {
+              'phase': 'دفعة ثانية',
+              'percentage': 50.0,
+              'amount': widget.totalAmount * 0.5,
+            },
+          ];
+    _paymentPhases = source.map((phase) {
+      final percentage = (phase['percentage'] as num?)?.toDouble() ?? 0.0;
+      final amount =
+          (phase['amount'] as num?)?.toDouble() ??
+          widget.totalAmount * (percentage / 100);
+      return {
+        'phase': phase['phase']?.toString() ?? 'دفعة',
+        'percentage': percentage,
+        'amount': amount,
+      };
+    }).toList();
+    _initializePaymentControllers();
+  }
+
+  void _replaceDesignScopeItems(List<Map<String, dynamic>> scopeItems) {
+    for (final scope in _designScopeControllers) {
+      scope['item']?.dispose();
+      scope['description']?.dispose();
+    }
+    _designScopeControllers = scopeItems.map((scope) {
+      return {
+        'item': TextEditingController(text: scope['item']?.toString() ?? ''),
+        'description': TextEditingController(
+          text: scope['description']?.toString() ?? '',
+        ),
+      };
+    }).toList();
   }
 
   Future<void> _loadDefaultTerms(String contractType) async {
