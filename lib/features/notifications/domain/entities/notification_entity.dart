@@ -1,10 +1,6 @@
 import 'package:flutter/material.dart';
 
-enum NotificationType {
-  projectUpdate,
-  newTask,
-  financialUpdate,
-}
+enum NotificationType { projectUpdate, newTask, financialUpdate }
 
 class NotificationActionButton {
   final String label;
@@ -39,4 +35,3 @@ class NotificationEntity {
     required this.actionButtons,
   });
 }
-

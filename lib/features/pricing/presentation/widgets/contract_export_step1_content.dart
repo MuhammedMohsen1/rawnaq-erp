@@ -129,7 +129,10 @@ class ContractExportStep1Content extends StatelessWidget {
           decoration: InputDecoration(
             labelText: 'اسم ممثل الشركة بالتوقيع',
             hintText: 'مثال: محمود محسن',
-            prefixIcon: const Icon(Icons.person, color: AppColors.textSecondary),
+            prefixIcon: const Icon(
+              Icons.person,
+              color: AppColors.textSecondary,
+            ),
             border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(10),

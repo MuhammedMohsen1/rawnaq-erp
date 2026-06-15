@@ -63,7 +63,8 @@ class DefaultFirebaseOptions {
     messagingSenderId: '151210588565',
     projectId: 'beenedeek-19505',
     storageBucket: 'beenedeek-19505.firebasestorage.app',
-    androidClientId: '151210588565-idt8mprliv7vuibalf93kv06a7l90g0a.apps.googleusercontent.com',
+    androidClientId:
+        '151210588565-idt8mprliv7vuibalf93kv06a7l90g0a.apps.googleusercontent.com',
     iosBundleId: 'com.m3tech.beenEdeekPortal',
   );
 
@@ -73,7 +74,8 @@ class DefaultFirebaseOptions {
     messagingSenderId: '151210588565',
     projectId: 'beenedeek-19505',
     storageBucket: 'beenedeek-19505.firebasestorage.app',
-    androidClientId: '151210588565-idt8mprliv7vuibalf93kv06a7l90g0a.apps.googleusercontent.com',
+    androidClientId:
+        '151210588565-idt8mprliv7vuibalf93kv06a7l90g0a.apps.googleusercontent.com',
     iosBundleId: 'com.m3tech.beenEdeekPortal',
   );
 
@@ -85,5 +87,4 @@ class DefaultFirebaseOptions {
     authDomain: 'beenedeek-19505.firebaseapp.com',
     storageBucket: 'beenedeek-19505.firebasestorage.app',
   );
-
 }

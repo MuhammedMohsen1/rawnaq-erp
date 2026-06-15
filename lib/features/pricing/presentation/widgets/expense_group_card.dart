@@ -102,7 +102,10 @@ class _ExpenseGroupCardState extends State<ExpenseGroupCard> {
                 const Spacer(),
                 // Status Badge
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 5),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 5,
+                    vertical: 5,
+                  ),
                   decoration: BoxDecoration(
                     color: const Color(0xFF2A313D),
                     border: Border.all(color: const Color(0xFF363C4A)),
@@ -115,7 +118,9 @@ class _ExpenseGroupCardState extends State<ExpenseGroupCard> {
                         width: 24,
                         height: 24,
                         decoration: BoxDecoration(
-                          color: _getStatusColor(widget.group.status).withOpacity(0.2),
+                          color: _getStatusColor(
+                            widget.group.status,
+                          ).withOpacity(0.2),
                           borderRadius: BorderRadius.circular(4),
                         ),
                         child: Center(
@@ -157,7 +162,9 @@ class _ExpenseGroupCardState extends State<ExpenseGroupCard> {
                       _isExpanded = !_isExpanded;
                     });
                     if (widget.onGroupChanged != null) {
-                      widget.onGroupChanged!(widget.group.copyWith(isExpanded: _isExpanded));
+                      widget.onGroupChanged!(
+                        widget.group.copyWith(isExpanded: _isExpanded),
+                      );
                     }
                   },
                   icon: Icon(
@@ -219,7 +226,9 @@ class _ExpenseGroupCardState extends State<ExpenseGroupCard> {
                       item: item,
                       isNewRow: item.unitPrice == null && item.quantity == null,
                       onDelete: () {
-                        final newItems = List<PricingItem>.from(widget.group.items);
+                        final newItems = List<PricingItem>.from(
+                          widget.group.items,
+                        );
                         newItems.removeAt(index);
                         final updatedGroup = widget.group.copyWith(
                           items: newItems,
@@ -228,11 +237,16 @@ class _ExpenseGroupCardState extends State<ExpenseGroupCard> {
                         widget.onGroupChanged?.call(updatedGroup);
                       },
                       onChanged: (updatedItem) {
-                        final newItems = List<PricingItem>.from(widget.group.items);
+                        final newItems = List<PricingItem>.from(
+                          widget.group.items,
+                        );
                         newItems[index] = updatedItem.copyWith(
                           total: updatedItem.calculateTotal(),
                         );
-                        final subtotal = newItems.fold<double>(0.0, (sum, item) => sum + item.total);
+                        final subtotal = newItems.fold<double>(
+                          0.0,
+                          (sum, item) => sum + item.total,
+                        );
                         final updatedGroup = widget.group.copyWith(
                           items: newItems,
                           subtotal: subtotal,
@@ -246,9 +260,7 @@ class _ExpenseGroupCardState extends State<ExpenseGroupCard> {
                   Container(
                     height: 46,
                     decoration: BoxDecoration(
-                      border: Border.all(
-                        color: const Color(0xFF4B5563),
-                      ),
+                      border: Border.all(color: const Color(0xFF4B5563)),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: InkWell(
@@ -277,11 +289,12 @@ class _ExpenseGroupCardState extends State<ExpenseGroupCard> {
                   // Subtotal
                   const SizedBox(height: 16),
                   Container(
-                    padding: const EdgeInsets.symmetric(vertical: 17.22, horizontal: 20),
+                    padding: const EdgeInsets.symmetric(
+                      vertical: 17.22,
+                      horizontal: 20,
+                    ),
                     decoration: const BoxDecoration(
-                      border: Border(
-                        top: BorderSide(color: Color(0xFF363C4A)),
-                      ),
+                      border: Border(top: BorderSide(color: Color(0xFF363C4A))),
                     ),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -297,10 +310,12 @@ class _ExpenseGroupCardState extends State<ExpenseGroupCard> {
                         Row(
                           children: [
                             Text(
-                              widget.group.subtotal.toStringAsFixed(0).replaceAllMapped(
-                                RegExp(r'(\d)(?=(\d{3})+(?!\d))'),
-                                (Match m) => '${m[1]},',
-                              ),
+                              widget.group.subtotal
+                                  .toStringAsFixed(0)
+                                  .replaceAllMapped(
+                                    RegExp(r'(\d)(?=(\d{3})+(?!\d))'),
+                                    (Match m) => '${m[1]},',
+                                  ),
                               style: const TextStyle(
                                 fontFamily: 'Menlo',
                                 fontSize: 20,
@@ -334,4 +349,3 @@ class _ExpenseGroupCardState extends State<ExpenseGroupCard> {
     );
   }
 }
-

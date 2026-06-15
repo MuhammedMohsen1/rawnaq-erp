@@ -60,10 +60,12 @@ class _TransactionsTableState extends State<TransactionsTable> {
 
     // Initialize controllers for all transactions
     for (var transaction in widget.transactions) {
-      _descriptionControllers[transaction.id] =
-          TextEditingController(text: transaction.description);
-      _amountControllers[transaction.id] =
-          TextEditingController(text: transaction.amount.toStringAsFixed(3));
+      _descriptionControllers[transaction.id] = TextEditingController(
+        text: transaction.description,
+      );
+      _amountControllers[transaction.id] = TextEditingController(
+        text: transaction.amount.toStringAsFixed(3),
+      );
       // New transactions (empty description) start in edit mode
       _editingStates[transaction.id] = transaction.description.isEmpty;
     }
@@ -91,7 +93,8 @@ class _TransactionsTableState extends State<TransactionsTable> {
       (t) => t.id == transactionId,
     );
     final description = _descriptionControllers[transactionId]!.text.trim();
-    final amount = double.tryParse(_amountControllers[transactionId]!.text) ??
+    final amount =
+        double.tryParse(_amountControllers[transactionId]!.text) ??
         transaction.amount;
 
     // Only save if description is not empty
@@ -113,8 +116,8 @@ class _TransactionsTableState extends State<TransactionsTable> {
       (t) => t.id == transactionId,
     );
     _descriptionControllers[transactionId]!.text = transaction.description;
-    _amountControllers[transactionId]!.text =
-        transaction.amount.toStringAsFixed(3);
+    _amountControllers[transactionId]!.text = transaction.amount
+        .toStringAsFixed(3);
     setState(() {
       _editingStates[transactionId] = false;
     });
@@ -162,10 +165,7 @@ class _TransactionsTableState extends State<TransactionsTable> {
                 // Type column (tighter)
                 SizedBox(
                   width: 50,
-                  child: Text(
-                    'النوع',
-                    style: AppTextStyles.tableHeader,
-                  ),
+                  child: Text('النوع', style: AppTextStyles.tableHeader),
                 ),
                 // Description column
                 Expanded(
@@ -178,18 +178,12 @@ class _TransactionsTableState extends State<TransactionsTable> {
                 // Date column
                 Expanded(
                   flex: 1,
-                  child: Text(
-                    'التاريخ',
-                    style: AppTextStyles.tableHeader,
-                  ),
+                  child: Text('التاريخ', style: AppTextStyles.tableHeader),
                 ),
                 // Amount column
                 Expanded(
                   flex: 1,
-                  child: Text(
-                    'المبلغ',
-                    style: AppTextStyles.tableHeader,
-                  ),
+                  child: Text('المبلغ', style: AppTextStyles.tableHeader),
                 ),
                 // Actions column
                 Expanded(
@@ -197,10 +191,7 @@ class _TransactionsTableState extends State<TransactionsTable> {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text(
-                        'الإجراءات',
-                        style: AppTextStyles.tableHeader,
-                      ),
+                      Text('الإجراءات', style: AppTextStyles.tableHeader),
                       if (widget.onAddNew != null)
                         IconButton(
                           icon: const Icon(Icons.add, size: 20),
@@ -220,10 +211,9 @@ class _TransactionsTableState extends State<TransactionsTable> {
             ),
           ),
           // Table rows
-          ...widget.transactions.map((transaction) => _buildTransactionRow(
-                context,
-                transaction,
-              )),
+          ...widget.transactions.map(
+            (transaction) => _buildTransactionRow(context, transaction),
+          ),
           // Load more button
           if (widget.onLoadMore != null)
             Container(
@@ -261,10 +251,12 @@ class _TransactionsTableState extends State<TransactionsTable> {
 
     // Initialize controllers if not exists (for new transactions)
     if (!_descriptionControllers.containsKey(transaction.id)) {
-      _descriptionControllers[transaction.id] =
-          TextEditingController(text: transaction.description);
-      _amountControllers[transaction.id] =
-          TextEditingController(text: transaction.amount.toStringAsFixed(3));
+      _descriptionControllers[transaction.id] = TextEditingController(
+        text: transaction.description,
+      );
+      _amountControllers[transaction.id] = TextEditingController(
+        text: transaction.amount.toStringAsFixed(3),
+      );
       // New transactions (empty description) start in edit mode
       _editingStates[transaction.id] = transaction.description.isEmpty;
     }
@@ -272,9 +264,7 @@ class _TransactionsTableState extends State<TransactionsTable> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
       decoration: const BoxDecoration(
-        border: Border(
-          bottom: BorderSide(color: AppColors.divider, width: 1),
-        ),
+        border: Border(bottom: BorderSide(color: AppColors.divider, width: 1)),
       ),
       child: Row(
         children: [
@@ -328,8 +318,10 @@ class _TransactionsTableState extends State<TransactionsTable> {
           Expanded(
             flex: 1,
             child: Tooltip(
-              message: DateFormat('dd MMM yyyy, hh:mm a', 'ar')
-                  .format(transaction.date),
+              message: DateFormat(
+                'dd MMM yyyy, hh:mm a',
+                'ar',
+              ).format(transaction.date),
               waitDuration: const Duration(milliseconds: 500),
               child: GestureDetector(
                 onLongPress: () {
@@ -337,8 +329,10 @@ class _TransactionsTableState extends State<TransactionsTable> {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
                       content: Text(
-                        DateFormat('dd MMM yyyy, hh:mm a', 'ar')
-                            .format(transaction.date),
+                        DateFormat(
+                          'dd MMM yyyy, hh:mm a',
+                          'ar',
+                        ).format(transaction.date),
                       ),
                       duration: const Duration(seconds: 2),
                     ),
@@ -401,79 +395,75 @@ class _TransactionsTableState extends State<TransactionsTable> {
           Expanded(
             flex: 1,
             child: transaction.metadata.isLocked
-                ? Icon(
-                    Icons.lock,
-                    color: AppColors.textMuted,
-                    size: 20,
-                  )
+                ? Icon(Icons.lock, color: AppColors.textMuted, size: 20)
                 : isEditing
-                    ? Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          IconButton(
-                            icon: const Icon(
-                              Icons.check,
-                              color: AppColors.success,
-                              size: 22,
-                            ),
-                            onPressed: () => _saveTransaction(transaction.id),
-                            padding: const EdgeInsets.all(8),
-                            constraints: const BoxConstraints(
-                              minWidth: 40,
-                              minHeight: 40,
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          IconButton(
-                            icon: const Icon(
-                              Icons.close,
-                              color: AppColors.error,
-                              size: 22,
-                            ),
-                            onPressed: () => _cancelEdit(transaction.id),
-                            padding: const EdgeInsets.all(8),
-                            constraints: const BoxConstraints(
-                              minWidth: 40,
-                              minHeight: 40,
-                            ),
-                          ),
-                        ],
-                      )
-                    : Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          if (canEdit)
-                            IconButton(
-                              icon: const Icon(
-                                Icons.edit_outlined,
-                                color: AppColors.info,
-                                size: 22,
-                              ),
-                              onPressed: () => _toggleEdit(transaction.id),
-                              padding: const EdgeInsets.all(8),
-                              constraints: const BoxConstraints(
-                                minWidth: 40,
-                                minHeight: 40,
-                              ),
-                            ),
-                          if (canEdit) const SizedBox(width: 12),
-                          IconButton(
-                            icon: const Icon(
-                              Icons.delete_outline,
-                              color: AppColors.error,
-                              size: 22,
-                            ),
-                            onPressed: widget.onDelete != null
-                                ? () => widget.onDelete!(transaction)
-                                : null,
-                            padding: const EdgeInsets.all(8),
-                            constraints: const BoxConstraints(
-                              minWidth: 40,
-                              minHeight: 40,
-                            ),
-                          ),
-                        ],
+                ? Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      IconButton(
+                        icon: const Icon(
+                          Icons.check,
+                          color: AppColors.success,
+                          size: 22,
+                        ),
+                        onPressed: () => _saveTransaction(transaction.id),
+                        padding: const EdgeInsets.all(8),
+                        constraints: const BoxConstraints(
+                          minWidth: 40,
+                          minHeight: 40,
+                        ),
                       ),
+                      const SizedBox(width: 12),
+                      IconButton(
+                        icon: const Icon(
+                          Icons.close,
+                          color: AppColors.error,
+                          size: 22,
+                        ),
+                        onPressed: () => _cancelEdit(transaction.id),
+                        padding: const EdgeInsets.all(8),
+                        constraints: const BoxConstraints(
+                          minWidth: 40,
+                          minHeight: 40,
+                        ),
+                      ),
+                    ],
+                  )
+                : Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      if (canEdit)
+                        IconButton(
+                          icon: const Icon(
+                            Icons.edit_outlined,
+                            color: AppColors.info,
+                            size: 22,
+                          ),
+                          onPressed: () => _toggleEdit(transaction.id),
+                          padding: const EdgeInsets.all(8),
+                          constraints: const BoxConstraints(
+                            minWidth: 40,
+                            minHeight: 40,
+                          ),
+                        ),
+                      if (canEdit) const SizedBox(width: 12),
+                      IconButton(
+                        icon: const Icon(
+                          Icons.delete_outline,
+                          color: AppColors.error,
+                          size: 22,
+                        ),
+                        onPressed: widget.onDelete != null
+                            ? () => widget.onDelete!(transaction)
+                            : null,
+                        padding: const EdgeInsets.all(8),
+                        constraints: const BoxConstraints(
+                          minWidth: 40,
+                          minHeight: 40,
+                        ),
+                      ),
+                    ],
+                  ),
           ),
         ],
       ),
@@ -495,9 +485,7 @@ class _TransactionsTableState extends State<TransactionsTable> {
 
     return RichText(
       text: TextSpan(
-        style: AppTextStyles.tableCellBold.copyWith(
-          color: color,
-        ),
+        style: AppTextStyles.tableCellBold.copyWith(color: color),
         children: [
           TextSpan(text: '$prefix$integerPart.'),
           TextSpan(

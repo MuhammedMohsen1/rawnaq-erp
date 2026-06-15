@@ -513,9 +513,7 @@ class PricingCubit extends Cubit<PricingState> {
         projectId,
         currentState.pricingVersion.version,
         items: subItems,
-        deductionAmount: currentState.deductionAmount > 0
-            ? currentState.deductionAmount
-            : null,
+        deductionAmount: currentState.deductionAmount,
       );
 
       await loadPricingData(projectId);
@@ -636,9 +634,7 @@ class PricingCubit extends Cubit<PricingState> {
           projectId,
           currentState.pricingVersion.version,
           items: items,
-          deductionAmount: currentState.deductionAmount > 0
-              ? currentState.deductionAmount
-              : null,
+          deductionAmount: currentState.deductionAmount,
         );
 
         await loadPricingData(projectId);

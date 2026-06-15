@@ -103,13 +103,19 @@ class _PricingCategoryCardState extends State<PricingCategoryCard> {
         widget.onItemChanged();
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('تم إضافة البند الفرعية بنجاح')),
+            const SnackBar(
+              duration: const Duration(seconds: 2),
+              content: Text('تم إضافة البند الفرعية بنجاح'),
+            ),
           );
         }
       } catch (e) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('فشل إضافة البند الفرعية: ${e.toString()}')),
+            SnackBar(
+              duration: const Duration(seconds: 2),
+              content: Text('فشل إضافة البند الفرعية: ${e.toString()}'),
+            ),
           );
         }
       }
@@ -235,13 +241,19 @@ class _PricingCategoryCardState extends State<PricingCategoryCard> {
         widget.onItemChanged();
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('تم إضافة العنصر بنجاح')),
+            const SnackBar(
+              duration: const Duration(seconds: 2),
+              content: Text('تم إضافة العنصر بنجاح'),
+            ),
           );
         }
       } catch (e) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('فشل إضافة العنصر: ${e.toString()}')),
+            SnackBar(
+              duration: const Duration(seconds: 2),
+              content: Text('فشل إضافة العنصر: ${e.toString()}'),
+            ),
           );
         }
       }

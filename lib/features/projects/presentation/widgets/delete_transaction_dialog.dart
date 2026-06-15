@@ -18,9 +18,7 @@ class DeleteTransactionDialog extends StatelessWidget {
     return AlertDialog(
       backgroundColor: AppColors.cardBackground,
       title: const Text('حذف المعاملة'),
-      content: Text(
-        'هل أنت متأكد من حذف "${transaction.description}"؟',
-      ),
+      content: Text('هل أنت متأكد من حذف "${transaction.description}"؟'),
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
@@ -31,10 +29,7 @@ class DeleteTransactionDialog extends StatelessWidget {
             Navigator.of(context).pop();
             onConfirm();
           },
-          child: const Text(
-            'حذف',
-            style: TextStyle(color: AppColors.error),
-          ),
+          child: const Text('حذف', style: TextStyle(color: AppColors.error)),
         ),
       ],
     );

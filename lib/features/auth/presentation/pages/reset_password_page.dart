@@ -55,6 +55,7 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
           if (state is ResetPasswordSuccess) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
+                duration: const Duration(seconds: 2),
                 content: Text(state.message),
                 backgroundColor: AppColors.success,
               ),
@@ -80,6 +81,7 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
           } else if (state is ResetPasswordError) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
+                duration: const Duration(seconds: 2),
                 content: Text(state.message),
                 backgroundColor: AppColors.error,
               ),

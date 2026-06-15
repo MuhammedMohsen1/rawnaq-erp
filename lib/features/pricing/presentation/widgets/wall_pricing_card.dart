@@ -107,7 +107,10 @@ class _WallPricingCardState extends State<WallPricingCard> {
                 const SizedBox(width: 16),
                 // Status Badge
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 5),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 5,
+                    vertical: 5,
+                  ),
                   decoration: BoxDecoration(
                     color: const Color(0xFF2A313D),
                     border: Border.all(color: const Color(0xFF363C4A)),
@@ -120,7 +123,9 @@ class _WallPricingCardState extends State<WallPricingCard> {
                         width: 24,
                         height: 24,
                         decoration: BoxDecoration(
-                          color: _getStatusColor(widget.wall.status).withOpacity(0.2),
+                          color: _getStatusColor(
+                            widget.wall.status,
+                          ).withOpacity(0.2),
                           borderRadius: BorderRadius.circular(4),
                         ),
                         child: Center(
@@ -162,7 +167,9 @@ class _WallPricingCardState extends State<WallPricingCard> {
                       _isExpanded = !_isExpanded;
                     });
                     if (widget.onWallChanged != null) {
-                      widget.onWallChanged!(widget.wall.copyWith(isExpanded: _isExpanded));
+                      widget.onWallChanged!(
+                        widget.wall.copyWith(isExpanded: _isExpanded),
+                      );
                     }
                   },
                   icon: Icon(
@@ -183,177 +190,188 @@ class _WallPricingCardState extends State<WallPricingCard> {
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                // Left: Image Gallery
-                Expanded(
-                  flex: 2,
-                  child: ImageGalleryWidget(
-                    imageUrls: widget.wall.imageUrls,
-                    selectedIndex: _selectedImageIndex,
-                    onImageSelected: (index) {
-                      setState(() {
-                        _selectedImageIndex = index;
-                      });
-                    },
-                    onAddImage: widget.onAddImage,
+                  // Left: Image Gallery
+                  Expanded(
+                    flex: 2,
+                    child: ImageGalleryWidget(
+                      imageUrls: widget.wall.imageUrls,
+                      selectedIndex: _selectedImageIndex,
+                      onImageSelected: (index) {
+                        setState(() {
+                          _selectedImageIndex = index;
+                        });
+                      },
+                      onAddImage: widget.onAddImage,
+                    ),
                   ),
-                ),
-                const SizedBox(width: 16),
-                // Right: Pricing Table
-                Expanded(
-                  flex: 3,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Table Header
-                      Container(
-                        height: 41.5,
-                        padding: const EdgeInsets.symmetric(horizontal: 8),
-                        child: Row(
-                          children: [
-                            Expanded(
-                              flex: 2,
-                              child: Text(
-                                'وصف العنصر',
-                                style: AppTextStyles.caption.copyWith(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w500,
-                                  color: const Color(0xFF6B7280),
+                  const SizedBox(width: 16),
+                  // Right: Pricing Table
+                  Expanded(
+                    flex: 3,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Table Header
+                        Container(
+                          height: 41.5,
+                          padding: const EdgeInsets.symmetric(horizontal: 8),
+                          child: Row(
+                            children: [
+                              Expanded(
+                                flex: 2,
+                                child: Text(
+                                  'وصف العنصر',
+                                  style: AppTextStyles.caption.copyWith(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w500,
+                                    color: const Color(0xFF6B7280),
+                                  ),
                                 ),
                               ),
-                            ),
-                            const SizedBox(width: 8),
-                            Expanded(
-                              flex: 2,
-                              child: Text(
-                                'التكلفة (دينار)',
-                                style: AppTextStyles.caption.copyWith(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w500,
-                                  color: const Color(0xFF6B7280),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                flex: 2,
+                                child: Text(
+                                  'التكلفة (دينار)',
+                                  style: AppTextStyles.caption.copyWith(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w500,
+                                    color: const Color(0xFF6B7280),
+                                  ),
+                                  textAlign: TextAlign.center,
                                 ),
-                                textAlign: TextAlign.center,
                               ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-                      // Table Rows
-                      ...widget.wall.items.asMap().entries.map((entry) {
-                        final index = entry.key;
-                        final item = entry.value;
-                        return PricingTableRow(
-                          item: item,
-                          isNewRow: item.unitPrice == null && item.quantity == null,
-                          onDelete: () {
-                            final newItems = List<PricingItem>.from(widget.wall.items);
-                            newItems.removeAt(index);
-                            final updatedWall = widget.wall.copyWith(
-                              items: newItems,
-                              subtotal: widget.wall.calculateSubtotal(),
-                            );
-                            widget.onWallChanged?.call(updatedWall);
-                          },
-                          onChanged: (updatedItem) {
-                            final newItems = List<PricingItem>.from(widget.wall.items);
-                            newItems[index] = updatedItem.copyWith(
-                              total: updatedItem.calculateTotal(),
-                            );
-                            final subtotal = newItems.fold<double>(0.0, (sum, item) => sum + item.total);
-                            final updatedWall = widget.wall.copyWith(
-                              items: newItems,
-                              subtotal: subtotal,
-                            );
-                            widget.onWallChanged?.call(updatedWall);
-                          },
-                        );
-                      }),
-                      // Add Item Row Button
-                      const SizedBox(height: 12),
-                      Container(
-                        height: 46,
-                        decoration: BoxDecoration(
-                          border: Border.all(
-                            color: const Color(0xFF4B5563),
-                          ),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: InkWell(
-                          onTap: widget.onAddItem,
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            const Icon(
-                              Icons.add,
-                              color: AppColors.textSecondary,
-                              size: 20,
-                            ),
-                            const SizedBox(width: 8),
-                            Text(
-                              'إضافة صف',
-                              style: AppTextStyles.bodyMedium.copyWith(
-                                fontSize: 14,
-                                fontWeight: FontWeight.w500,
-                                color: AppColors.textSecondary,
-                              ),
-                            ),
-                          ],
-                        ),
-                        ),
-                      ),
-                      // Subtotal
-                      const SizedBox(height: 16),
-                      Container(
-                        padding: const EdgeInsets.symmetric(vertical: 17.22, horizontal: 20),
-                        decoration: const BoxDecoration(
-                          border: Border(
-                            top: BorderSide(color: Color(0xFF363C4A)),
+                            ],
                           ),
                         ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(
-                              'المجموع الفرعي',
-                              style: AppTextStyles.bodyMedium.copyWith(
-                                fontSize: 14,
-                                fontWeight: FontWeight.w500,
-                                color: AppColors.textSecondary,
-                              ),
-                            ),
-                            Row(
+                        const SizedBox(height: 12),
+                        // Table Rows
+                        ...widget.wall.items.asMap().entries.map((entry) {
+                          final index = entry.key;
+                          final item = entry.value;
+                          return PricingTableRow(
+                            item: item,
+                            isNewRow:
+                                item.unitPrice == null && item.quantity == null,
+                            onDelete: () {
+                              final newItems = List<PricingItem>.from(
+                                widget.wall.items,
+                              );
+                              newItems.removeAt(index);
+                              final updatedWall = widget.wall.copyWith(
+                                items: newItems,
+                                subtotal: widget.wall.calculateSubtotal(),
+                              );
+                              widget.onWallChanged?.call(updatedWall);
+                            },
+                            onChanged: (updatedItem) {
+                              final newItems = List<PricingItem>.from(
+                                widget.wall.items,
+                              );
+                              newItems[index] = updatedItem.copyWith(
+                                total: updatedItem.calculateTotal(),
+                              );
+                              final subtotal = newItems.fold<double>(
+                                0.0,
+                                (sum, item) => sum + item.total,
+                              );
+                              final updatedWall = widget.wall.copyWith(
+                                items: newItems,
+                                subtotal: subtotal,
+                              );
+                              widget.onWallChanged?.call(updatedWall);
+                            },
+                          );
+                        }),
+                        // Add Item Row Button
+                        const SizedBox(height: 12),
+                        Container(
+                          height: 46,
+                          decoration: BoxDecoration(
+                            border: Border.all(color: const Color(0xFF4B5563)),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: InkWell(
+                            onTap: widget.onAddItem,
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                Text(
-                                  widget.wall.subtotal.toStringAsFixed(0).replaceAllMapped(
-                                    RegExp(r'(\d)(?=(\d{3})+(?!\d))'),
-                                    (Match m) => '${m[1]},',
-                                  ),
-                                  style: const TextStyle(
-                                    fontFamily: 'Menlo',
-                                    fontSize: 20,
-                                    fontWeight: FontWeight.w700,
-                                    color: AppColors.textPrimary,
-                                  ),
+                                const Icon(
+                                  Icons.add,
+                                  color: AppColors.textSecondary,
+                                  size: 20,
                                 ),
                                 const SizedBox(width: 8),
                                 Text(
-                                  'KD',
+                                  'إضافة صف',
                                   style: AppTextStyles.bodyMedium.copyWith(
                                     fontSize: 14,
-                                    color: const Color(0xFF6B7280),
+                                    fontWeight: FontWeight.w500,
+                                    color: AppColors.textSecondary,
                                   ),
                                 ),
                               ],
                             ),
-                          ],
+                          ),
                         ),
-                      ),
-                    ],
+                        // Subtotal
+                        const SizedBox(height: 16),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            vertical: 17.22,
+                            horizontal: 20,
+                          ),
+                          decoration: const BoxDecoration(
+                            border: Border(
+                              top: BorderSide(color: Color(0xFF363C4A)),
+                            ),
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                'المجموع الفرعي',
+                                style: AppTextStyles.bodyMedium.copyWith(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w500,
+                                  color: AppColors.textSecondary,
+                                ),
+                              ),
+                              Row(
+                                children: [
+                                  Text(
+                                    widget.wall.subtotal
+                                        .toStringAsFixed(0)
+                                        .replaceAllMapped(
+                                          RegExp(r'(\d)(?=(\d{3})+(?!\d))'),
+                                          (Match m) => '${m[1]},',
+                                        ),
+                                    style: const TextStyle(
+                                      fontFamily: 'Menlo',
+                                      fontSize: 20,
+                                      fontWeight: FontWeight.w700,
+                                      color: AppColors.textPrimary,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    'KD',
+                                    style: AppTextStyles.bodyMedium.copyWith(
+                                      fontSize: 14,
+                                      color: const Color(0xFF6B7280),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
             crossFadeState: _isExpanded
                 ? CrossFadeState.showSecond
                 : CrossFadeState.showFirst,
@@ -364,4 +382,3 @@ class _WallPricingCardState extends State<WallPricingCard> {
     );
   }
 }
-

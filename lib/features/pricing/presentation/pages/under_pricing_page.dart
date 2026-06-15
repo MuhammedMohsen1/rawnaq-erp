@@ -151,7 +151,7 @@ class _UnderPricingContentState extends State<_UnderPricingContent> {
             SnackBar(
               content: Text(state.message),
               backgroundColor: AppColors.error,
-              duration: const Duration(seconds: 4),
+              duration: const Duration(seconds: 2),
             ),
           );
         }
@@ -378,9 +378,12 @@ class _UnderPricingContentState extends State<_UnderPricingContent> {
         onSaveDraft: state.readOnly
             ? null
             : () {
-                ScaffoldMessenger.of(
-                  context,
-                ).showSnackBar(const SnackBar(content: Text('تم حفظ المسودة')));
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    duration: const Duration(seconds: 2),
+                    content: Text('تم حفظ المسودة'),
+                  ),
+                );
               },
         isDraft: currentStatus == 'DRAFT',
         isUnderPricing: currentStatus == 'UNDER_PRICING',
@@ -430,9 +433,12 @@ class _UnderPricingContentState extends State<_UnderPricingContent> {
       await ProjectsApiDataSource().deleteProject(projectId);
       if (!context.mounted) return;
       context.go(AppRoutes.archivedProjects);
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('تمت أرشفة المشروع')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          duration: const Duration(seconds: 2),
+          content: Text('تمت أرشفة المشروع'),
+        ),
+      );
     } catch (e) {
       if (context.mounted) {
         _showErrorMessage(context, 'فشل أرشفة المشروع', e);
@@ -446,14 +452,20 @@ class _UnderPricingContentState extends State<_UnderPricingContent> {
       try {
         await context.read<PricingCubit>().addItem(projectId, name);
         if (context.mounted) {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(const SnackBar(content: Text('تم إضافة البند بنجاح')));
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              duration: const Duration(seconds: 2),
+              content: Text('تم إضافة البند بنجاح'),
+            ),
+          );
         }
       } catch (e) {
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('فشل إضافة البند: ${e.toString()}')),
+            SnackBar(
+              duration: const Duration(seconds: 2),
+              content: Text('فشل إضافة البند: ${e.toString()}'),
+            ),
           );
         }
       }
@@ -473,7 +485,10 @@ class _UnderPricingContentState extends State<_UnderPricingContent> {
         );
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('تم إضافة البند الفرعية بنجاح')),
+            const SnackBar(
+              duration: const Duration(seconds: 2),
+              content: Text('تم إضافة البند الفرعية بنجاح'),
+            ),
           );
         }
       } catch (e) {
@@ -481,7 +496,7 @@ class _UnderPricingContentState extends State<_UnderPricingContent> {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text('فشل إضافة البند الفرعية: ${e.toString()}'),
-              duration: const Duration(seconds: 5),
+              duration: const Duration(seconds: 2),
             ),
           );
         }
@@ -732,7 +747,7 @@ class _UnderPricingContentState extends State<_UnderPricingContent> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('فشل حفظ الملاحظات: ${e.toString()}'),
-            duration: const Duration(seconds: 3),
+            duration: const Duration(seconds: 2),
           ),
         );
       }
@@ -744,13 +759,19 @@ class _UnderPricingContentState extends State<_UnderPricingContent> {
       await context.read<PricingCubit>().submitForApproval(projectId);
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('تم إرسال التسعير للتوقيع')),
+          const SnackBar(
+            duration: const Duration(seconds: 2),
+            content: Text('تم إرسال التسعير للتوقيع'),
+          ),
         );
       }
     } catch (e) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('فشل إرسال التسعير للتوقيع: ${e.toString()}')),
+          SnackBar(
+            duration: const Duration(seconds: 2),
+            content: Text('فشل إرسال التسعير للتوقيع: ${e.toString()}'),
+          ),
         );
       }
     }
@@ -907,7 +928,7 @@ class _UnderPricingContentState extends State<_UnderPricingContent> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('تم حفظ PDF بنجاح: ${savedFile.path}'),
-          duration: const Duration(seconds: 3),
+          duration: const Duration(seconds: 2),
           action: Platform.isWindows || Platform.isMacOS || Platform.isLinux
               ? SnackBarAction(
                   label: 'فتح',
@@ -986,7 +1007,7 @@ class _UnderPricingContentState extends State<_UnderPricingContent> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('تم حفظ الصورة بنجاح: ${savedFile.path}'),
-          duration: const Duration(seconds: 3),
+          duration: const Duration(seconds: 2),
         ),
       );
     }
@@ -1002,9 +1023,12 @@ class _UnderPricingContentState extends State<_UnderPricingContent> {
     final images = result['images'] as List<dynamic>? ?? [];
     if (images.isEmpty) {
       if (context.mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('لم يتم العثور على صور')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            duration: const Duration(seconds: 2),
+            content: Text('لم يتم العثور على صور'),
+          ),
+        );
       }
       return;
     }
@@ -1020,9 +1044,12 @@ class _UnderPricingContentState extends State<_UnderPricingContent> {
 
       if (outputDir == null) {
         if (context.mounted) {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(const SnackBar(content: Text('تم إلغاء حفظ الملفات')));
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              duration: const Duration(seconds: 2),
+              content: Text('تم إلغاء حفظ الملفات'),
+            ),
+          );
         }
         return;
       }
@@ -1063,7 +1090,7 @@ class _UnderPricingContentState extends State<_UnderPricingContent> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('تم حفظ ${savedFiles.length} صورة بنجاح'),
-          duration: const Duration(seconds: 3),
+          duration: const Duration(seconds: 2),
         ),
       );
     }
@@ -1082,7 +1109,7 @@ class _UnderPricingContentState extends State<_UnderPricingContent> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(errorMessage),
-        duration: const Duration(seconds: 5),
+        duration: const Duration(seconds: 2),
       ),
     );
   }

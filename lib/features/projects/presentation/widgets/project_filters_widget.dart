@@ -30,9 +30,7 @@ class ProjectFiltersWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // Filter managers (those with role = مدير مشروع)
-    final managers = teamMembers
-        .where((m) => m.role.contains('مدير'))
-        .toList();
+    final managers = teamMembers.where((m) => m.role.contains('مدير')).toList();
 
     return Wrap(
       spacing: 12,
@@ -45,14 +43,13 @@ class ProjectFiltersWidget extends StatelessWidget {
           hint: 'الحالة: الكل',
           icon: Icons.filter_list,
           items: [
-            const DropdownMenuItem(
-              value: null,
-              child: Text('الحالة: الكل'),
+            const DropdownMenuItem(value: null, child: Text('الحالة: الكل')),
+            ...ProjectStatus.values.map(
+              (status) => DropdownMenuItem(
+                value: status,
+                child: Text(status.arabicName),
+              ),
             ),
-            ...ProjectStatus.values.map((status) => DropdownMenuItem(
-              value: status,
-              child: Text(status.arabicName),
-            )),
           ],
           onChanged: onStatusChanged,
         ),
@@ -63,14 +60,13 @@ class ProjectFiltersWidget extends StatelessWidget {
           hint: 'مدير المشروع',
           icon: Icons.person_outline,
           items: [
-            const DropdownMenuItem(
-              value: null,
-              child: Text('مدير المشروع'),
+            const DropdownMenuItem(value: null, child: Text('مدير المشروع')),
+            ...managers.map(
+              (manager) => DropdownMenuItem(
+                value: manager.id,
+                child: Text(manager.name),
+              ),
             ),
-            ...managers.map((manager) => DropdownMenuItem(
-              value: manager.id,
-              child: Text(manager.name),
-            )),
           ],
           onChanged: onManagerChanged,
         ),
@@ -81,14 +77,11 @@ class ProjectFiltersWidget extends StatelessWidget {
           hint: 'عضو الفريق',
           icon: Icons.group_outlined,
           items: [
-            const DropdownMenuItem(
-              value: null,
-              child: Text('عضو الفريق'),
+            const DropdownMenuItem(value: null, child: Text('عضو الفريق')),
+            ...teamMembers.map(
+              (member) =>
+                  DropdownMenuItem(value: member.id, child: Text(member.name)),
             ),
-            ...teamMembers.map((member) => DropdownMenuItem(
-              value: member.id,
-              child: Text(member.name),
-            )),
           ],
           onChanged: onTeamMemberChanged,
         ),
@@ -132,7 +125,10 @@ class ProjectFiltersWidget extends StatelessWidget {
               Text(hint, style: AppTextStyles.inputHint),
             ],
           ),
-          icon: const Icon(Icons.keyboard_arrow_down, color: AppColors.textMuted),
+          icon: const Icon(
+            Icons.keyboard_arrow_down,
+            color: AppColors.textMuted,
+          ),
           dropdownColor: AppColors.cardBackground,
           style: AppTextStyles.inputText,
           items: items,
@@ -142,4 +138,3 @@ class ProjectFiltersWidget extends StatelessWidget {
     );
   }
 }
-

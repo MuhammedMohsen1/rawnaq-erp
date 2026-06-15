@@ -50,15 +50,27 @@ class ContractExportStep4Content extends StatelessWidget {
           label: 'نوع العقد',
           value: projectType == 'DESIGN' ? 'عقد تصميم' : 'عقد تنفيذ',
         ),
-        ContractExportReviewItem(label: 'الرقم المدني', value: civilIdController.text),
-        ContractExportReviewItem(label: 'عنوان المشروع', value: projectAddressController.text),
-        ContractExportReviewItem(label: 'عدد البنود', value: '$contractTermsCount بند'),
+        ContractExportReviewItem(
+          label: 'الرقم المدني',
+          value: civilIdController.text,
+        ),
+        ContractExportReviewItem(
+          label: 'عنوان المشروع',
+          value: projectAddressController.text,
+        ),
+        ContractExportReviewItem(
+          label: 'عدد البنود',
+          value: '$contractTermsCount بند',
+        ),
         if (projectType == 'DESIGN')
           ContractExportReviewItem(
             label: 'عدد عناصر المساحة',
             value: '$designScopeCount عنصر',
           ),
-        ContractExportReviewItem(label: 'عدد الدفعات', value: '$paymentPhasesCount دفعة'),
+        ContractExportReviewItem(
+          label: 'عدد الدفعات',
+          value: '$paymentPhasesCount دفعة',
+        ),
         const SizedBox(height: 24),
         SizedBox(
           width: double.infinity,

@@ -320,12 +320,13 @@ class _GanttChartPageState extends State<GanttChartPage>
                     'تم إضافة المهمة: ${task.name}\nتم تعديل الوقت تلقائياً لتجنب التعارض',
                   ),
                   backgroundColor: AppColors.warning,
-                  duration: const Duration(seconds: 4),
+                  duration: const Duration(seconds: 2),
                 ),
               );
             } else {
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
+                  duration: const Duration(seconds: 2),
                   content: Text('تم إضافة المهمة: ${task.name}'),
                   backgroundColor: AppColors.statusOnHold,
                 ),
@@ -377,13 +378,14 @@ class _GanttChartPageState extends State<GanttChartPage>
             '$action: ${task.name}\nتم تعديل الوقت تلقائياً لتجنب التعارض',
           ),
           backgroundColor: AppColors.warning,
-          duration: const Duration(seconds: 4),
+          duration: const Duration(seconds: 2),
         ),
       );
     } else {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
+          duration: const Duration(seconds: 2),
           content: Text('$action: ${task.name}'),
           backgroundColor: AppColors.statusCompleted,
         ),
@@ -409,6 +411,7 @@ class _GanttChartPageState extends State<GanttChartPage>
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
+          duration: const Duration(seconds: 2),
           content: Text('تم تعديل مدة المهمة: ${task.name}'),
           backgroundColor: AppColors.statusCompleted,
         ),
@@ -433,13 +436,14 @@ class _GanttChartPageState extends State<GanttChartPage>
             'تم تعديل مدة المهمة: ${task.name}\nتم تعديل الوقت تلقائياً لتجنب التعارض',
           ),
           backgroundColor: AppColors.warning,
-          duration: const Duration(seconds: 4),
+          duration: const Duration(seconds: 2),
         ),
       );
     } else {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
+          duration: const Duration(seconds: 2),
           content: Text('تم تعديل مدة المهمة: ${task.name}'),
           backgroundColor: AppColors.statusCompleted,
         ),
@@ -490,6 +494,7 @@ class _GanttChartPageState extends State<GanttChartPage>
               .then((_) => _refreshTasksPreservingTimeline());
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
+              duration: const Duration(seconds: 2),
               content: Text('تم حذف المهمة: ${task.name}'),
               backgroundColor: AppColors.statusDelayed,
             ),

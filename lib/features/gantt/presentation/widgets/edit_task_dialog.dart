@@ -569,6 +569,7 @@ class _EditTaskDialogState extends State<EditTaskDialog> {
     if (_assigneeId == null && !remainsDraft) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
+          duration: const Duration(seconds: 2),
           content: Text('يرجى اختيار الموظف المسؤول'),
           backgroundColor: AppColors.statusDelayed,
         ),
@@ -624,6 +625,7 @@ class _EditTaskDialogState extends State<EditTaskDialog> {
       setState(() => _isSaving = false);
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
+          duration: const Duration(seconds: 2),
           content: Text('تعذر حفظ التغييرات'),
           backgroundColor: AppColors.statusDelayed,
         ),

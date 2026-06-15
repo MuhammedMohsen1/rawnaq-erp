@@ -458,7 +458,7 @@ class _ProjectsListPageState extends State<ProjectsListPage> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('فشل نقل المشروع إلى التنفيذ: $e'),
-          duration: const Duration(seconds: 5),
+          duration: const Duration(seconds: 2),
         ),
       );
     }

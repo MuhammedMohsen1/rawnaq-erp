@@ -40,4 +40,3 @@ class TeamMemberEntity extends Equatable {
     );
   }
 }
-

@@ -1,10 +1,6 @@
 import 'pricing_item.dart';
 
-enum ExpenseGroupStatus {
-  inProgress,
-  completed,
-  underPricing,
-}
+enum ExpenseGroupStatus { inProgress, completed, underPricing }
 
 class ExpenseGroup {
   final String id;
@@ -45,4 +41,3 @@ class ExpenseGroup {
     return items.fold(0.0, (sum, item) => sum + item.total);
   }
 }
-

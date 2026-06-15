@@ -243,7 +243,10 @@ class _PricingSummarySidebarState extends State<PricingSummarySidebar> {
         _isRefreshingDefaultNotes = false;
       });
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('فشل تحديث الملاحظات: ${e.toString()}')),
+        SnackBar(
+          duration: const Duration(seconds: 2),
+          content: Text('فشل تحديث الملاحظات: ${e.toString()}'),
+        ),
       );
     }
   }

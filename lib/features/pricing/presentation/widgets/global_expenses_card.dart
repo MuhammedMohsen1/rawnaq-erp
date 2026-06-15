@@ -63,7 +63,10 @@ class _GlobalExpensesCardState extends State<GlobalExpensesCard> {
                 const Spacer(),
                 // Status Badge
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 5),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 5,
+                    vertical: 5,
+                  ),
                   decoration: BoxDecoration(
                     color: const Color(0xFF2A313D),
                     border: Border.all(color: const Color(0xFF363C4A)),
@@ -195,9 +198,7 @@ class _GlobalExpensesCardState extends State<GlobalExpensesCard> {
                   Container(
                     height: 46,
                     decoration: BoxDecoration(
-                      border: Border.all(
-                        color: const Color(0xFF4B5563),
-                      ),
+                      border: Border.all(color: const Color(0xFF4B5563)),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: InkWell(

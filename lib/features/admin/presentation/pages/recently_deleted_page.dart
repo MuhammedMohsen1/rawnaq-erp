@@ -259,6 +259,7 @@ class _RecentlyDeletedPageState extends State<RecentlyDeletedPage> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
+            duration: const Duration(seconds: 2),
             content: Text(
               'تمت الاستعادة بنجاح',
               textDirection: TextDirection.rtl,

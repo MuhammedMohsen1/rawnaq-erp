@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/services.dart';
 import 'package:open_file/open_file.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -67,7 +68,10 @@ class DesignChatBubble extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   if (activity.message.trim().isNotEmpty)
-                    Text(activity.message),
+                    _LinkifiedMessageText(
+                      message: activity.message,
+                      isMine: isMine,
+                    ),
                   if (activity.media != null) ...[
                     if (activity.message.trim().isNotEmpty)
                       const SizedBox(height: 8),
@@ -99,6 +103,189 @@ class DesignChatBubble extends StatelessWidget {
       ),
     );
   }
+}
+
+class _LinkifiedMessageText extends StatefulWidget {
+  final String message;
+  final bool isMine;
+
+  const _LinkifiedMessageText({required this.message, required this.isMine});
+
+  @override
+  State<_LinkifiedMessageText> createState() => _LinkifiedMessageTextState();
+}
+
+class _LinkifiedMessageTextState extends State<_LinkifiedMessageText> {
+  late List<_MessageSegment> _segments;
+  final List<TapGestureRecognizer> _recognizers = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _rebuildSegments();
+  }
+
+  @override
+  void didUpdateWidget(covariant _LinkifiedMessageText oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.message != widget.message) {
+      _rebuildSegments();
+    }
+  }
+
+  @override
+  void dispose() {
+    _disposeRecognizers();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final baseStyle = Theme.of(context).textTheme.bodyMedium;
+    final linkColor = widget.isMine
+        ? AppColors.secondary
+        : AppColors.primaryLight;
+
+    return RichText(
+      text: TextSpan(
+        style: baseStyle,
+        children: [
+          for (var index = 0; index < _segments.length; index++)
+            _segments[index].isLink
+                ? TextSpan(
+                    text: _segments[index].text,
+                    style: baseStyle?.copyWith(
+                      color: linkColor,
+                      decoration: TextDecoration.underline,
+                      fontWeight: FontWeight.w600,
+                    ),
+                    recognizer: _recognizers[index],
+                  )
+                : TextSpan(text: _segments[index].text),
+        ],
+      ),
+    );
+  }
+
+  void _rebuildSegments() {
+    _disposeRecognizers();
+    _segments = _splitMessageSegments(widget.message);
+    for (final segment in _segments) {
+      if (!segment.isLink) {
+        _recognizers.add(TapGestureRecognizer());
+        continue;
+      }
+      _recognizers.add(
+        TapGestureRecognizer()..onTap = () => _openLink(segment.text),
+      );
+    }
+  }
+
+  void _disposeRecognizers() {
+    for (final recognizer in _recognizers) {
+      recognizer.dispose();
+    }
+    _recognizers.clear();
+  }
+
+  Future<void> _openLink(String rawLink) async {
+    final uri = _messageLinkUri(rawLink);
+    if (uri == null) return;
+
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+      return;
+    }
+
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        duration: const Duration(seconds: 2),
+        content: Text('تعذر فتح الرابط'),
+      ),
+    );
+  }
+}
+
+class _MessageSegment {
+  final String text;
+  final bool isLink;
+
+  const _MessageSegment({required this.text, required this.isLink});
+}
+
+final RegExp _messageLinkPattern = RegExp(
+  r'((?:https?:\/\/|www\.)[^\s]+)',
+  caseSensitive: false,
+);
+
+List<_MessageSegment> _splitMessageSegments(String message) {
+  final segments = <_MessageSegment>[];
+  var currentIndex = 0;
+
+  for (final match in _messageLinkPattern.allMatches(message)) {
+    final rawMatch = match.group(0);
+    if (rawMatch == null || rawMatch.isEmpty) continue;
+
+    final trimmedMatch = _trimTrailingLinkPunctuation(rawMatch);
+    if (trimmedMatch.isEmpty) continue;
+    final trimmedLength = trimmedMatch.length;
+    final matchStart = match.start;
+    final matchEnd = matchStart + trimmedLength;
+
+    if (matchStart > currentIndex) {
+      segments.add(
+        _MessageSegment(
+          text: message.substring(currentIndex, matchStart),
+          isLink: false,
+        ),
+      );
+    }
+
+    segments.add(_MessageSegment(text: trimmedMatch, isLink: true));
+
+    if (match.end > matchEnd) {
+      segments.add(
+        _MessageSegment(
+          text: message.substring(matchEnd, match.end),
+          isLink: false,
+        ),
+      );
+    }
+
+    currentIndex = match.end;
+  }
+
+  if (currentIndex < message.length) {
+    segments.add(
+      _MessageSegment(text: message.substring(currentIndex), isLink: false),
+    );
+  }
+
+  return segments.isEmpty
+      ? [const _MessageSegment(text: '', isLink: false)]
+      : segments;
+}
+
+String _trimTrailingLinkPunctuation(String value) {
+  const trailingPunctuation = '.,!?;:)]}>"\'،؛';
+  var end = value.length;
+  while (end > 0 && trailingPunctuation.contains(value[end - 1])) {
+    end--;
+  }
+  return value.substring(0, end);
+}
+
+Uri? _messageLinkUri(String rawLink) {
+  final trimmed = rawLink.trim();
+  if (trimmed.isEmpty) return null;
+
+  final normalized = trimmed.toLowerCase().startsWith('www.')
+      ? 'https://$trimmed'
+      : trimmed;
+  final uri = Uri.tryParse(normalized);
+  if (uri == null || !uri.hasScheme) return null;
+  return uri;
 }
 
 class DesignAttachmentBubble extends StatelessWidget {
@@ -808,6 +995,7 @@ Future<void> downloadDesignMedia(
     if (!context.mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
+        duration: const Duration(seconds: 2),
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
         content: Row(
@@ -836,6 +1024,7 @@ Future<void> downloadDesignMedia(
 void _showDesignMediaSnackBar(BuildContext context, String message) {
   ScaffoldMessenger.of(context).showSnackBar(
     SnackBar(
+      duration: const Duration(seconds: 2),
       behavior: SnackBarBehavior.floating,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
       content: Text(message),

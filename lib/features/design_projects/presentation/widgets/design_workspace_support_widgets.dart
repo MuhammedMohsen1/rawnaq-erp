@@ -113,13 +113,19 @@ class DesignWorkspaceProjectHeader extends StatelessWidget {
       final refresh = DateTime.now().millisecondsSinceEpoch;
       context.go('${AppRoutes.projects}?refresh=$refresh');
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('تم تعليم مشروع التصميم كمكتمل')),
+        const SnackBar(
+          duration: const Duration(seconds: 2),
+          content: Text('تم تعليم مشروع التصميم كمكتمل'),
+        ),
       );
     } catch (error) {
       if (!context.mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('فشل إكمال المشروع: $error')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          duration: const Duration(seconds: 2),
+          content: Text('فشل إكمال المشروع: $error'),
+        ),
+      );
     }
   }
 }

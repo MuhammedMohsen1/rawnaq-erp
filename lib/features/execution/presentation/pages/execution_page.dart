@@ -50,7 +50,7 @@ class _ExecutionPageContent extends StatelessWidget {
             SnackBar(
               content: Text(state.message),
               backgroundColor: AppColors.error,
-              duration: const Duration(seconds: 4),
+              duration: const Duration(seconds: 2),
             ),
           );
         }
@@ -249,13 +249,19 @@ class _ExecutionLayout extends StatelessWidget {
       if (!context.mounted) return;
       final refreshToken = DateTime.now().millisecondsSinceEpoch;
       context.go('${AppRoutes.projects}?refresh=$refreshToken');
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('تم تعليم المشروع كمكتمل')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          duration: const Duration(seconds: 2),
+          content: Text('تم تعليم المشروع كمكتمل'),
+        ),
+      );
     } catch (e) {
       if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('فشل إكمال المشروع: ${e.toString()}')),
+        SnackBar(
+          duration: const Duration(seconds: 2),
+          content: Text('فشل إكمال المشروع: ${e.toString()}'),
+        ),
       );
     }
   }
@@ -320,12 +326,18 @@ class _ExecutionLayout extends StatelessWidget {
       if (!context.mounted) return;
       context.read<ExecutionCubit>().loadDashboard(project.id);
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('تمت إعادة المشروع إلى قيد التنفيذ')),
+        const SnackBar(
+          duration: const Duration(seconds: 2),
+          content: Text('تمت إعادة المشروع إلى قيد التنفيذ'),
+        ),
       );
     } catch (e) {
       if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('فشل إعادة المشروع: ${e.toString()}')),
+        SnackBar(
+          duration: const Duration(seconds: 2),
+          content: Text('فشل إعادة المشروع: ${e.toString()}'),
+        ),
       );
     }
   }
@@ -352,7 +364,10 @@ class _ExecutionLayout extends StatelessWidget {
         );
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('تم إلغاء تحصيل بند جدول الدفعات')),
+            const SnackBar(
+              duration: const Duration(seconds: 2),
+              content: Text('تم إلغاء تحصيل بند جدول الدفعات'),
+            ),
           );
         }
       } else {
@@ -362,14 +377,20 @@ class _ExecutionLayout extends StatelessWidget {
         );
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('تم تحصيل بند جدول الدفعات')),
+            const SnackBar(
+              duration: const Duration(seconds: 2),
+              content: Text('تم تحصيل بند جدول الدفعات'),
+            ),
           );
         }
       }
     } catch (e) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('فشل تحديث حالة التحصيل: ${e.toString()}')),
+          SnackBar(
+            duration: const Duration(seconds: 2),
+            content: Text('فشل تحديث حالة التحصيل: ${e.toString()}'),
+          ),
         );
       }
     }
@@ -385,7 +406,10 @@ class _ExecutionLayout extends StatelessWidget {
 
     if (availablePhases.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('لا توجد بنود متاحة في جدول الدفعات')),
+        const SnackBar(
+          duration: const Duration(seconds: 2),
+          content: Text('لا توجد بنود متاحة في جدول الدفعات'),
+        ),
       );
       return;
     }
@@ -409,6 +433,7 @@ class _ExecutionLayout extends StatelessWidget {
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
+              duration: const Duration(seconds: 2),
               content: Text('تم إرسال طلب بند جدول الدفعات للموافقة'),
             ),
           );
@@ -416,7 +441,10 @@ class _ExecutionLayout extends StatelessWidget {
       } catch (e) {
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('فشل إرسال الطلب: ${e.toString()}')),
+            SnackBar(
+              duration: const Duration(seconds: 2),
+              content: Text('فشل إرسال الطلب: ${e.toString()}'),
+            ),
           );
         }
       }
@@ -464,6 +492,7 @@ class _ExecutionLayout extends StatelessWidget {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
+            duration: const Duration(seconds: 2),
             content: Text(
               isAdmin
                   ? 'تم دفع بند جدول الدفعات'
@@ -475,7 +504,10 @@ class _ExecutionLayout extends StatelessWidget {
     } catch (e) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('فشل إرسال الطلب: ${e.toString()}')),
+          SnackBar(
+            duration: const Duration(seconds: 2),
+            content: Text('فشل إرسال الطلب: ${e.toString()}'),
+          ),
         );
       }
     }
@@ -492,13 +524,19 @@ class _ExecutionLayout extends StatelessWidget {
       );
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('تم قبول طلب بند جدول الدفعات')),
+          const SnackBar(
+            duration: const Duration(seconds: 2),
+            content: Text('تم قبول طلب بند جدول الدفعات'),
+          ),
         );
       }
     } catch (e) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('فشل قبول الطلب: ${e.toString()}')),
+          SnackBar(
+            duration: const Duration(seconds: 2),
+            content: Text('فشل قبول الطلب: ${e.toString()}'),
+          ),
         );
       }
     }
@@ -517,13 +555,19 @@ class _ExecutionLayout extends StatelessWidget {
       );
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('تم رفض طلب بند جدول الدفعات')),
+          const SnackBar(
+            duration: const Duration(seconds: 2),
+            content: Text('تم رفض طلب بند جدول الدفعات'),
+          ),
         );
       }
     } catch (e) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('فشل رفض الطلب: ${e.toString()}')),
+          SnackBar(
+            duration: const Duration(seconds: 2),
+            content: Text('فشل رفض الطلب: ${e.toString()}'),
+          ),
         );
       }
     }

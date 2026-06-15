@@ -51,9 +51,12 @@ class _ProjectAttachmentsPanelContent extends StatelessWidget {
     return BlocConsumer<ProjectAttachmentsCubit, ProjectAttachmentsState>(
       listener: (context, state) {
         if (state is ProjectAttachmentsError) {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(SnackBar(content: Text(state.message)));
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              duration: const Duration(seconds: 2),
+              content: Text(state.message),
+            ),
+          );
         }
       },
       builder: (context, state) {
@@ -135,7 +138,10 @@ class _ProjectAttachmentsPanelContent extends StatelessWidget {
 
     if (filePaths.isEmpty && fileBytes.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('تعذر قراءة الملفات المحددة')),
+        const SnackBar(
+          duration: const Duration(seconds: 2),
+          content: Text('تعذر قراءة الملفات المحددة'),
+        ),
       );
       return;
     }
@@ -149,9 +155,12 @@ class _ProjectAttachmentsPanelContent extends StatelessWidget {
     if (!context.mounted) return;
     if (context.read<ProjectAttachmentsCubit>().state
         is ProjectAttachmentsLoaded) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('تم رفع المرفقات بنجاح')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          duration: const Duration(seconds: 2),
+          content: Text('تم رفع المرفقات بنجاح'),
+        ),
+      );
     }
   }
 
@@ -187,9 +196,12 @@ class _ProjectAttachmentsPanelContent extends StatelessWidget {
     if (!context.mounted) return;
     if (context.read<ProjectAttachmentsCubit>().state
         is ProjectAttachmentsLoaded) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('تم حذف المرفق')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          duration: const Duration(seconds: 2),
+          content: Text('تم حذف المرفق'),
+        ),
+      );
     }
   }
 

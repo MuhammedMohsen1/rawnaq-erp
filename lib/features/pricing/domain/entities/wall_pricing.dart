@@ -1,10 +1,6 @@
 import 'pricing_item.dart';
 
-enum WallStatus {
-  inProgress,
-  completed,
-  underPricing,
-}
+enum WallStatus { inProgress, completed, underPricing }
 
 class WallPricing {
   final String id;
@@ -49,4 +45,3 @@ class WallPricing {
     return items.fold(0.0, (sum, item) => sum + item.total);
   }
 }
-

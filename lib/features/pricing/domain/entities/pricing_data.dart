@@ -45,9 +45,11 @@ class PricingData {
   }
 
   double calculateGrandTotal() {
-    final expenseGroupsTotal = expenseGroups.fold(0.0, (sum, group) => sum + group.subtotal);
+    final expenseGroupsTotal = expenseGroups.fold(
+      0.0,
+      (sum, group) => sum + group.subtotal,
+    );
     final wallsTotal = walls.fold(0.0, (sum, wall) => sum + wall.subtotal);
     return expenseGroupsTotal + wallsTotal;
   }
 }
-

@@ -127,7 +127,7 @@ class AuthRepositoryImpl implements AuthRepository {
             errorMessage = msg;
           }
         }
-        
+
         if (errorCode != null) {
           errorMessage = ResponseCodeTranslator.translate(errorCode);
         }

@@ -8,10 +8,7 @@ import '../../../../core/routing/app_router.dart';
 class ProjectBreadcrumb extends StatelessWidget {
   final String? projectName;
 
-  const ProjectBreadcrumb({
-    super.key,
-    this.projectName,
-  });
+  const ProjectBreadcrumb({super.key, this.projectName});
 
   @override
   Widget build(BuildContext context) {

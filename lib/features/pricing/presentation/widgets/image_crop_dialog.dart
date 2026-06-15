@@ -64,6 +64,7 @@ class _ImageCropDialogState extends State<ImageCropDialog> {
 
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
+          duration: const Duration(seconds: 2),
           content: Text('فشل في قص الصورة'),
           backgroundColor: AppColors.error,
         ),

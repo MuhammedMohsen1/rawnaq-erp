@@ -72,8 +72,11 @@ class AppointmentTooltip extends StatelessWidget {
             const SizedBox(height: 6),
           ],
           if (task.locationLink != null) ...[
-            _buildInfoRow(Icons.location_on_outlined, 'عرض الموقع',
-                isLink: true),
+            _buildInfoRow(
+              Icons.location_on_outlined,
+              'عرض الموقع',
+              isLink: true,
+            ),
           ],
 
           const SizedBox(height: 8),
@@ -151,7 +154,9 @@ class AppointmentDetailsDialog extends StatelessWidget {
                       const SizedBox(height: 4),
                       Container(
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 8, vertical: 2),
+                          horizontal: 8,
+                          vertical: 2,
+                        ),
                         decoration: BoxDecoration(
                           color: task.status.color.withValues(alpha: 0.15),
                           borderRadius: BorderRadius.circular(4),
@@ -255,10 +260,7 @@ class AppointmentDetailsDialog extends StatelessWidget {
                   color: AppColors.surfaceColor,
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: Text(
-                  task.notes!,
-                  style: AppTextStyles.bodyMedium,
-                ),
+                child: Text(task.notes!, style: AppTextStyles.bodyMedium),
               ),
             ],
 
@@ -405,12 +407,30 @@ class AppointmentDetailsDialog extends StatelessWidget {
   }
 
   String _formatDate(DateTime date) {
-    final days = ['الأحد', 'الإثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
-    final months = [
-      'يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو',
-      'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'
+    final days = [
+      'الأحد',
+      'الإثنين',
+      'الثلاثاء',
+      'الأربعاء',
+      'الخميس',
+      'الجمعة',
+      'السبت',
     ];
-    
+    final months = [
+      'يناير',
+      'فبراير',
+      'مارس',
+      'أبريل',
+      'مايو',
+      'يونيو',
+      'يوليو',
+      'أغسطس',
+      'سبتمبر',
+      'أكتوبر',
+      'نوفمبر',
+      'ديسمبر',
+    ];
+
     return '${days[date.weekday % 7]}، ${date.day} ${months[date.month - 1]} ${date.year}';
   }
 
@@ -423,16 +443,18 @@ class AppointmentDetailsDialog extends StatelessWidget {
 
   Future<void> _openLocation(String location) async {
     Uri uri;
-    
+
     // Check if it's already a URL
     if (location.startsWith('http://') || location.startsWith('https://')) {
       uri = Uri.parse(location);
     } else {
       // Treat as address, open in Google Maps
       final encoded = Uri.encodeComponent(location);
-      uri = Uri.parse('https://www.google.com/maps/search/?api=1&query=$encoded');
+      uri = Uri.parse(
+        'https://www.google.com/maps/search/?api=1&query=$encoded',
+      );
     }
-    
+
     if (await canLaunchUrl(uri)) {
       await launchUrl(uri, mode: LaunchMode.externalApplication);
     }
@@ -534,18 +556,16 @@ class _AppointmentCircleState extends State<AppointmentCircle> {
                 ],
               ),
               child: const Center(
-                child: Icon(Icons.calendar_today, color: Colors.white, size: 18),
+                child: Icon(
+                  Icons.calendar_today,
+                  color: Colors.white,
+                  size: 18,
+                ),
               ),
             ),
           ),
-          childWhenDragging: Opacity(
-            opacity: 0.3,
-            child: _buildCircle(),
-          ),
-          child: Tooltip(
-            message: 'انقر مرتين للتعديل',
-            child: _buildCircle(),
-          ),
+          childWhenDragging: Opacity(opacity: 0.3, child: _buildCircle()),
+          child: Tooltip(message: 'انقر مرتين للتعديل', child: _buildCircle()),
         ),
       ),
     );
@@ -561,14 +581,14 @@ class _AppointmentCircleState extends State<AppointmentCircle> {
         shape: BoxShape.circle,
         boxShadow: [
           BoxShadow(
-            color: widget.task.status.color.withValues(alpha: _isHovered ? 0.5 : 0.3),
+            color: widget.task.status.color.withValues(
+              alpha: _isHovered ? 0.5 : 0.3,
+            ),
             blurRadius: _isHovered ? 8 : 4,
             offset: const Offset(0, 2),
           ),
         ],
-        border: _isHovered
-            ? Border.all(color: Colors.white, width: 2)
-            : null,
+        border: _isHovered ? Border.all(color: Colors.white, width: 2) : null,
       ),
       child: Center(
         child: Icon(
@@ -580,4 +600,3 @@ class _AppointmentCircleState extends State<AppointmentCircle> {
     );
   }
 }
-

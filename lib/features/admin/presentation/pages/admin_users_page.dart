@@ -50,6 +50,7 @@ class _AdminUsersView extends StatelessWidget {
 
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
+            duration: const Duration(seconds: 2),
             content: Text(message, textDirection: TextDirection.rtl),
             backgroundColor: state.errorMessage == null
                 ? AppColors.success

@@ -14,14 +14,14 @@ class TaskEntity extends Equatable {
   final TaskStatus status;
   final String? assigneeId; // Nullable for draft tasks
   final TeamMemberEntity? assignee;
-  
+
   /// Start date and time of the task (includes time component)
   final DateTime startDate;
-  
+
   /// End date and time of the task (includes time component)
   /// For appointments, this equals startDate
   final DateTime endDate;
-  
+
   final String? notes;
   final DateTime? createdAt;
   final bool isDraft; // Draft tasks have no assignee
@@ -58,23 +58,23 @@ class TaskEntity extends Equatable {
 
   @override
   List<Object?> get props => [
-        id,
-        name,
-        taskType,
-        status,
-        assigneeId,
-        assignee,
-        startDate,
-        endDate,
-        notes,
-        createdAt,
-        isDraft,
-        projectId,
-        projectName,
-        customerName,
-        customerPhone,
-        locationLink,
-      ];
+    id,
+    name,
+    taskType,
+    status,
+    assigneeId,
+    assignee,
+    startDate,
+    endDate,
+    notes,
+    createdAt,
+    isDraft,
+    projectId,
+    projectName,
+    customerName,
+    customerPhone,
+    locationLink,
+  ];
 
   /// Create a copy with updated fields
   TaskEntity copyWith({
@@ -123,7 +123,11 @@ class TaskEntity extends Equatable {
 
   /// Get the duration in days (date-only comparison)
   int get durationDays {
-    final startDateOnly = DateTime(startDate.year, startDate.month, startDate.day);
+    final startDateOnly = DateTime(
+      startDate.year,
+      startDate.month,
+      startDate.day,
+    );
     final endDateOnly = DateTime(endDate.year, endDate.month, endDate.day);
     return endDateOnly.difference(startDateOnly).inDays + 1;
   }
@@ -146,16 +150,20 @@ class TaskEntity extends Equatable {
   bool get hasProject => projectId != null && projectName != null;
 
   /// Get start date only (without time)
-  DateTime get startDateOnly => DateTime(startDate.year, startDate.month, startDate.day);
+  DateTime get startDateOnly =>
+      DateTime(startDate.year, startDate.month, startDate.day);
 
   /// Get end date only (without time)
-  DateTime get endDateOnly => DateTime(endDate.year, endDate.month, endDate.day);
+  DateTime get endDateOnly =>
+      DateTime(endDate.year, endDate.month, endDate.day);
 
   /// Get start time as TimeOfDay
-  TimeOfDay get startTimeOfDay => TimeOfDay(hour: startDate.hour, minute: startDate.minute);
+  TimeOfDay get startTimeOfDay =>
+      TimeOfDay(hour: startDate.hour, minute: startDate.minute);
 
   /// Get end time as TimeOfDay
-  TimeOfDay get endTimeOfDay => TimeOfDay(hour: endDate.hour, minute: endDate.minute);
+  TimeOfDay get endTimeOfDay =>
+      TimeOfDay(hour: endDate.hour, minute: endDate.minute);
 
   /// Get formatted start time
   String get formattedStartTime {
@@ -175,7 +183,7 @@ class TaskEntity extends Equatable {
 
   /// Alias for backward compatibility - uses startDate time
   String? get formattedTaskTime => formattedStartTime;
-  
+
   /// Alias for appointments
   String? get formattedAppointmentTime => formattedStartTime;
 
@@ -193,12 +201,6 @@ class TaskEntity extends Equatable {
 
   /// Helper to create datetime from date and TimeOfDay
   static DateTime dateWithTimeOfDay(DateTime date, TimeOfDay time) {
-    return DateTime(
-      date.year,
-      date.month,
-      date.day,
-      time.hour,
-      time.minute,
-    );
+    return DateTime(date.year, date.month, date.day, time.hour, time.minute);
   }
 }

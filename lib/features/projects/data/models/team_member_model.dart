@@ -59,4 +59,3 @@ class TeamMemberModel extends TeamMemberEntity {
     );
   }
 }
-

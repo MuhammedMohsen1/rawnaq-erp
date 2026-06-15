@@ -323,7 +323,10 @@ class _DesignTimelinePanelState extends State<DesignTimelinePanel> {
 
   void _showOversizedFileMessage() {
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('حجم الملف يجب ألا يتجاوز 1GB')),
+      const SnackBar(
+        duration: const Duration(seconds: 2),
+        content: Text('حجم الملف يجب ألا يتجاوز 1GB'),
+      ),
     );
   }
 }

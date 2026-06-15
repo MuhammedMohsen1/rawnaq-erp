@@ -234,9 +234,12 @@ class ContractExportStep3Content extends StatelessWidget {
                         children: [
                           Expanded(
                             child: TextField(
-                              controller: paymentControllers[index]['percentage'],
-                              onChanged: (value) =>
-                                  onPercentageChanged(index, double.tryParse(value) ?? 0.0),
+                              controller:
+                                  paymentControllers[index]['percentage'],
+                              onChanged: (value) => onPercentageChanged(
+                                index,
+                                double.tryParse(value) ?? 0.0,
+                              ),
                               decoration: InputDecoration(
                                 labelText: 'النسبة %',
                                 prefixIcon: const Icon(
@@ -268,7 +271,10 @@ class ContractExportStep3Content extends StatelessWidget {
                                 ),
                                 isDense: true,
                               ),
-                              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                              keyboardType:
+                                  const TextInputType.numberWithOptions(
+                                    decimal: true,
+                                  ),
                               textDirection: TextDirection.ltr,
                               textAlign: TextAlign.center,
                               style: const TextStyle(
@@ -282,8 +288,10 @@ class ContractExportStep3Content extends StatelessWidget {
                           Expanded(
                             child: TextField(
                               controller: paymentControllers[index]['amount'],
-                              onChanged: (value) =>
-                                  onAmountChanged(index, double.tryParse(value) ?? 0.0),
+                              onChanged: (value) => onAmountChanged(
+                                index,
+                                double.tryParse(value) ?? 0.0,
+                              ),
                               decoration: InputDecoration(
                                 labelText: 'المبلغ',
                                 suffixText: 'د.ك',
@@ -316,7 +324,10 @@ class ContractExportStep3Content extends StatelessWidget {
                                 ),
                                 isDense: true,
                               ),
-                              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                              keyboardType:
+                                  const TextInputType.numberWithOptions(
+                                    decimal: true,
+                                  ),
                               textDirection: TextDirection.ltr,
                               textAlign: TextAlign.center,
                               style: const TextStyle(

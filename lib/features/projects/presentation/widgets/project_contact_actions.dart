@@ -88,9 +88,12 @@ class ProjectContactActions extends StatelessWidget {
     }
 
     if (!context.mounted) return;
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(const SnackBar(content: Text('تعذر فتح تطبيق الهاتف')));
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        duration: const Duration(seconds: 2),
+        content: Text('تعذر فتح تطبيق الهاتف'),
+      ),
+    );
   }
 
   Future<void> _launchMap(BuildContext context, String link) async {
@@ -101,9 +104,12 @@ class ProjectContactActions extends StatelessWidget {
     }
 
     if (!context.mounted) return;
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(const SnackBar(content: Text('تعذر فتح رابط خرائط جوجل')));
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        duration: const Duration(seconds: 2),
+        content: Text('تعذر فتح رابط خرائط جوجل'),
+      ),
+    );
   }
 
   Uri? _mapUri(String link) {

@@ -867,6 +867,7 @@ class _AddTaskDialogState extends State<AddTaskDialog>
   void _showError(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
+        duration: const Duration(seconds: 2),
         content: Text(message),
         backgroundColor: AppColors.statusDelayed,
       ),

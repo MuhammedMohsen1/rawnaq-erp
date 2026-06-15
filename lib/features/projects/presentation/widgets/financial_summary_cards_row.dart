@@ -6,10 +6,7 @@ import 'financial_summary_card.dart';
 class FinancialSummaryCardsRow extends StatelessWidget {
   final ProjectFinancialSummary financialSummary;
 
-  const FinancialSummaryCardsRow({
-    super.key,
-    required this.financialSummary,
-  });
+  const FinancialSummaryCardsRow({super.key, required this.financialSummary});
 
   @override
   Widget build(BuildContext context) {

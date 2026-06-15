@@ -115,7 +115,7 @@ mixin PricingItemCardImageActions on State<PricingItemCard> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('فشل اختيار الصور: $e'),
-            duration: const Duration(seconds: 5),
+            duration: const Duration(seconds: 2),
           ),
         );
       }
@@ -161,7 +161,7 @@ mixin PricingItemCardImageActions on State<PricingItemCard> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(errorMessage),
-            duration: const Duration(seconds: 5),
+            duration: const Duration(seconds: 2),
           ),
         );
       }
@@ -221,6 +221,7 @@ mixin PricingItemCardImageActions on State<PricingItemCard> {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
+              duration: const Duration(seconds: 2),
               content: Text(
                 'تم حذف الصورة ولكن فشل تحديث البيانات: ${e.toString()}',
               ),
@@ -241,7 +242,10 @@ mixin PricingItemCardImageActions on State<PricingItemCard> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('فشل حذف الصورة: ${e.toString()}')),
+          SnackBar(
+            duration: const Duration(seconds: 2),
+            content: Text('فشل حذف الصورة: ${e.toString()}'),
+          ),
         );
       }
     } finally {
@@ -306,7 +310,7 @@ mixin PricingItemCardImageActions on State<PricingItemCard> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('فشل رفع الصور: $e'),
-            duration: const Duration(seconds: 5),
+            duration: const Duration(seconds: 2),
           ),
         );
       }
@@ -410,7 +414,10 @@ mixin PricingItemCardImageActions on State<PricingItemCard> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('فشل قص الصورة: ${e.toString()}')),
+          SnackBar(
+            duration: const Duration(seconds: 2),
+            content: Text('فشل قص الصورة: ${e.toString()}'),
+          ),
         );
       }
     } finally {

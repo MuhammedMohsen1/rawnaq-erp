@@ -61,6 +61,7 @@ class _MyTasksPageState extends State<MyTasksPage> {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
+          duration: const Duration(seconds: 2),
           content: Text('تم تحديث حالة المهمة: ${task.name}'),
           backgroundColor: AppColors.statusCompleted,
         ),
@@ -69,6 +70,7 @@ class _MyTasksPageState extends State<MyTasksPage> {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
+          duration: const Duration(seconds: 2),
           content: Text('تعذر تحديث حالة المهمة'),
           backgroundColor: AppColors.statusDelayed,
         ),

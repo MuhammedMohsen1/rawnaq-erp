@@ -78,7 +78,7 @@ class _PricingNotesEditorState extends State<PricingNotesEditor> {
           backgroundColor: AppColors.primary,
           behavior: SnackBarBehavior.floating,
           margin: const EdgeInsets.all(16),
-          duration: const Duration(seconds: 3),
+          duration: const Duration(seconds: 2),
         ),
       );
     } catch (e) {

@@ -22,7 +22,10 @@ class LoginResponse {
     final data = json['data'] as Map<String, dynamic>;
     return LoginResponse(
       success: json['success'] as bool,
-      code: json['code'] as String? ?? json['message'] as String? ?? 'SUCCESS', // Support legacy message field
+      code:
+          json['code'] as String? ??
+          json['message'] as String? ??
+          'SUCCESS', // Support legacy message field
       user: User.fromJson(data['user'] as Map<String, dynamic>),
       token: data['token'] as String,
       refreshToken: data['refreshToken'] as String,

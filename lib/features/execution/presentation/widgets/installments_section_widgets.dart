@@ -36,8 +36,10 @@ class InstallmentsHeader extends StatelessWidget {
               ),
               if (isAdminOrManager)
                 Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 6,
+                  ),
                   decoration: BoxDecoration(
                     color: AppColors.success.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(20),
@@ -214,9 +216,7 @@ class InstallmentsActionButton extends StatelessWidget {
           backgroundColor: isCollected
               ? AppColors.warning.withValues(alpha: 0.1)
               : AppColors.success.withValues(alpha: 0.1),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(8),
-          ),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
         ),
         child: Text(
           isCollected ? 'إلغاء' : 'تحصيل',

@@ -8,7 +8,8 @@ class SettingsApiDataSource {
   SettingsApiDataSource({ApiClient? apiClient})
     : _apiClient = apiClient ?? ApiClient();
 
-  Future<Map<String, List<Map<String, String>>>> getDefaultContractTerms() async {
+  Future<Map<String, List<Map<String, String>>>>
+  getDefaultContractTerms() async {
     final response = await _apiClient.get(ApiEndpoints.contractTerms);
 
     final responseData = response.data as Map<String, dynamic>;

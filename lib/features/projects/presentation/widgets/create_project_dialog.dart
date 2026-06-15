@@ -770,6 +770,7 @@ class _CreateProjectDialogState extends State<CreateProjectDialog> {
       if (_selectedProjectType == null) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
+            duration: const Duration(seconds: 2),
             content: Text('يرجى اختيار نوع المشروع'),
             backgroundColor: AppColors.error,
           ),
@@ -798,6 +799,7 @@ class _CreateProjectDialogState extends State<CreateProjectDialog> {
       if (_selectedDepartmentId == null || _departments.isEmpty) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
+            duration: const Duration(seconds: 2),
             content: Text('خطأ في تحديد القسم'),
             backgroundColor: AppColors.error,
           ),
@@ -819,6 +821,7 @@ class _CreateProjectDialogState extends State<CreateProjectDialog> {
         if ((paymentsTotal - projectValue).abs() > 0.01) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
+              duration: const Duration(seconds: 2),
               content: Text('إجمالي الدفعات يجب أن يساوي قيمة المشروع'),
               backgroundColor: AppColors.error,
             ),

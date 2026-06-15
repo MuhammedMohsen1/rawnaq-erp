@@ -174,7 +174,10 @@ class _LoadedContent extends StatelessWidget {
                 : () => _addNewExpense(context),
             onLoadMore: () {
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('تحميل المزيد - قريباً')),
+                const SnackBar(
+                  duration: const Duration(seconds: 2),
+                  content: Text('تحميل المزيد - قريباً'),
+                ),
               );
             },
           ),
@@ -214,7 +217,10 @@ class _LoadedContent extends StatelessWidget {
 
     if (filePaths.isEmpty && fileBytes.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('تعذر قراءة الملفات المحددة')),
+        const SnackBar(
+          duration: const Duration(seconds: 2),
+          content: Text('تعذر قراءة الملفات المحددة'),
+        ),
       );
       return;
     }
@@ -227,9 +233,12 @@ class _LoadedContent extends StatelessWidget {
     if (!context.mounted) return;
     final state = context.read<ProjectFinancialCubit>().state;
     if (state is ProjectFinancialLoaded) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('تم رفع المرفقات بنجاح')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          duration: const Duration(seconds: 2),
+          content: Text('تم رفع المرفقات بنجاح'),
+        ),
+      );
     }
   }
 
@@ -262,9 +271,12 @@ class _LoadedContent extends StatelessWidget {
     if (!context.mounted) return;
     final state = context.read<ProjectFinancialCubit>().state;
     if (state is ProjectFinancialLoaded) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('تم حذف المرفق')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          duration: const Duration(seconds: 2),
+          content: Text('تم حذف المرفق'),
+        ),
+      );
     }
   }
 
@@ -312,9 +324,12 @@ class _LoadedContent extends StatelessWidget {
       transaction: transaction,
       onConfirm: () {
         context.read<ProjectFinancialCubit>().deleteTransaction(transaction.id);
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('تم حذف المعاملة')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            duration: const Duration(seconds: 2),
+            content: Text('تم حذف المعاملة'),
+          ),
+        );
       },
     );
   }
@@ -391,6 +406,7 @@ class _ContractActions extends StatelessWidget {
       if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
+          duration: const Duration(seconds: 2),
           content: Text(
             project.type == ProjectType.design
                 ? 'تم فتح مرحلة العمل على مشروع التصميم'
@@ -400,9 +416,12 @@ class _ContractActions extends StatelessWidget {
       );
     } catch (e) {
       if (!context.mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('فشل تأكيد العقد: $e')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          duration: const Duration(seconds: 2),
+          content: Text('فشل تأكيد العقد: $e'),
+        ),
+      );
     }
   }
 

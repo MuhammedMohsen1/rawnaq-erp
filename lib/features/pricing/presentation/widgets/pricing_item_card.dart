@@ -612,7 +612,10 @@ class _PricingItemCardState extends State<PricingItemCard>
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('فشل حذف العنصر: ${e.toString()}')),
+          SnackBar(
+            duration: const Duration(seconds: 2),
+            content: Text('فشل حذف العنصر: ${e.toString()}'),
+          ),
         );
       }
     }
@@ -860,7 +863,10 @@ class _PricingItemCardState extends State<PricingItemCard>
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('فشل نسخ العنصر: ${e.toString()}')),
+          SnackBar(
+            duration: const Duration(seconds: 2),
+            content: Text('فشل نسخ العنصر: ${e.toString()}'),
+          ),
         );
       }
     }
@@ -920,7 +926,10 @@ class _PricingItemCardState extends State<PricingItemCard>
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('فشل نسخ البند الفرعية: ${e.toString()}')),
+          SnackBar(
+            duration: const Duration(seconds: 2),
+            content: Text('فشل نسخ البند الفرعية: ${e.toString()}'),
+          ),
         );
       }
     }
@@ -1033,7 +1042,10 @@ class _PricingItemCardState extends State<PricingItemCard>
       } catch (e) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('فشل تحديث العنصر: ${e.toString()}')),
+            SnackBar(
+              duration: const Duration(seconds: 2),
+              content: Text('فشل تحديث العنصر: ${e.toString()}'),
+            ),
           );
         }
       }
@@ -1145,7 +1157,10 @@ class _PricingItemCardState extends State<PricingItemCard>
       } catch (e) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('فشل تحديث البند الفرعية: ${e.toString()}')),
+            SnackBar(
+              duration: const Duration(seconds: 2),
+              content: Text('فشل تحديث البند الفرعية: ${e.toString()}'),
+            ),
           );
         }
       }
@@ -1271,7 +1286,10 @@ class _PricingItemCardState extends State<PricingItemCard>
         }
         _profitMargins[subItem.id] = subItem.profitMargin;
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('فشل تحديث نسبة الربح: ${e.toString()}')),
+          SnackBar(
+            duration: const Duration(seconds: 2),
+            content: Text('فشل تحديث نسبة الربح: ${e.toString()}'),
+          ),
         );
       }
     }
@@ -1305,6 +1323,7 @@ class _PricingItemCardState extends State<PricingItemCard>
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
+            duration: const Duration(seconds: 2),
             content: Text('فشل تحديث وصف البند الفرعية: ${e.toString()}'),
           ),
         );
@@ -1334,7 +1353,10 @@ class _PricingItemCardState extends State<PricingItemCard>
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('فشل حذف البند الفرعية: ${e.toString()}')),
+          SnackBar(
+            duration: const Duration(seconds: 2),
+            content: Text('فشل حذف البند الفرعية: ${e.toString()}'),
+          ),
         );
       }
     }
@@ -1495,7 +1517,10 @@ class _PricingItemCardState extends State<PricingItemCard>
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('فشل حذف العنصر: ${e.toString()}')),
+          SnackBar(
+            duration: const Duration(seconds: 2),
+            content: Text('فشل حذف العنصر: ${e.toString()}'),
+          ),
         );
       }
     }
@@ -1599,7 +1624,10 @@ class _PricingItemCardState extends State<PricingItemCard>
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('فشل حفظ العنصر: ${e.toString()}')),
+          SnackBar(
+            duration: const Duration(seconds: 2),
+            content: Text('فشل حفظ العنصر: ${e.toString()}'),
+          ),
         );
       }
     }
@@ -1749,7 +1777,10 @@ class _PricingItemCardState extends State<PricingItemCard>
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('فشل تحديث حالة الظهور: ${e.toString()}')),
+          SnackBar(
+            duration: const Duration(seconds: 2),
+            content: Text('فشل تحديث حالة الظهور: ${e.toString()}'),
+          ),
         );
       }
     }
@@ -1807,6 +1838,7 @@ class _PricingItemCardState extends State<PricingItemCard>
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
+            duration: const Duration(seconds: 2),
             content: Text('فشل تحديث حالة ظهور العنصر: ${e.toString()}'),
           ),
         );
@@ -1859,7 +1891,10 @@ class _PricingItemCardState extends State<PricingItemCard>
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('فشل تحديث حالة الظهور: ${e.toString()}')),
+          SnackBar(
+            duration: const Duration(seconds: 2),
+            content: Text('فشل تحديث حالة الظهور: ${e.toString()}'),
+          ),
         );
       }
     }
@@ -1932,7 +1967,10 @@ class _PricingItemCardState extends State<PricingItemCard>
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('فشل تحديث العنصر: ${e.toString()}')),
+          SnackBar(
+            duration: const Duration(seconds: 2),
+            content: Text('فشل تحديث العنصر: ${e.toString()}'),
+          ),
         );
       }
     }

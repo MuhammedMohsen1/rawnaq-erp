@@ -435,9 +435,12 @@ void showDeleteInstallmentConfirmation(
             } catch (e) {
               if (context.mounted) {
                 final message = 'فشل حذف الدفعة: ${e.toString()}';
-                ScaffoldMessenger.of(
-                  context,
-                ).showSnackBar(SnackBar(content: Text(message)));
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    duration: const Duration(seconds: 2),
+                    content: Text(message),
+                  ),
+                );
               }
             }
           },
@@ -658,9 +661,12 @@ class _AddExpenseRowState extends State<AddExpenseRow> {
   Future<void> _submitExpense() async {
     final name = _nameController.text.trim();
     if (name.isEmpty) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('يرجى إدخال اسم المصروف')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          duration: const Duration(seconds: 2),
+          content: Text('يرجى إدخال اسم المصروف'),
+        ),
+      );
       return;
     }
 
@@ -671,9 +677,12 @@ class _AddExpenseRowState extends State<AddExpenseRow> {
     if (_costType == CostType.total) {
       amount = parseNumber(_amountController.text);
       if (amount == null || amount <= 0) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('يرجى إدخال مبلغ صحيح')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            duration: const Duration(seconds: 2),
+            content: Text('يرجى إدخال مبلغ صحيح'),
+          ),
+        );
         return;
       }
     } else {
@@ -684,7 +693,10 @@ class _AddExpenseRowState extends State<AddExpenseRow> {
           unitCost <= 0 ||
           quantity <= 0) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('يرجى إدخال سعر الوحدة والكمية')),
+          const SnackBar(
+            duration: const Duration(seconds: 2),
+            content: Text('يرجى إدخال سعر الوحدة والكمية'),
+          ),
         );
         return;
       }
@@ -708,6 +720,7 @@ class _AddExpenseRowState extends State<AddExpenseRow> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
+            duration: const Duration(seconds: 2),
             content: Text('تم إضافة المصروف بنجاح'),
             backgroundColor: AppColors.success,
           ),
@@ -718,6 +731,7 @@ class _AddExpenseRowState extends State<AddExpenseRow> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
+            duration: const Duration(seconds: 2),
             content: Text('فشل إضافة المصروف: ${e.toString()}'),
             backgroundColor: AppColors.error,
           ),
@@ -1041,9 +1055,12 @@ class _EditableExpenseRowState extends State<EditableExpenseRow> {
   Future<void> _submitUpdate() async {
     final name = _nameController.text.trim();
     if (name.isEmpty) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('يرجى إدخال اسم المصروف')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          duration: const Duration(seconds: 2),
+          content: Text('يرجى إدخال اسم المصروف'),
+        ),
+      );
       return;
     }
 
@@ -1054,9 +1071,12 @@ class _EditableExpenseRowState extends State<EditableExpenseRow> {
     if (_costType == CostType.total) {
       amount = double.tryParse(_amountController.text);
       if (amount == null || amount <= 0) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('يرجى إدخال مبلغ صحيح')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            duration: const Duration(seconds: 2),
+            content: Text('يرجى إدخال مبلغ صحيح'),
+          ),
+        );
         return;
       }
     } else {
@@ -1067,7 +1087,10 @@ class _EditableExpenseRowState extends State<EditableExpenseRow> {
           unitCost <= 0 ||
           quantity <= 0) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('يرجى إدخال سعر الوحدة والكمية')),
+          const SnackBar(
+            duration: const Duration(seconds: 2),
+            content: Text('يرجى إدخال سعر الوحدة والكمية'),
+          ),
         );
         return;
       }
@@ -1090,6 +1113,7 @@ class _EditableExpenseRowState extends State<EditableExpenseRow> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
+            duration: const Duration(seconds: 2),
             content: Text('تم تحديث المصروف بنجاح'),
             backgroundColor: AppColors.success,
           ),
@@ -1099,6 +1123,7 @@ class _EditableExpenseRowState extends State<EditableExpenseRow> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
+            duration: const Duration(seconds: 2),
             content: Text('فشل تحديث المصروف: ${e.toString()}'),
             backgroundColor: AppColors.error,
           ),
@@ -1358,7 +1383,10 @@ class _EditableInstallmentRowState extends State<EditableInstallmentRow> {
 
     if (name.isEmpty && !hasOriginal && !hasRequested) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('يرجى إدخال الاسم أو المبالغ')),
+        const SnackBar(
+          duration: const Duration(seconds: 2),
+          content: Text('يرجى إدخال الاسم أو المبالغ'),
+        ),
       );
       return;
     }
@@ -1381,6 +1409,7 @@ class _EditableInstallmentRowState extends State<EditableInstallmentRow> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
+            duration: const Duration(seconds: 2),
             content: Text('تم تحديث الدفعة بنجاح'),
             backgroundColor: AppColors.success,
           ),
@@ -1390,7 +1419,11 @@ class _EditableInstallmentRowState extends State<EditableInstallmentRow> {
       if (mounted) {
         final message = 'فشل تحديث الدفعة: ${e.toString()}';
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(message), backgroundColor: AppColors.error),
+          SnackBar(
+            duration: const Duration(seconds: 2),
+            content: Text(message),
+            backgroundColor: AppColors.error,
+          ),
         );
         context.read<ExecutionCubit>().cancelEditing(widget.transaction.id);
       }
@@ -1524,17 +1557,23 @@ class _AddIncomeRowState extends State<AddIncomeRow> {
   Future<void> _submitIncome() async {
     final description = _descriptionController.text.trim();
     if (description.isEmpty) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('يرجى إدخال وصف الإيراد')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          duration: const Duration(seconds: 2),
+          content: Text('يرجى إدخال وصف الإيراد'),
+        ),
+      );
       return;
     }
 
     final amount = double.tryParse(_amountController.text);
     if (amount == null || amount <= 0) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('يرجى إدخال مبلغ صحيح')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          duration: const Duration(seconds: 2),
+          content: Text('يرجى إدخال مبلغ صحيح'),
+        ),
+      );
       return;
     }
 
@@ -1557,6 +1596,7 @@ class _AddIncomeRowState extends State<AddIncomeRow> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
+            duration: const Duration(seconds: 2),
             content: Text('تم إضافة الإيراد بنجاح'),
             backgroundColor: AppColors.success,
           ),
@@ -1567,6 +1607,7 @@ class _AddIncomeRowState extends State<AddIncomeRow> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
+            duration: const Duration(seconds: 2),
             content: Text('فشل إضافة الإيراد: ${e.toString()}'),
             backgroundColor: AppColors.error,
           ),

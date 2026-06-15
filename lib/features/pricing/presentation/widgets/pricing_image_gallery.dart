@@ -28,8 +28,9 @@ class PricingImageGallery extends StatelessWidget {
     }
 
     // Ensure index is within bounds
-    final safeIndex =
-        selectedIndex >= images.length ? images.length - 1 : selectedIndex;
+    final safeIndex = selectedIndex >= images.length
+        ? images.length - 1
+        : selectedIndex;
     final currentImage = images[safeIndex];
 
     return Column(
@@ -160,10 +161,7 @@ class _IconButton extends StatelessWidget {
   final VoidCallback? onTap;
   final Widget icon;
 
-  const _IconButton({
-    required this.onTap,
-    required this.icon,
-  });
+  const _IconButton({required this.onTap, required this.icon});
 
   @override
   Widget build(BuildContext context) {
@@ -173,10 +171,7 @@ class _IconButton extends StatelessWidget {
       child: InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(4),
-        child: Container(
-          padding: const EdgeInsets.all(8),
-          child: icon,
-        ),
+        child: Container(padding: const EdgeInsets.all(8), child: icon),
       ),
     );
   }
@@ -260,18 +255,11 @@ class _EmptyGallery extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              Icons.image_outlined,
-              size: 48,
-              color: AppColors.textMuted,
-            ),
+            Icon(Icons.image_outlined, size: 48, color: AppColors.textMuted),
             SizedBox(height: 8),
             Text(
               'لا توجد صور',
-              style: TextStyle(
-                color: AppColors.textMuted,
-                fontSize: 14,
-              ),
+              style: TextStyle(color: AppColors.textMuted, fontSize: 14),
             ),
           ],
         ),
