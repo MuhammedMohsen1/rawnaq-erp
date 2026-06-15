@@ -16,7 +16,8 @@ class FinancialPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (context) => getIt<FinancialCubit>()..loadSummary(),
+      create: (context) =>
+          getIt<FinancialCubit>()..loadSummary(period: 'MONTH'),
       child: const _FinancialPageView(),
     );
   }

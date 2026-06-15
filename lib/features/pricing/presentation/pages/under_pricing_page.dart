@@ -123,6 +123,17 @@ class _UnderPricingContentState extends State<_UnderPricingContent> {
     _syncToolbarAction();
   }
 
+  bool _shouldLockSiteEngineerPricing(
+    AuthAuthenticated authState,
+    String status,
+  ) {
+    final user = authState.user;
+    return user.isSiteEngineer &&
+        !user.isAdmin &&
+        !user.isManager &&
+        status.toUpperCase() == 'PENDING_SIGNATURE';
+  }
+
   @override
   Widget build(BuildContext context) {
     return BlocConsumer<PricingCubit, PricingState>(
@@ -173,15 +184,24 @@ class _UnderPricingContentState extends State<_UnderPricingContent> {
 
         if (state is PricingLoaded) {
           final authState = context.read<AuthBloc>().state;
+          final siteEngineerLocked =
+              authState is AuthAuthenticated &&
+              _shouldLockSiteEngineerPricing(
+                authState,
+                state.pricingVersion.status,
+              );
+          final displayState = siteEngineerLocked
+              ? state.copyWith(readOnly: true)
+              : state;
           final adminCanEditReadOnly =
               state.readOnly &&
               authState is AuthAuthenticated &&
               authState.user.isAdmin;
-          final canEditPricing = !state.readOnly || adminCanEditReadOnly;
+          final canEditPricing = !displayState.readOnly || adminCanEditReadOnly;
 
           return PricingLoadedLayout(
             projectId: widget.projectId,
-            state: state,
+            state: displayState,
             canEditPricing: canEditPricing,
             hideFinancials: widget.hideFinancials,
             showFinancials: _showFinancials,
@@ -232,10 +252,10 @@ class _UnderPricingContentState extends State<_UnderPricingContent> {
               }
             },
             onSubItemProfitMarginChanged: (subItemId, profitMargin) async {
-              if (state.readOnly) return;
+              if (displayState.readOnly) return;
               await context.read<PricingCubit>().loadPricingData(
                 widget.projectId,
-                readOnly: state.readOnly,
+                readOnly: displayState.readOnly,
               );
               await context.read<PricingCubit>().updateSubItemProfitMargin(
                 subItemId,
@@ -246,7 +266,7 @@ class _UnderPricingContentState extends State<_UnderPricingContent> {
             onDataChanged: () {
               context.read<PricingCubit>().loadPricingData(
                 widget.projectId,
-                readOnly: state.readOnly,
+                readOnly: displayState.readOnly,
               );
             },
           );
@@ -266,9 +286,12 @@ class _UnderPricingContentState extends State<_UnderPricingContent> {
     final isAuthenticated = authState is AuthAuthenticated;
 
     bool isAdminOrManager = false;
+    bool showCostOnlySummary = false;
     if (authState is AuthAuthenticated) {
       final user = authState.user;
       isAdminOrManager = user.isAdmin || user.isManager;
+      showCostOnlySummary =
+          user.isSiteEngineer && !user.isAdmin && !user.isManager;
     }
 
     final currentStatus = state.pricingVersion.status.toUpperCase();
@@ -400,6 +423,7 @@ class _UnderPricingContentState extends State<_UnderPricingContent> {
               }
             : null,
         showFinancials: showFinancials,
+        showCostOnlySummary: showCostOnlySummary,
       ),
     );
   }

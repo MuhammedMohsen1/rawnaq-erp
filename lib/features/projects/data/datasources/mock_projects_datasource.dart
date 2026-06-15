@@ -260,7 +260,8 @@ class MockProjectsDataSource {
           .where(
             (p) =>
                 p.name.toLowerCase().contains(query) ||
-                (p.description?.toLowerCase().contains(query) ?? false),
+                (p.description?.toLowerCase().contains(query) ?? false) ||
+                (p.clientPhone?.toLowerCase().contains(query) ?? false),
           )
           .toList();
     }

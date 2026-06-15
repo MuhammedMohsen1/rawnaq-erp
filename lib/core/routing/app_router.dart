@@ -167,8 +167,8 @@ class AppRouter {
                         create: (context) =>
                             ProjectsBloc(repository: ProjectsRepositoryImpl())
                               ..add(
-                                const LoadProjects(
-                                  status: ProjectStatus.execution,
+                                LoadProjects(
+                                  type: ProjectType.execution.apiValue,
                                 ),
                               ),
                         child: const ProjectsListPage(
@@ -177,7 +177,6 @@ class AppRouter {
                           showCreateButton: false,
                           showArchiveActions: false,
                           showStatusActions: false,
-                          visibleStatuses: {ProjectStatus.execution},
                         ),
                       );
                     }
@@ -266,7 +265,7 @@ class AppRouter {
               child: BlocProvider(
                 create: (context) =>
                     ProjectsBloc(repository: ProjectsRepositoryImpl())
-                      ..add(const LoadProjects()),
+                      ..add(LoadProjects(type: ProjectType.execution.apiValue)),
                 child: const ProjectsListPage(
                   title: 'قيد التسعير أو بانتظار التوقيع',
                   emptyMessage: 'لا توجد مشاريع قيد التسعير أو بانتظار التوقيع',

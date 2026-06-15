@@ -42,6 +42,7 @@ class FinancialProjectTable extends StatelessWidget {
                 columns: const [
                   DataColumn(label: Text('المشروع')),
                   DataColumn(label: Text('الحالة')),
+                  DataColumn(label: Text('نوع المشروع')),
                   DataColumn(label: Text('قيمة العقد'), numeric: true),
                   DataColumn(label: Text('المحصل'), numeric: true),
                   DataColumn(label: Text('المصروفات'), numeric: true),
@@ -55,6 +56,7 @@ class FinancialProjectTable extends StatelessWidget {
                       cells: [
                         DataCell(_ProjectName(project: project)),
                         DataCell(_StatusBadge(status: project.status)),
+                        DataCell(_ProjectTypeBadge(label: project.projectType)),
                         DataCell(Text(formatKwd(project.totalContractValue))),
                         DataCell(Text(formatKwd(project.totalReceived))),
                         DataCell(Text(formatKwd(project.totalExpenses))),
@@ -121,7 +123,17 @@ class _MobileProjectTile extends StatelessWidget {
             Row(
               children: [
                 Expanded(child: _ProjectName(project: project)),
-                _StatusBadge(status: project.status),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: [
+                    _StatusBadge(
+                      status: project.status,
+                      projectType: project.projectType,
+                    ),
+                    _ProjectTypeBadge(label: project.projectType),
+                  ],
+                ),
               ],
             ),
             const SizedBox(height: 14),
@@ -175,24 +187,13 @@ class _ProjectName extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisSize: MainAxisSize.min,
           children: [
-            Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Flexible(
-                  child: Text(
-                    project.projectName,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: AppTextStyles.tableCellBold.copyWith(
-                      color: AppColors.primary,
-                    ),
-                  ),
-                ),
-                if (project.isDesignProject) ...[
-                  const SizedBox(width: 6),
-                  const _ProjectTypeBadge(label: 'تصميم'),
-                ],
-              ],
+            Text(
+              project.projectName,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: AppTextStyles.tableCellBold.copyWith(
+                color: AppColors.primary,
+              ),
             ),
             if ((project.clientName ?? '').isNotEmpty) ...[
               const SizedBox(height: 3),
@@ -211,12 +212,13 @@ class _ProjectName extends StatelessWidget {
 }
 
 class _ProjectTypeBadge extends StatelessWidget {
-  final String label;
+  final String? label;
 
   const _ProjectTypeBadge({required this.label});
 
   @override
   Widget build(BuildContext context) {
+    final projectTypeLabel = formatProjectType(label);
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
       decoration: BoxDecoration(
@@ -224,7 +226,7 @@ class _ProjectTypeBadge extends StatelessWidget {
         borderRadius: BorderRadius.circular(4),
       ),
       child: Text(
-        label,
+        projectTypeLabel,
         style: AppTextStyles.caption.copyWith(color: AppColors.primary),
       ),
     );
@@ -233,13 +235,19 @@ class _ProjectTypeBadge extends StatelessWidget {
 
 class _StatusBadge extends StatelessWidget {
   final String status;
+  final String? projectType;
 
-  const _StatusBadge({required this.status});
+  const _StatusBadge({required this.status, this.projectType});
 
   @override
   Widget build(BuildContext context) {
-    final isCompleted = status == 'COMPLETED';
-    final color = isCompleted ? AppColors.success : AppColors.info;
+    final color = switch (status) {
+      'COMPLETED' => AppColors.success,
+      'PENDING_SIGNATURE' => AppColors.warning,
+      'CANCELLED' => AppColors.error,
+      'DRAFT' => AppColors.textMuted,
+      _ => AppColors.info,
+    };
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
@@ -248,7 +256,7 @@ class _StatusBadge extends StatelessWidget {
         border: Border.all(color: color.withValues(alpha: 0.35)),
       ),
       child: Text(
-        formatProjectStatus(status),
+        formatProjectStatus(status, projectType: projectType),
         style: AppTextStyles.statusBadge.copyWith(color: color),
       ),
     );

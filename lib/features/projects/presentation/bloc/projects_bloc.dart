@@ -265,6 +265,20 @@ class ProjectsBloc extends Bloc<ProjectsEvent, ProjectsState> {
     ClearFilters event,
     Emitter<ProjectsState> emit,
   ) async {
+    if (state is ProjectsLoaded) {
+      final currentState = state as ProjectsLoaded;
+      add(
+        LoadProjects(
+          type: currentState.typeFilter,
+          archived: currentState.archived,
+          assignedToMe: currentState.assignedToMe,
+          page: 1,
+          limit: currentState.pageSize,
+        ),
+      );
+      return;
+    }
+
     add(const LoadProjects());
   }
 

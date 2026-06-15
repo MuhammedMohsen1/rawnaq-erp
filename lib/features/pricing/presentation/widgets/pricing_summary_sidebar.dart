@@ -52,6 +52,7 @@ class PricingSummarySidebar extends StatefulWidget {
   final Function(double)? onDeductionAmountChanged;
   final Function(double)? onDeductionAmountApplied;
   final bool showFinancials;
+  final bool showCostOnlySummary;
 
   const PricingSummarySidebar({
     super.key,
@@ -89,6 +90,7 @@ class PricingSummarySidebar extends StatefulWidget {
     required this.isUnderPricing,
     required this.isPendingSignature,
     this.showFinancials = true,
+    this.showCostOnlySummary = false,
   });
 
   @override
@@ -310,9 +312,11 @@ class _PricingSummarySidebarState extends State<PricingSummarySidebar> {
     required bool isMobile,
     required bool isTablet,
   }) {
-    final grandTotalValue = _formatNumberWithDecimals(
-      widget.isAdminOrManager ? widget.grandTotal : widget.totalCost ?? 0,
-    );
+    final primarySummaryLabel = widget.showCostOnlySummary
+        ? 'التكلفة'
+        : 'التقدير الإجمالي';
+    final grandTotalValue =
+        '${_formatNumberWithDecimals(widget.showCostOnlySummary ? (widget.totalCost ?? 0) : widget.grandTotal)} KD';
     final totalCostValue =
         '${_formatNumberWithDecimals(widget.totalCost ?? 0.0)} KD';
     final totalProfitValue =
@@ -383,13 +387,13 @@ class _PricingSummarySidebarState extends State<PricingSummarySidebar> {
                 children: [
                   Expanded(
                     child: PricingSummaryMetricCard(
-                      label: 'التقدير الإجمالي',
+                      label: primarySummaryLabel,
                       valueLabel: grandTotalValue,
                       fontSize: 14,
                       compact: true,
                     ),
                   ),
-                  if (showStats) ...[
+                  if (!widget.showCostOnlySummary && showStats) ...[
                     const SizedBox(width: 4),
                     Expanded(
                       child: PricingSummaryMetricCard(
@@ -421,13 +425,13 @@ class _PricingSummarySidebarState extends State<PricingSummarySidebar> {
                     Expanded(
                       flex: isTablet ? 3 : 1,
                       child: PricingSummaryMetricCard(
-                        label: 'التقدير الإجمالي',
+                        label: primarySummaryLabel,
                         valueLabel: grandTotalValue,
                         fontSize: isTablet ? 16 : 18,
                         compact: true,
                       ),
                     ),
-                    if (showStats) ...[
+                    if (!widget.showCostOnlySummary && showStats) ...[
                       Expanded(
                         child: PricingSummaryMetricCard(
                           label: 'التكلفة',
@@ -449,15 +453,17 @@ class _PricingSummarySidebarState extends State<PricingSummarySidebar> {
                   ],
                 ),
               ),
-            SizedBox(height: isMobile ? 6 : 8),
-            PricingSummaryDeductionSummaryRow(
-              deductionLabel: 'الخصم',
-              deductionValueLabel: deductionValue,
-              totalAfterLabel: 'الإجمالي بعد الخصم',
-              totalAfterValueLabel: totalAfterValue,
-              isMobile: isMobile,
-              isTablet: isTablet,
-            ),
+            if (!widget.showCostOnlySummary) ...[
+              SizedBox(height: isMobile ? 6 : 8),
+              PricingSummaryDeductionSummaryRow(
+                deductionLabel: 'الخصم',
+                deductionValueLabel: deductionValue,
+                totalAfterLabel: 'الإجمالي بعد الخصم',
+                totalAfterValueLabel: totalAfterValue,
+                isMobile: isMobile,
+                isTablet: isTablet,
+              ),
+            ],
           ],
         ),
       ),

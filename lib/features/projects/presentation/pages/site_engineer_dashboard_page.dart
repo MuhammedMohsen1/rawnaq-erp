@@ -120,6 +120,20 @@ class _SiteEngineerDashboardPageState extends State<SiteEngineerDashboardPage> {
     }
   }
 
+  bool _shouldOpenPricingReadOnly(String? pricingStatus) {
+    return pricingStatus?.toUpperCase() == 'PENDING_SIGNATURE';
+  }
+
+  void _openPricing(BuildContext context, ProjectEntity project) {
+    final pricingStatus = _projectPricingVersions[project.id]?.status;
+    context.push(
+      AppRoutes.pricing(
+        project.id,
+        readOnly: _shouldOpenPricingReadOnly(pricingStatus),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<ProjectsBloc, ProjectsState>(
@@ -561,7 +575,7 @@ class _SiteEngineerDashboardPageState extends State<SiteEngineerDashboardPage> {
 
     return InkWell(
       onTap: () {
-        context.push(AppRoutes.pricing(project.id));
+        _openPricing(context, project);
       },
       borderRadius: BorderRadius.circular(12),
       child: Container(
@@ -732,7 +746,7 @@ class _SiteEngineerDashboardPageState extends State<SiteEngineerDashboardPage> {
               height: 44,
               child: ElevatedButton(
                 onPressed: () {
-                  context.push(AppRoutes.pricing(project.id));
+                  _openPricing(context, project);
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.cardBackground,
