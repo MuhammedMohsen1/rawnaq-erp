@@ -200,7 +200,7 @@ class InstallmentsTableHeader {
   TableRow toTableRow() {
     final headers = isAdminOrManager
         ? [
-            'بند الجدول',
+            'بند',
             'النسبة',
             'السعر',
             'التكلفة',
@@ -208,7 +208,7 @@ class InstallmentsTableHeader {
             'التقاط',
             'إجراء',
           ]
-        : ['بند الجدول', 'النسبة', 'التكلفة', 'الحالة', 'التقاط', 'إجراء'];
+        : ['بند', 'النسبة', 'التكلفة', 'الحالة', 'التقاط', 'إجراء'];
 
     return TableRow(
       decoration: BoxDecoration(
@@ -249,6 +249,9 @@ class InstallmentsTableRow {
   });
 
   TableRow toTableRow() {
+    final displayNotes = (phase.notes?.trim().isNotEmpty ?? false)
+        ? phase.notes!.trim()
+        : '-';
     final statusWidget = InstallmentStatusBadge(phase: phase);
     final attachmentsWidget = phase.attachments.isEmpty
         ? const Text('-', style: TextStyle(color: AppColors.textSecondary))
@@ -264,7 +267,7 @@ class InstallmentsTableRow {
         ? [
             InstallmentsTableCell(
               child: Text(
-                phase.phaseName,
+                displayNotes,
                 style: AppTextStyles.bodyMedium.copyWith(
                   fontWeight: FontWeight.w500,
                 ),
@@ -300,7 +303,7 @@ class InstallmentsTableRow {
         : [
             InstallmentsTableCell(
               child: Text(
-                phase.phaseName,
+                displayNotes,
                 style: AppTextStyles.bodyMedium.copyWith(
                   fontWeight: FontWeight.w500,
                 ),

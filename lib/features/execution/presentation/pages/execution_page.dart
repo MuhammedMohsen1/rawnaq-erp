@@ -955,6 +955,9 @@ class _RequestInstallmentDialogState extends State<_RequestInstallmentDialog> {
               const SizedBox(height: 16),
             ...widget.availablePhases.map((phase) {
               final selected = phase.index == _selectedPhase?.index;
+              final displayNotes = (phase.notes?.trim().isNotEmpty ?? false)
+                  ? phase.notes!.trim()
+                  : 'بدون ملاحظات';
               return Card(
                 margin: const EdgeInsets.only(bottom: 8),
                 child: ListTile(
@@ -967,7 +970,7 @@ class _RequestInstallmentDialogState extends State<_RequestInstallmentDialog> {
                         ? AppColors.primary
                         : AppColors.textSecondary,
                   ),
-                  title: Text(phase.phaseName),
+                  title: Text(displayNotes),
                   subtitle: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [

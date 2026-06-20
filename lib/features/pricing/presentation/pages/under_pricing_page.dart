@@ -683,6 +683,7 @@ class _UnderPricingContentState extends State<_UnderPricingContent> {
           amount: amount != null && amount > 0 ? amount : calculatedAmount,
           dueDate: dueDate,
           isPaid: phase['isPaid'] == true || phase['paid'] == true,
+          notes: phase['notes']?.toString(),
         );
       }).toList();
     }
@@ -715,15 +716,15 @@ class _UnderPricingContentState extends State<_UnderPricingContent> {
     );
 
     return installments.asMap().entries.map((entry) {
-      final index = entry.key;
       final installment = entry.value;
       final percentage = total > 0 ? installment.amount / total * 100 : 0;
       return {
-        'phase': 'دفعة ${index + 1}',
+        'phase': '',
         'percentage': percentage,
         'amount': installment.amount,
         'dueDate': installment.dueDate.toIso8601String(),
         'isPaid': installment.isPaid,
+        'notes': installment.notes,
       };
     }).toList();
   }

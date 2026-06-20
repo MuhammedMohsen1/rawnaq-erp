@@ -7,7 +7,6 @@ class ContractExportStep3Content extends StatelessWidget {
   final List<Map<String, TextEditingController>> paymentControllers;
   final VoidCallback onAddPaymentPhase;
   final ValueChanged<int> onRemovePaymentPhase;
-  final void Function(int, String) onPhaseNameChanged;
   final void Function(int, double) onPercentageChanged;
   final void Function(int, double) onAmountChanged;
   final void Function(int, String) onNotesChanged;
@@ -19,7 +18,6 @@ class ContractExportStep3Content extends StatelessWidget {
     required this.paymentControllers,
     required this.onAddPaymentPhase,
     required this.onRemovePaymentPhase,
-    required this.onPhaseNameChanged,
     required this.onPercentageChanged,
     required this.onAmountChanged,
     required this.onNotesChanged,
@@ -189,55 +187,11 @@ class ContractExportStep3Content extends StatelessWidget {
                       ),
                       const SizedBox(height: 10),
                       TextField(
-                        controller: paymentControllers[index]['phase'],
-                        onChanged: (value) => onPhaseNameChanged(index, value),
-                        decoration: InputDecoration(
-                          labelText: 'اسم الدفعة',
-                          hintText: 'مثال: دفعة أولى',
-                          prefixIcon: const Icon(
-                            Icons.payment,
-                            size: 18,
-                            color: AppColors.textSecondary,
-                          ),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8),
-                            borderSide: const BorderSide(
-                              color: AppColors.inputBorder,
-                            ),
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8),
-                            borderSide: const BorderSide(
-                              color: AppColors.inputFocusBorder,
-                              width: 2,
-                            ),
-                          ),
-                          filled: true,
-                          fillColor: AppColors.inputBackground,
-                          contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 12,
-                          ),
-                          isDense: true,
-                        ),
-                        style: const TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w500,
-                          color: AppColors.textPrimary,
-                        ),
-                        textDirection: TextDirection.rtl,
-                        textAlign: TextAlign.right,
-                      ),
-                      const SizedBox(height: 8),
-                      TextField(
                         controller: paymentControllers[index]['notes'],
                         onChanged: (value) => onNotesChanged(index, value),
                         maxLines: 2,
                         decoration: InputDecoration(
-                          labelText: 'ملاحظات الدفعة',
+                          labelText: 'الملاحظات',
                           hintText: 'مثال: بعد اعتماد المخططات',
                           prefixIcon: const Icon(
                             Icons.sticky_note_2_outlined,

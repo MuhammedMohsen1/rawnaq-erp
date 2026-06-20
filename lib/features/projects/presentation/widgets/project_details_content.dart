@@ -459,11 +459,10 @@ class _ContractActions extends StatelessWidget {
     );
 
     return installments.asMap().entries.map((entry) {
-      final index = entry.key;
       final installment = entry.value;
       final percentage = total > 0 ? installment.amount / total * 100 : 0;
       return {
-        'phase': 'دفعة ${index + 1}',
+        'phase': '',
         'percentage': percentage,
         'amount': installment.amount,
         'dueDate': installment.dueDate.toIso8601String(),

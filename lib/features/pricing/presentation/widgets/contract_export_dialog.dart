@@ -67,13 +67,13 @@ class _ContractExportDialogState extends State<ContractExportDialog> {
     // Initialize payment phases with default values
     _paymentPhases = [
       {
-        'phase': 'دفعة أولى',
+        'phase': '',
         'percentage': 50.0,
         'amount': widget.totalAmount * 0.5,
         'notes': '',
       },
       {
-        'phase': 'دفعة ثانية',
+        'phase': '',
         'percentage': 50.0,
         'amount': widget.totalAmount * 0.5,
         'notes': '',
@@ -236,13 +236,13 @@ class _ContractExportDialogState extends State<ContractExportDialog> {
         ? phases
         : [
             {
-              'phase': 'دفعة أولى',
+              'phase': '',
               'percentage': 50.0,
               'amount': widget.totalAmount * 0.5,
               'notes': '',
             },
             {
-              'phase': 'دفعة ثانية',
+              'phase': '',
               'percentage': 50.0,
               'amount': widget.totalAmount * 0.5,
               'notes': '',
@@ -254,7 +254,7 @@ class _ContractExportDialogState extends State<ContractExportDialog> {
           (phase['amount'] as num?)?.toDouble() ??
           widget.totalAmount * (percentage / 100);
       return {
-        'phase': phase['phase']?.toString() ?? 'دفعة',
+        'phase': phase['phase']?.toString() ?? '',
         'percentage': percentage,
         'amount': amount,
         'notes': phase['notes']?.toString() ?? '',
@@ -403,13 +403,13 @@ class _ContractExportDialogState extends State<ContractExportDialog> {
   void _addPaymentPhase() {
     setState(() {
       _paymentPhases.add({
-        'phase': 'دفعة جديدة',
+        'phase': '',
         'percentage': 0.0,
         'amount': 0.0,
         'notes': '',
       });
       _paymentControllers.add({
-        'phase': TextEditingController(text: 'دفعة جديدة'),
+        'phase': TextEditingController(),
         'percentage': TextEditingController(text: '0.00'),
         'amount': TextEditingController(text: '0.000'),
         'notes': TextEditingController(),
@@ -762,20 +762,15 @@ class _ContractExportDialogState extends State<ContractExportDialog> {
                     // Step 3: Payment Schedule
                     Step(
                       title: const Text('جدول الدفعات'),
-                      content: ContractExportStep3Content(
-                        totalAmount: widget.totalAmount,
-                        paymentPhases: _paymentPhases,
-                        paymentControllers: _paymentControllers,
-                        onAddPaymentPhase: _addPaymentPhase,
-                        onRemovePaymentPhase: _removePaymentPhase,
-                        onPhaseNameChanged: (index, value) {
-                          setState(() {
-                            _paymentPhases[index]['phase'] = value;
-                          });
-                        },
-                        onPercentageChanged: _onPercentageChanged,
-                        onAmountChanged: _onAmountChanged,
-                        onNotesChanged: (index, value) {
+      content: ContractExportStep3Content(
+        totalAmount: widget.totalAmount,
+        paymentPhases: _paymentPhases,
+        paymentControllers: _paymentControllers,
+        onAddPaymentPhase: _addPaymentPhase,
+        onRemovePaymentPhase: _removePaymentPhase,
+        onPercentageChanged: _onPercentageChanged,
+        onAmountChanged: _onAmountChanged,
+        onNotesChanged: (index, value) {
                           setState(() {
                             _paymentPhases[index]['notes'] = value;
                           });

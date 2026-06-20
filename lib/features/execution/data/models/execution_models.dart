@@ -175,6 +175,7 @@ class TransactionModel {
 class PaymentPhaseModel {
   final int index;
   final String phaseName;
+  final String? notes;
   final double percentage;
   final double originalAmount;
   final double deductionAmount;
@@ -189,6 +190,7 @@ class PaymentPhaseModel {
   PaymentPhaseModel({
     required this.index,
     required this.phaseName,
+    this.notes,
     required this.percentage,
     required this.originalAmount,
     required this.deductionAmount,
@@ -212,6 +214,7 @@ class PaymentPhaseModel {
     return PaymentPhaseModel(
       index: _toIntOrZero(json['index']),
       phaseName: _toStringOrEmpty(json['phaseName']),
+      notes: _toStringOrNull(json['notes']),
       percentage: _toDoubleOrZero(json['percentage']),
       originalAmount: originalAmount,
       deductionAmount: deductionAmount,

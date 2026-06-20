@@ -114,7 +114,10 @@ class PricingConfirmationDialogs {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: paymentSchedule.map((phase) {
-                    final phaseName = phase['phase'] ?? 'دفعة';
+                    final phaseLabel =
+                        phase['notes']?.toString().trim().isNotEmpty == true
+                        ? phase['notes'].toString().trim()
+                        : '-';
                     final percentage = phase['percentage'] ?? 0;
                     final amount = phase['amount'];
                     return Padding(
@@ -129,7 +132,7 @@ class PricingConfirmationDialogs {
                           const SizedBox(width: 8),
                           Expanded(
                             child: Text(
-                              '$phaseName: $percentage%${amount != null ? ' (${(amount as num).toStringAsFixed(3)} د.ك)' : ''}',
+                              '$phaseLabel: $percentage%${amount != null ? ' (${(amount as num).toStringAsFixed(3)} د.ك)' : ''}',
                             ),
                           ),
                         ],
