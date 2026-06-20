@@ -27,6 +27,7 @@ class DesignWorkspaceInstallmentsEditorDialog extends StatefulWidget {
 class _InstallmentDraft {
   final String id;
   final TextEditingController amountController;
+  final TextEditingController notesController;
   DateTime dueDate;
   bool isPaid;
   final List<ProjectInstallmentCapture> captures;
@@ -34,6 +35,7 @@ class _InstallmentDraft {
   _InstallmentDraft({
     required this.id,
     required this.amountController,
+    required this.notesController,
     required this.dueDate,
     required this.isPaid,
     required this.captures,
@@ -45,6 +47,7 @@ class _InstallmentDraft {
       amountController: TextEditingController(
         text: installment.amount.toStringAsFixed(2),
       ),
+      notesController: TextEditingController(text: installment.notes ?? ''),
       dueDate: installment.dueDate,
       isPaid: installment.isPaid,
       captures: installment.captures,
@@ -55,6 +58,7 @@ class _InstallmentDraft {
     return _InstallmentDraft(
       id: 'installment-${DateTime.now().microsecondsSinceEpoch}-$index',
       amountController: TextEditingController(),
+      notesController: TextEditingController(),
       dueDate: DateTime.now().add(Duration(days: index * 30)),
       isPaid: false,
       captures: const [],
@@ -63,6 +67,7 @@ class _InstallmentDraft {
 
   void dispose() {
     amountController.dispose();
+    notesController.dispose();
   }
 }
 
@@ -146,6 +151,9 @@ class _DesignWorkspaceInstallmentsEditorDialogState
           amount: amount,
           dueDate: draft.dueDate,
           isPaid: draft.isPaid,
+          notes: draft.notesController.text.trim().isEmpty
+              ? null
+              : draft.notesController.text.trim(),
           captures: draft.captures,
         ),
       );
@@ -252,6 +260,15 @@ class _DesignWorkspaceInstallmentsEditorDialogState
                                       tooltip: 'حذف الدفعة',
                                     ),
                                   ],
+                                ),
+                                const SizedBox(height: 10),
+                                TextField(
+                                  controller: draft.notesController,
+                                  maxLines: 2,
+                                  decoration: const InputDecoration(
+                                    labelText: 'ملاحظات الدفعة',
+                                    hintText: 'أدخل ملاحظات هذه الدفعة',
+                                  ),
                                 ),
                                 const SizedBox(height: 10),
                                 Row(
@@ -412,6 +429,9 @@ class _DesignWorkspaceInstallmentsEditorDialogState
         amount: amount,
         dueDate: draft.dueDate,
         isPaid: draft.isPaid,
+        notes: draft.notesController.text.trim().isEmpty
+            ? null
+            : draft.notesController.text.trim(),
         captures: draft.captures,
       ),
     );

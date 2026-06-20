@@ -66,8 +66,10 @@ class PricingItemsList extends StatelessWidget {
       builder: (context) {
         final authState = context.read<AuthBloc>().state;
         bool isAdminOrManager = false;
+        bool isAdmin = false;
         if (authState is AuthAuthenticated) {
           final user = authState.user;
+          isAdmin = user.isAdmin;
           isAdminOrManager = user.isAdmin || user.isManager;
         }
 
@@ -112,7 +114,7 @@ class PricingItemsList extends StatelessWidget {
                       item: item,
                       pricingStatus: pricingStatus,
                       isAdminOrManager: isAdminOrManager && canEditPricing,
-                      canViewFinancials: isAdminOrManager && showFinancials,
+                      canViewFinancials: isAdmin && showFinancials,
                       initialIsExpanded: itemExpandedStates[item.id] ?? false,
                       initialSubItemExpandedStates:
                           subItemExpandedStates[item.id] ?? {},

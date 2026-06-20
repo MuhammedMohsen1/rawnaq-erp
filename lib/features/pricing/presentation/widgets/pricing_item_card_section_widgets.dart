@@ -143,11 +143,15 @@ class PricingAddSubItemFooter extends StatelessWidget {
   const PricingAddSubItemFooter({
     super.key,
     required this.showFinancials,
+    required this.canViewFinancials,
+    required this.totalCost,
     required this.totalPrice,
     required this.onTap,
   });
 
   final bool showFinancials;
+  final bool canViewFinancials;
+  final double totalCost;
   final double totalPrice;
   final VoidCallback onTap;
 
@@ -193,7 +197,7 @@ class PricingAddSubItemFooter extends StatelessWidget {
                     ),
                     const SizedBox(width: 8),
                     PricingFormattedNumber(
-                      value: totalPrice,
+                      value: canViewFinancials ? totalPrice : totalCost,
                       showFinancials: showFinancials,
                       fontSize: 20,
                       fontWeight: FontWeight.w700,

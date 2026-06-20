@@ -27,6 +27,7 @@ class ProjectInstallment extends Equatable {
   final double amount;
   final DateTime dueDate;
   final bool isPaid;
+  final String? notes;
   final List<ProjectInstallmentCapture> captures;
 
   const ProjectInstallment({
@@ -34,11 +35,12 @@ class ProjectInstallment extends Equatable {
     required this.amount,
     required this.dueDate,
     this.isPaid = false,
+    this.notes,
     this.captures = const [],
   });
 
   @override
-  List<Object?> get props => [id, amount, dueDate, isPaid, captures];
+  List<Object?> get props => [id, amount, dueDate, isPaid, notes, captures];
 }
 
 class ProjectPhoneContact extends Equatable {

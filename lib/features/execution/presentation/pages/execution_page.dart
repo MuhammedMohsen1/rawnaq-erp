@@ -113,10 +113,12 @@ class _ExecutionLayout extends StatelessWidget {
         final authState = context.read<AuthBloc>().state;
 
         bool isAdminOrManager = false;
+        bool canViewProfitData = false;
         bool canRequestInstallments = false;
         if (authState is AuthAuthenticated) {
           final user = authState.user;
           isAdminOrManager = user.isAdmin || user.isManager;
+          canViewProfitData = user.isAdmin;
           canRequestInstallments = user.canRequestInstallments;
         }
         final isCompleted = project.status == ProjectStatus.completed;
@@ -140,7 +142,7 @@ class _ExecutionLayout extends StatelessWidget {
                       ? () => _handleOpenPaymentScheduleDialog(
                           context,
                           state,
-                          true,
+                          canViewProfitData,
                           true,
                         )
                       : null,
@@ -186,7 +188,7 @@ class _ExecutionLayout extends StatelessWidget {
                   isLoadingMore: state.isLoadingMore,
                   hasMoreTransactions: state.dashboard.hasMoreTransactions,
                   isSiteEngineer: canRequestInstallments,
-                  isAdminOrManager: isAdminOrManager && canEditExecution,
+                  isAdminOrManager: canViewProfitData && canEditExecution,
                   paymentSchedule: state.dashboard.paymentSchedule,
                   pendingInstallmentRequests:
                       state.dashboard.pendingInstallmentRequests,
@@ -269,7 +271,7 @@ class _ExecutionLayout extends StatelessWidget {
   void _handleOpenPaymentScheduleDialog(
     BuildContext context,
     ExecutionLoaded state,
-    bool isAdminOrManager,
+    bool canViewProfitData,
     bool canRequestInstallments,
   ) {
     showDialog(
@@ -280,8 +282,8 @@ class _ExecutionLayout extends StatelessWidget {
         totalCost: state.dashboard.totalBudget,
         totalProfit: state.dashboard.totalProfit,
         profitPercentage: state.dashboard.profitPercentage,
-        isAdminOrManager: isAdminOrManager,
-        onToggleCollected: isAdminOrManager
+        isAdminOrManager: canViewProfitData,
+        onToggleCollected: canViewProfitData
             ? (phaseIndex, requestId, isCollected) =>
                   _handleToggleCollected(context, requestId, isCollected)
             : null,
@@ -290,6 +292,7 @@ class _ExecutionLayout extends StatelessWidget {
                 context,
                 phase,
                 state.dashboard.profitPercentage,
+                canViewProfitData,
               )
             : null,
       ),
@@ -400,6 +403,9 @@ class _ExecutionLayout extends StatelessWidget {
     BuildContext context,
     ExecutionLoaded state,
   ) async {
+    final authState = context.read<AuthBloc>().state;
+    final canViewProfitData =
+        authState is AuthAuthenticated && authState.user.isAdmin;
     final availablePhases = state.dashboard.paymentSchedule
         .where((p) => !p.isRequested && !p.isApproved)
         .toList();
@@ -419,6 +425,7 @@ class _ExecutionLayout extends StatelessWidget {
       builder: (context) => _RequestInstallmentDialog(
         availablePhases: availablePhases,
         profitPercentage: state.dashboard.profitPercentage,
+        canViewProfitData: canViewProfitData,
       ),
     );
 
@@ -455,6 +462,7 @@ class _ExecutionLayout extends StatelessWidget {
     BuildContext context,
     PaymentPhaseModel phase,
     double profitPercentage,
+    bool canViewProfitData,
   ) async {
     final authState = context.read<AuthBloc>().state;
     final isAdmin = authState is AuthAuthenticated && authState.user.isAdmin;
@@ -466,6 +474,7 @@ class _ExecutionLayout extends StatelessWidget {
         availablePhases: [phase],
         profitPercentage: profitPercentage,
         initialPhase: phase,
+        canViewProfitData: canViewProfitData,
       ),
     );
 
@@ -786,11 +795,13 @@ class _RequestInstallmentDialog extends StatefulWidget {
   final List<PaymentPhaseModel> availablePhases;
   final double profitPercentage;
   final PaymentPhaseModel? initialPhase;
+  final bool canViewProfitData;
 
   const _RequestInstallmentDialog({
     required this.availablePhases,
     required this.profitPercentage,
     this.initialPhase,
+    required this.canViewProfitData,
   });
 
   @override
@@ -932,13 +943,16 @@ class _RequestInstallmentDialogState extends State<_RequestInstallmentDialog> {
           children: [
             const Text('اختر بند جدول الدفعات المطلوب:'),
             const SizedBox(height: 8),
-            Text(
-              'سيتم خصم نسبة الربح (${widget.profitPercentage.toStringAsFixed(1)}%) من المبلغ',
-              style: AppTextStyles.bodySmall.copyWith(
-                color: AppColors.textSecondary,
+            if (widget.canViewProfitData) ...[
+              Text(
+                'سيتم خصم نسبة الربح (${widget.profitPercentage.toStringAsFixed(1)}%) من المبلغ',
+                style: AppTextStyles.bodySmall.copyWith(
+                  color: AppColors.textSecondary,
+                ),
               ),
-            ),
-            const SizedBox(height: 16),
+              const SizedBox(height: 16),
+            ] else
+              const SizedBox(height: 16),
             ...widget.availablePhases.map((phase) {
               final selected = phase.index == _selectedPhase?.index;
               return Card(
@@ -960,13 +974,14 @@ class _RequestInstallmentDialogState extends State<_RequestInstallmentDialog> {
                       Text(
                         'المبلغ الكامل: ${phase.originalAmount.toStringAsFixed(3)} د.ك',
                       ),
-                      Text(
-                        'التكلفة (بدون الربح): ${phase.costAmount.toStringAsFixed(3)} د.ك',
-                        style: const TextStyle(
-                          color: AppColors.success,
-                          fontWeight: FontWeight.bold,
+                      if (widget.canViewProfitData)
+                        Text(
+                          'التكلفة (بدون الربح): ${phase.costAmount.toStringAsFixed(3)} د.ك',
+                          style: const TextStyle(
+                            color: AppColors.success,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
-                      ),
                     ],
                   ),
                   onTap: _isPreparing

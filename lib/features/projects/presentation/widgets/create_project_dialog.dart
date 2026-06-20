@@ -32,6 +32,9 @@ class _CreateProjectDialogState extends State<CreateProjectDialog> {
     TextEditingController(),
   ];
   final List<DateTime> _installmentDueDates = [DateTime.now()];
+  final List<TextEditingController> _installmentNotesControllers = [
+    TextEditingController(),
+  ];
   final List<TextEditingController> _contactNameControllers = [
     TextEditingController(),
   ];
@@ -75,6 +78,9 @@ class _CreateProjectDialogState extends State<CreateProjectDialog> {
     _googleMapLinkController.dispose();
     _projectValueController.dispose();
     for (final controller in _installmentAmountControllers) {
+      controller.dispose();
+    }
+    for (final controller in _installmentNotesControllers) {
       controller.dispose();
     }
     for (final controller in _contactNameControllers) {
@@ -474,6 +480,7 @@ class _CreateProjectDialogState extends State<CreateProjectDialog> {
               onPressed: () {
                 setState(() {
                   _installmentAmountControllers.add(TextEditingController());
+                  _installmentNotesControllers.add(TextEditingController());
                   _installmentDueDates.add(
                     DateTime(
                       _startDate.year,
@@ -490,42 +497,55 @@ class _CreateProjectDialogState extends State<CreateProjectDialog> {
         ),
         const SizedBox(height: 8),
         for (var i = 0; i < _installmentAmountControllers.length; i++) ...[
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.end,
+          Column(
             children: [
-              Expanded(
-                child: _buildTextField(
-                  controller: _installmentAmountControllers[i],
-                  label: 'قيمة الدفعة ${i + 1} *',
-                  hint: 'أدخل قيمة الدفعة',
-                  icon: Icons.payments_outlined,
-                  keyboardType: TextInputType.number,
-                  validator: _validatePositiveNumber,
-                ),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Expanded(
+                    child: _buildTextField(
+                      controller: _installmentAmountControllers[i],
+                      label: 'قيمة الدفعة ${i + 1} *',
+                      hint: 'أدخل قيمة الدفعة',
+                      icon: Icons.payments_outlined,
+                      keyboardType: TextInputType.number,
+                      validator: _validatePositiveNumber,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: _buildDatePicker(
+                      label: 'تاريخ الاستحقاق',
+                      date: _installmentDueDates[i],
+                      onDateSelected: (date) {
+                        setState(() => _installmentDueDates[i] = date);
+                      },
+                    ),
+                  ),
+                  if (_installmentAmountControllers.length > 1) ...[
+                    const SizedBox(width: 8),
+                    IconButton(
+                      onPressed: () {
+                        setState(() {
+                          _installmentAmountControllers.removeAt(i).dispose();
+                          _installmentNotesControllers.removeAt(i).dispose();
+                          _installmentDueDates.removeAt(i);
+                        });
+                      },
+                      icon: const Icon(Icons.delete_outline),
+                      color: AppColors.error,
+                    ),
+                  ],
+                ],
               ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: _buildDatePicker(
-                  label: 'تاريخ الاستحقاق',
-                  date: _installmentDueDates[i],
-                  onDateSelected: (date) {
-                    setState(() => _installmentDueDates[i] = date);
-                  },
-                ),
+              const SizedBox(height: 12),
+              _buildTextField(
+                controller: _installmentNotesControllers[i],
+                label: 'ملاحظات الدفعة ${i + 1}',
+                hint: 'أدخل ملاحظات هذه الدفعة',
+                icon: Icons.sticky_note_2_outlined,
+                maxLines: 2,
               ),
-              if (_installmentAmountControllers.length > 1) ...[
-                const SizedBox(width: 8),
-                IconButton(
-                  onPressed: () {
-                    setState(() {
-                      _installmentAmountControllers.removeAt(i).dispose();
-                      _installmentDueDates.removeAt(i);
-                    });
-                  },
-                  icon: const Icon(Icons.delete_outline),
-                  color: AppColors.error,
-                ),
-              ],
             ],
           ),
           if (i < _installmentAmountControllers.length - 1)
@@ -893,6 +913,9 @@ class _CreateProjectDialogState extends State<CreateProjectDialog> {
             double.tryParse(_installmentAmountControllers[index].text.trim()) ??
             0,
         dueDate: _installmentDueDates[index],
+        notes: _installmentNotesControllers[index].text.trim().isEmpty
+            ? null
+            : _installmentNotesControllers[index].text.trim(),
       );
     });
   }

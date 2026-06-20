@@ -70,11 +70,13 @@ class _ContractExportDialogState extends State<ContractExportDialog> {
         'phase': 'دفعة أولى',
         'percentage': 50.0,
         'amount': widget.totalAmount * 0.5,
+        'notes': '',
       },
       {
         'phase': 'دفعة ثانية',
         'percentage': 50.0,
         'amount': widget.totalAmount * 0.5,
+        'notes': '',
       },
     ];
     _initializePaymentControllers();
@@ -93,6 +95,7 @@ class _ContractExportDialogState extends State<ContractExportDialog> {
             3,
           ),
         ),
+        'notes': TextEditingController(text: phase['notes']?.toString() ?? ''),
       };
     }).toList();
   }
@@ -117,6 +120,7 @@ class _ContractExportDialogState extends State<ContractExportDialog> {
       payment['phase']?.dispose();
       payment['percentage']?.dispose();
       payment['amount']?.dispose();
+      payment['notes']?.dispose();
     }
     super.dispose();
   }
@@ -235,11 +239,13 @@ class _ContractExportDialogState extends State<ContractExportDialog> {
               'phase': 'دفعة أولى',
               'percentage': 50.0,
               'amount': widget.totalAmount * 0.5,
+              'notes': '',
             },
             {
               'phase': 'دفعة ثانية',
               'percentage': 50.0,
               'amount': widget.totalAmount * 0.5,
+              'notes': '',
             },
           ];
     _paymentPhases = source.map((phase) {
@@ -251,6 +257,7 @@ class _ContractExportDialogState extends State<ContractExportDialog> {
         'phase': phase['phase']?.toString() ?? 'دفعة',
         'percentage': percentage,
         'amount': amount,
+        'notes': phase['notes']?.toString() ?? '',
       };
     }).toList();
     _initializePaymentControllers();
@@ -399,11 +406,13 @@ class _ContractExportDialogState extends State<ContractExportDialog> {
         'phase': 'دفعة جديدة',
         'percentage': 0.0,
         'amount': 0.0,
+        'notes': '',
       });
       _paymentControllers.add({
         'phase': TextEditingController(text: 'دفعة جديدة'),
         'percentage': TextEditingController(text: '0.00'),
         'amount': TextEditingController(text: '0.000'),
+        'notes': TextEditingController(),
       });
     });
   }
@@ -414,6 +423,7 @@ class _ContractExportDialogState extends State<ContractExportDialog> {
         _paymentControllers[index]['phase']?.dispose();
         _paymentControllers[index]['percentage']?.dispose();
         _paymentControllers[index]['amount']?.dispose();
+        _paymentControllers[index]['notes']?.dispose();
         _paymentPhases.removeAt(index);
         _paymentControllers.removeAt(index);
       });
@@ -520,6 +530,7 @@ class _ContractExportDialogState extends State<ContractExportDialog> {
         return {
           'phase': phase['phase'] as String,
           'percentage': (phase['percentage'] as num).toDouble(),
+          'notes': phase['notes']?.toString(),
         };
       }).toList();
       final designScopeItems = _designScopeControllers
@@ -764,6 +775,11 @@ class _ContractExportDialogState extends State<ContractExportDialog> {
                         },
                         onPercentageChanged: _onPercentageChanged,
                         onAmountChanged: _onAmountChanged,
+                        onNotesChanged: (index, value) {
+                          setState(() {
+                            _paymentPhases[index]['notes'] = value;
+                          });
+                        },
                       ),
                       isActive: _currentStep >= 2,
                       state: _currentStep > 2

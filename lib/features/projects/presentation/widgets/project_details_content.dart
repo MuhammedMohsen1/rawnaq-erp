@@ -468,6 +468,7 @@ class _ContractActions extends StatelessWidget {
         'amount': installment.amount,
         'dueDate': installment.dueDate.toIso8601String(),
         'isPaid': installment.isPaid,
+        'notes': installment.notes,
       };
     }).toList();
   }

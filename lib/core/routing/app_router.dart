@@ -162,6 +162,7 @@ class AppRouter {
                         user != null && user.isSiteEngineer && user.isDesigner;
                     if (user != null &&
                         user.isSiteEngineer &&
+                        !user.isDesigner &&
                         !isAdminOrManager) {
                       return BlocProvider(
                         create: (context) =>
@@ -175,6 +176,24 @@ class AppRouter {
                           title: 'مشاريع التنفيذ',
                           emptyMessage: 'لا توجد مشاريع تنفيذ',
                           showCreateButton: false,
+                          showArchiveActions: false,
+                          showStatusActions: false,
+                        ),
+                      );
+                    }
+                    if (isSpecialistCombo) {
+                      return BlocProvider(
+                        create: (context) =>
+                            ProjectsBloc(repository: ProjectsRepositoryImpl())
+                              ..add(
+                                LoadProjects(
+                                  type: ProjectType.execution.apiValue,
+                                ),
+                              ),
+                        child: const ProjectsListPage(
+                          title: 'مشاريع التنفيذ',
+                          emptyMessage: 'لا توجد مشاريع تنفيذ',
+                          showCreateButton: true,
                           showArchiveActions: false,
                           showStatusActions: false,
                         ),
@@ -295,7 +314,7 @@ class AppRouter {
                   ),
                   title: 'مشاريع التصميم',
                   emptyMessage: 'لا توجد مشاريع تصميم',
-                  showCreateButton: true,
+                  showCreateButton: false,
                   showArchiveActions: true,
                   showStatusActions: true,
                   useDesignStatusLabels: true,
@@ -334,9 +353,17 @@ class AppRouter {
                         : null;
                     final isAdminOrManager =
                         user != null && (user.isAdmin || user.isManager);
-                    final isDesigner =
-                        user != null && user.isDesigner && !isAdminOrManager;
-                    final type = isDesigner
+                    final isSpecialistCombo =
+                        user != null &&
+                        user.isDesigner &&
+                        user.isSiteEngineer &&
+                        !isAdminOrManager;
+                    final isDesignerOnly =
+                        user != null &&
+                        user.isDesigner &&
+                        !user.isSiteEngineer &&
+                        !isAdminOrManager;
+                    final type = isDesignerOnly
                         ? ProjectType.design.apiValue
                         : isAdminOrManager
                         ? ProjectType.execution.apiValue
@@ -347,16 +374,18 @@ class AppRouter {
                             ..add(LoadProjects(type: type)),
                       child: ProjectsListPage(
                         key: ValueKey(
-                          'projects-${state.uri.queryParameters['refresh'] ?? 'initial'}-${isDesigner ? 'designer' : 'all'}',
+                          'projects-${state.uri.queryParameters['refresh'] ?? 'initial'}-${isDesignerOnly ? 'designer' : isSpecialistCombo ? 'combo' : 'all'}',
                         ),
-                        title: isDesigner ? 'مشاريع التصميم' : 'مشاريع التنفيذ',
-                        emptyMessage: isDesigner
+                        title: isDesignerOnly ? 'مشاريع التصميم' : 'المشاريع',
+                        emptyMessage: isDesignerOnly
                             ? 'لا توجد مشاريع تصميم'
-                            : 'لا توجد مشاريع تنفيذ',
-                        showCreateButton: !isDesigner,
-                        showArchiveActions: !isDesigner,
-                        showStatusActions: !isDesigner,
-                        useDesignStatusLabels: isDesigner,
+                            : 'لا توجد مشاريع',
+                        showCreateButton: isAdminOrManager || isSpecialistCombo,
+                        showArchiveActions:
+                            !isDesignerOnly && !isSpecialistCombo,
+                        showStatusActions:
+                            !isDesignerOnly && !isSpecialistCombo,
+                        useDesignStatusLabels: isDesignerOnly,
                       ),
                     );
                   },

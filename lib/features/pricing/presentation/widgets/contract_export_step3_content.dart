@@ -10,6 +10,7 @@ class ContractExportStep3Content extends StatelessWidget {
   final void Function(int, String) onPhaseNameChanged;
   final void Function(int, double) onPercentageChanged;
   final void Function(int, double) onAmountChanged;
+  final void Function(int, String) onNotesChanged;
 
   const ContractExportStep3Content({
     super.key,
@@ -21,6 +22,7 @@ class ContractExportStep3Content extends StatelessWidget {
     required this.onPhaseNameChanged,
     required this.onPercentageChanged,
     required this.onAmountChanged,
+    required this.onNotesChanged,
   });
 
   @override
@@ -224,6 +226,50 @@ class ContractExportStep3Content extends StatelessWidget {
                         style: const TextStyle(
                           fontSize: 13,
                           fontWeight: FontWeight.w500,
+                          color: AppColors.textPrimary,
+                        ),
+                        textDirection: TextDirection.rtl,
+                        textAlign: TextAlign.right,
+                      ),
+                      const SizedBox(height: 8),
+                      TextField(
+                        controller: paymentControllers[index]['notes'],
+                        onChanged: (value) => onNotesChanged(index, value),
+                        maxLines: 2,
+                        decoration: InputDecoration(
+                          labelText: 'ملاحظات الدفعة',
+                          hintText: 'مثال: بعد اعتماد المخططات',
+                          prefixIcon: const Icon(
+                            Icons.sticky_note_2_outlined,
+                            size: 18,
+                            color: AppColors.textSecondary,
+                          ),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8),
+                            borderSide: const BorderSide(
+                              color: AppColors.inputBorder,
+                            ),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8),
+                            borderSide: const BorderSide(
+                              color: AppColors.inputFocusBorder,
+                              width: 2,
+                            ),
+                          ),
+                          filled: true,
+                          fillColor: AppColors.inputBackground,
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 12,
+                          ),
+                          isDense: true,
+                        ),
+                        style: const TextStyle(
+                          fontSize: 13,
                           color: AppColors.textPrimary,
                         ),
                         textDirection: TextDirection.rtl,

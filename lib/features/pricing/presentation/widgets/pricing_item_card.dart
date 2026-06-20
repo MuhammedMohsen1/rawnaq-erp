@@ -237,8 +237,7 @@ class _PricingItemCardState extends State<PricingItemCard>
         _expandedSubItems[subItem.id] =
             widget.initialSubItemExpandedStates[subItem.id] ?? false;
         _localElements[subItem.id] = [];
-        // Initialize profit margin controllers for every sub-item so the
-        // per-sub-item percentage field is always available when rendered.
+        // Keep local controller state in sync with backend profit margins.
         _profitMargins[subItem.id] = subItem.profitMargin;
         _profitControllers[subItem.id] = TextEditingController(
           text: subItem.profitMargin.toStringAsFixed(2),
@@ -2103,7 +2102,9 @@ class _PricingItemCardState extends State<PricingItemCard>
                     localElementFocusNodes: _localElementFocusNodes,
                     subItemDescriptionControllers: _notesControllers,
                     subItemDescriptionFocusNodes: _notesFocusNodes,
-                    subItemProfitControllers: _profitControllers,
+                    subItemProfitControllers: widget.canViewFinancials
+                        ? _profitControllers
+                        : <String, TextEditingController>{},
                     onToggleSubItem: _toggleSubItem,
                     onToggleSubItemVisibility: _toggleSubItemVisibility,
                     onSubItemDescriptionChanged:
@@ -2205,6 +2206,8 @@ class _PricingItemCardState extends State<PricingItemCard>
                   ),
                   PricingAddSubItemFooter(
                     showFinancials: widget.showFinancials,
+                    canViewFinancials: widget.canViewFinancials,
+                    totalCost: widget.item.totalCost,
                     totalPrice: widget.item.totalPrice,
                     onTap: widget.onAddSubItem ?? () {},
                   ),

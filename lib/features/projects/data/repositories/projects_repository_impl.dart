@@ -225,6 +225,7 @@ class ProjectsRepositoryImpl implements ProjectsRepository {
                   'amount': item.amount,
                   'dueDate': item.dueDate.toIso8601String(),
                   'isPaid': item.isPaid,
+                  'notes': item.notes,
                 },
               )
               .toList(),
@@ -309,6 +310,7 @@ class ProjectsRepositoryImpl implements ProjectsRepository {
                 'amount': installment.amount,
                 'dueDate': installment.dueDate.toIso8601String(),
                 'isPaid': installment.isPaid,
+                'notes': installment.notes,
               },
             )
             .toList();

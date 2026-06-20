@@ -73,6 +73,7 @@ class DesignWorkspaceRepository {
             'amount': installment.amount,
             'dueDate': installment.dueDate.toIso8601String(),
             'isPaid': installment.isPaid,
+            'notes': installment.notes,
             'captures': installment.captures
                 .map(
                   (capture) => {

@@ -108,6 +108,7 @@ class ProjectModel extends ProjectEntity {
                   ) ??
                   startDate!,
               isPaid: data['isPaid'] as bool? ?? data['paid'] as bool? ?? false,
+              notes: data['notes']?.toString(),
             );
           }).toList()
         : <ProjectInstallment>[];
@@ -197,6 +198,7 @@ class ProjectModel extends ProjectEntity {
               'amount': item.amount,
               'dueDate': item.dueDate.toIso8601String(),
               'isPaid': item.isPaid,
+              'notes': item.notes,
             },
           )
           .toList(),
