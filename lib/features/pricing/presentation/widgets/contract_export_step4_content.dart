@@ -8,6 +8,8 @@ class ContractExportStep4Content extends StatelessWidget {
   final TextEditingController projectAddressController;
   final int contractTermsCount;
   final int paymentPhasesCount;
+  final bool showExecutionItemPrices;
+  final ValueChanged<bool> onShowExecutionItemPricesChanged;
   final int designScopeCount;
   final VoidCallback onExportPdf;
 
@@ -19,6 +21,8 @@ class ContractExportStep4Content extends StatelessWidget {
     required this.projectAddressController,
     required this.contractTermsCount,
     required this.paymentPhasesCount,
+    required this.showExecutionItemPrices,
+    required this.onShowExecutionItemPricesChanged,
     required this.designScopeCount,
     required this.onExportPdf,
   });
@@ -71,6 +75,18 @@ class ContractExportStep4Content extends StatelessWidget {
           label: 'عدد الدفعات',
           value: '$paymentPhasesCount دفعة',
         ),
+        if (projectType != 'DESIGN') ...[
+          const SizedBox(height: 8),
+          CheckboxListTile(
+            value: showExecutionItemPrices,
+            onChanged: (value) =>
+                onShowExecutionItemPricesChanged(value ?? false),
+            title: const Text('إظهار سعر كل بند'),
+            subtitle: const Text('عند الإلغاء يظهر الإجمالي فقط في العقد'),
+            controlAffinity: ListTileControlAffinity.leading,
+            contentPadding: EdgeInsets.zero,
+          ),
+        ],
         const SizedBox(height: 24),
         SizedBox(
           width: double.infinity,

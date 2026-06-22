@@ -59,6 +59,7 @@ class _ContractExportDialogState extends State<ContractExportDialog> {
       TextEditingController();
   final TextEditingController _executionDurationDaysController =
       TextEditingController();
+  bool _showExecutionItemPrices = false;
   List<Map<String, TextEditingController>> _designScopeControllers = [];
 
   @override
@@ -161,6 +162,8 @@ class _ContractExportDialogState extends State<ContractExportDialog> {
           _executionDurationDaysController.text =
               (defaults['executionDurationDays'] as num?)?.toInt().toString() ??
               '';
+          _showExecutionItemPrices =
+              defaults['showExecutionItemPrices'] == true;
           _ensureDefaultScopeRow(projectType);
           _isLoadingProject = false;
           _isLoadingTerms = false;
@@ -564,6 +567,9 @@ class _ContractExportDialogState extends State<ContractExportDialog> {
             ? _splitNotes(_executionNotesController)
             : null,
         executionDurationDays: !_isDesignProject ? executionDurationDays : null,
+        showExecutionItemPrices: !_isDesignProject
+            ? _showExecutionItemPrices
+            : null,
         companySignerName: _companySignerNameController.text.trim(),
         paymentSchedule: paymentSchedule,
       );
@@ -791,6 +797,12 @@ class _ContractExportDialogState extends State<ContractExportDialog> {
                         projectAddressController: _projectAddressController,
                         contractTermsCount: _contractTerms.length,
                         paymentPhasesCount: _paymentPhases.length,
+                        showExecutionItemPrices: _showExecutionItemPrices,
+                        onShowExecutionItemPricesChanged: (value) {
+                          setState(() {
+                            _showExecutionItemPrices = value;
+                          });
+                        },
                         designScopeCount: _designScopeControllers.where((row) {
                           return (row['item']?.text.trim().isNotEmpty ??
                                   false) &&

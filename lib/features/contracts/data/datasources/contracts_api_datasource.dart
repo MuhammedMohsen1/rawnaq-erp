@@ -46,6 +46,7 @@ class ContractsApiDataSource {
     List<String>? designNotes,
     List<String>? executionNotes,
     int? executionDurationDays,
+    bool? showExecutionItemPrices,
     String? companySignerName,
     required List<Map<String, dynamic>> paymentSchedule,
   }) async {
@@ -69,6 +70,8 @@ class ContractsApiDataSource {
           'executionNotes': executionNotes,
         if (executionDurationDays != null)
           'executionDurationDays': executionDurationDays,
+        if (showExecutionItemPrices != null)
+          'showExecutionItemPrices': showExecutionItemPrices,
         if (companySignerName != null && companySignerName.isNotEmpty)
           'companySignerName': companySignerName,
         'paymentSchedule': paymentSchedule,
