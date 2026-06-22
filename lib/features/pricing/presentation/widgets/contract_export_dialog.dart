@@ -65,14 +65,14 @@ class _ContractExportDialogState extends State<ContractExportDialog> {
   void initState() {
     super.initState();
     // Initialize payment phases with default values
-    _paymentPhases = [
-      {
+    _paymentPhases = <Map<String, dynamic>>[
+      <String, dynamic>{
         'phase': '',
         'percentage': 50.0,
         'amount': widget.totalAmount * 0.5,
         'notes': '',
       },
-      {
+      <String, dynamic>{
         'phase': '',
         'percentage': 50.0,
         'amount': widget.totalAmount * 0.5,
@@ -232,28 +232,28 @@ class _ContractExportDialogState extends State<ContractExportDialog> {
       payment['percentage']?.dispose();
       payment['amount']?.dispose();
     }
-    final source = phases.isNotEmpty
+    final List<Map<String, dynamic>> source = phases.isNotEmpty
         ? phases
-        : [
-            {
+        : <Map<String, dynamic>>[
+            <String, dynamic>{
               'phase': '',
               'percentage': 50.0,
               'amount': widget.totalAmount * 0.5,
               'notes': '',
             },
-            {
+            <String, dynamic>{
               'phase': '',
               'percentage': 50.0,
               'amount': widget.totalAmount * 0.5,
               'notes': '',
             },
           ];
-    _paymentPhases = source.map((phase) {
+    _paymentPhases = source.map<Map<String, dynamic>>((phase) {
       final percentage = (phase['percentage'] as num?)?.toDouble() ?? 0.0;
       final amount =
           (phase['amount'] as num?)?.toDouble() ??
           widget.totalAmount * (percentage / 100);
-      return {
+      return <String, dynamic>{
         'phase': phase['phase']?.toString() ?? '',
         'percentage': percentage,
         'amount': amount,
@@ -402,7 +402,7 @@ class _ContractExportDialogState extends State<ContractExportDialog> {
 
   void _addPaymentPhase() {
     setState(() {
-      _paymentPhases.add({
+      _paymentPhases.add(<String, dynamic>{
         'phase': '',
         'percentage': 0.0,
         'amount': 0.0,
@@ -762,15 +762,15 @@ class _ContractExportDialogState extends State<ContractExportDialog> {
                     // Step 3: Payment Schedule
                     Step(
                       title: const Text('جدول الدفعات'),
-      content: ContractExportStep3Content(
-        totalAmount: widget.totalAmount,
-        paymentPhases: _paymentPhases,
-        paymentControllers: _paymentControllers,
-        onAddPaymentPhase: _addPaymentPhase,
-        onRemovePaymentPhase: _removePaymentPhase,
-        onPercentageChanged: _onPercentageChanged,
-        onAmountChanged: _onAmountChanged,
-        onNotesChanged: (index, value) {
+                      content: ContractExportStep3Content(
+                        totalAmount: widget.totalAmount,
+                        paymentPhases: _paymentPhases,
+                        paymentControllers: _paymentControllers,
+                        onAddPaymentPhase: _addPaymentPhase,
+                        onRemovePaymentPhase: _removePaymentPhase,
+                        onPercentageChanged: _onPercentageChanged,
+                        onAmountChanged: _onAmountChanged,
+                        onNotesChanged: (index, value) {
                           setState(() {
                             _paymentPhases[index]['notes'] = value;
                           });
