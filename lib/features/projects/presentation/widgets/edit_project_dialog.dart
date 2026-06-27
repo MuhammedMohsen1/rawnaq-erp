@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_text_styles.dart';
 import '../../../../core/widgets/dialog_keyboard_actions.dart';
+import '../../../auth/presentation/bloc/auth_bloc.dart';
 import '../../domain/entities/project_entity.dart';
 import '../bloc/projects_bloc.dart';
 import '../bloc/projects_event.dart';
@@ -23,6 +24,7 @@ class _EditProjectDialogState extends State<EditProjectDialog> {
   final _descriptionController = TextEditingController();
   final _clientNameController = TextEditingController();
   final _googleMapLinkController = TextEditingController();
+  final _projectValueController = TextEditingController();
   final List<TextEditingController> _contactNameControllers = [];
   final List<TextEditingController> _contactPhoneControllers = [];
 
@@ -38,6 +40,11 @@ class _EditProjectDialogState extends State<EditProjectDialog> {
     _descriptionController.text = widget.project.description ?? '';
     _clientNameController.text = widget.project.clientName ?? '';
     _googleMapLinkController.text = widget.project.googleMapLink ?? '';
+    if (widget.project.type.name.toUpperCase() == 'DESIGN') {
+      _projectValueController.text = widget.project.totalPrice.toStringAsFixed(
+        3,
+      );
+    }
     final contacts = widget.project.clientContacts.isNotEmpty
         ? widget.project.clientContacts
         : [
@@ -68,6 +75,7 @@ class _EditProjectDialogState extends State<EditProjectDialog> {
     _descriptionController.dispose();
     _clientNameController.dispose();
     _googleMapLinkController.dispose();
+    _projectValueController.dispose();
     for (final controller in _contactNameControllers) {
       controller.dispose();
     }
@@ -79,6 +87,12 @@ class _EditProjectDialogState extends State<EditProjectDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final authState = context.watch<AuthBloc>().state;
+    final canEditProjectValue =
+        authState is AuthAuthenticated &&
+        authState.user.isAdmin &&
+        widget.project.type.name.toUpperCase() == 'DESIGN';
+
     return DialogKeyboardActions(
       onSubmit: _handleSave,
       onClose: () => Navigator.of(context).pop(),
@@ -102,7 +116,7 @@ class _EditProjectDialogState extends State<EditProjectDialog> {
               Expanded(
                 child: SingleChildScrollView(
                   padding: const EdgeInsets.all(24),
-                  child: _buildForm(),
+                  child: _buildForm(canEditProjectValue: canEditProjectValue),
                 ),
               ),
 
@@ -143,7 +157,7 @@ class _EditProjectDialogState extends State<EditProjectDialog> {
     );
   }
 
-  Widget _buildForm() {
+  Widget _buildForm({required bool canEditProjectValue}) {
     return Form(
       key: _formKey,
       child: Column(
@@ -181,6 +195,29 @@ class _EditProjectDialogState extends State<EditProjectDialog> {
             icon: Icons.description_outlined,
             maxLines: 3,
           ),
+          if (canEditProjectValue) ...[
+            const SizedBox(height: 16),
+            _buildTextField(
+              controller: _projectValueController,
+              label: 'قيمة المشروع',
+              hint: 'أدخل القيمة الإجمالية',
+              icon: Icons.payments_outlined,
+              keyboardType: const TextInputType.numberWithOptions(
+                decimal: true,
+              ),
+              validator: (value) {
+                final raw = value?.trim() ?? '';
+                if (raw.isEmpty) {
+                  return 'قيمة المشروع مطلوبة';
+                }
+                final parsed = double.tryParse(raw);
+                if (parsed == null || parsed < 0) {
+                  return 'أدخل قيمة مشروع صحيحة';
+                }
+                return null;
+              },
+            ),
+          ],
           const SizedBox(height: 24),
 
           // Client Information Section
@@ -508,6 +545,16 @@ class _EditProjectDialogState extends State<EditProjectDialog> {
     }
 
     final contacts = _collectContacts();
+    final authState = context.read<AuthBloc>().state;
+    final canEditProjectValue =
+        authState is AuthAuthenticated &&
+        authState.user.isAdmin &&
+        widget.project.type.name.toUpperCase() == 'DESIGN';
+    final updatedProjectValue =
+        canEditProjectValue
+        ? double.tryParse(_projectValueController.text.trim()) ??
+              widget.project.totalPrice
+        : widget.project.totalPrice;
 
     // Create updated project entity
     final updatedProject = widget.project.copyWith(
@@ -519,6 +566,7 @@ class _EditProjectDialogState extends State<EditProjectDialog> {
       clientContacts: contacts,
       googleMapLink: _googleMapLinkController.text.trim(),
       endDate: _endDate ?? widget.project.endDate,
+      totalPrice: updatedProjectValue,
     );
 
     // Dispatch update project event
