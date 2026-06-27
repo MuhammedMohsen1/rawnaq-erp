@@ -110,11 +110,12 @@ class _PricingSummarySidebarState extends State<PricingSummarySidebar> {
   bool _isRefreshingDefaultNotes = false;
   bool _showDeductionBreakdownInPdf = false;
   bool _showLineItemPricesInPdf = true;
+  String? _displayNotes;
 
   @override
   void initState() {
     super.initState();
-    _initializeNoteControllers();
+    _syncDisplayedNotes();
     _deductionController.text = _formatPlainNumber(widget.deductionAmount);
   }
 
@@ -124,7 +125,7 @@ class _PricingSummarySidebarState extends State<PricingSummarySidebar> {
     if (widget.pricingVersionNotes != oldWidget.pricingVersionNotes) {
       final isEditingNotes = _noteFocusNodes.any((node) => node.hasFocus);
       if (!isEditingNotes) {
-        _initializeNoteControllers();
+        _syncDisplayedNotes();
       }
     }
     if (widget.deductionAmount != oldWidget.deductionAmount &&
@@ -150,7 +151,27 @@ class _PricingSummarySidebarState extends State<PricingSummarySidebar> {
     super.dispose();
   }
 
-  void _initializeNoteControllers() {
+  Future<void> _syncDisplayedNotes() async {
+    final pricingNotes = widget.pricingVersionNotes?.trim();
+    if (pricingNotes != null && pricingNotes.isNotEmpty) {
+      _displayNotes = pricingNotes;
+      _initializeNoteControllers(pricingNotes);
+      return;
+    }
+
+    try {
+      final defaultNotes = await _settingsApi.getDefaultPricingNotes();
+      if (!mounted) return;
+      _displayNotes = defaultNotes.trim();
+      _initializeNoteControllers(_displayNotes ?? '');
+    } catch (_) {
+      if (!mounted) return;
+      _displayNotes = '';
+      _initializeNoteControllers('');
+    }
+  }
+
+  void _initializeNoteControllers(String notes) {
     for (final controller in _noteControllers) {
       controller.dispose();
     }
@@ -158,7 +179,6 @@ class _PricingSummarySidebarState extends State<PricingSummarySidebar> {
       focusNode.dispose();
     }
 
-    final notes = widget.pricingVersionNotes ?? '';
     final noteItems = notes
         .split('\n')
         .map((line) => line.trim())

@@ -333,6 +333,7 @@ class InstallmentRequestModel {
 class ExecutionDashboardModel {
   final String projectId;
   final String projectName;
+  final int pricingVersionNumber;
   final DateTime? startDate;
   final DateTime? endDate;
   final double totalReceived;
@@ -357,6 +358,7 @@ class ExecutionDashboardModel {
   ExecutionDashboardModel({
     required this.projectId,
     required this.projectName,
+    required this.pricingVersionNumber,
     this.startDate,
     this.endDate,
     required this.totalReceived,
@@ -409,6 +411,7 @@ class ExecutionDashboardModel {
     return ExecutionDashboardModel(
       projectId: _toStringOrEmpty(json['projectId']),
       projectName: _toStringOrEmpty(json['projectName']),
+      pricingVersionNumber: _toIntOrZero(json['pricingVersionNumber']),
       startDate: json['startDate'] != null
           ? DateTime.tryParse(json['startDate'].toString())
           : null,
@@ -460,6 +463,7 @@ class ExecutionDashboardModel {
   ExecutionDashboardModel copyWith({
     String? projectId,
     String? projectName,
+    int? pricingVersionNumber,
     DateTime? startDate,
     DateTime? endDate,
     double? totalReceived,
@@ -484,6 +488,7 @@ class ExecutionDashboardModel {
     return ExecutionDashboardModel(
       projectId: projectId ?? this.projectId,
       projectName: projectName ?? this.projectName,
+      pricingVersionNumber: pricingVersionNumber ?? this.pricingVersionNumber,
       startDate: startDate ?? this.startDate,
       endDate: endDate ?? this.endDate,
       totalReceived: totalReceived ?? this.totalReceived,

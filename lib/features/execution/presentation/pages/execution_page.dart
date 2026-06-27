@@ -216,8 +216,17 @@ class _ExecutionLayout extends StatelessWidget {
   // ── handlers (unchanged) ──────────────────────────────────────────────────
 
   void _handleOpenPastPricing(BuildContext context) {
+    final state = context.read<ExecutionCubit>().state;
+    final version = state is ExecutionLoaded
+        ? state.dashboard.pricingVersionNumber
+        : null;
     context.push(
-      AppRoutes.pricing(project.id, readOnly: true, hideFinancials: true),
+      AppRoutes.pricing(
+        project.id,
+        readOnly: true,
+        hideFinancials: true,
+        version: version,
+      ),
     );
   }
 

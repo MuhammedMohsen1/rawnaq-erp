@@ -75,10 +75,12 @@ class AppRoutes {
     String projectId, {
     bool readOnly = false,
     bool hideFinancials = false,
+    int? version,
   }) {
     final queryParameters = <String, String>{
       if (readOnly) 'readOnly': 'true',
       if (hideFinancials) 'hideFinancials': 'true',
+      if (version != null) 'version': version.toString(),
     };
     final query = Uri(queryParameters: queryParameters).query;
     return query.isEmpty ? '/pricing/$projectId' : '/pricing/$projectId?$query';
@@ -374,7 +376,11 @@ class AppRouter {
                             ..add(LoadProjects(type: type)),
                       child: ProjectsListPage(
                         key: ValueKey(
-                          'projects-${state.uri.queryParameters['refresh'] ?? 'initial'}-${isDesignerOnly ? 'designer' : isSpecialistCombo ? 'combo' : 'all'}',
+                          'projects-${state.uri.queryParameters['refresh'] ?? 'initial'}-${isDesignerOnly
+                              ? 'designer'
+                              : isSpecialistCombo
+                              ? 'combo'
+                              : 'all'}',
                         ),
                         title: isDesignerOnly ? 'مشاريع التصميم' : 'المشاريع',
                         emptyMessage: isDesignerOnly
@@ -507,6 +513,9 @@ class AppRouter {
                   readOnly: state.uri.queryParameters['readOnly'] == 'true',
                   hideFinancials:
                       state.uri.queryParameters['hideFinancials'] == 'true',
+                  initialVersion: int.tryParse(
+                    state.uri.queryParameters['version'] ?? '',
+                  ),
                 ),
               );
             },

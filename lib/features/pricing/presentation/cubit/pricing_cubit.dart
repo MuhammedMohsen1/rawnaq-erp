@@ -18,6 +18,7 @@ class PricingCubit extends Cubit<PricingState> {
   Future<void> loadPricingData(
     String projectId, {
     bool readOnly = false,
+    int? version,
   }) async {
     // Preserve existing state if reloading
     Map<String, bool> preservedItemStates = {};
@@ -25,6 +26,8 @@ class PricingCubit extends Cubit<PricingState> {
     Map<String, double> preservedProfitMargins = {};
 
     final currentState = state;
+    final effectiveReadOnly =
+        readOnly || (currentState is PricingLoaded && currentState.readOnly);
     if (currentState is PricingLoaded) {
       preservedItemStates = Map.from(currentState.itemExpandedStates);
       preservedSubItemStates = {};
@@ -45,9 +48,14 @@ class PricingCubit extends Cubit<PricingState> {
       final versions = await pricingApiDataSource.getPricingVersions(projectId);
 
       PricingVersionModel pricingVersion;
+      final requestedVersion =
+          version ??
+          (currentState is PricingLoaded
+              ? currentState.pricingVersion.version
+              : null);
 
       if (versions.isEmpty) {
-        if (readOnly) {
+        if (effectiveReadOnly) {
           final projectMetadata = await pricingApiDataSource.getProjectMetadata(
             projectId,
           );
@@ -65,11 +73,10 @@ class PricingCubit extends Cubit<PricingState> {
           projectId,
         );
       } else {
-        // Get the latest version
-        final latestVersion = versions.first;
+        final targetVersion = requestedVersion ?? versions.first.version;
         pricingVersion = await pricingApiDataSource.getPricingVersion(
           projectId,
-          latestVersion.version,
+          targetVersion,
         );
       }
 
@@ -116,7 +123,7 @@ class PricingCubit extends Cubit<PricingState> {
           subItemExpandedStates: subItemExpandedStates,
           subItemProfitMargins: subItemProfitMargins,
           deductionAmount: pricingVersion.deductionAmount,
-          readOnly: readOnly,
+          readOnly: effectiveReadOnly,
         ),
       );
     } catch (e) {

@@ -609,7 +609,8 @@ class PricingSummaryExportActions extends StatelessWidget {
       }
     }
 
-    if (!showReturnToPricing &&
+    if (onSubmit != null &&
+        !showReturnToPricing &&
         !(isAdminOrManager && isApproved) &&
         !isProfitPending) {
       buttons.add(

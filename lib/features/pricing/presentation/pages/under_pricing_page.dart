@@ -33,23 +33,30 @@ class UnderPricingPage extends StatelessWidget {
   final String projectId;
   final bool readOnly;
   final bool hideFinancials;
+  final int? initialVersion;
 
   const UnderPricingPage({
     super.key,
     required this.projectId,
     this.readOnly = false,
     this.hideFinancials = false,
+    this.initialVersion,
   });
 
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (context) =>
-          getIt<PricingCubit>()..loadPricingData(projectId, readOnly: readOnly),
+      create: (context) => getIt<PricingCubit>()
+        ..loadPricingData(
+          projectId,
+          readOnly: readOnly,
+          version: initialVersion,
+        ),
       child: _UnderPricingContent(
         projectId: projectId,
         readOnly: readOnly,
         hideFinancials: hideFinancials,
+        initialVersion: initialVersion,
       ),
     );
   }
@@ -60,11 +67,13 @@ class _UnderPricingContent extends StatefulWidget {
   final String projectId;
   final bool readOnly;
   final bool hideFinancials;
+  final int? initialVersion;
 
   const _UnderPricingContent({
     required this.projectId,
     required this.readOnly,
     required this.hideFinancials,
+    required this.initialVersion,
   });
 
   @override
@@ -73,6 +82,8 @@ class _UnderPricingContent extends StatefulWidget {
 
 class _UnderPricingContentState extends State<_UnderPricingContent> {
   late bool _showFinancials = !widget.hideFinancials;
+  bool _hasExistingContract = false;
+  bool _isCheckingExistingContract = false;
 
   String get projectId => widget.projectId;
   bool get showFinancials => _showFinancials;
@@ -123,6 +134,21 @@ class _UnderPricingContentState extends State<_UnderPricingContent> {
     _syncToolbarAction();
   }
 
+  Future<void> _refreshExistingContractFlag() async {
+    if (!widget.readOnly || _isCheckingExistingContract) return;
+
+    _isCheckingExistingContract = true;
+    try {
+      final contract = await ContractsApiDataSource().getContract(projectId);
+      if (!mounted) return;
+      setState(() {
+        _hasExistingContract = contract != null;
+      });
+    } finally {
+      _isCheckingExistingContract = false;
+    }
+  }
+
   bool _shouldLockSiteEngineerPricing(
     AuthAuthenticated authState,
     String status,
@@ -139,6 +165,7 @@ class _UnderPricingContentState extends State<_UnderPricingContent> {
     return BlocConsumer<PricingCubit, PricingState>(
       listener: (context, state) {
         if (state is PricingLoaded) {
+          _refreshExistingContractFlag();
           final projectName = state.projectName?.trim();
           if (projectName != null && projectName.isNotEmpty) {
             TopBarTitleController.setPricingTitle('$projectName - التسعير');
@@ -178,6 +205,7 @@ class _UnderPricingContentState extends State<_UnderPricingContent> {
             onRetry: () => context.read<PricingCubit>().loadPricingData(
               widget.projectId,
               readOnly: widget.readOnly,
+              version: widget.initialVersion,
             ),
           );
         }
@@ -267,6 +295,7 @@ class _UnderPricingContentState extends State<_UnderPricingContent> {
               context.read<PricingCubit>().loadPricingData(
                 widget.projectId,
                 readOnly: displayState.readOnly,
+                version: widget.initialVersion,
               );
             },
           );
@@ -301,6 +330,11 @@ class _UnderPricingContentState extends State<_UnderPricingContent> {
 
     final isApproved = currentStatus == 'APPROVED';
     final isProfitPending = currentStatus == 'PENDING_SIGNATURE';
+    final hideHistoricalContractActions =
+        state.readOnly && _hasExistingContract;
+    final canEditHistoricalSummary = isAdminOrManager;
+    final canAdjustSummaryValues =
+        canEditHistoricalSummary && (isApproved || isProfitPending);
 
     return ConstrainedBox(
       constraints: BoxConstraints(
@@ -318,8 +352,14 @@ class _UnderPricingContentState extends State<_UnderPricingContent> {
         lastSaveTime: PricingStatusUtils.formatLastSaveTime(
           state.pricingVersion.updatedAt,
         ),
-        showReturnToPricing: showReturnButton && !state.readOnly,
-        onReturnToPricing: showReturnButton && !state.readOnly
+        showReturnToPricing:
+            showReturnButton &&
+            !state.readOnly &&
+            !hideHistoricalContractActions,
+        onReturnToPricing:
+            showReturnButton &&
+                !state.readOnly &&
+                !hideHistoricalContractActions
             ? () => _handleReturnToPricing(context)
             : null,
         isAdminOrManager: isAdminOrManager && showFinancials,
@@ -330,7 +370,8 @@ class _UnderPricingContentState extends State<_UnderPricingContent> {
         onMakeProfit: isAdminOrManager && !state.readOnly && isApproved
             ? () => _handleMakeProfit(context)
             : null,
-        onConfirmPricing: isProfitPending && !state.readOnly
+        onConfirmPricing:
+            isProfitPending && !state.readOnly && !hideHistoricalContractActions
             ? () => _handleConfirmPricing(context)
             : null,
         onExportPdf: (isAdminOrManager)
@@ -343,13 +384,16 @@ class _UnderPricingContentState extends State<_UnderPricingContent> {
         onExportContractPdf: isProfitPending
             ? () => _handleExportContractPdf(context)
             : null,
-        onConfirmContract: isProfitPending && !state.readOnly
+        onConfirmContract:
+            isProfitPending && !state.readOnly && !hideHistoricalContractActions
             ? () => _handleConfirmContract(context)
             : null,
-        onReturnContractToPricing: isProfitPending && !state.readOnly
+        onReturnContractToPricing:
+            isProfitPending && !state.readOnly && !hideHistoricalContractActions
             ? () => _handleReturnContractToPricing(context)
             : null,
-        onArchiveProject: isAuthenticated && !state.readOnly
+        onArchiveProject:
+            isAuthenticated && !state.readOnly && !hideHistoricalContractActions
             ? () => _handleArchiveProject(context)
             : null,
         onExportImages: (isAdminOrManager)
@@ -359,18 +403,12 @@ class _UnderPricingContentState extends State<_UnderPricingContent> {
                 showLineItemPrices: options.showLineItemPrices,
               )
             : null,
-        onDeductionAmountChanged:
-            isAdminOrManager &&
-                !state.readOnly &&
-                (isApproved || isProfitPending)
+        onDeductionAmountChanged: canAdjustSummaryValues
             ? (value) {
                 context.read<PricingCubit>().updateDeductionAmount(value);
               }
             : null,
-        onDeductionAmountApplied:
-            isAdminOrManager &&
-                !state.readOnly &&
-                (isApproved || isProfitPending)
+        onDeductionAmountApplied: canAdjustSummaryValues
             ? (value) async {
                 final cubit = context.read<PricingCubit>();
                 final currentState = cubit.state;
@@ -394,10 +432,12 @@ class _UnderPricingContentState extends State<_UnderPricingContent> {
               }
             : null,
         pricingVersionNotes: state.pricingVersion.notes,
-        onUpdateNotes: isAdminOrManager && !state.readOnly
+        onUpdateNotes: canEditHistoricalSummary
             ? (notes) => _handleUpdateNotes(context, notes)
             : null,
-        onSubmit: state.readOnly ? null : () => _handleSubmit(context),
+        onSubmit: state.readOnly || hideHistoricalContractActions
+            ? null
+            : () => _handleSubmit(context),
         onSaveDraft: state.readOnly
             ? null
             : () {
@@ -411,10 +451,7 @@ class _UnderPricingContentState extends State<_UnderPricingContent> {
         isDraft: currentStatus == 'DRAFT',
         isUnderPricing: currentStatus == 'UNDER_PRICING',
         isPendingSignature: currentStatus == 'PENDING_SIGNATURE',
-        onBulkProfitMarginUpdate:
-            isAdminOrManager &&
-                !state.readOnly &&
-                (isApproved || isProfitPending)
+        onBulkProfitMarginUpdate: canAdjustSummaryValues
             ? (profitMargin) {
                 context.read<PricingCubit>().updateAllSubItemProfitMargins(
                   projectId,
@@ -975,6 +1012,14 @@ class _UnderPricingContentState extends State<_UnderPricingContent> {
     return 'عرض سعر $projectName -$clientName - $dateStr.pdf';
   }
 
+  String _buildPricingExportBaseName(PricingLoaded state) {
+    final projectName = _sanitizeFileNamePart(state.projectName, 'المشروع');
+    final clientName = _sanitizeFileNamePart(state.clientName, 'العميل');
+    final dateStr = DateFormat('yyyy-MM-dd').format(DateTime.now());
+
+    return 'عرض سعر $projectName -$clientName - $dateStr';
+  }
+
   String _sanitizeFileNamePart(String? value, String fallback) {
     final sanitized =
         (value?.trim().isNotEmpty == true ? value!.trim() : fallback)
@@ -988,14 +1033,12 @@ class _UnderPricingContentState extends State<_UnderPricingContent> {
   Future<void> _saveImageFile(
     BuildContext context,
     Uint8List imageBytes,
-    String baseName,
+    String _,
   ) async {
     final state = context.read<PricingCubit>().state;
     if (state is! PricingLoaded) return;
 
-    final projectName = state.projectName ?? 'project';
-    final fileName =
-        '$baseName-$projectName-v${state.pricingVersion.version}-${DateFormat('yyyy-MM-dd').format(DateTime.now())}.png';
+    final fileName = '${_buildPricingExportBaseName(state)}.png';
 
     File savedFile;
 
@@ -1058,8 +1101,7 @@ class _UnderPricingContentState extends State<_UnderPricingContent> {
       return;
     }
 
-    final projectName = state.projectName ?? 'project';
-    final dateStr = DateFormat('yyyy-MM-dd').format(DateTime.now());
+    final baseName = _buildPricingExportBaseName(state);
     final savedFiles = <File>[];
 
     if (Platform.isWindows || Platform.isMacOS || Platform.isLinux) {
@@ -1086,8 +1128,7 @@ class _UnderPricingContentState extends State<_UnderPricingContent> {
 
         if (base64Data.isNotEmpty) {
           final imageBytes = base64Decode(base64Data);
-          final fileName =
-              'pricing-$projectName-v${state.pricingVersion.version}-$dateStr-page$pageNumber.png';
+          final fileName = '$baseName - صفحة $pageNumber.png';
           final file = File('$outputDir/$fileName');
           await file.writeAsBytes(imageBytes);
           savedFiles.add(file);
@@ -1102,8 +1143,7 @@ class _UnderPricingContentState extends State<_UnderPricingContent> {
 
         if (base64Data.isNotEmpty) {
           final imageBytes = base64Decode(base64Data);
-          final fileName =
-              'pricing-$projectName-v${state.pricingVersion.version}-$dateStr-page$pageNumber.png';
+          final fileName = '$baseName - صفحة $pageNumber.png';
           final file = File('${directory.path}/$fileName');
           await file.writeAsBytes(imageBytes);
           savedFiles.add(file);
