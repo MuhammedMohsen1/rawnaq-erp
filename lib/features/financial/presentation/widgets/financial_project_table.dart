@@ -56,7 +56,7 @@ class _PinnedFinancialProjectTable extends StatelessWidget {
     4: FixedColumnWidth(130),
     5: FixedColumnWidth(130),
     6: FixedColumnWidth(130),
-    7: FixedColumnWidth(150),
+    7: FixedColumnWidth(130),
     8: FixedColumnWidth(140),
   };
 
@@ -67,8 +67,8 @@ class _PinnedFinancialProjectTable extends StatelessWidget {
     'قيمة العقد',
     'المحصل',
     'المصروفات',
-    'المتبقي',
-    'استخدام الميزانية',
+    'الربح',
+    'نسبة الربح',
     '',
   ];
 
@@ -138,6 +138,11 @@ class _PinnedFinancialProjectTable extends StatelessWidget {
   }
 
   List<Widget> _buildRowCells(FinancialProjectModel project) {
+    final profit = project.totalReceived - project.totalExpenses;
+    final profitPercentage = project.totalExpenses > 0
+        ? (profit / project.totalExpenses) * 100
+        : 0.0;
+
     return [
       _BodyCell(
         alignment: Alignment.centerRight,
@@ -178,19 +183,19 @@ class _PinnedFinancialProjectTable extends StatelessWidget {
       _BodyCell(
         alignment: Alignment.centerLeft,
         child: Text(
-          formatKwd(project.remainingBudget),
+          formatKwd(profit),
           style: AppTextStyles.tableCell.copyWith(
-            color: project.remainingBudget >= 0
-                ? AppColors.textSecondary
-                : AppColors.error,
+            color: profit >= 0 ? AppColors.success : AppColors.error,
           ),
         ),
       ),
       _BodyCell(
-        alignment: Alignment.centerLeft,
+        alignment: Alignment.center,
         child: Text(
-          formatPercent(project.budgetUsagePercentage),
-          style: AppTextStyles.tableCell,
+          formatPercent(profitPercentage),
+          style: AppTextStyles.tableCell.copyWith(
+            color: profit >= 0 ? AppColors.success : AppColors.error,
+          ),
         ),
       ),
       _BodyCell(
@@ -261,6 +266,11 @@ class _MobileProjectTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final profit = project.totalReceived - project.totalExpenses;
+    final profitPercentage = project.totalExpenses > 0
+        ? (profit / project.totalExpenses) * 100
+        : 0.0;
+
     return InkWell(
       onTap: () =>
           context.push(AppRoutes.projectFinancialOverview(project.projectId)),
@@ -303,13 +313,21 @@ class _MobileProjectTile extends StatelessWidget {
                   value: formatKwd(project.totalExpenses),
                 ),
                 _MiniMetric(
-                  label: 'المتبقي',
-                  value: formatKwd(project.remainingBudget),
+                  label: 'الربح',
+                  value: formatKwd(profit),
+                  valueColor: profit >= 0
+                      ? AppColors.success
+                      : AppColors.error,
+                ),
+                _MiniMetric(
+                  label: 'نسبة الربح',
+                  value: formatPercent(profitPercentage),
+                  valueColor: profit >= 0
+                      ? AppColors.success
+                      : AppColors.error,
                 ),
               ],
             ),
-            const SizedBox(height: 12),
-            _BudgetUsageBar(value: project.budgetUsagePercentage),
             const SizedBox(height: 12),
             _RowActions(project: project),
           ],
@@ -412,46 +430,16 @@ class _StatusBadge extends StatelessWidget {
   }
 }
 
-class _BudgetUsageBar extends StatelessWidget {
-  final double value;
-
-  const _BudgetUsageBar({required this.value});
-
-  @override
-  Widget build(BuildContext context) {
-    final clamped = value.clamp(0, 100).toDouble();
-    final color = value >= 100
-        ? AppColors.error
-        : value >= 85
-        ? AppColors.warning
-        : AppColors.success;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'استخدام الميزانية ${formatPercent(value)}',
-          style: AppTextStyles.caption,
-        ),
-        const SizedBox(height: 6),
-        ClipRRect(
-          borderRadius: BorderRadius.circular(4),
-          child: LinearProgressIndicator(
-            value: clamped / 100,
-            minHeight: 7,
-            backgroundColor: AppColors.progressBackground,
-            color: color,
-          ),
-        ),
-      ],
-    );
-  }
-}
-
 class _MiniMetric extends StatelessWidget {
   final String label;
   final String value;
+  final Color? valueColor;
 
-  const _MiniMetric({required this.label, required this.value});
+  const _MiniMetric({
+    required this.label,
+    required this.value,
+    this.valueColor,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -462,7 +450,10 @@ class _MiniMetric extends StatelessWidget {
         children: [
           Text(label, style: AppTextStyles.caption),
           const SizedBox(height: 4),
-          Text(value, style: AppTextStyles.tableCellBold),
+          Text(
+            value,
+            style: AppTextStyles.tableCellBold.copyWith(color: valueColor),
+          ),
         ],
       ),
     );
