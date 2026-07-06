@@ -283,11 +283,15 @@ class _ExecutionLayout extends StatelessWidget {
     bool canViewProfitData,
     bool canRequestInstallments,
   ) {
+    final scheduleTotal =
+        state.dashboard.totalAmountAfterDeduction > 0
+        ? state.dashboard.totalAmountAfterDeduction
+        : state.dashboard.totalPrice;
     showDialog(
       context: context,
       builder: (dialogContext) => PaymentScheduleDialog(
         paymentSchedule: state.dashboard.paymentSchedule,
-        totalPrice: state.dashboard.totalPrice,
+        totalPrice: scheduleTotal,
         totalCost: state.dashboard.totalBudget,
         totalProfit: state.dashboard.totalProfit,
         profitPercentage: state.dashboard.profitPercentage,

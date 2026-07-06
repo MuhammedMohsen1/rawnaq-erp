@@ -29,59 +29,208 @@ class FinancialProjectTable extends StatelessWidget {
             return _ProjectCardList(projects: projects);
           }
 
-          return SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: ConstrainedBox(
-              constraints: BoxConstraints(minWidth: constraints.maxWidth),
-              child: DataTable(
-                headingRowColor: WidgetStateProperty.all(AppColors.tableHeader),
-                dataRowMinHeight: 58,
-                dataRowMaxHeight: 72,
-                headingTextStyle: AppTextStyles.tableHeader,
-                dataTextStyle: AppTextStyles.tableCell,
-                columns: const [
-                  DataColumn(label: Text('المشروع')),
-                  DataColumn(label: Text('الحالة')),
-                  DataColumn(label: Text('نوع المشروع')),
-                  DataColumn(label: Text('قيمة العقد'), numeric: true),
-                  DataColumn(label: Text('المحصل'), numeric: true),
-                  DataColumn(label: Text('المصروفات'), numeric: true),
-                  DataColumn(label: Text('المتبقي'), numeric: true),
-                  DataColumn(label: Text('استخدام الميزانية'), numeric: true),
-                  DataColumn(label: Text('')),
-                ],
-                rows: [
-                  for (final project in projects)
-                    DataRow(
-                      cells: [
-                        DataCell(_ProjectName(project: project)),
-                        DataCell(_StatusBadge(status: project.status)),
-                        DataCell(_ProjectTypeBadge(label: project.projectType)),
-                        DataCell(Text(formatKwd(project.totalContractValue))),
-                        DataCell(Text(formatKwd(project.totalReceived))),
-                        DataCell(Text(formatKwd(project.totalExpenses))),
-                        DataCell(
-                          Text(
-                            formatKwd(project.remainingBudget),
-                            style: TextStyle(
-                              color: project.remainingBudget >= 0
-                                  ? AppColors.textSecondary
-                                  : AppColors.error,
-                            ),
-                          ),
-                        ),
-                        DataCell(
-                          Text(formatPercent(project.budgetUsagePercentage)),
-                        ),
-                        DataCell(_RowActions(project: project)),
-                      ],
-                    ),
-                ],
-              ),
-            ),
+          return _PinnedFinancialProjectTable(
+            projects: projects,
+            minWidth: constraints.maxWidth,
           );
         },
       ),
+    );
+  }
+}
+
+class _PinnedFinancialProjectTable extends StatelessWidget {
+  final List<FinancialProjectModel> projects;
+  final double minWidth;
+
+  const _PinnedFinancialProjectTable({
+    required this.projects,
+    required this.minWidth,
+  });
+
+  static const Map<int, TableColumnWidth> _columnWidths = {
+    0: FixedColumnWidth(250),
+    1: FixedColumnWidth(140),
+    2: FixedColumnWidth(140),
+    3: FixedColumnWidth(130),
+    4: FixedColumnWidth(130),
+    5: FixedColumnWidth(130),
+    6: FixedColumnWidth(130),
+    7: FixedColumnWidth(150),
+    8: FixedColumnWidth(140),
+  };
+
+  static const List<String> _headers = [
+    'المشروع',
+    'الحالة',
+    'نوع المشروع',
+    'قيمة العقد',
+    'المحصل',
+    'المصروفات',
+    'المتبقي',
+    'استخدام الميزانية',
+    '',
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: ConstrainedBox(
+        constraints: BoxConstraints(minWidth: minWidth),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            _buildHeaderTable(),
+            const Divider(height: 1, thickness: 1, color: AppColors.border),
+            SizedBox(
+              height: _bodyHeight,
+              child: Scrollbar(
+                thumbVisibility: projects.length > 5,
+                child: SingleChildScrollView(child: _buildBodyTable()),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  double get _bodyHeight {
+    final estimatedHeight = (projects.length * 72.0).clamp(0, 420).toDouble();
+    return estimatedHeight < 220 ? estimatedHeight : 420;
+  }
+
+  Widget _buildHeaderTable() {
+    return Table(
+      columnWidths: _columnWidths,
+      children: [
+        TableRow(
+          decoration: const BoxDecoration(color: AppColors.tableHeader),
+          children: [
+            for (int index = 0; index < _headers.length; index++)
+              _HeaderCell(
+                label: _headers[index],
+                numeric: index >= 3 && index <= 7,
+              ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildBodyTable() {
+    return Table(
+      columnWidths: _columnWidths,
+      defaultVerticalAlignment: TableCellVerticalAlignment.middle,
+      children: [
+        for (int index = 0; index < projects.length; index++)
+          TableRow(
+            decoration: BoxDecoration(
+              border: index == projects.length - 1
+                  ? null
+                  : const Border(bottom: BorderSide(color: AppColors.border)),
+            ),
+            children: _buildRowCells(projects[index]),
+          ),
+      ],
+    );
+  }
+
+  List<Widget> _buildRowCells(FinancialProjectModel project) {
+    return [
+      _BodyCell(
+        alignment: Alignment.centerRight,
+        child: _ProjectName(project: project),
+      ),
+      _BodyCell(
+        alignment: Alignment.centerRight,
+        child: _StatusBadge(
+          status: project.status,
+          projectType: project.projectType,
+        ),
+      ),
+      _BodyCell(
+        alignment: Alignment.centerRight,
+        child: _ProjectTypeBadge(label: project.projectType),
+      ),
+      _BodyCell(
+        alignment: Alignment.centerLeft,
+        child: Text(
+          formatKwd(project.totalContractValue),
+          style: AppTextStyles.tableCell,
+        ),
+      ),
+      _BodyCell(
+        alignment: Alignment.centerLeft,
+        child: Text(
+          formatKwd(project.totalReceived),
+          style: AppTextStyles.tableCell,
+        ),
+      ),
+      _BodyCell(
+        alignment: Alignment.centerLeft,
+        child: Text(
+          formatKwd(project.totalExpenses),
+          style: AppTextStyles.tableCell,
+        ),
+      ),
+      _BodyCell(
+        alignment: Alignment.centerLeft,
+        child: Text(
+          formatKwd(project.remainingBudget),
+          style: AppTextStyles.tableCell.copyWith(
+            color: project.remainingBudget >= 0
+                ? AppColors.textSecondary
+                : AppColors.error,
+          ),
+        ),
+      ),
+      _BodyCell(
+        alignment: Alignment.centerLeft,
+        child: Text(
+          formatPercent(project.budgetUsagePercentage),
+          style: AppTextStyles.tableCell,
+        ),
+      ),
+      _BodyCell(
+        alignment: Alignment.center,
+        child: _RowActions(project: project),
+      ),
+    ];
+  }
+}
+
+class _HeaderCell extends StatelessWidget {
+  final String label;
+  final bool numeric;
+
+  const _HeaderCell({required this.label, this.numeric = false});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: 56,
+      alignment: numeric ? Alignment.centerLeft : Alignment.centerRight,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      child: Text(label, style: AppTextStyles.tableHeader),
+    );
+  }
+}
+
+class _BodyCell extends StatelessWidget {
+  final Widget child;
+  final Alignment alignment;
+
+  const _BodyCell({required this.child, required this.alignment});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      constraints: const BoxConstraints(minHeight: 58),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+      alignment: alignment,
+      child: child,
     );
   }
 }
