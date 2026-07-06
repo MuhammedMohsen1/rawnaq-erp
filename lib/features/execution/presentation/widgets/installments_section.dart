@@ -74,6 +74,7 @@ class PaymentScheduleDialog extends StatelessWidget {
   final double totalProfit;
   final double profitPercentage;
   final bool isAdminOrManager;
+  final bool isReadOnly;
   final Function(int phaseIndex, String? requestId, bool currentlyCollected)?
   onToggleCollected;
   final void Function(PaymentPhaseModel phase)? onRequestPaymentPhase;
@@ -86,6 +87,7 @@ class PaymentScheduleDialog extends StatelessWidget {
     required this.totalProfit,
     required this.profitPercentage,
     required this.isAdminOrManager,
+    this.isReadOnly = false,
     this.onToggleCollected,
     this.onRequestPaymentPhase,
   });
@@ -127,6 +129,7 @@ class PaymentScheduleDialog extends StatelessWidget {
                 child: InstallmentsSectionTable(
                   paymentSchedule: paymentSchedule,
                   isAdminOrManager: isAdminOrManager,
+                  isReadOnly: isReadOnly,
                   onToggleCollected: onToggleCollected,
                   onRequestPaymentPhase: onRequestPaymentPhase,
                 ),

@@ -137,13 +137,12 @@ class _ExecutionLayout extends StatelessWidget {
                   onOpenPastPricing: () => _handleOpenPastPricing(context),
                   onOpenPaymentSchedule:
                       isAdminOrManager &&
-                          canEditExecution &&
                           state.dashboard.paymentSchedule.isNotEmpty
                       ? () => _handleOpenPaymentScheduleDialog(
                           context,
                           state,
                           canViewProfitData,
-                          true,
+                          canEditExecution,
                         )
                       : null,
                   onMarkComplete: isAdminOrManager && canEditExecution
@@ -281,7 +280,7 @@ class _ExecutionLayout extends StatelessWidget {
     BuildContext context,
     ExecutionLoaded state,
     bool canViewProfitData,
-    bool canRequestInstallments,
+    bool canEditExecution,
   ) {
     final scheduleTotal =
         state.dashboard.totalAmountAfterDeduction > 0
@@ -296,11 +295,12 @@ class _ExecutionLayout extends StatelessWidget {
         totalProfit: state.dashboard.totalProfit,
         profitPercentage: state.dashboard.profitPercentage,
         isAdminOrManager: canViewProfitData,
-        onToggleCollected: canViewProfitData
+        isReadOnly: !canEditExecution,
+        onToggleCollected: canViewProfitData && canEditExecution
             ? (phaseIndex, requestId, isCollected) =>
                   _handleToggleCollected(context, requestId, isCollected)
             : null,
-        onRequestPaymentPhase: canRequestInstallments
+        onRequestPaymentPhase: canEditExecution
             ? (phase) => _handleRequestInstallmentPhase(
                 context,
                 phase,

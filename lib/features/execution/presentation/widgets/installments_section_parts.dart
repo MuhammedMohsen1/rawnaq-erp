@@ -139,6 +139,7 @@ class InstallmentsSummaryItem extends StatelessWidget {
 class InstallmentsSectionTable extends StatelessWidget {
   final List<PaymentPhaseModel> paymentSchedule;
   final bool isAdminOrManager;
+  final bool isReadOnly;
   final Function(int phaseIndex, String? requestId, bool currentlyCollected)?
   onToggleCollected;
   final void Function(PaymentPhaseModel phase)? onRequestPaymentPhase;
@@ -147,6 +148,7 @@ class InstallmentsSectionTable extends StatelessWidget {
     super.key,
     required this.paymentSchedule,
     required this.isAdminOrManager,
+    this.isReadOnly = false,
     required this.onToggleCollected,
     this.onRequestPaymentPhase,
   });
@@ -155,33 +157,35 @@ class InstallmentsSectionTable extends StatelessWidget {
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.all(16),
-      child: Table(
+        child: Table(
         columnWidths: isAdminOrManager
-            ? const {
+            ? {
                 0: FlexColumnWidth(2),
                 1: FlexColumnWidth(1),
                 2: FlexColumnWidth(1.5),
                 3: FlexColumnWidth(1.5),
                 4: FlexColumnWidth(1.3),
                 5: FlexColumnWidth(1),
-                6: FlexColumnWidth(1),
+                if (!isReadOnly) 6: FlexColumnWidth(1),
               }
-            : const {
+            : {
                 0: FlexColumnWidth(2),
                 1: FlexColumnWidth(1),
                 2: FlexColumnWidth(1.5),
                 3: FlexColumnWidth(1.5),
                 4: FlexColumnWidth(1),
-                5: FlexColumnWidth(1),
+                if (!isReadOnly) 5: FlexColumnWidth(1),
               },
         children: [
           InstallmentsTableHeader(
             isAdminOrManager: isAdminOrManager,
+            isReadOnly: isReadOnly,
           ).toTableRow(),
           ...paymentSchedule.map(
             (phase) => InstallmentsTableRow(
               phase: phase,
               isAdminOrManager: isAdminOrManager,
+              isReadOnly: isReadOnly,
               onToggleCollected: onToggleCollected,
               onRequestPaymentPhase: onRequestPaymentPhase,
             ).toTableRow(),
@@ -194,8 +198,12 @@ class InstallmentsSectionTable extends StatelessWidget {
 
 class InstallmentsTableHeader {
   final bool isAdminOrManager;
+  final bool isReadOnly;
 
-  const InstallmentsTableHeader({required this.isAdminOrManager});
+  const InstallmentsTableHeader({
+    required this.isAdminOrManager,
+    this.isReadOnly = false,
+  });
 
   TableRow toTableRow() {
     final headers = isAdminOrManager
@@ -206,9 +214,16 @@ class InstallmentsTableHeader {
             'التكلفة',
             'الحالة',
             'التقاط',
-            'إجراء',
+            if (!isReadOnly) 'إجراء',
           ]
-        : ['بند', 'النسبة', 'التكلفة', 'الحالة', 'التقاط', 'إجراء'];
+        : [
+            'بند',
+            'النسبة',
+            'التكلفة',
+            'الحالة',
+            'التقاط',
+            if (!isReadOnly) 'إجراء',
+          ];
 
     return TableRow(
       decoration: BoxDecoration(
@@ -237,6 +252,7 @@ class InstallmentsTableHeader {
 class InstallmentsTableRow {
   final PaymentPhaseModel phase;
   final bool isAdminOrManager;
+  final bool isReadOnly;
   final Function(int phaseIndex, String? requestId, bool currentlyCollected)?
   onToggleCollected;
   final void Function(PaymentPhaseModel phase)? onRequestPaymentPhase;
@@ -244,6 +260,7 @@ class InstallmentsTableRow {
   const InstallmentsTableRow({
     required this.phase,
     required this.isAdminOrManager,
+    this.isReadOnly = false,
     required this.onToggleCollected,
     this.onRequestPaymentPhase,
   });
@@ -256,12 +273,6 @@ class InstallmentsTableRow {
     final attachmentsWidget = phase.attachments.isEmpty
         ? const Text('-', style: TextStyle(color: AppColors.textSecondary))
         : TransactionAttachments(attachments: phase.attachments, compact: true);
-    final actionWidget = InstallmentActionButton(
-      phase: phase,
-      isAdminOrManager: isAdminOrManager,
-      onToggleCollected: onToggleCollected,
-      onRequestPaymentPhase: onRequestPaymentPhase,
-    );
 
     final cells = isAdminOrManager
         ? [
@@ -326,10 +337,18 @@ class InstallmentsTableRow {
             ),
             InstallmentsTableCell(child: Center(child: statusWidget)),
             InstallmentsTableCell(child: Center(child: attachmentsWidget)),
-            InstallmentsTableCell(
-              padding: const EdgeInsets.all(8),
-              child: Center(child: actionWidget),
-            ),
+            if (!isReadOnly)
+              InstallmentsTableCell(
+                padding: const EdgeInsets.all(8),
+                child: Center(
+                  child: InstallmentActionButton(
+                    phase: phase,
+                    isAdminOrManager: isAdminOrManager,
+                    onToggleCollected: onToggleCollected,
+                    onRequestPaymentPhase: onRequestPaymentPhase,
+                  ),
+                ),
+              ),
           ];
 
     final rowCells = isAdminOrManager
@@ -340,10 +359,18 @@ class InstallmentsTableRow {
             cells[3],
             InstallmentsTableCell(child: Center(child: statusWidget)),
             InstallmentsTableCell(child: Center(child: attachmentsWidget)),
-            InstallmentsTableCell(
-              padding: const EdgeInsets.all(8),
-              child: Center(child: actionWidget),
-            ),
+            if (!isReadOnly)
+              InstallmentsTableCell(
+                padding: const EdgeInsets.all(8),
+                child: Center(
+                  child: InstallmentActionButton(
+                    phase: phase,
+                    isAdminOrManager: isAdminOrManager,
+                    onToggleCollected: onToggleCollected,
+                    onRequestPaymentPhase: onRequestPaymentPhase,
+                  ),
+                ),
+              ),
           ]
         : cells;
 
