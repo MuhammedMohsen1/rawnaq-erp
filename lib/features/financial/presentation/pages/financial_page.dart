@@ -85,8 +85,10 @@ class _LoadedFinancialView extends StatelessWidget {
             onSearchChanged: context.read<FinancialCubit>().updateSearchQuery,
             onRefresh: context.read<FinancialCubit>().loadSummary,
             selectedPeriod: state.period,
+            selectedProjectType: state.projectType,
             customRange: state.customRange,
             onPeriodChanged: context.read<FinancialCubit>().selectPeriod,
+            onProjectTypeChanged: context.read<FinancialCubit>().selectProjectType,
             onCustomRangeChanged: context
                 .read<FinancialCubit>()
                 .selectCustomRange,

@@ -21,12 +21,14 @@ final class FinancialLoaded extends FinancialState {
   final FinancialSummaryModel summary;
   final String searchQuery;
   final String? period;
+  final String? projectType;
   final DateTimeRange? customRange;
 
   const FinancialLoaded({
     required this.summary,
     this.searchQuery = '',
     this.period,
+    this.projectType,
     this.customRange,
   });
 
@@ -46,20 +48,29 @@ final class FinancialLoaded extends FinancialState {
     FinancialSummaryModel? summary,
     String? searchQuery,
     String? period,
+    String? projectType,
     DateTimeRange? customRange,
     bool clearPeriod = false,
+    bool clearProjectType = false,
     bool clearCustomRange = false,
   }) {
     return FinancialLoaded(
       summary: summary ?? this.summary,
       searchQuery: searchQuery ?? this.searchQuery,
       period: clearPeriod ? null : period ?? this.period,
+      projectType: clearProjectType ? null : projectType ?? this.projectType,
       customRange: clearCustomRange ? null : customRange ?? this.customRange,
     );
   }
 
   @override
-  List<Object?> get props => [summary, searchQuery, period, customRange];
+  List<Object?> get props => [
+    summary,
+    searchQuery,
+    period,
+    projectType,
+    customRange,
+  ];
 }
 
 final class FinancialFailure extends FinancialState {

@@ -11,6 +11,7 @@ class FinancialApiDataSource {
 
   Future<FinancialSummaryModel> getSummary({
     String? period,
+    String? projectType,
     DateTime? startDate,
     DateTime? endDate,
   }) async {
@@ -18,6 +19,7 @@ class FinancialApiDataSource {
       ApiEndpoints.financialSummary,
       queryParameters: {
         if (period != null) 'period': period,
+        if (projectType != null) 'projectType': projectType,
         if (startDate != null) 'startDate': _date(startDate),
         if (endDate != null) 'endDate': _date(endDate),
       },

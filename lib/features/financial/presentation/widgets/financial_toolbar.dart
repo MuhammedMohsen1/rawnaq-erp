@@ -9,8 +9,10 @@ class FinancialToolbar extends StatelessWidget {
   final ValueChanged<String> onSearchChanged;
   final VoidCallback onRefresh;
   final String? selectedPeriod;
+  final String? selectedProjectType;
   final DateTimeRange? customRange;
   final ValueChanged<String?> onPeriodChanged;
+  final ValueChanged<String?> onProjectTypeChanged;
   final ValueChanged<DateTimeRange> onCustomRangeChanged;
 
   const FinancialToolbar({
@@ -19,8 +21,10 @@ class FinancialToolbar extends StatelessWidget {
     required this.onSearchChanged,
     required this.onRefresh,
     required this.selectedPeriod,
+    required this.selectedProjectType,
     required this.customRange,
     required this.onPeriodChanged,
+    required this.onProjectTypeChanged,
     required this.onCustomRangeChanged,
   });
 
@@ -66,32 +70,67 @@ class FinancialToolbar extends StatelessWidget {
             ),
           ],
         );
-        final filters = Wrap(
-          spacing: 8,
-          runSpacing: 8,
+        final filters = Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _PeriodChip(
-              label: 'الكل',
-              selected: selectedPeriod == null && customRange == null,
-              onSelected: () => onPeriodChanged(null),
-            ),
-            for (final option in const [
-              ('WEEK', 'أسبوع'),
-              ('MONTH', 'شهر'),
-              ('YEAR', 'سنة'),
-            ])
-              _PeriodChip(
-                label: option.$2,
-                selected: selectedPeriod == option.$1,
-                onSelected: () => onPeriodChanged(option.$1),
+            _FilterSection(
+              title: 'نوع المشروع',
+              icon: Icons.category_outlined,
+              child: Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: [
+                  _PeriodChip(
+                    label: 'كل المشاريع',
+                    selected: selectedProjectType == null,
+                    onSelected: () => onProjectTypeChanged(null),
+                  ),
+                  _PeriodChip(
+                    label: 'تصميم',
+                    selected: selectedProjectType == 'DESIGN',
+                    onSelected: () => onProjectTypeChanged('DESIGN'),
+                  ),
+                  _PeriodChip(
+                    label: 'تنفيذ',
+                    selected: selectedProjectType == 'EXECUTION',
+                    onSelected: () => onProjectTypeChanged('EXECUTION'),
+                  ),
+                ],
               ),
-            _PeriodChip(
-              label: customRange == null
-                  ? 'فترة مخصصة'
-                  : '${DateFormat('yyyy/MM/dd').format(customRange!.start)} - '
-                        '${DateFormat('yyyy/MM/dd').format(customRange!.end)}',
-              selected: customRange != null,
-              onSelected: () => _pickRange(context),
+            ),
+            const SizedBox(height: 12),
+            _FilterSection(
+              title: 'النطاق الزمني',
+              icon: Icons.date_range_outlined,
+              child: Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: [
+                  _PeriodChip(
+                    label: 'الكل',
+                    selected: selectedPeriod == null && customRange == null,
+                    onSelected: () => onPeriodChanged(null),
+                  ),
+                  for (final option in const [
+                    ('WEEK', 'أسبوع'),
+                    ('MONTH', 'شهر'),
+                    ('YEAR', 'سنة'),
+                  ])
+                    _PeriodChip(
+                      label: option.$2,
+                      selected: selectedPeriod == option.$1,
+                      onSelected: () => onPeriodChanged(option.$1),
+                    ),
+                  _PeriodChip(
+                    label: customRange == null
+                        ? 'فترة مخصصة'
+                        : '${DateFormat('yyyy/MM/dd').format(customRange!.start)} - '
+                              '${DateFormat('yyyy/MM/dd').format(customRange!.end)}',
+                    selected: customRange != null,
+                    onSelected: () => _pickRange(context),
+                  ),
+                ],
+              ),
             ),
           ],
         );
@@ -183,6 +222,46 @@ class _CustomRangeDialogState extends State<_CustomRangeDialog> {
           child: const Text('تطبيق'),
         ),
       ],
+    );
+  }
+}
+
+class _FilterSection extends StatelessWidget {
+  final String title;
+  final IconData icon;
+  final Widget child;
+
+  const _FilterSection({
+    required this.title,
+    required this.icon,
+    required this.child,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: AppColors.cardBackground,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: AppColors.border),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(icon, size: 16, color: AppColors.textMuted),
+              const SizedBox(width: 8),
+              Text(title, style: AppTextStyles.label),
+            ],
+          ),
+          const SizedBox(height: 10),
+          child,
+        ],
+      ),
     );
   }
 }

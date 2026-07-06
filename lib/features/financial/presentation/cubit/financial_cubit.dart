@@ -11,6 +11,7 @@ class FinancialCubit extends Cubit<FinancialState> {
 
   Future<void> loadSummary({
     String? period,
+    String? projectType,
     DateTimeRange? customRange,
     bool resetFilter = false,
   }) async {
@@ -23,10 +24,14 @@ class FinancialCubit extends Cubit<FinancialState> {
     final selectedRange = resetFilter
         ? null
         : customRange ?? (period != null ? null : previous?.customRange);
+    final selectedProjectType = resetFilter
+        ? null
+        : projectType ?? previous?.projectType;
     emit(const FinancialLoading());
     try {
       final summary = await apiDataSource.getSummary(
         period: selectedPeriod,
+        projectType: selectedProjectType,
         startDate: selectedRange?.start,
         endDate: selectedRange?.end,
       );
@@ -35,6 +40,7 @@ class FinancialCubit extends Cubit<FinancialState> {
           summary: summary,
           searchQuery: previous?.searchQuery ?? '',
           period: selectedPeriod,
+          projectType: selectedProjectType,
           customRange: selectedRange,
         ),
       );
@@ -55,4 +61,7 @@ class FinancialCubit extends Cubit<FinancialState> {
 
   Future<void> selectCustomRange(DateTimeRange range) =>
       loadSummary(customRange: range);
+
+  Future<void> selectProjectType(String? projectType) =>
+      loadSummary(projectType: projectType);
 }
