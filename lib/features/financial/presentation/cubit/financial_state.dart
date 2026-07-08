@@ -19,17 +19,23 @@ final class FinancialLoading extends FinancialState {
 
 final class FinancialLoaded extends FinancialState {
   final FinancialSummaryModel summary;
+  final List<CompanyExpenseModel> companyExpenses;
   final String searchQuery;
   final String? period;
   final String? projectType;
   final DateTimeRange? customRange;
+  final bool companyExpensesLoading;
+  final bool companyExpenseSaving;
 
   const FinancialLoaded({
     required this.summary,
+    this.companyExpenses = const [],
     this.searchQuery = '',
     this.period,
     this.projectType,
     this.customRange,
+    this.companyExpensesLoading = false,
+    this.companyExpenseSaving = false,
   });
 
   List<FinancialProjectModel> get filteredProjects {
@@ -46,30 +52,40 @@ final class FinancialLoaded extends FinancialState {
 
   FinancialLoaded copyWith({
     FinancialSummaryModel? summary,
+    List<CompanyExpenseModel>? companyExpenses,
     String? searchQuery,
     String? period,
     String? projectType,
     DateTimeRange? customRange,
+    bool? companyExpensesLoading,
+    bool? companyExpenseSaving,
     bool clearPeriod = false,
     bool clearProjectType = false,
     bool clearCustomRange = false,
   }) {
     return FinancialLoaded(
       summary: summary ?? this.summary,
+      companyExpenses: companyExpenses ?? this.companyExpenses,
       searchQuery: searchQuery ?? this.searchQuery,
       period: clearPeriod ? null : period ?? this.period,
       projectType: clearProjectType ? null : projectType ?? this.projectType,
       customRange: clearCustomRange ? null : customRange ?? this.customRange,
+      companyExpensesLoading:
+          companyExpensesLoading ?? this.companyExpensesLoading,
+      companyExpenseSaving: companyExpenseSaving ?? this.companyExpenseSaving,
     );
   }
 
   @override
   List<Object?> get props => [
     summary,
+    companyExpenses,
     searchQuery,
     period,
     projectType,
     customRange,
+    companyExpensesLoading,
+    companyExpenseSaving,
   ];
 }
 

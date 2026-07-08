@@ -4,8 +4,10 @@ import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_text_styles.dart';
 import '../../../../core/di/injection_container.dart';
 import '../../../../core/utils/responsive_layout.dart';
+import '../../../auth/presentation/bloc/auth_bloc.dart';
 import '../cubit/financial_cubit.dart';
 import '../cubit/financial_state.dart';
+import '../widgets/company_expenses_section.dart';
 import '../widgets/financial_kpi_grid.dart';
 import '../widgets/financial_project_table.dart';
 import '../widgets/financial_toolbar.dart';
@@ -15,31 +17,36 @@ class FinancialPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final authState = context.read<AuthBloc>().state;
+    final isAdmin = authState is AuthAuthenticated && authState.user.isAdmin;
     return BlocProvider(
       create: (context) =>
-          getIt<FinancialCubit>()..loadSummary(period: 'MONTH'),
-      child: const _FinancialPageView(),
+          getIt<FinancialCubit>()..loadInitial(includeCompanyExpenses: isAdmin),
+      child: _FinancialPageView(isAdmin: isAdmin),
     );
   }
 }
 
 class _FinancialPageView extends StatelessWidget {
-  const _FinancialPageView();
+  final bool isAdmin;
+
+  const _FinancialPageView({required this.isAdmin});
 
   @override
   Widget build(BuildContext context) {
     return ResponsiveLayout(
-      mobile: const _FinancialLayout(padding: 16),
-      tablet: const _FinancialLayout(padding: 24),
-      desktop: const _FinancialLayout(padding: 32),
+      mobile: _FinancialLayout(padding: 16, isAdmin: isAdmin),
+      tablet: _FinancialLayout(padding: 24, isAdmin: isAdmin),
+      desktop: _FinancialLayout(padding: 32, isAdmin: isAdmin),
     );
   }
 }
 
 class _FinancialLayout extends StatelessWidget {
   final double padding;
+  final bool isAdmin;
 
-  const _FinancialLayout({required this.padding});
+  const _FinancialLayout({required this.padding, required this.isAdmin});
 
   @override
   Widget build(BuildContext context) {
@@ -53,6 +60,7 @@ class _FinancialLayout extends StatelessWidget {
             FinancialLoaded() => _LoadedFinancialView(
               state: state,
               padding: padding,
+              isAdmin: isAdmin,
             ),
           };
         },
@@ -64,8 +72,13 @@ class _FinancialLayout extends StatelessWidget {
 class _LoadedFinancialView extends StatelessWidget {
   final FinancialLoaded state;
   final double padding;
+  final bool isAdmin;
 
-  const _LoadedFinancialView({required this.state, required this.padding});
+  const _LoadedFinancialView({
+    required this.state,
+    required this.padding,
+    required this.isAdmin,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -78,17 +91,34 @@ class _LoadedFinancialView extends StatelessWidget {
           const SizedBox(height: 20),
           FinancialKpiGrid(totals: state.summary.totals),
           const SizedBox(height: 20),
+          if (isAdmin) ...[
+            CompanyProfitPanel(profit: state.summary.companyProfit),
+            const SizedBox(height: 20),
+            CompanyExpensesSection(
+              expenses: state.companyExpenses,
+              loading: state.companyExpensesLoading,
+              saving: state.companyExpenseSaving,
+            ),
+            const SizedBox(height: 20),
+          ],
           _PortfolioHealthStrip(state: state),
           const SizedBox(height: 20),
           FinancialToolbar(
             projectCount: state.filteredProjects.length,
             onSearchChanged: context.read<FinancialCubit>().updateSearchQuery,
-            onRefresh: context.read<FinancialCubit>().loadSummary,
+            onRefresh: () async {
+              await context.read<FinancialCubit>().loadSummary();
+              if (isAdmin && context.mounted) {
+                await context.read<FinancialCubit>().loadCompanyExpenses();
+              }
+            },
             selectedPeriod: state.period,
             selectedProjectType: state.projectType,
             customRange: state.customRange,
             onPeriodChanged: context.read<FinancialCubit>().selectPeriod,
-            onProjectTypeChanged: context.read<FinancialCubit>().selectProjectType,
+            onProjectTypeChanged: context
+                .read<FinancialCubit>()
+                .selectProjectType,
             onCustomRangeChanged: context
                 .read<FinancialCubit>()
                 .selectCustomRange,

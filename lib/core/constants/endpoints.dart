@@ -1,8 +1,8 @@
 abstract class ApiEndpoints {
   // Base URL - Backend is running on port 3001
   // Using 127.0.0.1 instead of localhost to avoid macOS permission issues
-  // static const String baseUrl = 'http://localhost:3001/api/v1';
-  static const String baseUrl = 'https://api.beenedeek.com/api/v1';
+  static const String baseUrl = 'http://localhost:3001/api/v1';
+  //   static const String baseUrl = 'https://api.beenedeek.com/api/v1';
   // static const String baseUrl =
   //     'http://10.0.2.2:3001/api/v1'; // For Android emulator
 
@@ -438,6 +438,9 @@ abstract class ApiEndpoints {
   static String executionAddIncome(String projectId) =>
       '/projects/$projectId/execution/income';
   static const String financialSummary = '/financial/summary';
+  static const String companyExpenses = '/financial/company-expenses';
+  static String companyExpense(String expenseId) =>
+      '/financial/company-expenses/$expenseId';
   static String projectFinancialOverview(String projectId) =>
       '/financial/projects/$projectId/overview';
   static String approveInstallment(String requestId) =>

@@ -29,6 +29,75 @@ class FinancialApiDataSource {
     return FinancialSummaryModel.fromJson(data);
   }
 
+  Future<List<CompanyExpenseModel>> getCompanyExpenses({
+    String? period,
+    DateTime? startDate,
+    DateTime? endDate,
+  }) async {
+    final response = await _apiClient.get(
+      ApiEndpoints.companyExpenses,
+      queryParameters: {
+        if (period != null) 'period': period,
+        if (startDate != null) 'startDate': _date(startDate),
+        if (endDate != null) 'endDate': _date(endDate),
+      },
+    );
+    final responseData = response.data;
+    final data = responseData is Map<String, dynamic>
+        ? responseData['data'] ?? responseData
+        : responseData;
+    final list = data as List? ?? const [];
+    return list
+        .map(
+          (expense) =>
+              CompanyExpenseModel.fromJson(expense as Map<String, dynamic>),
+        )
+        .toList();
+  }
+
+  Future<void> createCompanyExpense({
+    required String title,
+    String? description,
+    String? category,
+    required double amount,
+    required DateTime transactionDate,
+  }) async {
+    await _apiClient.post(
+      ApiEndpoints.companyExpenses,
+      data: {
+        'title': title,
+        if (description != null) 'description': description,
+        if (category != null) 'category': category,
+        'amount': amount,
+        'transactionDate': _date(transactionDate),
+      },
+    );
+  }
+
+  Future<void> updateCompanyExpense({
+    required String id,
+    required String title,
+    String? description,
+    String? category,
+    required double amount,
+    required DateTime transactionDate,
+  }) async {
+    await _apiClient.patch(
+      ApiEndpoints.companyExpense(id),
+      data: {
+        'title': title,
+        'description': description,
+        'category': category,
+        'amount': amount,
+        'transactionDate': _date(transactionDate),
+      },
+    );
+  }
+
+  Future<void> deleteCompanyExpense(String id) async {
+    await _apiClient.delete(ApiEndpoints.companyExpense(id));
+  }
+
   Future<ProjectFinancialOverviewModel> getProjectOverview(
     String projectId,
   ) async {

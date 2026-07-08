@@ -60,6 +60,88 @@ class FinancialTotalsModel extends Equatable {
   ];
 }
 
+class CompanyProfitModel extends Equatable {
+  final int completedProjectCount;
+  final double completedProjectContractValue;
+  final double completedProjectCost;
+  final double projectProfit;
+  final double companyExpenses;
+  final double netCompanyProfit;
+
+  const CompanyProfitModel({
+    required this.completedProjectCount,
+    required this.completedProjectContractValue,
+    required this.completedProjectCost,
+    required this.projectProfit,
+    required this.companyExpenses,
+    required this.netCompanyProfit,
+  });
+
+  factory CompanyProfitModel.fromJson(Map<String, dynamic> json) {
+    return CompanyProfitModel(
+      completedProjectCount: _toInt(json['completedProjectCount']),
+      completedProjectContractValue: _toDouble(
+        json['completedProjectContractValue'],
+      ),
+      completedProjectCost: _toDouble(json['completedProjectCost']),
+      projectProfit: _toDouble(json['projectProfit']),
+      companyExpenses: _toDouble(json['companyExpenses']),
+      netCompanyProfit: _toDouble(json['netCompanyProfit']),
+    );
+  }
+
+  @override
+  List<Object?> get props => [
+    completedProjectCount,
+    completedProjectContractValue,
+    completedProjectCost,
+    projectProfit,
+    companyExpenses,
+    netCompanyProfit,
+  ];
+}
+
+class CompanyExpenseModel extends Equatable {
+  final String id;
+  final String title;
+  final String? description;
+  final String? category;
+  final double amount;
+  final DateTime transactionDate;
+
+  const CompanyExpenseModel({
+    required this.id,
+    required this.title,
+    this.description,
+    this.category,
+    required this.amount,
+    required this.transactionDate,
+  });
+
+  factory CompanyExpenseModel.fromJson(Map<String, dynamic> json) {
+    return CompanyExpenseModel(
+      id: json['id']?.toString() ?? '',
+      title: json['title']?.toString() ?? '',
+      description: json['description']?.toString(),
+      category: json['category']?.toString(),
+      amount: _toDouble(json['amount']),
+      transactionDate:
+          DateTime.tryParse(json['transactionDate']?.toString() ?? '') ??
+          DateTime.now(),
+    );
+  }
+
+  @override
+  List<Object?> get props => [
+    id,
+    title,
+    description,
+    category,
+    amount,
+    transactionDate,
+  ];
+}
+
 class FinancialProjectModel extends Equatable {
   final String projectId;
   final String projectName;
@@ -127,15 +209,23 @@ class FinancialProjectModel extends Equatable {
 
 class FinancialSummaryModel extends Equatable {
   final FinancialTotalsModel totals;
+  final CompanyProfitModel companyProfit;
   final List<FinancialProjectModel> projects;
 
-  const FinancialSummaryModel({required this.totals, required this.projects});
+  const FinancialSummaryModel({
+    required this.totals,
+    required this.companyProfit,
+    required this.projects,
+  });
 
   factory FinancialSummaryModel.fromJson(Map<String, dynamic> json) {
     final projectsJson = json['projects'] as List? ?? [];
     return FinancialSummaryModel(
       totals: FinancialTotalsModel.fromJson(
         json['totals'] as Map<String, dynamic>? ?? const {},
+      ),
+      companyProfit: CompanyProfitModel.fromJson(
+        json['companyProfit'] as Map<String, dynamic>? ?? const {},
       ),
       projects: projectsJson
           .map(
@@ -147,5 +237,5 @@ class FinancialSummaryModel extends Equatable {
   }
 
   @override
-  List<Object?> get props => [totals, projects];
+  List<Object?> get props => [totals, companyProfit, projects];
 }
