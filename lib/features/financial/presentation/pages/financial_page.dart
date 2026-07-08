@@ -91,16 +91,6 @@ class _LoadedFinancialView extends StatelessWidget {
           const SizedBox(height: 20),
           FinancialKpiGrid(totals: state.summary.totals),
           const SizedBox(height: 20),
-          if (isAdmin) ...[
-            CompanyProfitPanel(profit: state.summary.companyProfit),
-            const SizedBox(height: 20),
-            CompanyExpensesSection(
-              expenses: state.companyExpenses,
-              loading: state.companyExpensesLoading,
-              saving: state.companyExpenseSaving,
-            ),
-            const SizedBox(height: 20),
-          ],
           _PortfolioHealthStrip(state: state),
           const SizedBox(height: 20),
           FinancialToolbar(
@@ -128,6 +118,16 @@ class _LoadedFinancialView extends StatelessWidget {
             const Text(
               'تم تطبيق الفترة على المشاريع والقيم المالية المعروضة.',
               style: AppTextStyles.caption,
+            ),
+          ],
+          if (isAdmin) ...[
+            const SizedBox(height: 16),
+            CompanyProfitPanel(profit: state.summary.companyProfit),
+            const SizedBox(height: 16),
+            CompanyExpensesSection(
+              expenses: state.companyExpenses,
+              loading: state.companyExpensesLoading,
+              saving: state.companyExpenseSaving,
             ),
           ],
           const SizedBox(height: 14),
