@@ -139,7 +139,7 @@ class MainLayout extends StatelessWidget {
     if (currentPath == AppRoutes.designProjects) return 'مشاريع التصميم';
     if (currentPath == AppRoutes.archivedProjects) return 'الأرشيف';
     if (currentPath == AppRoutes.completedProjects) return 'المشاريع المكتملة';
-    if (currentPath == AppRoutes.gantt) return 'مخطط جانت';
+    if (currentPath == AppRoutes.gantt) return 'جدول المهام';
     if (currentPath == AppRoutes.tasks) return 'مهامي';
     if (currentPath == AppRoutes.settings) return 'الإعدادات';
     if (currentPath == AppRoutes.notifications) return 'الإشعارات';
@@ -702,7 +702,7 @@ class _SidebarState extends State<_Sidebar> {
                       context: context,
                       icon: Icons.bar_chart_outlined,
                       activeIcon: Icons.bar_chart,
-                      label: 'مخطط جانت',
+                      label: 'جدول المهام',
                       path: AppRoutes.gantt,
                       isActive: widget.currentPath == AppRoutes.gantt,
                     ),
@@ -749,7 +749,7 @@ class _SidebarState extends State<_Sidebar> {
                       context: context,
                       icon: Icons.bar_chart_outlined,
                       activeIcon: Icons.bar_chart,
-                      label: 'مخطط جانت',
+                      label: 'جدول المهام',
                       path: AppRoutes.gantt,
                       isActive: widget.currentPath == AppRoutes.gantt,
                     ),
@@ -844,7 +844,7 @@ class _SidebarState extends State<_Sidebar> {
                       context: context,
                       icon: Icons.bar_chart_outlined,
                       activeIcon: Icons.bar_chart,
-                      label: 'مخطط جانت',
+                      label: 'جدول المهام',
                       path: AppRoutes.gantt,
                       isActive: widget.currentPath == AppRoutes.gantt,
                     ),
@@ -1112,7 +1112,7 @@ class _SidebarState extends State<_Sidebar> {
     if (path == AppRoutes.designProjects) return 'مشاريع التصميم';
     if (path == AppRoutes.archivedProjects) return 'الأرشيف';
     if (path == AppRoutes.completedProjects) return 'المكتملة';
-    if (path == AppRoutes.gantt) return 'مخطط جانت';
+    if (path == AppRoutes.gantt) return 'جدول المهام';
     if (path == AppRoutes.tasks) return 'مهامي';
     if (path == AppRoutes.settings) return 'الإعدادات';
     if (path == AppRoutes.notifications) return 'الإشعارات';

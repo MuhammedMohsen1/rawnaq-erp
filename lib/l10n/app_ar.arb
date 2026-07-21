@@ -27,7 +27,7 @@
   
   "dashboard": "لوحة القيادة",
   "projects": "المشاريع",
-  "ganttChart": "مخطط جانت",
+  "ganttChart": "جدول المهام",
   "tasks": "المهام",
   "reports": "التقارير",
   "settings": "الإعدادات",
@@ -109,7 +109,7 @@
   "pageNotFound": "الصفحة غير موجودة",
   "pageNotFoundMessage": "الصفحة التي تبحث عنها غير موجودة",
   
-  "ganttChartTitle": "مخطط جانت - توزيع المهام",
+  "ganttChartTitle": "توزيع المهام",
   "today": "اليوم",
   "week": "الأسبوع",
   "month": "الشهر",

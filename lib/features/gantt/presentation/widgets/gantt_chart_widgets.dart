@@ -128,7 +128,7 @@ class GanttChartPageBody extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('مخطط جانت - توزيع المهام', style: AppTextStyles.pageTitle),
+        Text('توزيع المهام', style: AppTextStyles.pageTitle),
         const SizedBox(height: 24),
         GanttFiltersWidget(
           selectedPeriod: selectedPeriod,
