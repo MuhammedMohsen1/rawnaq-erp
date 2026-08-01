@@ -437,7 +437,7 @@ void showDeleteInstallmentConfirmation(
                 final message = 'فشل حذف الدفعة: ${e.toString()}';
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
-                    duration: const Duration(seconds: 2),
+                    duration: Duration(seconds: 2),
                     content: Text(message),
                   ),
                 );
@@ -663,7 +663,7 @@ class _AddExpenseRowState extends State<AddExpenseRow> {
     if (name.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          duration: const Duration(seconds: 2),
+          duration: Duration(seconds: 2),
           content: Text('يرجى إدخال اسم المصروف'),
         ),
       );
@@ -679,7 +679,7 @@ class _AddExpenseRowState extends State<AddExpenseRow> {
       if (amount == null || amount <= 0) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            duration: const Duration(seconds: 2),
+            duration: Duration(seconds: 2),
             content: Text('يرجى إدخال مبلغ صحيح'),
           ),
         );
@@ -694,7 +694,7 @@ class _AddExpenseRowState extends State<AddExpenseRow> {
           quantity <= 0) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            duration: const Duration(seconds: 2),
+            duration: Duration(seconds: 2),
             content: Text('يرجى إدخال سعر الوحدة والكمية'),
           ),
         );
@@ -720,7 +720,7 @@ class _AddExpenseRowState extends State<AddExpenseRow> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            duration: const Duration(seconds: 2),
+            duration: Duration(seconds: 2),
             content: Text('تم إضافة المصروف بنجاح'),
             backgroundColor: AppColors.success,
           ),
@@ -731,7 +731,7 @@ class _AddExpenseRowState extends State<AddExpenseRow> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            duration: const Duration(seconds: 2),
+            duration: Duration(seconds: 2),
             content: Text('فشل إضافة المصروف: ${e.toString()}'),
             backgroundColor: AppColors.error,
           ),
@@ -1057,7 +1057,7 @@ class _EditableExpenseRowState extends State<EditableExpenseRow> {
     if (name.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          duration: const Duration(seconds: 2),
+          duration: Duration(seconds: 2),
           content: Text('يرجى إدخال اسم المصروف'),
         ),
       );
@@ -1073,7 +1073,7 @@ class _EditableExpenseRowState extends State<EditableExpenseRow> {
       if (amount == null || amount <= 0) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            duration: const Duration(seconds: 2),
+            duration: Duration(seconds: 2),
             content: Text('يرجى إدخال مبلغ صحيح'),
           ),
         );
@@ -1088,7 +1088,7 @@ class _EditableExpenseRowState extends State<EditableExpenseRow> {
           quantity <= 0) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            duration: const Duration(seconds: 2),
+            duration: Duration(seconds: 2),
             content: Text('يرجى إدخال سعر الوحدة والكمية'),
           ),
         );
@@ -1113,7 +1113,7 @@ class _EditableExpenseRowState extends State<EditableExpenseRow> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            duration: const Duration(seconds: 2),
+            duration: Duration(seconds: 2),
             content: Text('تم تحديث المصروف بنجاح'),
             backgroundColor: AppColors.success,
           ),
@@ -1123,7 +1123,7 @@ class _EditableExpenseRowState extends State<EditableExpenseRow> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            duration: const Duration(seconds: 2),
+            duration: Duration(seconds: 2),
             content: Text('فشل تحديث المصروف: ${e.toString()}'),
             backgroundColor: AppColors.error,
           ),
@@ -1384,7 +1384,7 @@ class _EditableInstallmentRowState extends State<EditableInstallmentRow> {
     if (name.isEmpty && !hasOriginal && !hasRequested) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          duration: const Duration(seconds: 2),
+          duration: Duration(seconds: 2),
           content: Text('يرجى إدخال الاسم أو المبالغ'),
         ),
       );
@@ -1409,7 +1409,7 @@ class _EditableInstallmentRowState extends State<EditableInstallmentRow> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            duration: const Duration(seconds: 2),
+            duration: Duration(seconds: 2),
             content: Text('تم تحديث الدفعة بنجاح'),
             backgroundColor: AppColors.success,
           ),
@@ -1420,7 +1420,7 @@ class _EditableInstallmentRowState extends State<EditableInstallmentRow> {
         final message = 'فشل تحديث الدفعة: ${e.toString()}';
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            duration: const Duration(seconds: 2),
+            duration: Duration(seconds: 2),
             content: Text(message),
             backgroundColor: AppColors.error,
           ),
@@ -1559,7 +1559,7 @@ class _AddIncomeRowState extends State<AddIncomeRow> {
     if (description.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          duration: const Duration(seconds: 2),
+          duration: Duration(seconds: 2),
           content: Text('يرجى إدخال وصف الإيراد'),
         ),
       );
@@ -1570,7 +1570,7 @@ class _AddIncomeRowState extends State<AddIncomeRow> {
     if (amount == null || amount <= 0) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          duration: const Duration(seconds: 2),
+          duration: Duration(seconds: 2),
           content: Text('يرجى إدخال مبلغ صحيح'),
         ),
       );
@@ -1596,7 +1596,7 @@ class _AddIncomeRowState extends State<AddIncomeRow> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            duration: const Duration(seconds: 2),
+            duration: Duration(seconds: 2),
             content: Text('تم إضافة الإيراد بنجاح'),
             backgroundColor: AppColors.success,
           ),
@@ -1607,7 +1607,7 @@ class _AddIncomeRowState extends State<AddIncomeRow> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            duration: const Duration(seconds: 2),
+            duration: Duration(seconds: 2),
             content: Text('فشل إضافة الإيراد: ${e.toString()}'),
             backgroundColor: AppColors.error,
           ),

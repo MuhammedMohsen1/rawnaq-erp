@@ -75,6 +75,7 @@ class PaymentScheduleDialog extends StatelessWidget {
   final double profitPercentage;
   final bool isAdminOrManager;
   final bool isReadOnly;
+  final VoidCallback? onEditSchedule;
   final Function(int phaseIndex, String? requestId, bool currentlyCollected)?
   onToggleCollected;
   final void Function(PaymentPhaseModel phase)? onRequestPaymentPhase;
@@ -88,6 +89,7 @@ class PaymentScheduleDialog extends StatelessWidget {
     required this.profitPercentage,
     required this.isAdminOrManager,
     this.isReadOnly = false,
+    this.onEditSchedule,
     this.onToggleCollected,
     this.onRequestPaymentPhase,
   });
@@ -106,6 +108,16 @@ class PaymentScheduleDialog extends StatelessWidget {
               padding: const EdgeInsets.fromLTRB(20, 12, 12, 0),
               child: Row(
                 children: [
+                  if (onEditSchedule != null)
+                    Padding(
+                      padding: const EdgeInsetsDirectional.only(end: 8),
+                      child: IconButton(
+                        onPressed: onEditSchedule,
+                        icon: const Icon(Icons.edit_note_rounded),
+                        tooltip: 'تعديل جدول الدفعات',
+                        color: AppColors.primary,
+                      ),
+                    ),
                   const Expanded(child: SizedBox.shrink()),
                   IconButton(
                     onPressed: () => Navigator.of(context).pop(),

@@ -176,6 +176,7 @@ class PaymentPhaseModel {
   final int index;
   final String phaseName;
   final String? notes;
+  final DateTime? dueDate;
   final double percentage;
   final double originalAmount;
   final double deductionAmount;
@@ -191,6 +192,7 @@ class PaymentPhaseModel {
     required this.index,
     required this.phaseName,
     this.notes,
+    this.dueDate,
     required this.percentage,
     required this.originalAmount,
     required this.deductionAmount,
@@ -215,6 +217,9 @@ class PaymentPhaseModel {
       index: _toIntOrZero(json['index']),
       phaseName: _toStringOrEmpty(json['phaseName']),
       notes: _toStringOrNull(json['notes']),
+      dueDate: json['dueDate'] != null
+          ? DateTime.tryParse(json['dueDate'].toString())
+          : null,
       percentage: _toDoubleOrZero(json['percentage']),
       originalAmount: originalAmount,
       deductionAmount: deductionAmount,

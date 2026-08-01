@@ -66,6 +66,16 @@ class ExecutionApiDataSource {
         .toList();
   }
 
+  Future<void> replacePaymentSchedule(
+    String projectId,
+    List<Map<String, dynamic>> paymentSchedule,
+  ) async {
+    await _apiClient.patch(
+      ApiEndpoints.executionPaymentSchedule(projectId),
+      data: {'paymentSchedule': paymentSchedule},
+    );
+  }
+
   /// Request an installment (Site Engineer)
   Future<InstallmentRequestModel> requestInstallment(
     String projectId, {

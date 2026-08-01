@@ -174,6 +174,18 @@ class ExecutionCubit extends Cubit<ExecutionState> {
     }
   }
 
+  Future<void> replacePaymentSchedule(
+    String projectId,
+    List<Map<String, dynamic>> paymentSchedule,
+  ) async {
+    try {
+      await _apiDataSource.replacePaymentSchedule(projectId, paymentSchedule);
+      await refreshDashboard(projectId);
+    } catch (e) {
+      rethrow;
+    }
+  }
+
   /// Pay a payment schedule item directly (Admin)
   Future<void> payPaymentScheduleItem(
     String projectId, {

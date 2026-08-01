@@ -12,6 +12,7 @@ import '../../../../core/utils/responsive_layout.dart';
 import '../../../auth/presentation/bloc/auth_bloc.dart';
 import '../../../projects/data/datasources/projects_api_datasource.dart';
 import '../../../projects/domain/enums/project_status.dart';
+import '../../../design_projects/presentation/widgets/design_workspace_installments_editor.dart';
 import '../../../projects/presentation/widgets/project_attachments_panel.dart';
 import '../../../projects/presentation/widgets/project_contact_actions.dart';
 import '../../data/models/execution_models.dart';
@@ -50,7 +51,7 @@ class _ExecutionPageContent extends StatelessWidget {
             SnackBar(
               content: Text(state.message),
               backgroundColor: AppColors.error,
-              duration: const Duration(seconds: 2),
+              duration: Duration(seconds: 2),
             ),
           );
         }
@@ -261,7 +262,7 @@ class _ExecutionLayout extends StatelessWidget {
       context.go('${AppRoutes.projects}?refresh=$refreshToken');
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          duration: const Duration(seconds: 2),
+          duration: Duration(seconds: 2),
           content: Text('تم تعليم المشروع كمكتمل'),
         ),
       );
@@ -269,7 +270,7 @@ class _ExecutionLayout extends StatelessWidget {
       if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          duration: const Duration(seconds: 2),
+          duration: Duration(seconds: 2),
           content: Text('فشل إكمال المشروع: ${e.toString()}'),
         ),
       );
@@ -282,8 +283,7 @@ class _ExecutionLayout extends StatelessWidget {
     bool canViewProfitData,
     bool canEditExecution,
   ) {
-    final scheduleTotal =
-        state.dashboard.totalAmountAfterDeduction > 0
+    final scheduleTotal = state.dashboard.totalAmountAfterDeduction > 0
         ? state.dashboard.totalAmountAfterDeduction
         : state.dashboard.totalPrice;
     showDialog(
@@ -296,6 +296,9 @@ class _ExecutionLayout extends StatelessWidget {
         profitPercentage: state.dashboard.profitPercentage,
         isAdminOrManager: canViewProfitData,
         isReadOnly: !canEditExecution,
+        onEditSchedule: canViewProfitData && canEditExecution
+            ? () => _handleEditPaymentSchedule(context, state)
+            : null,
         onToggleCollected: canViewProfitData && canEditExecution
             ? (phaseIndex, requestId, isCollected) =>
                   _handleToggleCollected(context, requestId, isCollected)
@@ -310,6 +313,96 @@ class _ExecutionLayout extends StatelessWidget {
             : null,
       ),
     );
+  }
+
+  Future<void> _handleEditPaymentSchedule(
+    BuildContext context,
+    ExecutionLoaded state,
+  ) async {
+    final installments = await showDialog<List<ProjectInstallment>>(
+      context: context,
+      builder: (_) => DesignWorkspaceInstallmentsEditorDialog(
+        initialInstallments: _paymentPhasesToInstallments(
+          state.dashboard.paymentSchedule,
+        ),
+        title: 'تعديل جدول دفعات التنفيذ',
+        description: 'يمكنك إضافة أو تعديل أو حذف أي بند في جدول الدفعات.',
+        confirmLabel: 'حفظ جدول الدفعات',
+      ),
+    );
+    if (installments == null || installments.isEmpty || !context.mounted) {
+      return;
+    }
+
+    try {
+      await context.read<ExecutionCubit>().replacePaymentSchedule(
+        project.id,
+        _installmentsToPaymentSchedule(installments),
+      );
+      if (!context.mounted) return;
+      Navigator.of(context, rootNavigator: true).pop();
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          duration: Duration(seconds: 2),
+          content: Text('تم تحديث جدول دفعات التنفيذ'),
+        ),
+      );
+    } catch (e) {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          duration: Duration(seconds: 2),
+          content: Text('فشل تحديث جدول الدفعات: ${e.toString()}'),
+        ),
+      );
+    }
+  }
+
+  List<ProjectInstallment> _paymentPhasesToInstallments(
+    List<PaymentPhaseModel> phases,
+  ) {
+    return phases.map((phase) {
+      return ProjectInstallment(
+        id: 'installment-${phase.index + 1}',
+        amount: phase.originalAmount,
+        dueDate: phase.dueDate ?? DateTime.now(),
+        isPaid: phase.isCollected,
+        notes: phase.notes ?? phase.phaseName,
+        captures: phase.attachments
+            .map(
+              (attachment) => ProjectInstallmentCapture(
+                id: attachment.id,
+                fileName: attachment.fileName ?? '',
+                mimeType: attachment.mimeType ?? '',
+                url: attachment.url,
+                createdAt: attachment.createdAt ?? DateTime.now(),
+              ),
+            )
+            .toList(),
+      );
+    }).toList();
+  }
+
+  List<Map<String, dynamic>> _installmentsToPaymentSchedule(
+    List<ProjectInstallment> installments,
+  ) {
+    final total = installments.fold<double>(
+      0,
+      (sum, installment) => sum + installment.amount,
+    );
+
+    return installments.map((installment) {
+      final percentage = total > 0 ? installment.amount / total * 100 : 0;
+      final notes = installment.notes?.trim();
+      return {
+        'phase': notes?.isNotEmpty == true ? notes : '',
+        'percentage': percentage,
+        'amount': installment.amount,
+        'dueDate': installment.dueDate.toIso8601String(),
+        'isPaid': installment.isPaid,
+        'notes': notes,
+      };
+    }).toList();
   }
 
   Future<void> _handleReturnToExecution(BuildContext context) async {
@@ -343,7 +436,7 @@ class _ExecutionLayout extends StatelessWidget {
       context.read<ExecutionCubit>().loadDashboard(project.id);
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          duration: const Duration(seconds: 2),
+          duration: Duration(seconds: 2),
           content: Text('تمت إعادة المشروع إلى قيد التنفيذ'),
         ),
       );
@@ -351,7 +444,7 @@ class _ExecutionLayout extends StatelessWidget {
       if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          duration: const Duration(seconds: 2),
+          duration: Duration(seconds: 2),
           content: Text('فشل إعادة المشروع: ${e.toString()}'),
         ),
       );
@@ -381,7 +474,7 @@ class _ExecutionLayout extends StatelessWidget {
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
-              duration: const Duration(seconds: 2),
+              duration: Duration(seconds: 2),
               content: Text('تم إلغاء تحصيل بند جدول الدفعات'),
             ),
           );
@@ -394,7 +487,7 @@ class _ExecutionLayout extends StatelessWidget {
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
-              duration: const Duration(seconds: 2),
+              duration: Duration(seconds: 2),
               content: Text('تم تحصيل بند جدول الدفعات'),
             ),
           );
@@ -404,7 +497,7 @@ class _ExecutionLayout extends StatelessWidget {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            duration: const Duration(seconds: 2),
+            duration: Duration(seconds: 2),
             content: Text('فشل تحديث حالة التحصيل: ${e.toString()}'),
           ),
         );
@@ -426,7 +519,7 @@ class _ExecutionLayout extends StatelessWidget {
     if (availablePhases.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          duration: const Duration(seconds: 2),
+          duration: Duration(seconds: 2),
           content: Text('لا توجد بنود متاحة في جدول الدفعات'),
         ),
       );
@@ -453,7 +546,7 @@ class _ExecutionLayout extends StatelessWidget {
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
-              duration: const Duration(seconds: 2),
+              duration: Duration(seconds: 2),
               content: Text('تم إرسال طلب بند جدول الدفعات للموافقة'),
             ),
           );
@@ -462,7 +555,7 @@ class _ExecutionLayout extends StatelessWidget {
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              duration: const Duration(seconds: 2),
+              duration: Duration(seconds: 2),
               content: Text('فشل إرسال الطلب: ${e.toString()}'),
             ),
           );
@@ -514,7 +607,7 @@ class _ExecutionLayout extends StatelessWidget {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            duration: const Duration(seconds: 2),
+            duration: Duration(seconds: 2),
             content: Text(
               isAdmin
                   ? 'تم دفع بند جدول الدفعات'
@@ -527,7 +620,7 @@ class _ExecutionLayout extends StatelessWidget {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            duration: const Duration(seconds: 2),
+            duration: Duration(seconds: 2),
             content: Text('فشل إرسال الطلب: ${e.toString()}'),
           ),
         );
@@ -547,7 +640,7 @@ class _ExecutionLayout extends StatelessWidget {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            duration: const Duration(seconds: 2),
+            duration: Duration(seconds: 2),
             content: Text('تم قبول طلب بند جدول الدفعات'),
           ),
         );
@@ -556,7 +649,7 @@ class _ExecutionLayout extends StatelessWidget {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            duration: const Duration(seconds: 2),
+            duration: Duration(seconds: 2),
             content: Text('فشل قبول الطلب: ${e.toString()}'),
           ),
         );
@@ -578,7 +671,7 @@ class _ExecutionLayout extends StatelessWidget {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            duration: const Duration(seconds: 2),
+            duration: Duration(seconds: 2),
             content: Text('تم رفض طلب بند جدول الدفعات'),
           ),
         );
@@ -587,7 +680,7 @@ class _ExecutionLayout extends StatelessWidget {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            duration: const Duration(seconds: 2),
+            duration: Duration(seconds: 2),
             content: Text('فشل رفض الطلب: ${e.toString()}'),
           ),
         );

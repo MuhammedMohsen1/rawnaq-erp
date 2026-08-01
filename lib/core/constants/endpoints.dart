@@ -433,6 +433,8 @@ abstract class ApiEndpoints {
       '/projects/$projectId/execution/transactions';
   static String executionAvailablePhases(String projectId) =>
       '/projects/$projectId/execution/available-phases';
+  static String executionPaymentSchedule(String projectId) =>
+      '/projects/$projectId/execution/payment-schedule';
   static String executionRequestInstallment(String projectId) =>
       '/projects/$projectId/execution/installments';
   static String executionAddIncome(String projectId) =>
