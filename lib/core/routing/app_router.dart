@@ -39,6 +39,7 @@ class AppRoutes {
   static const String projects = '/projects';
   static const String designProjects = '/projects/design';
   static const String siteEngineerPricingProjects = '/projects/site-pricing';
+  static const String siteEngineerOngoingProjects = '/projects/site-engineer';
   static const String archivedProjects = '/projects/archived';
   static const String completedProjects = '/projects/completed';
 
