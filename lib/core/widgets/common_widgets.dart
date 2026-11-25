@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../constants/app_colors.dart';
 import '../utils/localization_extension.dart';
+import 'package:rawnaq/core/utils/arabic_number_transformer.dart';
 
 class LoadingWidget extends StatelessWidget {
   final String? message;
@@ -28,7 +29,7 @@ class LoadingWidget extends StatelessWidget {
           if (message != null) ...[
             const SizedBox(height: 16),
             Text(
-              message!,
+              ArabicNumberTransformer.transform(message!),
               style: TextStyle(
                 fontSize: 16,
                 color: AppColors.of(context).textSecondary,
@@ -78,7 +79,7 @@ class ErrorWidget extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             Text(
-              message,
+              ArabicNumberTransformer.transform(message),
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                 color: AppColors.of(context).textSecondary,
               ),
@@ -89,7 +90,9 @@ class ErrorWidget extends StatelessWidget {
               ElevatedButton.icon(
                 onPressed: onRetry,
                 icon: const Icon(Icons.refresh),
-                label: Text(context.l10n.retry),
+                label: Text(
+                  ArabicNumberTransformer.transform(context.l10n.retry),
+                ),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.of(context).primary,
                   foregroundColor: AppColors.white,
@@ -138,7 +141,7 @@ class EmptyWidget extends StatelessWidget {
             ),
             const SizedBox(height: 16),
             Text(
-              title,
+              ArabicNumberTransformer.transform(title),
               style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                 color: AppColors.of(context).textPrimary,
                 fontWeight: FontWeight.w600,
@@ -148,7 +151,7 @@ class EmptyWidget extends StatelessWidget {
             if (subtitle != null) ...[
               const SizedBox(height: 8),
               Text(
-                subtitle!,
+                ArabicNumberTransformer.transform(subtitle!),
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                   color: AppColors.of(context).textSecondary,
                 ),
@@ -160,7 +163,7 @@ class EmptyWidget extends StatelessWidget {
               ElevatedButton.icon(
                 onPressed: onAction,
                 icon: const Icon(Icons.add),
-                label: Text(actionText!),
+                label: Text(ArabicNumberTransformer.transform(actionText!)),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.of(context).primary,
                   foregroundColor: AppColors.white,

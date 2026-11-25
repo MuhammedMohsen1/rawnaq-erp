@@ -12,6 +12,7 @@ import '../../../auth/domain/entities/user.dart';
 import '../../../auth/presentation/bloc/auth_bloc.dart';
 import '../cubit/admin_users_cubit.dart';
 import '../cubit/admin_users_state.dart';
+import 'package:rawnaq/core/utils/arabic_number_transformer.dart';
 
 class AdminUsersPage extends StatelessWidget {
   const AdminUsersPage({super.key});
@@ -56,7 +57,10 @@ class _AdminUsersView extends StatelessWidget {
                 ? ToastTone.success
                 : ToastTone.error,
             duration: const Duration(seconds: 2),
-            content: Text(message, textDirection: TextDirection.rtl),
+            content: Text(
+              ArabicNumberTransformer.transform(message),
+              textDirection: TextDirection.rtl,
+            ),
           ),
         );
       },
@@ -218,7 +222,7 @@ class _ToolbarTextButton extends StatelessWidget {
         ),
         icon: icon,
         label: Text(
-          label,
+          ArabicNumberTransformer.transform(label),
           style: AppTextStyles.of(
             context,
           ).bodyMedium.copyWith(fontWeight: FontWeight.w700),
@@ -251,8 +255,10 @@ class _FilterDropdown extends StatelessWidget {
       decoration: _inputDecoration(context),
       items: items.entries
           .map(
-            (entry) =>
-                DropdownMenuItem(value: entry.key, child: Text(entry.value)),
+            (entry) => DropdownMenuItem(
+              value: entry.key,
+              child: Text(ArabicNumberTransformer.transform(entry.value)),
+            ),
           )
           .toList(),
       onChanged: (value) {
@@ -333,7 +339,7 @@ class _TableHeader extends StatelessWidget {
       child: Row(
         children: [
           Text(
-            'المستخدمون ($total)',
+            ArabicNumberTransformer.transform('المستخدمون ($total)'),
             style: AppTextStyles.of(context).bodyMedium.copyWith(
               color: AppColors.of(context).textPrimary,
               fontWeight: FontWeight.w700,
@@ -361,7 +367,7 @@ class _HeaderLabel extends StatelessWidget {
     return SizedBox(
       width: width,
       child: Text(
-        text,
+        ArabicNumberTransformer.transform(text),
         style: AppTextStyles.of(
           context,
         ).caption.copyWith(color: AppColors.of(context).textMuted),
@@ -390,7 +396,9 @@ class _UserRow extends StatelessWidget {
                 : NetworkImage(user.avatar!),
             child: user.avatar == null
                 ? Text(
-                    user.name.isEmpty ? '?' : user.name.characters.first,
+                    ArabicNumberTransformer.transform(
+                      user.name.isEmpty ? '?' : user.name.characters.first,
+                    ),
                     style: AppTextStyles.of(context).bodyMedium.copyWith(
                       color: AppColors.of(context).textPrimary,
                     ),
@@ -404,7 +412,7 @@ class _UserRow extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Text(
-                  user.name,
+                  ArabicNumberTransformer.transform(user.name),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: AppTextStyles.of(context).bodyMedium.copyWith(
@@ -414,11 +422,13 @@ class _UserRow extends StatelessWidget {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  [
-                    user.email,
-                    if (user.phone != null && user.phone!.isNotEmpty)
-                      user.phone!,
-                  ].join('  |  '),
+                  ArabicNumberTransformer.transform(
+                    [
+                      user.email,
+                      if (user.phone != null && user.phone!.isNotEmpty)
+                        user.phone!,
+                    ].join('  |  '),
+                  ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: AppTextStyles.of(context).caption.copyWith(
@@ -433,9 +443,11 @@ class _UserRow extends StatelessWidget {
           SizedBox(
             width: 140,
             child: Text(
-              user.lastLoginAt == null
-                  ? 'لم يسجل'
-                  : DateHelper.formatDate(user.lastLoginAt!),
+              ArabicNumberTransformer.transform(
+                user.lastLoginAt == null
+                    ? 'لم يسجل'
+                    : DateHelper.formatDate(user.lastLoginAt!),
+              ),
               style: AppTextStyles.of(
                 context,
               ).caption.copyWith(color: AppColors.of(context).textSecondary),
@@ -461,7 +473,9 @@ class _UserRow extends StatelessWidget {
                     PopupMenuItem(
                       value: user.isActive ? 'suspend' : 'activate',
                       child: Text(
-                        user.isActive ? 'إيقاف الحساب' : 'تنشيط الحساب',
+                        ArabicNumberTransformer.transform(
+                          user.isActive ? 'إيقاف الحساب' : 'تنشيط الحساب',
+                        ),
                       ),
                     ),
                     const PopupMenuItem(
@@ -498,7 +512,11 @@ class _UserRow extends StatelessWidget {
       builder: (context) => AlertDialog(
         backgroundColor: AppColors.of(context).cardBackground,
         title: const Text('حذف المستخدم'),
-        content: Text('هل تريد حذف ${user.name}؟ سيتم الحذف بشكل ناعم.'),
+        content: Text(
+          ArabicNumberTransformer.transform(
+            'هل تريد حذف ${user.name}؟ سيتم الحذف بشكل ناعم.',
+          ),
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
@@ -586,7 +604,7 @@ class _Badge extends StatelessWidget {
         borderRadius: BorderRadius.circular(99),
       ),
       child: Text(
-        text,
+        ArabicNumberTransformer.transform(text),
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
         style: AppTextStyles.of(context).caption.copyWith(color: color),
@@ -617,14 +635,14 @@ class _EmptyState extends StatelessWidget {
           Icon(icon, size: 48, color: AppColors.of(context).textMuted),
           const SizedBox(height: 12),
           Text(
-            title,
+            ArabicNumberTransformer.transform(title),
             style: AppTextStyles.of(
               context,
             ).h6.copyWith(color: AppColors.of(context).textPrimary),
           ),
           const SizedBox(height: 6),
           Text(
-            subtitle,
+            ArabicNumberTransformer.transform(subtitle),
             style: AppTextStyles.of(
               context,
             ).bodySmall.copyWith(color: AppColors.of(context).textSecondary),
@@ -704,7 +722,11 @@ class _UserFormDialogState extends State<_UserFormDialog> {
       textDirection: TextDirection.rtl,
       child: AlertDialog(
         backgroundColor: AppColors.of(context).cardBackground,
-        title: Text(_isEditing ? 'تعديل مستخدم' : 'إضافة مستخدم'),
+        title: Text(
+          ArabicNumberTransformer.transform(
+            _isEditing ? 'تعديل مستخدم' : 'إضافة مستخدم',
+          ),
+        ),
         content: SizedBox(
           width: 560,
           child: Form(
@@ -862,8 +884,10 @@ class _DialogDropdown extends StatelessWidget {
       decoration: _inputDecoration(context, hintText: label),
       items: items.entries
           .map(
-            (entry) =>
-                DropdownMenuItem(value: entry.key, child: Text(entry.value)),
+            (entry) => DropdownMenuItem(
+              value: entry.key,
+              child: Text(ArabicNumberTransformer.transform(entry.value)),
+            ),
           )
           .toList(),
       onChanged: (value) {
@@ -909,7 +933,7 @@ class _RolesSelector extends StatelessWidget {
             children: items.entries.map((entry) {
               final isSelected = selected.contains(entry.key);
               return FilterChip(
-                label: Text(entry.value),
+                label: Text(ArabicNumberTransformer.transform(entry.value)),
                 selected: isSelected,
                 onSelected: (value) {
                   final next = {...selected};
@@ -951,7 +975,7 @@ class _AdminSubRolesSelector extends StatelessWidget {
         children: items.entries.map((entry) {
           final isSelected = selected.contains(entry.key);
           return FilterChip(
-            label: Text(entry.value),
+            label: Text(ArabicNumberTransformer.transform(entry.value)),
             selected: isSelected,
             onSelected: (value) {
               final next = {...selected};

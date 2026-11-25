@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:rawnaq/core/utils/arabic_number_transformer.dart';
 
 /// Collection of confirmation dialogs for pricing actions
 class PricingConfirmationDialogs {
@@ -155,7 +156,9 @@ class PricingConfirmationDialogs {
                           const SizedBox(width: 8),
                           Expanded(
                             child: Text(
-                              '$phaseLabel: $percentage%${amount != null ? ' (${(amount as num).toStringAsFixed(3)} د.ك)' : ''}',
+                              ArabicNumberTransformer.transform(
+                                '$phaseLabel: $percentage%${amount != null ? ' (${(amount as num).toStringAsFixed(3)} د.ك)' : ''}',
+                              ),
                             ),
                           ),
                         ],

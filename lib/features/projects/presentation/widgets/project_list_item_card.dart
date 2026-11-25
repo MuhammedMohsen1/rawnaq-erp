@@ -9,6 +9,7 @@ import '../../domain/entities/project_entity.dart';
 import '../../domain/enums/project_status.dart';
 import '../../domain/enums/project_type.dart';
 import '../widgets/project_list_item_card_support_widgets.dart';
+import 'package:rawnaq/core/utils/arabic_number_transformer.dart';
 
 class ProjectListItemCard extends StatefulWidget {
   final ProjectEntity project;
@@ -53,7 +54,7 @@ class _ProjectListItemCardState extends State<ProjectListItemCard> {
       ScaffoldMessenger.of(context).showSnackBar(
         AppToast.build(
           tone: ToastTone.success,
-          content: Text(message),
+          content: Text(ArabicNumberTransformer.transform(message)),
           duration: const Duration(seconds: 1),
         ),
       );
@@ -143,7 +144,9 @@ class _ProjectListItemCardState extends State<ProjectListItemCard> {
                                     ),
                                     SizedBox(height: compact ? 3 : 5),
                                     Text(
-                                      widget.project.name,
+                                      ArabicNumberTransformer.transform(
+                                        widget.project.name,
+                                      ),
                                       maxLines: 1,
                                       overflow: TextOverflow.ellipsis,
                                       style: AppTextStyles.of(context)
@@ -369,7 +372,8 @@ class ProjectsListEmptyState extends StatelessWidget {
   const ProjectsListEmptyState({super.key, required this.message});
 
   @override
-  Widget build(BuildContext context) => Center(child: Text(message));
+  Widget build(BuildContext context) =>
+      Center(child: Text(ArabicNumberTransformer.transform(message)));
 }
 
 class ProjectsListEmptyFilteredState extends StatelessWidget {
@@ -401,7 +405,7 @@ class ProjectsListErrorState extends StatelessWidget {
     child: Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Text(message),
+        Text(ArabicNumberTransformer.transform(message)),
         TextButton(onPressed: onRetry, child: const Text('إعادة المحاولة')),
       ],
     ),

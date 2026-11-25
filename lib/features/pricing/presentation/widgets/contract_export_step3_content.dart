@@ -1,6 +1,7 @@
 import 'package:rawnaq/core/utils/arabic_number_input_formatter.dart';
 import 'package:flutter/material.dart';
 import '../../../../core/constants/app_colors.dart';
+import 'package:rawnaq/core/utils/arabic_number_transformer.dart';
 
 class ContractExportStep3Content extends StatelessWidget {
   final double totalAmount;
@@ -104,10 +105,12 @@ class ContractExportStep3Content extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        (totalPercentage - 100.0).abs() < 0.01 &&
-                                remainingAmount.abs() < 0.01
-                            ? 'المجموع: 100% ✓'
-                            : 'المجموع: ${totalPercentage.toStringAsFixed(2)}%',
+                        ArabicNumberTransformer.transform(
+                          (totalPercentage - 100.0).abs() < 0.01 &&
+                                  remainingAmount.abs() < 0.01
+                              ? 'المجموع: 100% ✓'
+                              : 'المجموع: ${totalPercentage.toStringAsFixed(2)}%',
+                        ),
                         style: TextStyle(
                           color:
                               (totalPercentage - 100.0).abs() < 0.01 &&
@@ -168,7 +171,9 @@ class ContractExportStep3Content extends StatelessWidget {
                               borderRadius: BorderRadius.circular(4),
                             ),
                             child: Text(
-                              'دفعة ${index + 1}',
+                              ArabicNumberTransformer.transform(
+                                'دفعة ${index + 1}',
+                              ),
                               style: TextStyle(
                                 fontSize: 11,
                                 fontWeight: FontWeight.bold,

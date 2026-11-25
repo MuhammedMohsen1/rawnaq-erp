@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_text_styles.dart';
+import 'package:rawnaq/core/utils/arabic_number_transformer.dart';
 
 /// Type of financial summary card
 enum FinancialSummaryCardType { totalReceived, totalExpenses, netCashFlow }
@@ -47,7 +48,7 @@ class FinancialSummaryCard extends StatelessWidget {
               ),
               const SizedBox(width: 8),
               Text(
-                _getTitle(),
+                ArabicNumberTransformer.transform(_getTitle()),
                 style: AppTextStyles.of(context).bodyMedium.copyWith(
                   color: AppColors.of(context).textSecondary,
                 ),
@@ -81,7 +82,7 @@ class FinancialSummaryCard extends StatelessWidget {
                             const SizedBox(width: 4),
                           if (subtitle != null)
                             Text(
-                              subtitle!,
+                              ArabicNumberTransformer.transform(subtitle!),
                               style: AppTextStyles.of(context).caption.copyWith(
                                 color: AppColors.of(context).textMuted,
                               ),
@@ -196,9 +197,11 @@ class FinancialSummaryCard extends StatelessWidget {
           color: AppColors.of(context).textPrimary,
         ),
         children: [
-          TextSpan(text: '$integerPart.'),
           TextSpan(
-            text: decimalPart,
+            text: ArabicNumberTransformer.transformNullable('$integerPart.'),
+          ),
+          TextSpan(
+            text: ArabicNumberTransformer.transformNullable(decimalPart),
             style: AppTextStyles.of(context).h3.copyWith(
               fontSize: 14,
               fontWeight: FontWeight.bold,
@@ -206,7 +209,7 @@ class FinancialSummaryCard extends StatelessWidget {
             ),
           ),
           TextSpan(
-            text: ' $currency',
+            text: ArabicNumberTransformer.transformNullable(' $currency'),
             style: AppTextStyles.of(context).h3.copyWith(
               fontSize: 24,
               fontWeight: FontWeight.bold,

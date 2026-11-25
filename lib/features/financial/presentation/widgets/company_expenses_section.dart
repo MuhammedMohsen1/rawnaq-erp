@@ -7,6 +7,7 @@ import '../../../../core/constants/app_text_styles.dart';
 import '../../data/models/financial_summary_model.dart';
 import '../cubit/financial_cubit.dart';
 import 'financial_formatters.dart';
+import 'package:rawnaq/core/utils/arabic_number_transformer.dart';
 
 class CompanyProfitPanel extends StatelessWidget {
   final CompanyProfitModel profit;
@@ -147,14 +148,18 @@ class _NetProfitBlock extends StatelessWidget {
               Text('صافي ربح الشركة', style: AppTextStyles.of(context).label),
               const SizedBox(height: 4),
               Text(
-                formatKwd(profit.netCompanyProfit),
+                ArabicNumberTransformer.transform(
+                  formatKwd(profit.netCompanyProfit),
+                ),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: AppTextStyles.of(context).h4.copyWith(color: color),
               ),
               const SizedBox(height: 4),
               Text(
-                '${profit.completedProjectCount} مشروع مكتمل داخل الحساب',
+                ArabicNumberTransformer.transform(
+                  '${profit.completedProjectCount} مشروع مكتمل داخل الحساب',
+                ),
                 style: AppTextStyles.of(context).caption,
               ),
             ],
@@ -235,10 +240,13 @@ class _ProfitDetailChip extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(label, style: AppTextStyles.of(context).caption),
+                Text(
+                  ArabicNumberTransformer.transform(label),
+                  style: AppTextStyles.of(context).caption,
+                ),
                 const SizedBox(height: 2),
                 Text(
-                  value,
+                  ArabicNumberTransformer.transform(value),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: AppTextStyles.of(
@@ -300,7 +308,9 @@ class _LedgerHeader extends StatelessWidget {
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      '$count عملية في الفترة المحددة',
+                      ArabicNumberTransformer.transform(
+                        '$count عملية في الفترة المحددة',
+                      ),
                       style: AppTextStyles.of(context).caption,
                     ),
                   ],
@@ -312,7 +322,7 @@ class _LedgerHeader extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               Text(
-                formatKwd(total),
+                ArabicNumberTransformer.transform(formatKwd(total)),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: AppTextStyles.of(
@@ -500,7 +510,9 @@ class _DesktopExpenseRow extends StatelessWidget {
           SizedBox(
             width: 112,
             child: Text(
-              _dateFormat.format(expense.transactionDate),
+              ArabicNumberTransformer.transform(
+                _dateFormat.format(expense.transactionDate),
+              ),
               style: AppTextStyles.of(context).tableCell,
             ),
           ),
@@ -515,7 +527,7 @@ class _DesktopExpenseRow extends StatelessWidget {
           SizedBox(
             width: 140,
             child: Text(
-              formatKwd(expense.amount),
+              ArabicNumberTransformer.transform(formatKwd(expense.amount)),
               textAlign: TextAlign.end,
               style: AppTextStyles.of(
                 context,
@@ -565,7 +577,7 @@ class _MobileExpenseCard extends StatelessWidget {
               Expanded(child: _ExpenseTitleBlock(expense: expense)),
               const SizedBox(width: 12),
               Text(
-                formatKwd(expense.amount),
+                ArabicNumberTransformer.transform(formatKwd(expense.amount)),
                 style: AppTextStyles.of(
                   context,
                 ).h6.copyWith(color: AppColors.of(context).error),
@@ -582,7 +594,9 @@ class _MobileExpenseCard extends StatelessWidget {
               ),
               const SizedBox(width: 6),
               Text(
-                _dateFormat.format(expense.transactionDate),
+                ArabicNumberTransformer.transform(
+                  _dateFormat.format(expense.transactionDate),
+                ),
                 style: AppTextStyles.of(context).caption,
               ),
               const SizedBox(width: 10),
@@ -609,7 +623,7 @@ class _ExpenseTitleBlock extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          expense.title,
+          ArabicNumberTransformer.transform(expense.title),
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
           style: AppTextStyles.of(context).tableCellBold,
@@ -617,7 +631,7 @@ class _ExpenseTitleBlock extends StatelessWidget {
         if (description != null && description.isNotEmpty) ...[
           const SizedBox(height: 4),
           Text(
-            description,
+            ArabicNumberTransformer.transform(description),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: AppTextStyles.of(context).caption,
@@ -644,7 +658,9 @@ class _CategoryBadge extends StatelessWidget {
         border: Border.all(color: AppColors.of(context).selectedSurfaceStrong),
       ),
       child: Text(
-        text == null || text.isEmpty ? 'بدون تصنيف' : text,
+        ArabicNumberTransformer.transform(
+          text == null || text.isEmpty ? 'بدون تصنيف' : text,
+        ),
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
         style: AppTextStyles.of(
@@ -825,7 +841,9 @@ class _CompanyExpenseDialogState extends State<_CompanyExpenseDialog> {
           const SizedBox(width: 12),
           Expanded(
             child: Text(
-              isEditing ? 'تعديل مصروف شركة' : 'إضافة مصروف شركة',
+              ArabicNumberTransformer.transform(
+                isEditing ? 'تعديل مصروف شركة' : 'إضافة مصروف شركة',
+              ),
               style: AppTextStyles.of(context).h5,
             ),
           ),
@@ -903,7 +921,12 @@ class _CompanyExpenseDialogState extends State<_CompanyExpenseDialog> {
                   initialValue: selectedCategory,
                   items: [
                     for (final category in _companyExpenseCategories)
-                      DropdownMenuItem(value: category, child: Text(category)),
+                      DropdownMenuItem(
+                        value: category,
+                        child: Text(
+                          ArabicNumberTransformer.transform(category),
+                        ),
+                      ),
                   ],
                   onChanged: (value) {
                     if (value != null) {
@@ -1005,7 +1028,7 @@ class _DateFieldButton extends StatelessWidget {
                 Text('التاريخ', style: AppTextStyles.of(context).caption),
                 const SizedBox(height: 2),
                 Text(
-                  _dateFormat.format(date),
+                  ArabicNumberTransformer.transform(_dateFormat.format(date)),
                   style: AppTextStyles.of(context).inputText,
                 ),
               ],
@@ -1049,12 +1072,14 @@ class _DeleteCompanyExpenseDialog extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  expense.title,
+                  ArabicNumberTransformer.transform(expense.title),
                   style: AppTextStyles.of(context).tableCellBold,
                 ),
                 const SizedBox(height: 6),
                 Text(
-                  '${_dateFormat.format(expense.transactionDate)}  •  ${formatKwd(expense.amount)}',
+                  ArabicNumberTransformer.transform(
+                    '${_dateFormat.format(expense.transactionDate)}  •  ${formatKwd(expense.amount)}',
+                  ),
                   style: AppTextStyles.of(
                     context,
                   ).caption.copyWith(color: AppColors.of(context).error),

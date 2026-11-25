@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_text_styles.dart';
 import '../../data/models/execution_models.dart';
+import 'package:rawnaq/core/utils/arabic_number_transformer.dart';
 
 class InstallmentsHeader extends StatelessWidget {
   final bool isAdminOrManager;
@@ -106,7 +107,7 @@ class InstallmentsSummaryItem extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          label,
+          ArabicNumberTransformer.transform(label),
           style: AppTextStyles.of(
             context,
           ).bodySmall.copyWith(color: AppColors.of(context).textSecondary),
@@ -169,7 +170,7 @@ class InstallmentsStatusBadge extends StatelessWidget {
           Icon(icon, size: 14, color: textColor),
           const SizedBox(width: 4),
           Text(
-            statusText,
+            ArabicNumberTransformer.transform(statusText),
             style: AppTextStyles.of(
               context,
             ).bodySmall.copyWith(color: textColor, fontWeight: FontWeight.w500),
@@ -222,7 +223,7 @@ class InstallmentsActionButton extends StatelessWidget {
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
         ),
         child: Text(
-          isCollected ? 'إلغاء' : 'تحصيل',
+          ArabicNumberTransformer.transform(isCollected ? 'إلغاء' : 'تحصيل'),
           style: AppTextStyles.of(context).bodySmall.copyWith(
             color: isCollected
                 ? AppColors.of(context).warning

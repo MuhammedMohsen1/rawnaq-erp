@@ -13,6 +13,7 @@ import '../../../../core/constants/app_text_styles.dart';
 import '../../domain/entities/project_attachment_entity.dart';
 import 'project_attachments_section_support_widgets.dart';
 import 'project_attachments_section_pdf_dialogs.dart';
+import 'package:rawnaq/core/utils/arabic_number_transformer.dart';
 
 // ─── Main Section ────────────────────────────────────────────────────────────
 
@@ -109,7 +110,9 @@ class ProjectAttachmentsSection extends StatelessWidget {
                     ),
                   )
                 : Text(
-                    visibleAttachments.map((a) => a.originalName).join('، '),
+                    ArabicNumberTransformer.transform(
+                      visibleAttachments.map((a) => a.originalName).join('، '),
+                    ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: AppTextStyles.of(context).caption.copyWith(
@@ -239,7 +242,7 @@ class _AttachmentCountBadge extends StatelessWidget {
         borderRadius: BorderRadius.circular(999),
       ),
       child: Text(
-        '$count',
+        ArabicNumberTransformer.transform('$count'),
         style: AppTextStyles.of(context).caption.copyWith(
           color: count > 0
               ? AppColors.of(context).primary
@@ -300,7 +303,7 @@ Future<void> _downloadProjectAttachment(
       AppToast.build(
         tone: ToastTone.success,
         duration: const Duration(seconds: 2),
-        content: Text('تم تحميل: $fileName'),
+        content: Text(ArabicNumberTransformer.transform('تم تحميل: $fileName')),
         action: SnackBarAction(
           label: 'فتح',
           onPressed: () => OpenFile.open(targetPath),
@@ -318,7 +321,7 @@ void _showSnackBar(BuildContext context, String message) {
     AppToast.build(
       tone: ToastTone.error,
       duration: const Duration(seconds: 2),
-      content: Text(message),
+      content: Text(ArabicNumberTransformer.transform(message)),
     ),
   );
 }

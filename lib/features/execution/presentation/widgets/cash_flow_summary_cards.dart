@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_text_styles.dart';
 import '../../domain/enums/transaction_type.dart';
+import 'package:rawnaq/core/utils/arabic_number_transformer.dart';
 
 class CashFlowSummaryCards extends StatelessWidget {
   final double totalReceived;
@@ -146,7 +147,7 @@ class _SummaryCard extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.start,
                   children: [
                     Text(
-                      title,
+                      ArabicNumberTransformer.transform(title),
                       style: AppTextStyles.of(context).overline.copyWith(
                         color: AppColors.of(context).textSecondary,
                       ),
@@ -334,9 +335,11 @@ class _DateProgressCard extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           Text(
-            isValidRange && endDate != null
-                ? dateFormat.format(endDate!)
-                : 'غير متاح',
+            ArabicNumberTransformer.transform(
+              isValidRange && endDate != null
+                  ? dateFormat.format(endDate!)
+                  : 'غير متاح',
+            ),
             style: AppTextStyles.of(
               context,
             ).sectionTitle.copyWith(color: AppColors.of(context).textPrimary),
@@ -344,7 +347,9 @@ class _DateProgressCard extends StatelessWidget {
           const SizedBox(height: 8),
           if (isValidRange) ...[
             Text(
-              'التقدم: ${percentValue.toStringAsFixed(0)}% · المتبقي: $daysLeft يوم',
+              ArabicNumberTransformer.transform(
+                'التقدم: ${percentValue.toStringAsFixed(0)}% · المتبقي: $daysLeft يوم',
+              ),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: AppTextStyles.of(

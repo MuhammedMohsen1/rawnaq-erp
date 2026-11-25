@@ -7,6 +7,7 @@ import '../../../../core/constants/app_text_styles.dart';
 import '../../../../core/utils/responsive_layout.dart';
 import '../../../financial/domain/entities/transaction_entity.dart';
 import '../../../financial/domain/entities/transaction_entity.dart' as tx;
+import 'package:rawnaq/core/utils/arabic_number_transformer.dart';
 
 /// Table widget displaying transactions
 class TransactionsTable extends StatefulWidget {
@@ -341,7 +342,7 @@ class _TransactionsTableState extends State<TransactionsTable> {
                     ),
                   )
                 : Text(
-                    transaction.description,
+                    ArabicNumberTransformer.transform(transaction.description),
                     style: AppTextStyles.of(context).tableCellBold,
                   ),
           ),
@@ -361,17 +362,21 @@ class _TransactionsTableState extends State<TransactionsTable> {
                     AppToast.build(
                       tone: ToastTone.info,
                       content: Text(
-                        DateFormat(
-                          'dd MMM yyyy, hh:mm a',
-                          'ar',
-                        ).format(transaction.date),
+                        ArabicNumberTransformer.transform(
+                          DateFormat(
+                            'dd MMM yyyy, hh:mm a',
+                            'ar',
+                          ).format(transaction.date),
+                        ),
                       ),
                       duration: const Duration(seconds: 2),
                     ),
                   );
                 },
                 child: Text(
-                  dateFormat.format(transaction.date),
+                  ArabicNumberTransformer.transform(
+                    dateFormat.format(transaction.date),
+                  ),
                   style: AppTextStyles.of(context).tableCell,
                 ),
               ),
@@ -530,9 +535,13 @@ class _TransactionsTableState extends State<TransactionsTable> {
       text: TextSpan(
         style: AppTextStyles.of(context).tableCellBold.copyWith(color: color),
         children: [
-          TextSpan(text: '$prefix$integerPart.'),
           TextSpan(
-            text: decimalPart,
+            text: ArabicNumberTransformer.transformNullable(
+              '$prefix$integerPart.',
+            ),
+          ),
+          TextSpan(
+            text: ArabicNumberTransformer.transformNullable(decimalPart),
             style: AppTextStyles.of(
               context,
             ).tableCellBold.copyWith(fontSize: 10, color: color),

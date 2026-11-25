@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../../core/constants/app_text_styles.dart';
+import 'package:rawnaq/core/utils/arabic_number_transformer.dart';
 
 /// Header widget showing pricing status badge
 class PricingHeader extends StatelessWidget {
@@ -60,7 +61,7 @@ class _StatusBadge extends StatelessWidget {
           ),
           const SizedBox(width: 8),
           Text(
-            statusText,
+            ArabicNumberTransformer.transform(statusText),
             style: AppTextStyles.of(context).caption.copyWith(
               fontSize: 12,
               fontWeight: FontWeight.w700,

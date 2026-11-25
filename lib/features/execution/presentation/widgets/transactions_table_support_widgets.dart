@@ -5,6 +5,7 @@ import 'package:rawnaq/features/auth/presentation/bloc/auth_bloc.dart';
 
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_text_styles.dart';
+import 'package:rawnaq/core/utils/arabic_number_transformer.dart';
 
 class ExpenseSummaryStrip extends StatefulWidget {
   final double totalReceived;
@@ -341,7 +342,7 @@ class _ProgressSummaryCircle extends StatelessWidget {
                 ),
               ),
               Text(
-                '$percent%',
+                ArabicNumberTransformer.transform('$percent%'),
                 style: AppTextStyles.of(context).caption.copyWith(
                   color: AppColors.of(context).textPrimary,
                   fontWeight: FontWeight.w600,
@@ -357,7 +358,7 @@ class _ProgressSummaryCircle extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                title,
+                ArabicNumberTransformer.transform(title),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: AppTextStyles.of(context).labelSmall.copyWith(
@@ -369,7 +370,7 @@ class _ProgressSummaryCircle extends StatelessWidget {
                 fit: BoxFit.scaleDown,
                 alignment: AlignmentDirectional.centerStart,
                 child: Text(
-                  value,
+                  ArabicNumberTransformer.transform(value),
                   maxLines: 1,
                   style: AppTextStyles.of(
                     context,
@@ -379,7 +380,7 @@ class _ProgressSummaryCircle extends StatelessWidget {
               if (detail != null) ...[
                 const SizedBox(height: 2),
                 Text(
-                  detail!,
+                  ArabicNumberTransformer.transform(detail!),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: AppTextStyles.of(context).caption,
@@ -436,7 +437,7 @@ class _ExpenseSummaryTile extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  title,
+                  ArabicNumberTransformer.transform(title),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: AppTextStyles.of(context).labelSmall.copyWith(
@@ -448,14 +449,14 @@ class _ExpenseSummaryTile extends StatelessWidget {
                   fit: BoxFit.scaleDown,
                   alignment: AlignmentDirectional.centerStart,
                   child: Text(
-                    value,
+                    ArabicNumberTransformer.transform(value),
                     maxLines: 1,
                     style: AppTextStyles.of(context).h6.copyWith(color: color),
                   ),
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  detail,
+                  ArabicNumberTransformer.transform(detail),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: AppTextStyles.of(

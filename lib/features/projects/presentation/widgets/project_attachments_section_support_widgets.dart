@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_text_styles.dart';
 import '../../domain/entities/project_attachment_entity.dart';
+import 'package:rawnaq/core/utils/arabic_number_transformer.dart';
 
 enum ProjectAttachmentsMarkupTool {
   pen,
@@ -204,7 +205,9 @@ class ProjectAttachmentsZoomControls extends StatelessWidget {
                 ),
               ),
               child: Text(
-                '${(zoomLevel * 100).round()}%',
+                ArabicNumberTransformer.transform(
+                  '${(zoomLevel * 100).round()}%',
+                ),
                 style: AppTextStyles.of(context).caption.copyWith(
                   fontWeight: FontWeight.w700,
                   color: AppColors.of(context).textPrimary,
@@ -260,7 +263,7 @@ class ProjectAttachmentsPreviewHeader extends StatelessWidget {
           const SizedBox(width: 10),
           Expanded(
             child: Text(
-              title,
+              ArabicNumberTransformer.transform(title),
               overflow: TextOverflow.ellipsis,
               style: AppTextStyles.of(
                 context,
@@ -319,14 +322,14 @@ class ProjectAttachmentsPdfPageIndicator extends StatelessWidget {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Text(
-                        '$current',
+                        ArabicNumberTransformer.transform('$current'),
                         style: AppTextStyles.of(context).caption.copyWith(
                           fontWeight: FontWeight.w800,
                           color: AppColors.of(context).primary,
                         ),
                       ),
                       Text(
-                        ' / $total',
+                        ArabicNumberTransformer.transform(' / $total'),
                         style: AppTextStyles.of(context).caption.copyWith(
                           color: AppColors.of(context).textSecondary,
                         ),
@@ -406,7 +409,7 @@ class ProjectAttachmentsPdfFooterHint extends StatelessWidget {
           ),
           const SizedBox(width: 6),
           Text(
-            text,
+            ArabicNumberTransformer.transform(text),
             style: AppTextStyles.of(
               context,
             ).caption.copyWith(color: AppColors.of(context).textMuted),
@@ -547,7 +550,9 @@ class _ProjectAttachmentTileState extends State<ProjectAttachmentTile> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    widget.attachment.originalName,
+                    ArabicNumberTransformer.transform(
+                      widget.attachment.originalName,
+                    ),
                     overflow: TextOverflow.ellipsis,
                     style: AppTextStyles.of(context).bodyMedium.copyWith(
                       color: AppColors.of(context).textPrimary,
@@ -650,7 +655,7 @@ class ProjectAttachmentsMetaChip extends StatelessWidget {
         Icon(icon, size: 11, color: AppColors.of(context).textMuted),
         const SizedBox(width: 3),
         Text(
-          label,
+          ArabicNumberTransformer.transform(label),
           style: AppTextStyles.of(context).caption.copyWith(
             color: AppColors.of(context).textSecondary,
             fontSize: 11,

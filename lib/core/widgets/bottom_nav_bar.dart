@@ -6,6 +6,7 @@ import '../constants/app_colors.dart';
 import '../routing/app_router.dart';
 import '../../features/auth/presentation/bloc/auth_bloc.dart';
 import 'logout_confirmation_dialog.dart';
+import 'package:rawnaq/core/utils/arabic_number_transformer.dart';
 
 enum DashboardSection { home, ongoingProjects }
 
@@ -484,7 +485,7 @@ class AppBottomNavBar extends StatelessWidget {
             ),
             const SizedBox(height: 4),
             Text(
-              label,
+              ArabicNumberTransformer.transform(label),
               style: TextStyle(
                 color: isSelected
                     ? AppColors.of(context).primary

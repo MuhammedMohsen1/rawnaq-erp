@@ -3,6 +3,7 @@ import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_text_styles.dart';
 import '../../data/models/financial_summary_model.dart';
 import 'financial_formatters.dart';
+import 'package:rawnaq/core/utils/arabic_number_transformer.dart';
 
 class FinancialKpiGrid extends StatelessWidget {
   final FinancialTotalsModel totals;
@@ -109,10 +110,13 @@ class _FinancialKpiCard extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(data.title, style: AppTextStyles.of(context).statLabel),
+                Text(
+                  ArabicNumberTransformer.transform(data.title),
+                  style: AppTextStyles.of(context).statLabel,
+                ),
                 const SizedBox(height: 6),
                 Text(
-                  data.value,
+                  ArabicNumberTransformer.transform(data.value),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: AppTextStyles.of(context).h5,

@@ -8,6 +8,7 @@ import '../../../tasks/domain/enums/task_status.dart';
 import '../widgets/gantt_filters_widget.dart';
 import '../widgets/gantt_chart_surface.dart';
 import '../widgets/gantt_chart_surface_support_widgets.dart';
+import 'package:rawnaq/core/utils/arabic_number_transformer.dart';
 
 class GanttChartPageBody extends StatelessWidget {
   const GanttChartPageBody({
@@ -261,7 +262,7 @@ class GanttErrorState extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           Text(
-            errorMessage ?? 'حدث خطأ',
+            ArabicNumberTransformer.transform(errorMessage ?? 'حدث خطأ'),
             style: AppTextStyles.of(
               context,
             ).h5.copyWith(color: AppColors.of(context).textPrimary),
@@ -340,7 +341,9 @@ class GanttCompactInfoBar extends StatelessWidget {
                         ),
                         const SizedBox(width: 6),
                         Text(
-                          'معلقة: ${draftTasks.length}',
+                          ArabicNumberTransformer.transform(
+                            'معلقة: ${draftTasks.length}',
+                          ),
                           style: TextStyle(
                             color: draftTasks.isEmpty
                                 ? AppColors.of(context).textMuted
@@ -474,7 +477,7 @@ class GanttCompactInfoBar extends StatelessWidget {
                 ),
                 const SizedBox(width: 4),
                 Text(
-                  item.$2,
+                  ArabicNumberTransformer.transform(item.$2),
                   style: TextStyle(
                     fontSize: 11,
                     color: AppColors.of(context).textSecondary,
@@ -541,7 +544,7 @@ class _CompactWarning extends StatelessWidget {
           Icon(icon, size: 14, color: color),
           const SizedBox(width: 4),
           Text(
-            text,
+            ArabicNumberTransformer.transform(text),
             style: TextStyle(
               fontSize: 11,
               color: color,

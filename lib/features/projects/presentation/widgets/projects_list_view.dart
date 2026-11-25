@@ -10,6 +10,7 @@ import '../../domain/enums/project_status.dart';
 import '../bloc/projects_state.dart';
 import 'project_list_header.dart';
 import 'project_list_item_card.dart';
+import 'package:rawnaq/core/utils/arabic_number_transformer.dart';
 
 const List<ProjectStatus> _statusOrder = [
   ProjectStatus.underPricing,
@@ -95,7 +96,7 @@ class ProjectsListView extends StatelessWidget {
       children: [
         if (title.isNotEmpty) ...[
           Text(
-            title,
+            ArabicNumberTransformer.transform(title),
             style: AppTextStyles.of(context).h4.copyWith(
               color: AppColors.of(context).textPrimary,
               fontWeight: FontWeight.w700,

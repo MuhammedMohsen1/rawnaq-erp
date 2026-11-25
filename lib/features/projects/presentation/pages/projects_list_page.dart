@@ -20,6 +20,7 @@ import '../widgets/create_project_dialog.dart';
 import '../widgets/edit_project_dialog.dart';
 import '../widgets/projects_confirm_action_dialog.dart';
 import '../widgets/projects_list_view.dart';
+import 'package:rawnaq/core/utils/arabic_number_transformer.dart';
 
 const int _pageSize = 12;
 const Set<ProjectStatus> _pricingPipelineStatuses = {
@@ -460,7 +461,11 @@ class _ProjectsListPageState extends State<ProjectsListPage> {
       ScaffoldMessenger.of(context).showSnackBar(
         AppToast.build(
           tone: ToastTone.error,
-          content: Text('فشل نقل المشروع إلى التنفيذ: $e'),
+          content: Text(
+            ArabicNumberTransformer.transform(
+              'فشل نقل المشروع إلى التنفيذ: $e',
+            ),
+          ),
           duration: const Duration(seconds: 2),
         ),
       );

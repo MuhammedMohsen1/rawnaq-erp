@@ -6,6 +6,7 @@ import '../../domain/entities/project_entity.dart';
 import '../../domain/enums/project_type.dart';
 import 'status_badge_widget.dart';
 import 'progress_indicator_widget.dart';
+import 'package:rawnaq/core/utils/arabic_number_transformer.dart';
 
 /// Widget to display projects in a table format
 class ProjectTableWidget extends StatelessWidget {
@@ -141,7 +142,9 @@ class ProjectTableWidget extends StatelessWidget {
                                   children: [
                                     Expanded(
                                       child: Text(
-                                        project.name,
+                                        ArabicNumberTransformer.transform(
+                                          project.name,
+                                        ),
                                         style: AppTextStyles.of(
                                           context,
                                         ).tableCellBold,
@@ -183,7 +186,9 @@ class ProjectTableWidget extends StatelessWidget {
                               Expanded(
                                 flex: 2,
                                 child: Text(
-                                  dateFormat.format(project.startDate),
+                                  ArabicNumberTransformer.transform(
+                                    dateFormat.format(project.startDate),
+                                  ),
                                   style: AppTextStyles.of(context).tableCell,
                                 ),
                               ),
@@ -192,7 +197,9 @@ class ProjectTableWidget extends StatelessWidget {
                               Expanded(
                                 flex: 2,
                                 child: Text(
-                                  dateFormat.format(project.endDate),
+                                  ArabicNumberTransformer.transform(
+                                    dateFormat.format(project.endDate),
+                                  ),
                                   style: AppTextStyles.of(context).tableCell,
                                 ),
                               ),

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../projects/domain/entities/team_member_entity.dart';
+import 'package:rawnaq/core/utils/arabic_number_transformer.dart';
 
 /// Time period options for Gantt chart
 enum GanttTimePeriod { today, week, month, threeMonths }
@@ -149,7 +150,7 @@ class GanttFiltersWidget extends StatelessWidget {
             child: SizedBox(
               width: 52,
               child: Text(
-                '$zoomPercent%',
+                ArabicNumberTransformer.transform('$zoomPercent%'),
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   color: AppColors.of(context).textPrimary,
@@ -271,7 +272,7 @@ class GanttFiltersWidget extends StatelessWidget {
             ),
             const SizedBox(width: 6),
             Text(
-              label,
+              ArabicNumberTransformer.transform(label),
               style: TextStyle(
                 color: isSelected
                     ? AppColors.of(context).primary
@@ -361,7 +362,9 @@ class GanttFiltersWidget extends StatelessWidget {
                         context,
                       ).primary.withValues(alpha: 0.2),
                       child: Text(
-                        member.name.substring(0, 1),
+                        ArabicNumberTransformer.transform(
+                          member.name.substring(0, 1),
+                        ),
                         style: TextStyle(
                           color: AppColors.of(context).primary,
                           fontSize: 10,
@@ -370,7 +373,10 @@ class GanttFiltersWidget extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(width: 6),
-                    Text(member.name, style: const TextStyle(fontSize: 12)),
+                    Text(
+                      ArabicNumberTransformer.transform(member.name),
+                      style: const TextStyle(fontSize: 12),
+                    ),
                   ],
                 ),
               ),

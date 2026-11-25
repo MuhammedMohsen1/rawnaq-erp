@@ -6,6 +6,7 @@ import '../../domain/entities/project_entity.dart';
 import '../../domain/enums/project_type.dart';
 import 'status_badge_widget.dart';
 import 'progress_indicator_widget.dart';
+import 'package:rawnaq/core/utils/arabic_number_transformer.dart';
 
 /// Widget to display a single project as a card
 class ProjectCardWidget extends StatelessWidget {
@@ -51,7 +52,9 @@ class ProjectCardWidget extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          hasClientName ? clientName : project.name,
+                          ArabicNumberTransformer.transform(
+                            hasClientName ? clientName : project.name,
+                          ),
                           style: AppTextStyles.of(context).h6,
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
@@ -59,7 +62,7 @@ class ProjectCardWidget extends StatelessWidget {
                         if (hasClientName) ...[
                           const SizedBox(height: 4),
                           Text(
-                            project.name,
+                            ArabicNumberTransformer.transform(project.name),
                             style: AppTextStyles.of(context).bodyMedium
                                 .copyWith(
                                   color: AppColors.of(context).textSecondary,
@@ -158,7 +161,9 @@ class ProjectCardWidget extends StatelessWidget {
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          dateFormat.format(project.startDate),
+                          ArabicNumberTransformer.transform(
+                            dateFormat.format(project.startDate),
+                          ),
                           style: AppTextStyles.of(context).bodyMedium.copyWith(
                             color: AppColors.of(context).textPrimary,
                           ),
@@ -176,7 +181,9 @@ class ProjectCardWidget extends StatelessWidget {
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          dateFormat.format(project.endDate),
+                          ArabicNumberTransformer.transform(
+                            dateFormat.format(project.endDate),
+                          ),
                           style: AppTextStyles.of(context).bodyMedium.copyWith(
                             color: AppColors.of(context).textPrimary,
                           ),
@@ -198,7 +205,9 @@ class ProjectCardWidget extends StatelessWidget {
                       radius: 16,
                       backgroundColor: AppColors.of(context).surfaceColor,
                       child: Text(
-                        project.manager!.name.substring(0, 1),
+                        ArabicNumberTransformer.transform(
+                          project.manager!.name.substring(0, 1),
+                        ),
                         style: AppTextStyles.of(context).bodyMedium.copyWith(
                           color: AppColors.of(context).primary,
                           fontWeight: FontWeight.w600,
@@ -211,14 +220,18 @@ class ProjectCardWidget extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            project.manager!.name,
+                            ArabicNumberTransformer.transform(
+                              project.manager!.name,
+                            ),
                             style: AppTextStyles.of(context).bodyMedium
                                 .copyWith(
                                   color: AppColors.of(context).textPrimary,
                                 ),
                           ),
                           Text(
-                            project.manager!.role,
+                            ArabicNumberTransformer.transform(
+                              project.manager!.role,
+                            ),
                             style: AppTextStyles.of(context).caption,
                           ),
                         ],

@@ -8,6 +8,7 @@ import '../../../../core/widgets/dialog_keyboard_actions.dart';
 import '../../domain/entities/project_entity.dart';
 import '../bloc/projects_bloc.dart';
 import '../bloc/projects_event.dart';
+import 'package:rawnaq/core/utils/arabic_number_transformer.dart';
 
 /// Multi-step dialog for creating a new project
 class CreateProjectDialog extends StatefulWidget {
@@ -261,7 +262,7 @@ class _CreateProjectDialogState extends State<CreateProjectDialog> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    title,
+                    ArabicNumberTransformer.transform(title),
                     style: AppTextStyles.of(context).bodyLarge.copyWith(
                       color: AppColors.of(context).textPrimary,
                       fontWeight: FontWeight.w600,
@@ -269,7 +270,7 @@ class _CreateProjectDialogState extends State<CreateProjectDialog> {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    subtitle,
+                    ArabicNumberTransformer.transform(subtitle),
                     style: AppTextStyles.of(context).bodySmall.copyWith(
                       color: AppColors.of(context).textSecondary,
                     ),
@@ -572,7 +573,7 @@ class _CreateProjectDialogState extends State<CreateProjectDialog> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          label,
+          ArabicNumberTransformer.transform(label),
           style: AppTextStyles.of(context).bodyMedium.copyWith(
             color: AppColors.of(context).textSecondary,
             fontWeight: FontWeight.w500,
@@ -667,7 +668,7 @@ class _CreateProjectDialogState extends State<CreateProjectDialog> {
               const SizedBox(width: 12),
               Expanded(
                 child: Text(
-                  departmentName,
+                  ArabicNumberTransformer.transform(departmentName),
                   style: AppTextStyles.of(context).bodyMedium.copyWith(
                     color: AppColors.of(context).textPrimary,
                   ),
@@ -689,7 +690,7 @@ class _CreateProjectDialogState extends State<CreateProjectDialog> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          label,
+          ArabicNumberTransformer.transform(label),
           style: AppTextStyles.of(context).bodyMedium.copyWith(
             color: AppColors.of(context).textSecondary,
             fontWeight: FontWeight.w500,
@@ -738,7 +739,9 @@ class _CreateProjectDialogState extends State<CreateProjectDialog> {
                 const SizedBox(width: 12),
                 Expanded(
                   child: Text(
-                    '${date.year}/${date.month}/${date.day}',
+                    ArabicNumberTransformer.transform(
+                      '${date.year}/${date.month}/${date.day}',
+                    ),
                     style: AppTextStyles.of(context).bodyMedium.copyWith(
                       color: AppColors.of(context).textPrimary,
                     ),
@@ -792,7 +795,9 @@ class _CreateProjectDialogState extends State<CreateProjectDialog> {
               ),
             ),
             child: Text(
-              _currentStep == 0 ? 'التالي' : 'إنشاء المشروع',
+              ArabicNumberTransformer.transform(
+                _currentStep == 0 ? 'التالي' : 'إنشاء المشروع',
+              ),
               style: const TextStyle(fontWeight: FontWeight.w600),
             ),
           ),

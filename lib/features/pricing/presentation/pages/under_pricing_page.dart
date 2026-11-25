@@ -29,6 +29,7 @@ import '../widgets/pricing_confirmation_dialogs.dart';
 import '../widgets/pricing_drafts.dart';
 import '../widgets/pricing_summary_sidebar.dart';
 import '../widgets/under_pricing_page_views.dart';
+import 'package:rawnaq/core/utils/arabic_number_transformer.dart';
 
 /// Under pricing page - refactored with Cubit and extracted widgets
 class UnderPricingPage extends StatelessWidget {
@@ -289,7 +290,9 @@ class _UnderPricingContentState extends State<_UnderPricingContent> {
               ScaffoldMessenger.of(context).showSnackBar(
                 AppToast.build(
                   tone: ToastTone.error,
-                  content: Text(state.message),
+                  content: Text(
+                    ArabicNumberTransformer.transform(state.message),
+                  ),
                   duration: const Duration(seconds: 2),
                 ),
               );
@@ -634,7 +637,11 @@ class _UnderPricingContentState extends State<_UnderPricingContent> {
             AppToast.build(
               tone: ToastTone.error,
               duration: const Duration(seconds: 2),
-              content: Text('فشل إضافة البند: ${e.toString()}'),
+              content: Text(
+                ArabicNumberTransformer.transform(
+                  'فشل إضافة البند: ${e.toString()}',
+                ),
+              ),
             ),
           );
         }
@@ -667,7 +674,11 @@ class _UnderPricingContentState extends State<_UnderPricingContent> {
           ScaffoldMessenger.of(context).showSnackBar(
             AppToast.build(
               tone: ToastTone.error,
-              content: Text('فشل إضافة البند الفرعية: ${e.toString()}'),
+              content: Text(
+                ArabicNumberTransformer.transform(
+                  'فشل إضافة البند الفرعية: ${e.toString()}',
+                ),
+              ),
               duration: const Duration(seconds: 2),
             ),
           );
@@ -925,7 +936,11 @@ class _UnderPricingContentState extends State<_UnderPricingContent> {
         ScaffoldMessenger.of(context).showSnackBar(
           AppToast.build(
             tone: ToastTone.error,
-            content: Text('فشل حفظ الملاحظات: ${e.toString()}'),
+            content: Text(
+              ArabicNumberTransformer.transform(
+                'فشل حفظ الملاحظات: ${e.toString()}',
+              ),
+            ),
             duration: const Duration(seconds: 2),
           ),
         );
@@ -951,7 +966,11 @@ class _UnderPricingContentState extends State<_UnderPricingContent> {
           AppToast.build(
             tone: ToastTone.error,
             duration: const Duration(seconds: 2),
-            content: Text('فشل إرسال التسعير للتوقيع: ${e.toString()}'),
+            content: Text(
+              ArabicNumberTransformer.transform(
+                'فشل إرسال التسعير للتوقيع: ${e.toString()}',
+              ),
+            ),
           ),
         );
       }
@@ -1110,7 +1129,11 @@ class _UnderPricingContentState extends State<_UnderPricingContent> {
       ScaffoldMessenger.of(context).showSnackBar(
         AppToast.build(
           tone: ToastTone.success,
-          content: Text('تم حفظ PDF بنجاح: ${savedFile.path}'),
+          content: Text(
+            ArabicNumberTransformer.transform(
+              'تم حفظ PDF بنجاح: ${savedFile.path}',
+            ),
+          ),
           duration: const Duration(seconds: 2),
           action: Platform.isWindows || Platform.isMacOS || Platform.isLinux
               ? SnackBarAction(
@@ -1197,7 +1220,11 @@ class _UnderPricingContentState extends State<_UnderPricingContent> {
       ScaffoldMessenger.of(context).showSnackBar(
         AppToast.build(
           tone: ToastTone.success,
-          content: Text('تم حفظ الصورة بنجاح: ${savedFile.path}'),
+          content: Text(
+            ArabicNumberTransformer.transform(
+              'تم حفظ الصورة بنجاح: ${savedFile.path}',
+            ),
+          ),
           duration: const Duration(seconds: 2),
         ),
       );
@@ -1280,7 +1307,11 @@ class _UnderPricingContentState extends State<_UnderPricingContent> {
       ScaffoldMessenger.of(context).showSnackBar(
         AppToast.build(
           tone: ToastTone.success,
-          content: Text('تم حفظ ${savedFiles.length} صورة بنجاح'),
+          content: Text(
+            ArabicNumberTransformer.transform(
+              'تم حفظ ${savedFiles.length} صورة بنجاح',
+            ),
+          ),
           duration: const Duration(seconds: 2),
         ),
       );
@@ -1300,7 +1331,7 @@ class _UnderPricingContentState extends State<_UnderPricingContent> {
     ScaffoldMessenger.of(context).showSnackBar(
       AppToast.build(
         tone: ToastTone.error,
-        content: Text(errorMessage),
+        content: Text(ArabicNumberTransformer.transform(errorMessage)),
         duration: const Duration(seconds: 2),
       ),
     );

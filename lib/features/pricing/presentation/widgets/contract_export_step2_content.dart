@@ -1,6 +1,7 @@
 import 'package:rawnaq/core/utils/arabic_number_input_formatter.dart';
 import 'package:flutter/material.dart';
 import '../../../../core/constants/app_colors.dart';
+import 'package:rawnaq/core/utils/arabic_number_transformer.dart';
 
 class ContractExportStep2Content extends StatelessWidget {
   final bool isLoadingTerms;
@@ -84,7 +85,9 @@ class ContractExportStep2Content extends StatelessWidget {
                           ),
                           Expanded(
                             child: Text(
-                              'بند ${index + 1}',
+                              ArabicNumberTransformer.transform(
+                                'بند ${index + 1}',
+                              ),
                               style: TextStyle(
                                 fontSize: 12,
                                 fontWeight: FontWeight.bold,

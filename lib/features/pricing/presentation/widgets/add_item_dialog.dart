@@ -2,6 +2,7 @@ import 'package:rawnaq/core/utils/arabic_number_input_formatter.dart';
 import 'package:flutter/material.dart';
 
 import '../../../../core/widgets/dialog_keyboard_actions.dart';
+import 'package:rawnaq/core/utils/arabic_number_transformer.dart';
 
 class AddSubItemDialogResult {
   const AddSubItemDialogResult({required this.name, this.description});
@@ -37,7 +38,7 @@ class AddItemDialog extends StatelessWidget {
       onSubmit: submit,
       onClose: () => Navigator.pop(context),
       child: AlertDialog(
-        title: Text(title),
+        title: Text(ArabicNumberTransformer.transform(title)),
         content: TextField(
           inputFormatters: const [ArabicNumberInputFormatter()],
           controller: nameController,

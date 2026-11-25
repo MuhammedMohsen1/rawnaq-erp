@@ -5,6 +5,7 @@ import '../../../../core/constants/app_text_styles.dart';
 import '../../../../core/routing/app_router.dart';
 import '../../data/models/financial_summary_model.dart';
 import 'financial_formatters.dart';
+import 'package:rawnaq/core/utils/arabic_number_transformer.dart';
 
 class FinancialProjectTable extends StatelessWidget {
   final List<FinancialProjectModel> projects;
@@ -171,28 +172,30 @@ class _PinnedFinancialProjectTable extends StatelessWidget {
       _BodyCell(
         alignment: Alignment.centerLeft,
         child: Text(
-          formatKwd(project.totalContractValue),
+          ArabicNumberTransformer.transform(
+            formatKwd(project.totalContractValue),
+          ),
           style: AppTextStyles.of(context).tableCell,
         ),
       ),
       _BodyCell(
         alignment: Alignment.centerLeft,
         child: Text(
-          formatKwd(project.totalReceived),
+          ArabicNumberTransformer.transform(formatKwd(project.totalReceived)),
           style: AppTextStyles.of(context).tableCell,
         ),
       ),
       _BodyCell(
         alignment: Alignment.centerLeft,
         child: Text(
-          formatKwd(project.totalExpenses),
+          ArabicNumberTransformer.transform(formatKwd(project.totalExpenses)),
           style: AppTextStyles.of(context).tableCell,
         ),
       ),
       _BodyCell(
         alignment: Alignment.centerLeft,
         child: Text(
-          formatKwd(profit),
+          ArabicNumberTransformer.transform(formatKwd(profit)),
           style: AppTextStyles.of(context).tableCell.copyWith(
             color: profit >= 0
                 ? AppColors.of(context).success
@@ -203,7 +206,7 @@ class _PinnedFinancialProjectTable extends StatelessWidget {
       _BodyCell(
         alignment: Alignment.center,
         child: Text(
-          formatPercent(profitPercentage),
+          ArabicNumberTransformer.transform(formatPercent(profitPercentage)),
           style: AppTextStyles.of(context).tableCell.copyWith(
             color: profit >= 0
                 ? AppColors.of(context).success
@@ -231,7 +234,10 @@ class _HeaderCell extends StatelessWidget {
       height: 56,
       alignment: numeric ? Alignment.centerLeft : Alignment.centerRight,
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      child: Text(label, style: AppTextStyles.of(context).tableHeader),
+      child: Text(
+        ArabicNumberTransformer.transform(label),
+        style: AppTextStyles.of(context).tableHeader,
+      ),
     );
   }
 }
@@ -368,7 +374,7 @@ class _ProjectName extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
-              project.projectName,
+              ArabicNumberTransformer.transform(project.projectName),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: AppTextStyles.of(
@@ -378,7 +384,7 @@ class _ProjectName extends StatelessWidget {
             if ((project.clientName ?? '').isNotEmpty) ...[
               const SizedBox(height: 3),
               Text(
-                project.clientName!,
+                ArabicNumberTransformer.transform(project.clientName!),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: AppTextStyles.of(context).caption,
@@ -406,7 +412,7 @@ class _ProjectTypeBadge extends StatelessWidget {
         borderRadius: BorderRadius.circular(4),
       ),
       child: Text(
-        projectTypeLabel,
+        ArabicNumberTransformer.transform(projectTypeLabel),
         style: AppTextStyles.of(
           context,
         ).caption.copyWith(color: AppColors.of(context).primary),
@@ -438,7 +444,9 @@ class _StatusBadge extends StatelessWidget {
         border: Border.all(color: color.withValues(alpha: 0.35)),
       ),
       child: Text(
-        formatProjectStatus(status, projectType: projectType),
+        ArabicNumberTransformer.transform(
+          formatProjectStatus(status, projectType: projectType),
+        ),
         style: AppTextStyles.of(context).statusBadge.copyWith(color: color),
       ),
     );
@@ -463,10 +471,13 @@ class _MiniMetric extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(label, style: AppTextStyles.of(context).caption),
+          Text(
+            ArabicNumberTransformer.transform(label),
+            style: AppTextStyles.of(context).caption,
+          ),
           const SizedBox(height: 4),
           Text(
-            value,
+            ArabicNumberTransformer.transform(value),
             style: AppTextStyles.of(
               context,
             ).tableCellBold.copyWith(color: valueColor),

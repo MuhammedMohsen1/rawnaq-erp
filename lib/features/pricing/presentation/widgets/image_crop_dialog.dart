@@ -6,6 +6,7 @@ import 'package:crop_your_image/crop_your_image.dart';
 
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_text_styles.dart';
+import 'package:rawnaq/core/utils/arabic_number_transformer.dart';
 
 /// Dialog for cropping images before upload.
 /// Default:
@@ -139,9 +140,11 @@ class _ImageCropDialogState extends State<ImageCropDialog> {
               ),
               const SizedBox(height: 3),
               Text(
-                widget.fileName?.trim().isNotEmpty == true
-                    ? widget.fileName!
-                    : 'Freeform - الحجم الكامل للصورة',
+                ArabicNumberTransformer.transform(
+                  widget.fileName?.trim().isNotEmpty == true
+                      ? widget.fileName!
+                      : 'Freeform - الحجم الكامل للصورة',
+                ),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: AppTextStyles.of(context).bodySmall.copyWith(
@@ -313,7 +316,9 @@ class _ImageCropDialogState extends State<ImageCropDialog> {
                 )
               : const Icon(Icons.cloud_upload_outlined, size: 18),
           label: Text(
-            _isCropping ? 'جاري التجهيز...' : 'قص ورفع',
+            ArabicNumberTransformer.transform(
+              _isCropping ? 'جاري التجهيز...' : 'قص ورفع',
+            ),
             style: AppTextStyles.of(context).buttonLarge.copyWith(fontSize: 14),
           ),
         ),

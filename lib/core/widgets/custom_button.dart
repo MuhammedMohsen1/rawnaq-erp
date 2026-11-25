@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../constants/app_colors.dart';
+import 'package:rawnaq/core/utils/arabic_number_transformer.dart';
 
 class CustomButton extends StatelessWidget {
   final String text;
@@ -70,7 +71,7 @@ class CustomButton extends StatelessWidget {
                 children: [
                   if (icon != null) ...[icon!, const SizedBox(width: 8)],
                   Text(
-                    text,
+                    ArabicNumberTransformer.transform(text),
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
@@ -157,7 +158,7 @@ class CustomOutlinedButton extends StatelessWidget {
                 children: [
                   if (icon != null) ...[icon!, const SizedBox(width: 8)],
                   Text(
-                    text,
+                    ArabicNumberTransformer.transform(text),
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w600,

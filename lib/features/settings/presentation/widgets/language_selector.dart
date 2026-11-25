@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_text_styles.dart';
 import '../../../../core/providers/locale_provider.dart';
+import 'package:rawnaq/core/utils/arabic_number_transformer.dart';
 
 class LanguageSelector extends StatelessWidget {
   const LanguageSelector({super.key});
@@ -87,7 +88,7 @@ class LanguageOption extends StatelessWidget {
                   ),
                   child: Center(
                     child: Text(
-                      badge,
+                      ArabicNumberTransformer.transform(badge),
                       style: AppTextStyles.of(context).tableCellBold.copyWith(
                         color: isSelected
                             ? AppColors.of(context).primary
@@ -102,7 +103,7 @@ class LanguageOption extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        title,
+                        ArabicNumberTransformer.transform(title),
                         textAlign: TextAlign.right,
                         style: AppTextStyles.of(context).tableCellBold.copyWith(
                           color: isSelected
@@ -112,7 +113,7 @@ class LanguageOption extends StatelessWidget {
                       ),
                       const SizedBox(height: 3),
                       Text(
-                        subtitle,
+                        ArabicNumberTransformer.transform(subtitle),
                         textAlign: TextAlign.right,
                         style: AppTextStyles.of(context).caption.copyWith(
                           color: AppColors.of(context).textMuted,

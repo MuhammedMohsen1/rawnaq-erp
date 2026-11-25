@@ -5,6 +5,7 @@ import '../../../../core/constants/app_text_styles.dart';
 import '../../../tasks/domain/entities/task_entity.dart';
 import '../../../tasks/domain/enums/task_type.dart';
 import '../../../tasks/domain/enums/task_status.dart' show TaskStatusExtension;
+import 'package:rawnaq/core/utils/arabic_number_transformer.dart';
 
 /// Tooltip content for appointment hover
 class AppointmentTooltip extends StatelessWidget {
@@ -44,7 +45,7 @@ class AppointmentTooltip extends StatelessWidget {
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
-                  task.name,
+                  ArabicNumberTransformer.transform(task.name),
                   style: AppTextStyles.of(context).tableCellBold.copyWith(
                     color: AppColors.of(context).textPrimary,
                   ),
@@ -109,7 +110,7 @@ class AppointmentTooltip extends StatelessWidget {
         const SizedBox(width: 8),
         Expanded(
           child: Text(
-            text,
+            ArabicNumberTransformer.transform(text),
             style: AppTextStyles.of(context).caption.copyWith(
               color: isLink
                   ? AppColors.of(context).primary
@@ -164,7 +165,10 @@ class AppointmentDetailsDialog extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(task.name, style: AppTextStyles.of(context).h5),
+                      Text(
+                        ArabicNumberTransformer.transform(task.name),
+                        style: AppTextStyles.of(context).h5,
+                      ),
                       const SizedBox(height: 4),
                       Container(
                         padding: const EdgeInsets.symmetric(
@@ -178,7 +182,9 @@ class AppointmentDetailsDialog extends StatelessWidget {
                           borderRadius: BorderRadius.circular(4),
                         ),
                         child: Text(
-                          task.status.arabicName,
+                          ArabicNumberTransformer.transform(
+                            task.status.arabicName,
+                          ),
                           style: TextStyle(
                             color: task.status.color(context),
                             fontSize: 12,
@@ -285,7 +291,7 @@ class AppointmentDetailsDialog extends StatelessWidget {
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(
-                  task.notes!,
+                  ArabicNumberTransformer.transform(task.notes!),
                   style: AppTextStyles.of(context).bodyMedium,
                 ),
               ),
@@ -350,7 +356,7 @@ class AppointmentDetailsDialog extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                label,
+                ArabicNumberTransformer.transform(label),
                 style: AppTextStyles.of(
                   context,
                 ).caption.copyWith(color: AppColors.of(context).textMuted),
@@ -360,14 +366,17 @@ class AppointmentDetailsDialog extends StatelessWidget {
                   ? InkWell(
                       onTap: () => _makePhoneCall(value),
                       child: Text(
-                        value,
+                        ArabicNumberTransformer.transform(value),
                         style: AppTextStyles.of(context).bodyMedium.copyWith(
                           color: AppColors.of(context).statusActive,
                           decoration: TextDecoration.underline,
                         ),
                       ),
                     )
-                  : Text(value, style: AppTextStyles.of(context).bodyMedium),
+                  : Text(
+                      ArabicNumberTransformer.transform(value),
+                      style: AppTextStyles.of(context).bodyMedium,
+                    ),
             ],
           ),
         ],
@@ -417,9 +426,11 @@ class AppointmentDetailsDialog extends StatelessWidget {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    task.locationLink!.length > 40
-                        ? '${task.locationLink!.substring(0, 40)}...'
-                        : task.locationLink!,
+                    ArabicNumberTransformer.transform(
+                      task.locationLink!.length > 40
+                          ? '${task.locationLink!.substring(0, 40)}...'
+                          : task.locationLink!,
+                    ),
                     style: AppTextStyles.of(
                       context,
                     ).caption.copyWith(color: AppColors.of(context).textMuted),

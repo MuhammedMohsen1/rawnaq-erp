@@ -6,6 +6,7 @@ import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_text_styles.dart';
 import '../../data/datasources/settings_api_datasource.dart';
 import 'contract_terms_widgets.dart';
+import 'package:rawnaq/core/utils/arabic_number_transformer.dart';
 
 class PricingNotesEditor extends StatefulWidget {
   const PricingNotesEditor({super.key});
@@ -188,7 +189,9 @@ class _PricingNotesEditorState extends State<PricingNotesEditor> {
                     )
                   : const Icon(Icons.save_outlined, size: 19),
               label: Text(
-                _isSaving ? 'جار الحفظ...' : 'حفظ الملاحظات الافتراضية',
+                ArabicNumberTransformer.transform(
+                  _isSaving ? 'جار الحفظ...' : 'حفظ الملاحظات الافتراضية',
+                ),
                 textAlign: TextAlign.right,
                 style: AppTextStyles.of(
                   context,

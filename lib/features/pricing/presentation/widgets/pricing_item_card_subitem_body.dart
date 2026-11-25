@@ -6,6 +6,7 @@ import '../../../../core/constants/app_text_styles.dart';
 import '../../data/models/pricing_version_model.dart';
 import 'profit_margin_input.dart';
 import 'pricing_item_card_support_widgets.dart';
+import 'package:rawnaq/core/utils/arabic_number_transformer.dart';
 
 class PricingSubItemBody extends StatelessWidget {
   const PricingSubItemBody({
@@ -415,9 +416,11 @@ class PricingSubItemImagesPanel extends StatelessWidget {
             child: Row(
               children: [
                 Text(
-                  subItem.images.isEmpty
-                      ? '0/0 Photos'
-                      : '${selectedImageIndex[subItem.id] != null ? (selectedImageIndex[subItem.id]!.clamp(0, subItem.images.length - 1) + 1) : 1}/${subItem.images.length} Photos',
+                  ArabicNumberTransformer.transform(
+                    subItem.images.isEmpty
+                        ? '0/0 Photos'
+                        : '${selectedImageIndex[subItem.id] != null ? (selectedImageIndex[subItem.id]!.clamp(0, subItem.images.length - 1) + 1) : 1}/${subItem.images.length} Photos',
+                  ),
                   style: AppTextStyles.of(
                     context,
                   ).bodyMedium.copyWith(fontWeight: FontWeight.w600),

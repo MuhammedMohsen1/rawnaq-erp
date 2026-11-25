@@ -9,6 +9,7 @@ import '../../../../core/widgets/custom_text_field.dart';
 import '../../../../core/utils/validators.dart';
 import '../../../../core/routing/app_router.dart';
 import '../bloc/auth_bloc.dart';
+import 'package:rawnaq/core/utils/arabic_number_transformer.dart';
 
 class ResetPasswordPage extends StatefulWidget {
   const ResetPasswordPage({super.key});
@@ -61,7 +62,7 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
               AppToast.build(
                 tone: ToastTone.success,
                 duration: const Duration(seconds: 2),
-                content: Text(state.message),
+                content: Text(ArabicNumberTransformer.transform(state.message)),
               ),
             );
             // Show success dialog and navigate back to login
@@ -70,7 +71,7 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
               barrierDismissible: false,
               builder: (context) => AlertDialog(
                 title: const Text('Email Sent'),
-                content: Text(state.message),
+                content: Text(ArabicNumberTransformer.transform(state.message)),
                 actions: [
                   TextButton(
                     onPressed: () {
@@ -87,7 +88,7 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
               AppToast.build(
                 tone: ToastTone.error,
                 duration: const Duration(seconds: 2),
-                content: Text(state.message),
+                content: Text(ArabicNumberTransformer.transform(state.message)),
               ),
             );
           }

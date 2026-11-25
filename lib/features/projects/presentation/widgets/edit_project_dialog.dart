@@ -8,6 +8,7 @@ import '../../../auth/presentation/bloc/auth_bloc.dart';
 import '../../domain/entities/project_entity.dart';
 import '../bloc/projects_bloc.dart';
 import '../bloc/projects_event.dart';
+import 'package:rawnaq/core/utils/arabic_number_transformer.dart';
 
 /// Dialog for editing an existing project
 class EditProjectDialog extends StatefulWidget {
@@ -380,7 +381,7 @@ class _EditProjectDialogState extends State<EditProjectDialog> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          label,
+          ArabicNumberTransformer.transform(label),
           style: AppTextStyles.of(context).bodyMedium.copyWith(
             color: AppColors.of(context).textSecondary,
             fontWeight: FontWeight.w500,
@@ -452,7 +453,7 @@ class _EditProjectDialogState extends State<EditProjectDialog> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          label,
+          ArabicNumberTransformer.transform(label),
           style: AppTextStyles.of(context).bodyMedium.copyWith(
             color: AppColors.of(context).textSecondary,
             fontWeight: FontWeight.w500,
@@ -501,9 +502,11 @@ class _EditProjectDialogState extends State<EditProjectDialog> {
                 const SizedBox(width: 12),
                 Expanded(
                   child: Text(
-                    date != null
-                        ? '${date.year}/${date.month}/${date.day}'
-                        : 'اختر التاريخ',
+                    ArabicNumberTransformer.transform(
+                      date != null
+                          ? '${date.year}/${date.month}/${date.day}'
+                          : 'اختر التاريخ',
+                    ),
                     style: AppTextStyles.of(context).bodyMedium.copyWith(
                       color: date != null
                           ? AppColors.of(context).textPrimary

@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import 'package:syncfusion_flutter_datepicker/datepicker.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_text_styles.dart';
+import 'package:rawnaq/core/utils/arabic_number_transformer.dart';
 
 class FinancialToolbar extends StatelessWidget {
   final int projectCount;
@@ -67,7 +68,10 @@ class FinancialToolbar extends StatelessWidget {
         final actions = Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text('$projectCount مشروع', style: AppTextStyles.of(context).label),
+            Text(
+              ArabicNumberTransformer.transform('$projectCount مشروع'),
+              style: AppTextStyles.of(context).label,
+            ),
             const SizedBox(width: 12),
             Tooltip(
               message: 'تحديث',
@@ -264,7 +268,10 @@ class _FilterSection extends StatelessWidget {
             children: [
               Icon(icon, size: 16, color: AppColors.of(context).textMuted),
               const SizedBox(width: 8),
-              Text(title, style: AppTextStyles.of(context).label),
+              Text(
+                ArabicNumberTransformer.transform(title),
+                style: AppTextStyles.of(context).label,
+              ),
             ],
           ),
           const SizedBox(height: 10),
@@ -289,7 +296,7 @@ class _PeriodChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ChoiceChip(
-      label: Text(label),
+      label: Text(ArabicNumberTransformer.transform(label)),
       selected: selected,
       onSelected: (_) => onSelected(),
     );

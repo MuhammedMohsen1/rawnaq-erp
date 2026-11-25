@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_text_styles.dart';
 import '../../../tasks/domain/entities/task_entity.dart';
+import 'package:rawnaq/core/utils/arabic_number_transformer.dart';
 
 class GanttErrorState extends StatelessWidget {
   final String? errorMessage;
@@ -27,7 +28,7 @@ class GanttErrorState extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           Text(
-            errorMessage ?? 'حدث خطأ',
+            ArabicNumberTransformer.transform(errorMessage ?? 'حدث خطأ'),
             style: AppTextStyles.of(
               context,
             ).h5.copyWith(color: AppColors.of(context).textPrimary),
@@ -101,7 +102,9 @@ class _GanttCompactInfoBarState extends State<GanttCompactInfoBar> {
                     ),
                     const SizedBox(width: 6),
                     Text(
-                      'معلقة: ${widget.draftTasks.length}',
+                      ArabicNumberTransformer.transform(
+                        'معلقة: ${widget.draftTasks.length}',
+                      ),
                       style: TextStyle(
                         color: widget.draftTasks.isEmpty
                             ? AppColors.of(context).textMuted

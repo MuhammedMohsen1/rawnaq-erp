@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_text_styles.dart';
+import 'package:rawnaq/core/utils/arabic_number_transformer.dart';
 
 class ImageGalleryWidget extends StatelessWidget {
   final List<String> imageUrls;
@@ -70,7 +71,9 @@ class ImageGalleryWidget extends StatelessWidget {
                     borderRadius: BorderRadius.circular(4),
                   ),
                   child: Text(
-                    '${selectedIndex + 1}/${imageUrls.length} Photos',
+                    ArabicNumberTransformer.transform(
+                      '${selectedIndex + 1}/${imageUrls.length} Photos',
+                    ),
                     style: const TextStyle(
                       fontFamily: 'Menlo',
                       fontSize: 11.8,

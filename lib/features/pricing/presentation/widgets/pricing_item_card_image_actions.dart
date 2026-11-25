@@ -115,7 +115,9 @@ mixin PricingItemCardImageActions on State<PricingItemCard> {
         ScaffoldMessenger.of(context).showSnackBar(
           AppToast.build(
             tone: ToastTone.error,
-            content: Text('فشل اختيار الصور: $e'),
+            content: Text(
+              ArabicNumberTransformer.transform('فشل اختيار الصور: $e'),
+            ),
             duration: const Duration(seconds: 2),
           ),
         );
@@ -162,7 +164,7 @@ mixin PricingItemCardImageActions on State<PricingItemCard> {
         ScaffoldMessenger.of(context).showSnackBar(
           AppToast.build(
             tone: ToastTone.error,
-            content: Text(errorMessage),
+            content: Text(ArabicNumberTransformer.transform(errorMessage)),
             duration: const Duration(seconds: 2),
           ),
         );
@@ -226,7 +228,9 @@ mixin PricingItemCardImageActions on State<PricingItemCard> {
               tone: ToastTone.error,
               duration: const Duration(seconds: 2),
               content: Text(
-                'تم حذف الصورة ولكن فشل تحديث البيانات: ${e.toString()}',
+                ArabicNumberTransformer.transform(
+                  'تم حذف الصورة ولكن فشل تحديث البيانات: ${e.toString()}',
+                ),
               ),
             ),
           );
@@ -249,7 +253,11 @@ mixin PricingItemCardImageActions on State<PricingItemCard> {
           AppToast.build(
             tone: ToastTone.error,
             duration: const Duration(seconds: 2),
-            content: Text('فشل حذف الصورة: ${e.toString()}'),
+            content: Text(
+              ArabicNumberTransformer.transform(
+                'فشل حذف الصورة: ${e.toString()}',
+              ),
+            ),
           ),
         );
       }
@@ -316,7 +324,9 @@ mixin PricingItemCardImageActions on State<PricingItemCard> {
         ScaffoldMessenger.of(context).showSnackBar(
           AppToast.build(
             tone: ToastTone.error,
-            content: Text('فشل رفع الصور: $e'),
+            content: Text(
+              ArabicNumberTransformer.transform('فشل رفع الصور: $e'),
+            ),
             duration: const Duration(seconds: 2),
           ),
         );
@@ -425,7 +435,11 @@ mixin PricingItemCardImageActions on State<PricingItemCard> {
           AppToast.build(
             tone: ToastTone.error,
             duration: const Duration(seconds: 2),
-            content: Text('فشل قص الصورة: ${e.toString()}'),
+            content: Text(
+              ArabicNumberTransformer.transform(
+                'فشل قص الصورة: ${e.toString()}',
+              ),
+            ),
           ),
         );
       }

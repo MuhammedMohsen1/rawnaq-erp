@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_text_styles.dart';
 import '../../domain/entities/notification_entity.dart';
+import 'package:rawnaq/core/utils/arabic_number_transformer.dart';
 
 class NotificationCard extends StatelessWidget {
   final NotificationEntity notification;
@@ -42,7 +43,7 @@ class NotificationCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  notification.message,
+                  ArabicNumberTransformer.transform(notification.message),
                   style: AppTextStyles.of(context).bodyMedium.copyWith(
                     color: AppColors.of(context).textPrimary,
                   ),
@@ -51,7 +52,7 @@ class NotificationCard extends StatelessWidget {
                 Row(
                   children: [
                     Text(
-                      notification.timestamp,
+                      ArabicNumberTransformer.transform(notification.timestamp),
                       style: AppTextStyles.of(context).caption.copyWith(
                         color: AppColors.of(context).textMuted,
                       ),
@@ -117,12 +118,18 @@ class _NotificationActionButton extends StatelessWidget {
         ? ElevatedButton(
             onPressed: button.onPressed,
             style: style,
-            child: Text(button.label, style: labelStyle),
+            child: Text(
+              ArabicNumberTransformer.transform(button.label),
+              style: labelStyle,
+            ),
           )
         : OutlinedButton(
             onPressed: button.onPressed,
             style: style,
-            child: Text(button.label, style: labelStyle),
+            child: Text(
+              ArabicNumberTransformer.transform(button.label),
+              style: labelStyle,
+            ),
           );
   }
 }

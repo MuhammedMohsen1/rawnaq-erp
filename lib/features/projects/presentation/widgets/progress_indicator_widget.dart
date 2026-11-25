@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../domain/enums/project_status.dart';
+import 'package:rawnaq/core/utils/arabic_number_transformer.dart';
 
 /// Widget to display project progress as a bar with percentage
 class ProgressIndicatorWidget extends StatelessWidget {
@@ -25,7 +26,7 @@ class ProgressIndicatorWidget extends StatelessWidget {
           SizedBox(
             width: 45,
             child: Text(
-              '$progress%',
+              ArabicNumberTransformer.transform('$progress%'),
               style: TextStyle(
                 color: AppColors.of(context).textPrimary,
                 fontSize: 14,

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_text_styles.dart';
 import 'pricing_item_card_support_widgets.dart';
+import 'package:rawnaq/core/utils/arabic_number_transformer.dart';
 
 class PricingItemCardHeader extends StatelessWidget {
   const PricingItemCardHeader({
@@ -65,7 +66,7 @@ class PricingItemCardHeader extends StatelessWidget {
           const SizedBox(width: 8),
           Expanded(
             child: Text(
-              itemName,
+              ArabicNumberTransformer.transform(itemName),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: AppTextStyles.of(
@@ -79,7 +80,8 @@ class PricingItemCardHeader extends StatelessWidget {
               canViewFinancials &&
               (pricingStatus!.toUpperCase() == 'APPROVED' ||
                   pricingStatus!.toUpperCase() == 'PENDING_SIGNATURE')) ...[
-            PricingStatChip(
+            PricingStatCard(
+              label: 'التكلفة',
               value: totalCost,
               color: (Theme.of(context).brightness == Brightness.light
                   ? AppColors.light.error
@@ -87,7 +89,8 @@ class PricingItemCardHeader extends StatelessWidget {
               showFinancials: showFinancials,
             ),
             const SizedBox(width: 6),
-            PricingStatChip(
+            PricingStatCard(
+              label: 'صافي الربح',
               value: profitAmount,
               color: (Theme.of(context).brightness == Brightness.light
                   ? AppColors.light.success
@@ -203,7 +206,7 @@ class PricingItemCardAddButton extends StatelessWidget {
             ),
             const SizedBox(width: 8),
             Text(
-              label,
+              ArabicNumberTransformer.transform(label),
               style: AppTextStyles.of(context).bodyMedium.copyWith(
                 fontSize: 14,
                 fontWeight: FontWeight.w500,

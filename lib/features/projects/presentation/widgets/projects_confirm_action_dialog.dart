@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/constants/app_colors.dart';
+import 'package:rawnaq/core/utils/arabic_number_transformer.dart';
 
 class ProjectsConfirmActionDialog extends StatelessWidget {
   final IconData icon;
@@ -30,9 +31,9 @@ class ProjectsConfirmActionDialog extends StatelessWidget {
           children: [
             Icon(icon, color: iconColor, size: 34),
             const SizedBox(height: 12),
-            Text(title),
+            Text(ArabicNumberTransformer.transform(title)),
             const SizedBox(height: 12),
-            Text(message),
+            Text(ArabicNumberTransformer.transform(message)),
             const SizedBox(height: 18),
             Row(
               children: [
@@ -53,7 +54,9 @@ class ProjectsConfirmActionDialog extends StatelessWidget {
                       backgroundColor: AppColors.of(context).error,
                       foregroundColor: AppColors.white,
                     ),
-                    child: Text(confirmLabel),
+                    child: Text(
+                      ArabicNumberTransformer.transform(confirmLabel),
+                    ),
                   ),
                 ),
               ],

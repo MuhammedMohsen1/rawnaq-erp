@@ -13,6 +13,7 @@ import 'contract_export_step1_content.dart';
 import 'contract_export_step2_content.dart';
 import 'contract_export_step3_content.dart';
 import 'contract_export_step4_content.dart';
+import 'package:rawnaq/core/utils/arabic_number_transformer.dart';
 
 class ContractExportDialog extends StatefulWidget {
   final String projectId;
@@ -836,7 +837,7 @@ class _ContractExportDialogState extends State<ContractExportDialog> {
                       const SizedBox(width: 8),
                       Expanded(
                         child: Text(
-                          _errorMessage!,
+                          ArabicNumberTransformer.transform(_errorMessage!),
                           style: TextStyle(
                             color: Colors.red[700],
                             fontSize: 12,

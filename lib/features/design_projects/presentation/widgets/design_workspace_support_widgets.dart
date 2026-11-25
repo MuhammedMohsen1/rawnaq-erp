@@ -12,6 +12,7 @@ import '../../../projects/domain/entities/project_entity.dart';
 import '../../../projects/domain/enums/project_status.dart';
 import '../cubit/design_workspace_cubit.dart';
 import 'design_workspace_installments_editor.dart';
+import 'package:rawnaq/core/utils/arabic_number_transformer.dart';
 
 class DesignWorkspaceProjectHeader extends StatelessWidget {
   final ProjectEntity project;
@@ -53,11 +54,14 @@ class DesignWorkspaceProjectHeader extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  project.name,
+                  ArabicNumberTransformer.transform(project.name),
                   style: Theme.of(context).textTheme.titleMedium,
                 ),
                 const SizedBox(height: 3),
-                Text(clientName, style: Theme.of(context).textTheme.bodySmall),
+                Text(
+                  ArabicNumberTransformer.transform(clientName),
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
               ],
             ),
           ),
@@ -127,7 +131,9 @@ class DesignWorkspaceProjectHeader extends StatelessWidget {
         AppToast.build(
           tone: ToastTone.error,
           duration: const Duration(seconds: 2),
-          content: Text('فشل إكمال المشروع: $error'),
+          content: Text(
+            ArabicNumberTransformer.transform('فشل إكمال المشروع: $error'),
+          ),
         ),
       );
     }
@@ -229,9 +235,15 @@ class _FinanceCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(label, style: Theme.of(context).textTheme.bodySmall),
+          Text(
+            ArabicNumberTransformer.transform(label),
+            style: Theme.of(context).textTheme.bodySmall,
+          ),
           const SizedBox(height: 8),
-          Text(value, style: Theme.of(context).textTheme.titleMedium),
+          Text(
+            ArabicNumberTransformer.transform(value),
+            style: Theme.of(context).textTheme.titleMedium,
+          ),
         ],
       ),
     );
@@ -395,7 +407,9 @@ class DesignInstallmentsPanel extends StatelessWidget {
                               ),
                               const SizedBox(height: 2),
                               Text(
-                                'تاريخ الاستحقاق: ${installment.dueDate.toLocal().toString().split(' ').first}',
+                                ArabicNumberTransformer.transform(
+                                  'تاريخ الاستحقاق: ${installment.dueDate.toLocal().toString().split(' ').first}',
+                                ),
                                 style: Theme.of(context).textTheme.bodySmall,
                               ),
                               if (installment.captures.isNotEmpty) ...[
@@ -411,9 +425,11 @@ class DesignInstallmentsPanel extends StatelessWidget {
                                             size: 15,
                                           ),
                                           label: Text(
-                                            capture.fileName.isEmpty
-                                                ? 'إيصال'
-                                                : capture.fileName,
+                                            ArabicNumberTransformer.transform(
+                                              capture.fileName.isEmpty
+                                                  ? 'إيصال'
+                                                  : capture.fileName,
+                                            ),
                                             overflow: TextOverflow.ellipsis,
                                           ),
                                         ),
@@ -667,7 +683,9 @@ class _InstallmentsEditorDialogState extends State<_InstallmentsEditorDialog> {
                                   children: [
                                     Expanded(
                                       child: Text(
-                                        'الدفعة ${index + 1}',
+                                        ArabicNumberTransformer.transform(
+                                          'الدفعة ${index + 1}',
+                                        ),
                                         style: Theme.of(
                                           context,
                                         ).textTheme.titleSmall,
@@ -728,7 +746,9 @@ class _InstallmentsEditorDialogState extends State<_InstallmentsEditorDialog> {
                                             ),
                                           ),
                                           child: Text(
-                                            'تاريخ الاستحقاق: ${draft.dueDate.toLocal().toString().split(' ').first}',
+                                            ArabicNumberTransformer.transform(
+                                              'تاريخ الاستحقاق: ${draft.dueDate.toLocal().toString().split(' ').first}',
+                                            ),
                                             style: Theme.of(
                                               context,
                                             ).textTheme.bodyMedium,
@@ -771,7 +791,7 @@ class _InstallmentsEditorDialogState extends State<_InstallmentsEditorDialog> {
               if (_errorMessage != null) ...[
                 const SizedBox(height: 12),
                 Text(
-                  _errorMessage!,
+                  ArabicNumberTransformer.transform(_errorMessage!),
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
                     color: AppColors.of(context).error,
                   ),

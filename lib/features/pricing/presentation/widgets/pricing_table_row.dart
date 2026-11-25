@@ -4,6 +4,7 @@ import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_text_styles.dart';
 import '../../../../core/utils/arabic_number_input_formatter.dart';
 import '../../domain/entities/pricing_item.dart';
+import 'package:rawnaq/core/utils/arabic_number_transformer.dart';
 
 class PricingTableRow extends StatefulWidget {
   final PricingItem item;
@@ -51,7 +52,7 @@ class _PricingTableRowState extends State<PricingTableRow> {
   void initState() {
     super.initState();
     _descriptionController = TextEditingController(
-      text: widget.item.description,
+      text: ArabicNumberTransformer.transform(widget.item.description),
     );
     _quantityController = TextEditingController(
       text: widget.item.quantity?.toString() ?? '',
@@ -362,9 +363,11 @@ class _PricingTableRowState extends State<PricingTableRow> {
                               child: FittedBox(
                                 fit: BoxFit.scaleDown,
                                 child: Text(
-                                  widget.item.total > 0
-                                      ? widget.item.total.toStringAsFixed(3)
-                                      : '-',
+                                  ArabicNumberTransformer.transform(
+                                    widget.item.total > 0
+                                        ? widget.item.total.toStringAsFixed(3)
+                                        : '-',
+                                  ),
                                   style: AppTextStyles.of(context).bodyMedium
                                       .copyWith(
                                         color: AppColors.of(

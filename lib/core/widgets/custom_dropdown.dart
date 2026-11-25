@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../constants/app_colors.dart';
+import 'package:rawnaq/core/utils/arabic_number_transformer.dart';
 
 class CustomDropdown<T> extends StatelessWidget {
   final String? label;
@@ -47,7 +48,7 @@ class CustomDropdown<T> extends StatelessWidget {
         if (label != null) ...[
           RichText(
             text: TextSpan(
-              text: label!,
+              text: ArabicNumberTransformer.transformNullable(label!),
               style:
                   labelStyle ??
                   TextStyle(

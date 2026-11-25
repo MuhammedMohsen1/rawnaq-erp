@@ -4,6 +4,7 @@ import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_text_styles.dart';
 import '../../domain/entities/project_entity.dart';
 import '../widgets/project_contact_actions.dart';
+import 'package:rawnaq/core/utils/arabic_number_transformer.dart';
 
 class ProjectListItemCardBaseGradient extends StatelessWidget {
   const ProjectListItemCardBaseGradient({super.key});
@@ -120,7 +121,7 @@ class ProjectListItemPipelineLabel extends StatelessWidget {
         ),
       ),
       child: Text(
-        groupLabel,
+        ArabicNumberTransformer.transform(groupLabel),
         style: AppTextStyles.of(context).overline.copyWith(
           color: accent,
           fontSize: compact ? 8.4 : 9.2,
@@ -287,7 +288,7 @@ class ProjectListItemContactRow extends StatelessWidget {
         const SizedBox(width: 6),
         Expanded(
           child: Text(
-            clientName,
+            ArabicNumberTransformer.transform(clientName),
             style: AppTextStyles.of(
               context,
             ).bodyMedium.copyWith(color: AppColors.of(context).textSecondary),
@@ -363,11 +364,13 @@ class ProjectListItemProgressSection extends StatelessWidget {
                 ],
               ),
               Text(
-                [
-                  if (safeDateProgress != null) '$dateInDays يوم',
-                  if (safeReceivedProgress != null)
-                    'باقي ${restInCash!.toStringAsFixed(2)}\$',
-                ].join('  |  '),
+                ArabicNumberTransformer.transform(
+                  [
+                    if (safeDateProgress != null) '$dateInDays يوم',
+                    if (safeReceivedProgress != null)
+                      'باقي ${restInCash!.toStringAsFixed(2)}\$',
+                  ].join('  |  '),
+                ),
                 style: AppTextStyles.of(context).bodySmall.copyWith(
                   color: AppColors.of(context).textMuted,
                   fontWeight: FontWeight.bold,
@@ -381,7 +384,7 @@ class ProjectListItemProgressSection extends StatelessWidget {
             children: [
               Expanded(
                 child: Text(
-                  compactStats.join('  |  '),
+                  ArabicNumberTransformer.transform(compactStats.join('  |  ')),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: AppTextStyles.of(context).bodySmall.copyWith(
@@ -424,7 +427,7 @@ class _ProgressLegend extends StatelessWidget {
         ),
         const SizedBox(width: 4),
         Text(
-          label,
+          ArabicNumberTransformer.transform(label),
           style: AppTextStyles.of(context).bodySmall.copyWith(
             color: AppColors.of(context).textMuted,
             fontSize: 10,

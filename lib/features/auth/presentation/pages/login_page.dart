@@ -9,6 +9,7 @@ import '../../../../core/constants/app_colors.dart';
 import '../../../../core/routing/app_router.dart';
 import '../bloc/auth_bloc.dart';
 import '../widgets/login_page_content.dart';
+import 'package:rawnaq/core/utils/arabic_number_transformer.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -37,7 +38,7 @@ class _LoginPageState extends State<LoginPage> {
             ScaffoldMessenger.of(context).showSnackBar(
               AppToast.build(
                 tone: ToastTone.error,
-                content: Text(state.message),
+                content: Text(ArabicNumberTransformer.transform(state.message)),
                 margin: const EdgeInsets.all(16),
                 duration: const Duration(seconds: 2),
               ),

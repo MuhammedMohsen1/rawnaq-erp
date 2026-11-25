@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../l10n/app_localizations.dart';
 import '../routing/app_router.dart';
+import 'package:rawnaq/core/utils/arabic_number_transformer.dart';
 
 class ErrorPage extends StatelessWidget {
   const ErrorPage({super.key});
@@ -46,7 +47,7 @@ class ErrorPage extends StatelessWidget {
                     child: Transform.translate(
                       offset: Offset(0, 20 * (1 - value)),
                       child: Text(
-                        l10n.pageNotFound,
+                        ArabicNumberTransformer.transform(l10n.pageNotFound),
                         style: Theme.of(context).textTheme.headlineSmall
                             ?.copyWith(
                               fontWeight: FontWeight.bold,
@@ -71,7 +72,9 @@ class ErrorPage extends StatelessWidget {
                     child: Transform.translate(
                       offset: Offset(0, 20 * (1 - value)),
                       child: Text(
-                        l10n.pageNotFoundDescription,
+                        ArabicNumberTransformer.transform(
+                          l10n.pageNotFoundDescription,
+                        ),
                         style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                           color: Theme.of(
                             context,
@@ -99,7 +102,9 @@ class ErrorPage extends StatelessWidget {
                       child: ElevatedButton.icon(
                         onPressed: () => context.go(AppRoutes.dashboard),
                         icon: const Icon(Icons.dashboard),
-                        label: Text(l10n.goToDashboard),
+                        label: Text(
+                          ArabicNumberTransformer.transform(l10n.goToDashboard),
+                        ),
                         style: ElevatedButton.styleFrom(
                           padding: const EdgeInsets.symmetric(
                             horizontal: 24,

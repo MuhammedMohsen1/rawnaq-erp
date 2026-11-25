@@ -6,6 +6,7 @@ import '../../data/models/pricing_version_model.dart';
 import '../../domain/entities/pricing_item.dart';
 import 'pricing_item_card_support_widgets.dart';
 import 'pricing_table_row.dart';
+import 'package:rawnaq/core/utils/arabic_number_transformer.dart';
 
 class PricingSubItemHeader extends StatelessWidget {
   const PricingSubItemHeader({
@@ -72,7 +73,7 @@ class PricingSubItemHeader extends StatelessWidget {
             const SizedBox(width: 8),
             Expanded(
               child: Text(
-                subItem.name,
+                ArabicNumberTransformer.transform(subItem.name),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: AppTextStyles.of(
@@ -139,14 +140,18 @@ class PricingSubItemHeader extends StatelessWidget {
                     text: TextSpan(
                       children: [
                         TextSpan(
-                          text: intPart,
+                          text: ArabicNumberTransformer.transformNullable(
+                            intPart,
+                          ),
                           style: AppTextStyles.of(context).caption.copyWith(
                             color: AppColors.of(context).textSecondary,
                           ),
                         ),
                         if (decimalPart.isNotEmpty)
                           TextSpan(
-                            text: decimalPart,
+                            text: ArabicNumberTransformer.transformNullable(
+                              decimalPart,
+                            ),
                             style: AppTextStyles.of(context).caption.copyWith(
                               color: AppColors.of(context).textSecondary,
                               fontSize:
@@ -246,8 +251,8 @@ class PricingElementRowShell extends StatelessWidget {
                   child: Checkbox(
                     value: !element.isHidden,
                     onChanged: (value) => onToggleVisibility(value ?? false),
-                    activeColor: AppColors.of(context).background,
-                    checkColor: AppColors.of(context).primary,
+                    activeColor: AppColors.of(context).primary,
+                    checkColor: Theme.of(context).colorScheme.onPrimary,
                     side: BorderSide(
                       color: element.isHidden
                           ? Colors.red

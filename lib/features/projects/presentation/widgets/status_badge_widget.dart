@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../domain/enums/project_status.dart';
+import 'package:rawnaq/core/utils/arabic_number_transformer.dart';
 
 /// Widget to display project status as a badge
 class StatusBadgeWidget extends StatelessWidget {
@@ -25,7 +26,7 @@ class StatusBadgeWidget extends StatelessWidget {
         borderRadius: BorderRadius.circular(6),
       ),
       child: Text(
-        status.arabicName,
+        ArabicNumberTransformer.transform(status.arabicName),
         style: TextStyle(
           color: _getTextColor(context),
           fontSize: isCompact ? 11 : 12,

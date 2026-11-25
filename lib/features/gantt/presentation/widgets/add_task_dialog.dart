@@ -10,6 +10,7 @@ import '../../../tasks/domain/enums/task_status.dart'
     show TaskStatus, TaskStatusExtension;
 import '../../../tasks/domain/entities/task_entity.dart';
 import '../../../projects/domain/entities/team_member_entity.dart';
+import 'package:rawnaq/core/utils/arabic_number_transformer.dart';
 
 /// Dialog for adding a new task
 class AddTaskDialog extends StatefulWidget {
@@ -301,7 +302,9 @@ class _AddTaskDialogState extends State<AddTaskDialog>
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'الموظف المسؤول${isRequired ? ' *' : ''}',
+          ArabicNumberTransformer.transform(
+            'الموظف المسؤول${isRequired ? ' *' : ''}',
+          ),
           style: AppTextStyles.of(context).inputLabel,
         ),
         const SizedBox(height: 8),
@@ -352,7 +355,7 @@ class _AddTaskDialogState extends State<AddTaskDialog>
               context,
             ).primary.withValues(alpha: 0.2),
             child: Text(
-              member.name.substring(0, 1),
+              ArabicNumberTransformer.transform(member.name.substring(0, 1)),
               style: TextStyle(
                 color: AppColors.of(context).primary,
                 fontSize: 12,
@@ -361,7 +364,7 @@ class _AddTaskDialogState extends State<AddTaskDialog>
             ),
           ),
           const SizedBox(width: 10),
-          Text(member.name),
+          Text(ArabicNumberTransformer.transform(member.name)),
         ],
       ),
     );
@@ -406,7 +409,7 @@ class _AddTaskDialogState extends State<AddTaskDialog>
   ) {
     return DropdownMenuItem(
       value: project['id'],
-      child: Text(project['name']!),
+      child: Text(ArabicNumberTransformer.transform(project['name']!)),
     );
   }
 
@@ -455,7 +458,7 @@ class _AddTaskDialogState extends State<AddTaskDialog>
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          '$label${required ? ' *' : ''}',
+          ArabicNumberTransformer.transform('$label${required ? ' *' : ''}'),
           style: AppTextStyles.of(context).inputLabel,
         ),
         const SizedBox(height: 8),
@@ -472,7 +475,11 @@ class _AddTaskDialogState extends State<AddTaskDialog>
                 const SizedBox(width: 12),
                 Expanded(
                   child: Text(
-                    _taskTime != null ? _formatTime(_taskTime!) : 'اختر الوقت',
+                    ArabicNumberTransformer.transform(
+                      _taskTime != null
+                          ? _formatTime(_taskTime!)
+                          : 'اختر الوقت',
+                    ),
                     style: _taskTime != null
                         ? AppTextStyles.of(context).inputText
                         : AppTextStyles.of(context).inputHint,
@@ -540,7 +547,10 @@ class _AddTaskDialogState extends State<AddTaskDialog>
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: AppTextStyles.of(context).inputLabel),
+        Text(
+          ArabicNumberTransformer.transform(label),
+          style: AppTextStyles.of(context).inputLabel,
+        ),
         const SizedBox(height: 8),
         InkWell(
           onTap: onTap,
@@ -555,7 +565,9 @@ class _AddTaskDialogState extends State<AddTaskDialog>
                 const SizedBox(width: 12),
                 Expanded(
                   child: Text(
-                    value != null ? dateFormat.format(value) : 'اختر التاريخ',
+                    ArabicNumberTransformer.transform(
+                      value != null ? dateFormat.format(value) : 'اختر التاريخ',
+                    ),
                     style: value != null
                         ? AppTextStyles.of(context).inputText
                         : AppTextStyles.of(context).inputHint,
@@ -658,7 +670,7 @@ class _AddTaskDialogState extends State<AddTaskDialog>
             ),
           ),
           const SizedBox(width: 10),
-          Text(status.arabicName),
+          Text(ArabicNumberTransformer.transform(status.arabicName)),
         ],
       ),
     );
@@ -685,7 +697,7 @@ class _AddTaskDialogState extends State<AddTaskDialog>
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          '$label${required ? ' *' : ''}',
+          ArabicNumberTransformer.transform('$label${required ? ' *' : ''}'),
           style: AppTextStyles.of(context).inputLabel,
         ),
         const SizedBox(height: 8),
@@ -797,7 +809,11 @@ class _AddTaskDialogState extends State<AddTaskDialog>
                     vertical: 12,
                   ),
                 ),
-                child: Text(_saveAsDraft ? 'حفظ كمسودة' : 'إضافة المهمة'),
+                child: Text(
+                  ArabicNumberTransformer.transform(
+                    _saveAsDraft ? 'حفظ كمسودة' : 'إضافة المهمة',
+                  ),
+                ),
               ),
             ],
           ),
@@ -896,7 +912,7 @@ class _AddTaskDialogState extends State<AddTaskDialog>
       AppToast.build(
         tone: ToastTone.error,
         duration: const Duration(seconds: 2),
-        content: Text(message),
+        content: Text(ArabicNumberTransformer.transform(message)),
       ),
     );
   }

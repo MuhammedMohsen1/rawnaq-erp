@@ -14,6 +14,7 @@ import '../utils/pricing_status_utils.dart';
 import 'add_pricing_item_button.dart';
 import 'pricing_header.dart';
 import 'pricing_items_list.dart';
+import 'package:rawnaq/core/utils/arabic_number_transformer.dart';
 
 class PricingLoadingView extends StatelessWidget {
   const PricingLoadingView({super.key});
@@ -54,7 +55,7 @@ class PricingErrorView extends StatelessWidget {
             ),
             const SizedBox(height: 16),
             Text(
-              message,
+              ArabicNumberTransformer.transform(message),
               style: AppTextStyles.of(
                 context,
               ).bodyLarge.copyWith(color: AppColors.of(context).error),

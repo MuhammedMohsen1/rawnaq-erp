@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:syncfusion_flutter_charts/charts.dart';
 import '../../data/models/dashboard_summary_model.dart';
+import 'package:rawnaq/core/utils/arabic_number_transformer.dart';
 
 final _kwd = NumberFormat.currency(
   locale: 'en',
@@ -141,7 +142,9 @@ class _ProjectStats extends StatelessWidget {
                     ]
                     .map(
                       (item) => Text(
-                        '${item.$1}: ${item.$2}',
+                        ArabicNumberTransformer.transform(
+                          '${item.$1}: ${item.$2}',
+                        ),
                         style: TextStyle(
                           color: AppColors.of(context).textPrimary,
                         ),
@@ -173,11 +176,11 @@ class _MetricCard extends StatelessWidget {
         Icon(icon, color: color),
         const SizedBox(height: 16),
         Text(
-          value,
+          ArabicNumberTransformer.transform(value),
           style: const TextStyle(fontSize: 26, fontWeight: FontWeight.bold),
         ),
         Text(
-          title,
+          ArabicNumberTransformer.transform(title),
           style: TextStyle(color: AppColors.of(context).textSecondary),
         ),
       ],
@@ -232,13 +235,15 @@ class _FinancialSection extends StatelessWidget {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              item.$1,
+                              ArabicNumberTransformer.transform(item.$1),
                               style: TextStyle(
                                 color: AppColors.of(context).textSecondary,
                               ),
                             ),
                             Text(
-                              _kwd.format(item.$2),
+                              ArabicNumberTransformer.transform(
+                                _kwd.format(item.$2),
+                              ),
                               style: const TextStyle(
                                 fontWeight: FontWeight.bold,
                               ),
@@ -255,7 +260,7 @@ class _FinancialSection extends StatelessWidget {
             children: [('WEEK', 'أسبوع'), ('MONTH', 'شهر'), ('YEAR', 'سنة')]
                 .map(
                   (item) => ChoiceChip(
-                    label: Text(item.$2),
+                    label: Text(ArabicNumberTransformer.transform(item.$2)),
                     selected: summary.period == item.$1,
                     onSelected: (_) => onPeriodChanged(item.$1),
                   ),
@@ -345,9 +350,9 @@ class _RecentUsers extends StatelessWidget {
           ...users.map(
             (u) => ListTile(
               contentPadding: EdgeInsets.zero,
-              title: Text(u.name),
-              subtitle: Text(u.email),
-              trailing: Text(u.role),
+              title: Text(ArabicNumberTransformer.transform(u.name)),
+              subtitle: Text(ArabicNumberTransformer.transform(u.email)),
+              trailing: Text(ArabicNumberTransformer.transform(u.role)),
             ),
           ),
       ],
@@ -375,8 +380,8 @@ class _RecentActivities extends StatelessWidget {
             (a) => ListTile(
               contentPadding: EdgeInsets.zero,
               leading: const Icon(Icons.history, color: Color(0xff58a6ff)),
-              title: Text(a.title),
-              subtitle: Text(a.description),
+              title: Text(ArabicNumberTransformer.transform(a.title)),
+              subtitle: Text(ArabicNumberTransformer.transform(a.description)),
             ),
           ),
       ],

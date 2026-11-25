@@ -4,6 +4,7 @@ import '../../../../core/constants/app_text_styles.dart';
 import '../../domain/entities/pricing_item.dart';
 import '../../domain/entities/expense_group.dart';
 import 'pricing_table_row.dart';
+import 'package:rawnaq/core/utils/arabic_number_transformer.dart';
 
 class ExpenseGroupCard extends StatefulWidget {
   final ExpenseGroup group;
@@ -92,7 +93,7 @@ class _ExpenseGroupCardState extends State<ExpenseGroupCard> {
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
-                    widget.group.name,
+                    ArabicNumberTransformer.transform(widget.group.name),
                     style: AppTextStyles.of(
                       context,
                     ).h4.copyWith(fontSize: 18, fontWeight: FontWeight.w700),
@@ -135,7 +136,9 @@ class _ExpenseGroupCardState extends State<ExpenseGroupCard> {
                       ),
                       const SizedBox(width: 8),
                       Text(
-                        _getStatusText(widget.group.status),
+                        ArabicNumberTransformer.transform(
+                          _getStatusText(widget.group.status),
+                        ),
                         style: AppTextStyles.of(context).caption.copyWith(
                           fontSize: 12,
                           fontWeight: FontWeight.w700,
@@ -314,12 +317,14 @@ class _ExpenseGroupCardState extends State<ExpenseGroupCard> {
                         Row(
                           children: [
                             Text(
-                              widget.group.subtotal
-                                  .toStringAsFixed(0)
-                                  .replaceAllMapped(
-                                    RegExp(r'(\d)(?=(\d{3})+(?!\d))'),
-                                    (Match m) => '${m[1]},',
-                                  ),
+                              ArabicNumberTransformer.transform(
+                                widget.group.subtotal
+                                    .toStringAsFixed(0)
+                                    .replaceAllMapped(
+                                      RegExp(r'(\d)(?=(\d{3})+(?!\d))'),
+                                      (Match m) => '${m[1]},',
+                                    ),
+                              ),
                               style: TextStyle(
                                 fontFamily: 'Menlo',
                                 fontSize: 20,

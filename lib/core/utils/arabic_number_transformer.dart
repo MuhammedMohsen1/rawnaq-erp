@@ -2,6 +2,9 @@
 class ArabicNumberTransformer {
   static final _digits = RegExp(r'[٠-٩۰-۹]');
 
+  static String? transformNullable(String? input) =>
+      input == null ? null : transform(input);
+
   static String transform(String input) {
     return input.replaceAllMapped(_digits, (match) {
       final digit = match[0]!.codeUnitAt(0);

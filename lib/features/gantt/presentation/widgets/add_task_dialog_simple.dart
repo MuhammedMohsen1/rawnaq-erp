@@ -8,6 +8,7 @@ import '../../../../core/widgets/dialog_keyboard_actions.dart';
 import '../../../tasks/domain/enums/task_type.dart';
 import '../../../tasks/domain/enums/task_status.dart' show TaskStatus;
 import '../../../tasks/domain/entities/task_entity.dart';
+import 'package:rawnaq/core/utils/arabic_number_transformer.dart';
 
 /// Simple dialog for adding a new task (always as draft - no assignee)
 class AddTaskDialogSimple extends StatefulWidget {
@@ -289,7 +290,9 @@ class _AddTaskDialogSimpleState extends State<AddTaskDialogSimple>
             items: widget.projects.map((project) {
               return DropdownMenuItem(
                 value: project['id'],
-                child: Text(project['name']!),
+                child: Text(
+                  ArabicNumberTransformer.transform(project['name']!),
+                ),
               );
             }).toList(),
             onChanged: (value) {
@@ -399,7 +402,9 @@ class _AddTaskDialogSimpleState extends State<AddTaskDialogSimple>
             const SizedBox(width: 10),
             Expanded(
               child: Text(
-                value != null ? dateFormat.format(value) : 'اختر التاريخ',
+                ArabicNumberTransformer.transform(
+                  value != null ? dateFormat.format(value) : 'اختر التاريخ',
+                ),
                 style: value != null
                     ? AppTextStyles.of(context).inputText
                     : AppTextStyles.of(context).inputHint,
@@ -435,7 +440,9 @@ class _AddTaskDialogSimpleState extends State<AddTaskDialogSimple>
             const SizedBox(width: 10),
             Expanded(
               child: Text(
-                value != null ? _formatTime(value) : 'الوقت',
+                ArabicNumberTransformer.transform(
+                  value != null ? _formatTime(value) : 'الوقت',
+                ),
                 style: value != null
                     ? AppTextStyles.of(context).inputText
                     : AppTextStyles.of(context).inputHint,
@@ -541,7 +548,7 @@ class _AddTaskDialogSimpleState extends State<AddTaskDialogSimple>
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          '$label${required ? ' *' : ''}',
+          ArabicNumberTransformer.transform('$label${required ? ' *' : ''}'),
           style: AppTextStyles.of(context).inputLabel,
         ),
         const SizedBox(height: 8),
@@ -707,7 +714,7 @@ class _AddTaskDialogSimpleState extends State<AddTaskDialogSimple>
       AppToast.build(
         tone: ToastTone.error,
         duration: const Duration(seconds: 2),
-        content: Text(message),
+        content: Text(ArabicNumberTransformer.transform(message)),
       ),
     );
   }

@@ -5,6 +5,7 @@ import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_text_styles.dart';
 import '../../data/datasources/pricing_api_datasource.dart';
 import '../../data/models/pricing_version_model.dart';
+import 'package:rawnaq/core/utils/arabic_number_transformer.dart';
 
 class PricingCategoryCard extends StatefulWidget {
   final String projectId;
@@ -120,7 +121,11 @@ class _PricingCategoryCardState extends State<PricingCategoryCard> {
             AppToast.build(
               tone: ToastTone.error,
               duration: const Duration(seconds: 2),
-              content: Text('فشل إضافة البند الفرعية: ${e.toString()}'),
+              content: Text(
+                ArabicNumberTransformer.transform(
+                  'فشل إضافة البند الفرعية: ${e.toString()}',
+                ),
+              ),
             ),
           );
         }
@@ -264,7 +269,11 @@ class _PricingCategoryCardState extends State<PricingCategoryCard> {
             AppToast.build(
               tone: ToastTone.error,
               duration: const Duration(seconds: 2),
-              content: Text('فشل إضافة العنصر: ${e.toString()}'),
+              content: Text(
+                ArabicNumberTransformer.transform(
+                  'فشل إضافة العنصر: ${e.toString()}',
+                ),
+              ),
             ),
           );
         }
@@ -306,7 +315,7 @@ class _PricingCategoryCardState extends State<PricingCategoryCard> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        widget.item.name,
+                        ArabicNumberTransformer.transform(widget.item.name),
                         style: AppTextStyles.of(context).h4.copyWith(
                           fontSize: 18,
                           fontWeight: FontWeight.w700,
@@ -315,7 +324,9 @@ class _PricingCategoryCardState extends State<PricingCategoryCard> {
                       if (widget.item.description != null) ...[
                         const SizedBox(height: 4),
                         Text(
-                          widget.item.description!,
+                          ArabicNumberTransformer.transform(
+                            widget.item.description!,
+                          ),
                           style: AppTextStyles.of(context).bodyMedium.copyWith(
                             color: AppColors.of(context).textSecondary,
                           ),
@@ -380,7 +391,7 @@ class _PricingCategoryCardState extends State<PricingCategoryCard> {
                           const SizedBox(width: 8),
                           Expanded(
                             child: Text(
-                              subItem.name,
+                              ArabicNumberTransformer.transform(subItem.name),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                               style: AppTextStyles.of(
@@ -391,7 +402,9 @@ class _PricingCategoryCardState extends State<PricingCategoryCard> {
                           if (subItem.elements != null &&
                               subItem.elements!.isNotEmpty) ...[
                             Text(
-                              '${subItem.elements!.length} عنصر',
+                              ArabicNumberTransformer.transform(
+                                '${subItem.elements!.length} عنصر',
+                              ),
                               style: AppTextStyles.of(context).caption.copyWith(
                                 color: AppColors.of(context).textSecondary,
                               ),
@@ -436,7 +449,9 @@ class _PricingCategoryCardState extends State<PricingCategoryCard> {
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Text(
-                                      element.name,
+                                      ArabicNumberTransformer.transform(
+                                        element.name,
+                                      ),
                                       style: AppTextStyles.of(context)
                                           .bodyMedium
                                           .copyWith(
@@ -446,7 +461,9 @@ class _PricingCategoryCardState extends State<PricingCategoryCard> {
                                     if (element.description != null) ...[
                                       const SizedBox(height: 4),
                                       Text(
-                                        element.description!,
+                                        ArabicNumberTransformer.transform(
+                                          element.description!,
+                                        ),
                                         style: AppTextStyles.of(context).caption
                                             .copyWith(
                                               color: AppColors.of(

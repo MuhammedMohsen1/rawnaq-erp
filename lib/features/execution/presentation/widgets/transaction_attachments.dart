@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_text_styles.dart';
 import '../../data/models/execution_models.dart';
+import 'package:rawnaq/core/utils/arabic_number_transformer.dart';
 
 class TransactionAttachments extends StatelessWidget {
   final List<TransactionAttachmentModel> attachments;
@@ -52,7 +53,7 @@ class TransactionAttachments extends StatelessWidget {
                 const SizedBox(width: 4),
                 Flexible(
                   child: Text(
-                    label,
+                    ArabicNumberTransformer.transform(label),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: AppTextStyles.of(context).caption.copyWith(

@@ -15,6 +15,7 @@ import '../../domain/entities/design_workspace_entities.dart';
 import '../cubit/design_workspace_cubit.dart';
 import 'design_workspace_message_widgets.dart';
 import 'design_workspace_support_widgets.dart';
+import 'package:rawnaq/core/utils/arabic_number_transformer.dart';
 
 const int _maxDesignAttachmentBytes = 1024 * 1024 * 1024;
 
@@ -295,7 +296,7 @@ class _DesignTimelinePanelState extends State<DesignTimelinePanel> {
               .map(
                 (quality) => ListTile(
                   leading: const Icon(Icons.high_quality_outlined),
-                  title: Text(quality.label),
+                  title: Text(ArabicNumberTransformer.transform(quality.label)),
                   onTap: () => Navigator.of(context).pop(quality),
                 ),
               )
@@ -351,7 +352,10 @@ class DesignWorkspaceBody extends StatelessWidget {
           return Center(
             child: Column(
               children: [
-                Text(state.message, textAlign: TextAlign.center),
+                Text(
+                  ArabicNumberTransformer.transform(state.message),
+                  textAlign: TextAlign.center,
+                ),
                 const SizedBox(height: 8),
                 FilledButton.icon(
                   onPressed: context.read<DesignWorkspaceCubit>().load,

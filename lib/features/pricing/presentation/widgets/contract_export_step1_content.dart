@@ -1,6 +1,7 @@
 import 'package:rawnaq/core/utils/arabic_number_input_formatter.dart';
 import 'package:flutter/material.dart';
 import '../../../../core/constants/app_colors.dart';
+import 'package:rawnaq/core/utils/arabic_number_transformer.dart';
 
 class ContractExportStep1Content extends StatelessWidget {
   final bool isLoadingProject;
@@ -194,7 +195,9 @@ class ContractExportStep1Content extends StatelessWidget {
                 children: [
                   Row(
                     children: [
-                      Text('مساحة ${index + 1}'),
+                      Text(
+                        ArabicNumberTransformer.transform('مساحة ${index + 1}'),
+                      ),
                       const Spacer(),
                       if (designScopeControllers.length > 1)
                         IconButton(

@@ -5,6 +5,7 @@ import '../../../../core/di/injection_container.dart';
 import '../../../../core/routing/app_router.dart';
 import '../cubit/dashboard_cubit.dart';
 import '../widgets/dashboard_content.dart';
+import 'package:rawnaq/core/utils/arabic_number_transformer.dart';
 
 class DashboardPage extends StatelessWidget {
   const DashboardPage({super.key});
@@ -23,7 +24,7 @@ class DashboardPage extends StatelessWidget {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Text(message),
+                  Text(ArabicNumberTransformer.transform(message)),
                   const SizedBox(height: 12),
                   FilledButton(
                     onPressed: context.read<DashboardCubit>().load,

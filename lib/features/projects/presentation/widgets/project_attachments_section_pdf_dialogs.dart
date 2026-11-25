@@ -16,6 +16,7 @@ import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_text_styles.dart';
 import '../../domain/entities/project_attachment_entity.dart';
 import 'project_attachments_section_support_widgets.dart';
+import 'package:rawnaq/core/utils/arabic_number_transformer.dart';
 
 Future<void> openProjectAttachment(
   BuildContext context,
@@ -197,7 +198,9 @@ class _PdfAttachmentPreviewState extends State<_PdfAttachmentPreview> {
                       const SizedBox(width: 10),
                       Expanded(
                         child: Text(
-                          widget.attachment.originalName,
+                          ArabicNumberTransformer.transform(
+                            widget.attachment.originalName,
+                          ),
                           overflow: TextOverflow.ellipsis,
                           style: AppTextStyles.of(
                             context,
@@ -328,9 +331,11 @@ class _PdfAttachmentPreviewState extends State<_PdfAttachmentPreview> {
                       ),
                       const SizedBox(width: 6),
                       Text(
-                        isDesktop
-                            ? 'Ctrl/⌘ + تمرير أو قرصة للتكبير  ·  ← → للتنقل بين الصفحات'
-                            : 'قرصة بإصبعين للتكبير  ·  اسحب للتنقل',
+                        ArabicNumberTransformer.transform(
+                          isDesktop
+                              ? 'Ctrl/⌘ + تمرير أو قرصة للتكبير  ·  ← → للتنقل بين الصفحات'
+                              : 'قرصة بإصبعين للتكبير  ·  اسحب للتنقل',
+                        ),
                         style: AppTextStyles.of(context).caption.copyWith(
                           color: AppColors.of(context).textMuted,
                         ),
@@ -603,7 +608,7 @@ class _PdfMarkupEditorDialogState extends State<_PdfMarkupEditorDialog> {
           backgroundColor: AppColors.of(context).cardBackground,
           appBar: AppBar(
             title: Text(
-              widget.attachment.originalName,
+              ArabicNumberTransformer.transform(widget.attachment.originalName),
               overflow: TextOverflow.ellipsis,
             ),
             leading: IconButton(
@@ -745,9 +750,11 @@ class _PdfMarkupEditorDialogState extends State<_PdfMarkupEditorDialog> {
                     ),
                     const Spacer(),
                     Text(
-                      _hasUnsavedChanges
-                          ? 'هناك تعديلات غير محفوظة'
-                          : 'لا توجد تعديلات',
+                      ArabicNumberTransformer.transform(
+                        _hasUnsavedChanges
+                            ? 'هناك تعديلات غير محفوظة'
+                            : 'لا توجد تعديلات',
+                      ),
                       style: AppTextStyles.of(context).caption.copyWith(
                         color: _hasUnsavedChanges
                             ? AppColors.of(context).warning
@@ -906,7 +913,7 @@ class _PdfMarkup {
       case ProjectAttachmentsMarkupTool.text:
         final painter = TextPainter(
           text: TextSpan(
-            text: text ?? '',
+            text: ArabicNumberTransformer.transformNullable(text ?? ''),
             style: TextStyle(
               color: color,
               fontSize: math.max(12, strokeWidth * 4),
@@ -1068,7 +1075,7 @@ void _showSnackBar(
     AppToast.build(
       tone: tone,
       duration: const Duration(seconds: 2),
-      content: Text(message),
+      content: Text(ArabicNumberTransformer.transform(message)),
     ),
   );
 }

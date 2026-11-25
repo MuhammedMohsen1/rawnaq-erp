@@ -24,6 +24,7 @@ import 'financial_summary_cards_row.dart';
 import 'project_attachments_section.dart';
 import 'project_header.dart';
 import 'transactions_table.dart';
+import 'package:rawnaq/core/utils/arabic_number_transformer.dart';
 
 bool _isDesignWorkspaceOpen(ProjectStatus status) {
   return status == ProjectStatus.execution || status == ProjectStatus.completed;
@@ -254,7 +255,11 @@ class _LoadedContent extends StatelessWidget {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('حذف المرفق'),
-        content: Text('هل تريد حذف "${attachment.originalName}"؟'),
+        content: Text(
+          ArabicNumberTransformer.transform(
+            'هل تريد حذف "${attachment.originalName}"؟',
+          ),
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
@@ -376,7 +381,11 @@ class _ContractActions extends StatelessWidget {
             onPressed: () => _confirmContractAndStart(context),
             icon: const Icon(Icons.play_circle_outline_rounded),
             label: Text(
-              project.type == ProjectType.design ? 'بدء العمل' : 'تأكيد العقد',
+              ArabicNumberTransformer.transform(
+                project.type == ProjectType.design
+                    ? 'بدء العمل'
+                    : 'تأكيد العقد',
+              ),
             ),
           ),
         ],
@@ -415,9 +424,11 @@ class _ContractActions extends StatelessWidget {
           tone: ToastTone.success,
           duration: const Duration(seconds: 2),
           content: Text(
-            project.type == ProjectType.design
-                ? 'تم فتح مرحلة العمل على مشروع التصميم'
-                : 'تم تأكيد العقد ونقل المشروع إلى التنفيذ',
+            ArabicNumberTransformer.transform(
+              project.type == ProjectType.design
+                  ? 'تم فتح مرحلة العمل على مشروع التصميم'
+                  : 'تم تأكيد العقد ونقل المشروع إلى التنفيذ',
+            ),
           ),
         ),
       );
@@ -427,7 +438,9 @@ class _ContractActions extends StatelessWidget {
         AppToast.build(
           tone: ToastTone.error,
           duration: const Duration(seconds: 2),
-          content: Text('فشل تأكيد العقد: $e'),
+          content: Text(
+            ArabicNumberTransformer.transform('فشل تأكيد العقد: $e'),
+          ),
         ),
       );
     }
@@ -499,7 +512,7 @@ class _ErrorView extends StatelessWidget {
           ),
           const SizedBox(height: 16),
           Text(
-            message,
+            ArabicNumberTransformer.transform(message),
             style: TextStyle(color: AppColors.of(context).textSecondary),
             textAlign: TextAlign.center,
           ),

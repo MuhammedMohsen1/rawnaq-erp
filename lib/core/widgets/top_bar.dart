@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../constants/app_colors.dart';
 import '../constants/app_text_styles.dart';
 import '../layout/top_bar_title_controller.dart';
+import 'package:rawnaq/core/utils/arabic_number_transformer.dart';
 
 /// Top bar component with title, search, notifications, and user profile
 class TopBar extends StatelessWidget {
@@ -46,7 +47,7 @@ class TopBar extends StatelessWidget {
                 ConstrainedBox(
                   constraints: const BoxConstraints(maxWidth: 520),
                   child: Text(
-                    title,
+                    ArabicNumberTransformer.transform(title),
                     overflow: TextOverflow.ellipsis,
                     style: AppTextStyles.of(context).h3.copyWith(
                       color: AppColors.of(context).textPrimary,

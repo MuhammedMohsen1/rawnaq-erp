@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_text_styles.dart';
+import 'package:rawnaq/core/utils/arabic_number_transformer.dart';
 
 class AddIncomeRowContent extends StatelessWidget {
   final bool isCompact;
@@ -55,7 +56,9 @@ class AddIncomeRowContent extends StatelessWidget {
             const Icon(Icons.calendar_today, size: 16),
             const SizedBox(width: 4),
             Text(
-              '${selectedDate.day}/${selectedDate.month}/${selectedDate.year}',
+              ArabicNumberTransformer.transform(
+                '${selectedDate.day}/${selectedDate.month}/${selectedDate.year}',
+              ),
               style: AppTextStyles.of(context).bodySmall,
             ),
           ],
@@ -73,7 +76,9 @@ class AddIncomeRowContent extends StatelessWidget {
           onPressed: isSubmitting ? null : onPickAttachments,
           icon: const Icon(Icons.attach_file, size: 16),
           label: Text(
-            attachments.isEmpty ? 'إرفاق صورة' : '${attachments.length} مرفق',
+            ArabicNumberTransformer.transform(
+              attachments.isEmpty ? 'إرفاق صورة' : '${attachments.length} مرفق',
+            ),
             overflow: TextOverflow.ellipsis,
           ),
         ),
@@ -102,7 +107,7 @@ class AddIncomeRowContent extends StatelessWidget {
                     const SizedBox(width: 4),
                     Flexible(
                       child: Text(
-                        file.name,
+                        ArabicNumberTransformer.transform(file.name),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: AppTextStyles.of(context).caption.copyWith(

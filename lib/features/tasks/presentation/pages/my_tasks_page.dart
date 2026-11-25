@@ -6,6 +6,7 @@ import '../../data/datasources/tasks_api_datasource.dart';
 import '../../domain/entities/task_entity.dart';
 import '../../domain/enums/task_status.dart';
 import '../widgets/my_tasks_body.dart';
+import 'package:rawnaq/core/utils/arabic_number_transformer.dart';
 
 class MyTasksPage extends StatefulWidget {
   const MyTasksPage({super.key});
@@ -64,7 +65,11 @@ class _MyTasksPageState extends State<MyTasksPage> {
         AppToast.build(
           tone: ToastTone.success,
           duration: const Duration(seconds: 2),
-          content: Text('تم تحديث حالة المهمة: ${task.name}'),
+          content: Text(
+            ArabicNumberTransformer.transform(
+              'تم تحديث حالة المهمة: ${task.name}',
+            ),
+          ),
         ),
       );
     } catch (_) {

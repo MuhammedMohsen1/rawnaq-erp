@@ -9,6 +9,7 @@ import '../../domain/enums/project_status.dart';
 import '../cubit/project_attachments_cubit.dart';
 import '../cubit/project_attachments_state.dart';
 import 'project_attachments_section.dart';
+import 'package:rawnaq/core/utils/arabic_number_transformer.dart';
 
 class ProjectAttachmentsPanel extends StatelessWidget {
   final String projectId;
@@ -56,7 +57,7 @@ class _ProjectAttachmentsPanelContent extends StatelessWidget {
             AppToast.build(
               tone: ToastTone.error,
               duration: const Duration(seconds: 2),
-              content: Text(state.message),
+              content: Text(ArabicNumberTransformer.transform(state.message)),
             ),
           );
         }
@@ -176,7 +177,11 @@ class _ProjectAttachmentsPanelContent extends StatelessWidget {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('حذف المرفق'),
-        content: Text('هل تريد حذف "${attachment.originalName}"؟'),
+        content: Text(
+          ArabicNumberTransformer.transform(
+            'هل تريد حذف "${attachment.originalName}"؟',
+          ),
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),

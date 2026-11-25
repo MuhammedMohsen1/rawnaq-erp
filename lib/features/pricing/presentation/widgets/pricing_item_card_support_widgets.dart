@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_text_styles.dart';
 import '../../data/models/pricing_version_model.dart';
+import 'package:rawnaq/core/utils/arabic_number_transformer.dart';
 
 class PricingFormattedNumber extends StatelessWidget {
   final double value;
@@ -49,9 +50,11 @@ class PricingFormattedNumber extends StatelessWidget {
           color: AppColors.of(context).textPrimary,
         ),
         children: [
-          TextSpan(text: formattedInteger),
           TextSpan(
-            text: '.$decimalPart',
+            text: ArabicNumberTransformer.transformNullable(formattedInteger),
+          ),
+          TextSpan(
+            text: ArabicNumberTransformer.transformNullable('.$decimalPart'),
             style: TextStyle(fontSize: fontSize * 0.7, fontWeight: fontWeight),
           ),
         ],
@@ -90,7 +93,8 @@ class PricingStatChip extends StatelessWidget {
         border: Border.all(color: color.withOpacity(0.3)),
       ),
       child: Text(
-        '$formattedValue $suffix',
+        ArabicNumberTransformer.transform('$formattedValue $suffix'),
+        textDirection: TextDirection.ltr,
         style: AppTextStyles.of(context).bodySmall.copyWith(
           fontSize: 11,
           color: color,
@@ -118,7 +122,7 @@ class PricingStatCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Tooltip(
-      message: 'Total $label',
+      message: label,
       child: Container(
         constraints: const BoxConstraints(minWidth: 66),
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -129,6 +133,7 @@ class PricingStatCard extends StatelessWidget {
         ),
         child: Text(
           '${showFinancials ? value.toStringAsFixed(2) : '••••'} KD',
+          textDirection: TextDirection.ltr,
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
           style: AppTextStyles.of(context).bodySmall.copyWith(
@@ -171,7 +176,7 @@ class PricingSubItemStats extends StatelessWidget {
         ),
         const SizedBox(width: 4),
         PricingStatCard(
-          label: 'إيرادات',
+          label: 'صافي الربح',
           value: subItem.profitAmount,
           color: (Theme.of(context).brightness == Brightness.light
               ? AppColors.light.success
@@ -314,7 +319,9 @@ class _PricingImagePreviewState extends State<PricingImagePreview> {
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Text(
-                          '${safeIndex + 1} / $imageCount',
+                          ArabicNumberTransformer.transform(
+                            '${safeIndex + 1} / $imageCount',
+                          ),
                           style: const TextStyle(
                             color: Colors.white,
                             fontSize: 12,

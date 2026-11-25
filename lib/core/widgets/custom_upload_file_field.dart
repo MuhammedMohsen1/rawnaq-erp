@@ -1,6 +1,7 @@
 import 'package:rawnaq/core/utils/arabic_number_input_formatter.dart';
 import 'package:flutter/material.dart';
 import '../constants/app_colors.dart';
+import 'package:rawnaq/core/utils/arabic_number_transformer.dart';
 
 class CustomUploadFileField extends StatefulWidget {
   final String? label;
@@ -68,7 +69,7 @@ class _CustomUploadFileFieldState extends State<CustomUploadFileField> {
         if (widget.label != null) ...[
           RichText(
             text: TextSpan(
-              text: widget.label!,
+              text: ArabicNumberTransformer.transformNullable(widget.label!),
               style:
                   widget.labelStyle ??
                   TextStyle(
@@ -163,7 +164,7 @@ class _CustomUploadFileFieldState extends State<CustomUploadFileField> {
           Padding(
             padding: const EdgeInsets.only(top: 8, left: 12),
             child: Text(
-              widget.helperText!,
+              ArabicNumberTransformer.transform(widget.helperText!),
               style: TextStyle(
                 color: AppColors.of(context).textSecondary,
                 fontSize: 12,

@@ -7,6 +7,7 @@ import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_text_styles.dart';
 import '../../../../core/utils/arabic_number_input_formatter.dart';
 import 'pricing_summary_sidebar.dart';
+import 'package:rawnaq/core/utils/arabic_number_transformer.dart';
 
 class PricingSummaryMetricCard extends StatelessWidget {
   final String label;
@@ -38,14 +39,14 @@ class PricingSummaryMetricCard extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           Text(
-            label,
+            ArabicNumberTransformer.transform(label),
             style: AppTextStyles.of(context).caption.copyWith(
               fontSize: compact ? 7 : 8,
               color: AppColors.of(context).textSecondary,
             ),
           ),
           Text(
-            valueLabel,
+            ArabicNumberTransformer.transform(valueLabel),
             style: AppTextStyles.of(context).bodyLarge.copyWith(
               fontSize: fontSize,
               fontWeight: FontWeight.w700,
@@ -105,9 +106,15 @@ class PricingSummaryDeductionSummaryRow extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(deductionLabel, style: textStyle),
+                Text(
+                  ArabicNumberTransformer.transform(deductionLabel),
+                  style: textStyle,
+                ),
                 const SizedBox(height: 4),
-                Text(deductionValueLabel, style: valueStyle),
+                Text(
+                  ArabicNumberTransformer.transform(deductionValueLabel),
+                  style: valueStyle,
+                ),
               ],
             ),
           ),
@@ -116,10 +123,13 @@ class PricingSummaryDeductionSummaryRow extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(totalAfterLabel, style: textStyle),
+                Text(
+                  ArabicNumberTransformer.transform(totalAfterLabel),
+                  style: textStyle,
+                ),
                 const SizedBox(height: 4),
                 Text(
-                  totalAfterValueLabel,
+                  ArabicNumberTransformer.transform(totalAfterValueLabel),
                   style: valueStyle.copyWith(color: const Color(0xFF10B981)),
                 ),
               ],
@@ -760,7 +770,7 @@ class _PdfOptionCheckbox extends StatelessWidget {
           SizedBox(width: isMobile ? 6 : 8),
           Expanded(
             child: Text(
-              label,
+              ArabicNumberTransformer.transform(label),
               overflow: TextOverflow.ellipsis,
               style: AppTextStyles.of(context).caption.copyWith(
                 fontSize: isMobile ? 10 : 11,

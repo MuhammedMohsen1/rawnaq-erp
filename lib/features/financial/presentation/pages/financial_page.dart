@@ -11,6 +11,7 @@ import '../widgets/company_expenses_section.dart';
 import '../widgets/financial_kpi_grid.dart';
 import '../widgets/financial_project_table.dart';
 import '../widgets/financial_toolbar.dart';
+import 'package:rawnaq/core/utils/arabic_number_transformer.dart';
 
 class FinancialPage extends StatelessWidget {
   const FinancialPage({super.key});
@@ -252,8 +253,16 @@ class _HealthItem extends StatelessWidget {
       children: [
         Icon(icon, color: color, size: 22),
         const SizedBox(width: 10),
-        Expanded(child: Text(label, style: AppTextStyles.of(context).label)),
-        Text(value, style: AppTextStyles.of(context).h5.copyWith(color: color)),
+        Expanded(
+          child: Text(
+            ArabicNumberTransformer.transform(label),
+            style: AppTextStyles.of(context).label,
+          ),
+        ),
+        Text(
+          ArabicNumberTransformer.transform(value),
+          style: AppTextStyles.of(context).h5.copyWith(color: color),
+        ),
       ],
     );
   }
@@ -301,7 +310,7 @@ class _FailureView extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             Text(
-              message,
+              ArabicNumberTransformer.transform(message),
               textAlign: TextAlign.center,
               style: AppTextStyles.of(context).bodySmall,
             ),

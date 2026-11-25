@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 
 import '../../../../core/constants/app_colors.dart';
 import '../../../projects/domain/entities/project_entity.dart';
+import 'package:rawnaq/core/utils/arabic_number_transformer.dart';
 
 class DesignWorkspaceInstallmentsEditorDialog extends StatefulWidget {
   final List<ProjectInstallment> initialInstallments;
@@ -199,12 +200,12 @@ class _DesignWorkspaceInstallmentsEditorDialogState
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          widget.title,
+                          ArabicNumberTransformer.transform(widget.title),
                           style: Theme.of(context).textTheme.titleMedium,
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          widget.description,
+                          ArabicNumberTransformer.transform(widget.description),
                           style: Theme.of(context).textTheme.bodySmall,
                         ),
                       ],
@@ -250,7 +251,9 @@ class _DesignWorkspaceInstallmentsEditorDialogState
                                   children: [
                                     Expanded(
                                       child: Text(
-                                        'الدفعة ${index + 1}',
+                                        ArabicNumberTransformer.transform(
+                                          'الدفعة ${index + 1}',
+                                        ),
                                         style: Theme.of(
                                           context,
                                         ).textTheme.titleSmall,
@@ -323,7 +326,9 @@ class _DesignWorkspaceInstallmentsEditorDialogState
                                             ),
                                           ),
                                           child: Text(
-                                            'تاريخ الاستحقاق: ${draft.dueDate.toLocal().toString().split(' ').first}',
+                                            ArabicNumberTransformer.transform(
+                                              'تاريخ الاستحقاق: ${draft.dueDate.toLocal().toString().split(' ').first}',
+                                            ),
                                             style: Theme.of(
                                               context,
                                             ).textTheme.bodyMedium,
@@ -393,7 +398,7 @@ class _DesignWorkspaceInstallmentsEditorDialogState
               if (_errorMessage != null) ...[
                 const SizedBox(height: 12),
                 Text(
-                  _errorMessage!,
+                  ArabicNumberTransformer.transform(_errorMessage!),
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
                     color: AppColors.of(context).error,
                   ),
@@ -419,7 +424,9 @@ class _DesignWorkspaceInstallmentsEditorDialogState
                   FilledButton(
                     onPressed: _save,
                     style: buttonStyle,
-                    child: Text(widget.confirmLabel),
+                    child: Text(
+                      ArabicNumberTransformer.transform(widget.confirmLabel),
+                    ),
                   ),
                 ],
               ),
@@ -467,7 +474,11 @@ class _InstallmentCaptureChip extends StatelessWidget {
       avatar: const Icon(Icons.receipt_long_outlined, size: 16),
       label: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 160),
-        child: Text(label, maxLines: 1, overflow: TextOverflow.ellipsis),
+        child: Text(
+          ArabicNumberTransformer.transform(label),
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+        ),
       ),
       onPressed: () => _preview(context),
     );
@@ -489,7 +500,11 @@ class _InstallmentCaptureChip extends StatelessWidget {
                   const SizedBox(width: 12),
                   const Icon(Icons.receipt_long_outlined),
                   const SizedBox(width: 8),
-                  Expanded(child: Text(capture.fileName)),
+                  Expanded(
+                    child: Text(
+                      ArabicNumberTransformer.transform(capture.fileName),
+                    ),
+                  ),
                   IconButton(
                     onPressed: () => Navigator.of(dialogContext).pop(),
                     icon: const Icon(Icons.close),

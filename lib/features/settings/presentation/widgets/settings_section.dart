@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_text_styles.dart';
+import 'package:rawnaq/core/utils/arabic_number_transformer.dart';
 
 class SettingsSection extends StatelessWidget {
   final String title;
@@ -46,13 +47,13 @@ class SettingsSection extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      title,
+                      ArabicNumberTransformer.transform(title),
                       style: AppTextStyles.of(context).sectionTitle,
                       textAlign: TextAlign.right,
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      subtitle,
+                      ArabicNumberTransformer.transform(subtitle),
                       textAlign: TextAlign.right,
                       style: AppTextStyles.of(context).caption.copyWith(
                         color: AppColors.of(context).textMuted,

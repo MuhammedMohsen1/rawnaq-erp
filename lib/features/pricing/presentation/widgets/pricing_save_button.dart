@@ -5,6 +5,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../cubit/pricing_cubit.dart';
 import '../cubit/pricing_state.dart';
 import 'pricing_drafts.dart';
+import 'package:rawnaq/core/utils/arabic_number_transformer.dart';
 
 class PricingSaveButton extends StatelessWidget {
   const PricingSaveButton({
@@ -26,7 +27,11 @@ class PricingSaveButton extends StatelessWidget {
             ? () => save(context, projectId, state)
             : null,
         icon: const Icon(Icons.save_outlined),
-        label: Text(drafts.isSaving ? 'جارٍ الحفظ…' : 'حفظ التعديلات'),
+        label: Text(
+          ArabicNumberTransformer.transform(
+            drafts.isSaving ? 'جارٍ الحفظ…' : 'حفظ التعديلات',
+          ),
+        ),
       ),
     );
   }
@@ -61,7 +66,7 @@ class PricingSaveButton extends StatelessWidget {
           tone: error != null || cubit.state is PricingError
               ? ToastTone.error
               : ToastTone.success,
-          content: Text(message),
+          content: Text(ArabicNumberTransformer.transform(message)),
         ),
       );
     }

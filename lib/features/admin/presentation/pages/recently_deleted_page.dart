@@ -9,6 +9,7 @@ import '../../../../core/constants/app_text_styles.dart';
 import '../../../../core/utils/role_utils.dart';
 import '../../../auth/presentation/bloc/auth_bloc.dart';
 import '../../data/datasources/recently_deleted_api_datasource.dart';
+import 'package:rawnaq/core/utils/arabic_number_transformer.dart';
 
 class RecentlyDeletedPage extends StatefulWidget {
   const RecentlyDeletedPage({super.key});
@@ -113,7 +114,7 @@ class _RecentlyDeletedPageState extends State<RecentlyDeletedPage> {
                 if (_errorMessage != null) ...[
                   const SizedBox(height: 12),
                   Text(
-                    _errorMessage!,
+                    ArabicNumberTransformer.transform(_errorMessage!),
                     textAlign: TextAlign.center,
                     style: AppTextStyles.of(
                       context,
@@ -171,7 +172,7 @@ class _RecentlyDeletedPageState extends State<RecentlyDeletedPage> {
           Padding(
             padding: const EdgeInsets.only(bottom: 12),
             child: Text(
-              _errorMessage!,
+              ArabicNumberTransformer.transform(_errorMessage!),
               style: AppTextStyles.of(
                 context,
               ).bodySmall.copyWith(color: AppColors.of(context).error),
@@ -319,17 +320,19 @@ class _DeletedItemRow extends StatelessWidget {
         ),
       ),
       title: Text(
-        item.title,
+        ArabicNumberTransformer.transform(item.title),
         style: AppTextStyles.of(context).tableCellBold,
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
       ),
       subtitle: Text(
-        [
-          labelForType(item.type),
-          item.subtitle,
-          dateText,
-        ].where((value) => value != null && value.isNotEmpty).join(' • '),
+        ArabicNumberTransformer.transform(
+          [
+            labelForType(item.type),
+            item.subtitle,
+            dateText,
+          ].where((value) => value != null && value.isNotEmpty).join(' • '),
+        ),
         style: AppTextStyles.of(context).bodySmall,
         maxLines: 1,
         overflow: TextOverflow.ellipsis,

@@ -15,6 +15,7 @@ import '../widgets/add_task_dialog_simple.dart';
 import '../widgets/appointment_widgets.dart';
 import '../widgets/edit_task_dialog.dart';
 import '../widgets/gantt_chart_widgets.dart';
+import 'package:rawnaq/core/utils/arabic_number_transformer.dart';
 
 /// Gantt Chart page for task visualization
 class GanttChartPage extends StatefulWidget {
@@ -319,7 +320,9 @@ class _GanttChartPageState extends State<GanttChartPage>
                 AppToast.build(
                   tone: ToastTone.success,
                   content: Text(
-                    'تم إضافة المهمة: ${task.name}\nتم تعديل الوقت تلقائياً لتجنب التعارض',
+                    ArabicNumberTransformer.transform(
+                      'تم إضافة المهمة: ${task.name}\nتم تعديل الوقت تلقائياً لتجنب التعارض',
+                    ),
                   ),
                   duration: const Duration(seconds: 2),
                 ),
@@ -329,7 +332,11 @@ class _GanttChartPageState extends State<GanttChartPage>
                 AppToast.build(
                   tone: ToastTone.success,
                   duration: const Duration(seconds: 2),
-                  content: Text('تم إضافة المهمة: ${task.name}'),
+                  content: Text(
+                    ArabicNumberTransformer.transform(
+                      'تم إضافة المهمة: ${task.name}',
+                    ),
+                  ),
                 ),
               );
             }
@@ -377,7 +384,9 @@ class _GanttChartPageState extends State<GanttChartPage>
         AppToast.build(
           tone: ToastTone.success,
           content: Text(
-            '$action: ${task.name}\nتم تعديل الوقت تلقائياً لتجنب التعارض',
+            ArabicNumberTransformer.transform(
+              '$action: ${task.name}\nتم تعديل الوقت تلقائياً لتجنب التعارض',
+            ),
           ),
           duration: const Duration(seconds: 2),
         ),
@@ -388,7 +397,9 @@ class _GanttChartPageState extends State<GanttChartPage>
         AppToast.build(
           tone: ToastTone.success,
           duration: const Duration(seconds: 2),
-          content: Text('$action: ${task.name}'),
+          content: Text(
+            ArabicNumberTransformer.transform('$action: ${task.name}'),
+          ),
         ),
       );
     }
@@ -414,7 +425,11 @@ class _GanttChartPageState extends State<GanttChartPage>
         AppToast.build(
           tone: ToastTone.success,
           duration: const Duration(seconds: 2),
-          content: Text('تم تعديل مدة المهمة: ${task.name}'),
+          content: Text(
+            ArabicNumberTransformer.transform(
+              'تم تعديل مدة المهمة: ${task.name}',
+            ),
+          ),
         ),
       );
       return;
@@ -435,7 +450,9 @@ class _GanttChartPageState extends State<GanttChartPage>
         AppToast.build(
           tone: ToastTone.success,
           content: Text(
-            'تم تعديل مدة المهمة: ${task.name}\nتم تعديل الوقت تلقائياً لتجنب التعارض',
+            ArabicNumberTransformer.transform(
+              'تم تعديل مدة المهمة: ${task.name}\nتم تعديل الوقت تلقائياً لتجنب التعارض',
+            ),
           ),
           duration: const Duration(seconds: 2),
         ),
@@ -446,7 +463,11 @@ class _GanttChartPageState extends State<GanttChartPage>
         AppToast.build(
           tone: ToastTone.success,
           duration: const Duration(seconds: 2),
-          content: Text('تم تعديل مدة المهمة: ${task.name}'),
+          content: Text(
+            ArabicNumberTransformer.transform(
+              'تم تعديل مدة المهمة: ${task.name}',
+            ),
+          ),
         ),
       );
     }
@@ -479,9 +500,11 @@ class _GanttChartPageState extends State<GanttChartPage>
                   ? ToastTone.warning
                   : ToastTone.success,
               content: Text(
-                savedTask.wasAdjusted
-                    ? 'تم تحديث المهمة: ${updatedTask.name}\nتم تعديل الوقت تلقائياً لتجنب التعارض'
-                    : 'تم تحديث المهمة: ${updatedTask.name}',
+                ArabicNumberTransformer.transform(
+                  savedTask.wasAdjusted
+                      ? 'تم تحديث المهمة: ${updatedTask.name}\nتم تعديل الوقت تلقائياً لتجنب التعارض'
+                      : 'تم تحديث المهمة: ${updatedTask.name}',
+                ),
               ),
               duration: savedTask.wasAdjusted
                   ? const Duration(seconds: 4)
@@ -497,7 +520,11 @@ class _GanttChartPageState extends State<GanttChartPage>
             AppToast.build(
               tone: ToastTone.success,
               duration: const Duration(seconds: 2),
-              content: Text('تم حذف المهمة: ${task.name}'),
+              content: Text(
+                ArabicNumberTransformer.transform(
+                  'تم حذف المهمة: ${task.name}',
+                ),
+              ),
             ),
           );
         },

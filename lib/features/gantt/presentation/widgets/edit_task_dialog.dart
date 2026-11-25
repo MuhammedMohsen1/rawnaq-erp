@@ -8,6 +8,7 @@ import '../../../tasks/domain/entities/task_entity.dart';
 import '../../../tasks/domain/enums/task_status.dart';
 import '../../../tasks/domain/enums/task_type.dart';
 import '../../../projects/domain/entities/team_member_entity.dart';
+import 'package:rawnaq/core/utils/arabic_number_transformer.dart';
 
 /// Dialog for editing task dates and times (opened on double-tap)
 class EditTaskDialog extends StatefulWidget {
@@ -89,9 +90,11 @@ class _EditTaskDialogState extends State<EditTaskDialog> {
 
                       // Start Date & Time
                       Text(
-                        isAppointment
-                            ? 'تاريخ ووقت الموعد'
-                            : 'تاريخ ووقت البداية',
+                        ArabicNumberTransformer.transform(
+                          isAppointment
+                              ? 'تاريخ ووقت الموعد'
+                              : 'تاريخ ووقت البداية',
+                        ),
                         style: AppTextStyles.of(
                           context,
                         ).inputLabel.copyWith(fontWeight: FontWeight.w600),
@@ -190,7 +193,9 @@ class _EditTaskDialogState extends State<EditTaskDialog> {
                 Text('تعديل المهمة', style: AppTextStyles.of(context).h6),
                 const SizedBox(height: 2),
                 Text(
-                  widget.task.taskType.arabicName,
+                  ArabicNumberTransformer.transform(
+                    widget.task.taskType.arabicName,
+                  ),
                   style: AppTextStyles.of(context).caption,
                 ),
               ],
@@ -221,7 +226,7 @@ class _EditTaskDialogState extends State<EditTaskDialog> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            widget.task.name,
+            ArabicNumberTransformer.transform(widget.task.name),
             style: AppTextStyles.of(
               context,
             ).bodyMedium.copyWith(fontWeight: FontWeight.w600),
@@ -237,7 +242,7 @@ class _EditTaskDialogState extends State<EditTaskDialog> {
                 ),
                 const SizedBox(width: 6),
                 Text(
-                  widget.task.projectName!,
+                  ArabicNumberTransformer.transform(widget.task.projectName!),
                   style: AppTextStyles.of(
                     context,
                   ).caption.copyWith(color: AppColors.of(context).primary),
@@ -256,7 +261,7 @@ class _EditTaskDialogState extends State<EditTaskDialog> {
                 ),
                 const SizedBox(width: 6),
                 Text(
-                  widget.task.customerName!,
+                  ArabicNumberTransformer.transform(widget.task.customerName!),
                   style: AppTextStyles.of(context).caption,
                 ),
               ],
@@ -297,7 +302,9 @@ class _EditTaskDialogState extends State<EditTaskDialog> {
                           context,
                         ).primary.withValues(alpha: 0.2),
                         child: Text(
-                          member.name.substring(0, 1),
+                          ArabicNumberTransformer.transform(
+                            member.name.substring(0, 1),
+                          ),
                           style: TextStyle(
                             color: AppColors.of(context).primary,
                             fontSize: 11,
@@ -306,7 +313,10 @@ class _EditTaskDialogState extends State<EditTaskDialog> {
                         ),
                       ),
                       const SizedBox(width: 10),
-                      Text(member.name, style: const TextStyle(fontSize: 13)),
+                      Text(
+                        ArabicNumberTransformer.transform(member.name),
+                        style: const TextStyle(fontSize: 13),
+                      ),
                     ],
                   ),
                 );
@@ -353,7 +363,7 @@ class _EditTaskDialogState extends State<EditTaskDialog> {
                       ),
                       const SizedBox(width: 10),
                       Text(
-                        status.arabicName,
+                        ArabicNumberTransformer.transform(status.arabicName),
                         style: const TextStyle(fontSize: 13),
                       ),
                     ],
@@ -396,7 +406,7 @@ class _EditTaskDialogState extends State<EditTaskDialog> {
             const SizedBox(width: 10),
             Expanded(
               child: Text(
-                dateFormat.format(value),
+                ArabicNumberTransformer.transform(dateFormat.format(value)),
                 style: AppTextStyles.of(
                   context,
                 ).inputText.copyWith(fontSize: 13),
@@ -432,7 +442,7 @@ class _EditTaskDialogState extends State<EditTaskDialog> {
             const SizedBox(width: 10),
             Expanded(
               child: Text(
-                _formatTime(value),
+                ArabicNumberTransformer.transform(_formatTime(value)),
                 style: AppTextStyles.of(
                   context,
                 ).inputText.copyWith(fontSize: 13),
@@ -549,7 +559,11 @@ class _EditTaskDialogState extends State<EditTaskDialog> {
           ElevatedButton.icon(
             onPressed: _isSaving ? null : _saveChanges,
             icon: const Icon(Icons.check, size: 18),
-            label: Text(_isSaving ? 'جار الحفظ...' : 'حفظ التغييرات'),
+            label: Text(
+              ArabicNumberTransformer.transform(
+                _isSaving ? 'جار الحفظ...' : 'حفظ التغييرات',
+              ),
+            ),
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.of(context).primary,
               foregroundColor: AppColors.of(context).scaffoldBackground,

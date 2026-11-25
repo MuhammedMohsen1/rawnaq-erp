@@ -7,6 +7,7 @@ import '../../../../core/constants/app_text_styles.dart';
 import '../../data/models/project_financial_overview_model.dart';
 import '../cubit/project_financial_overview_cubit.dart';
 import '../widgets/financial_formatters.dart';
+import 'package:rawnaq/core/utils/arabic_number_transformer.dart';
 
 class ProjectFinancialOverviewPage extends StatelessWidget {
   final String projectId;
@@ -28,7 +29,7 @@ class ProjectFinancialOverviewPage extends StatelessWidget {
                 ),
               ),
               ProjectFinancialOverviewFailure(:final message) => Center(
-                child: Text(message),
+                child: Text(ArabicNumberTransformer.transform(message)),
               ),
               ProjectFinancialOverviewLoaded(:final overview) =>
                 _OverviewContent(overview: overview),
@@ -47,11 +48,16 @@ class _OverviewContent extends StatelessWidget {
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(overview.projectName, style: AppTextStyles.of(context).pageTitle),
+        Text(
+          ArabicNumberTransformer.transform(overview.projectName),
+          style: AppTextStyles.of(context).pageTitle,
+        ),
         const SizedBox(height: 6),
         Text(
-          '${overview.projectType == 'DESIGN' ? 'تصميم' : 'تنفيذ'} • '
-          '${overview.clientName ?? 'عميل غير محدد'} • ${overview.status}',
+          ArabicNumberTransformer.transform(
+            '${overview.projectType == 'DESIGN' ? 'تصميم' : 'تنفيذ'} • '
+            '${overview.clientName ?? 'عميل غير محدد'} • ${overview.status}',
+          ),
           style: AppTextStyles.of(context).bodyMedium,
         ),
         const SizedBox(height: 20),
@@ -95,12 +101,17 @@ class _AnalyticsGrid extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(item.$1, style: AppTextStyles.of(context).caption),
+                    Text(
+                      ArabicNumberTransformer.transform(item.$1),
+                      style: AppTextStyles.of(context).caption,
+                    ),
                     const SizedBox(height: 6),
                     Text(
-                      item.$1 == 'استخدام الميزانية'
-                          ? '${item.$2.toStringAsFixed(1)}%'
-                          : formatKwd(item.$2),
+                      ArabicNumberTransformer.transform(
+                        item.$1 == 'استخدام الميزانية'
+                            ? '${item.$2.toStringAsFixed(1)}%'
+                            : formatKwd(item.$2),
+                      ),
                       style: AppTextStyles.of(context).h6,
                     ),
                   ],
@@ -188,13 +199,17 @@ class _TransactionsPanel extends StatelessWidget {
                     ? AppColors.of(context).success
                     : AppColors.of(context).error,
               ),
-              title: Text(item.description),
+              title: Text(ArabicNumberTransformer.transform(item.description)),
               subtitle: Text(
-                item.isUndated || item.date == null
-                    ? 'غير مؤرخ'
-                    : DateFormat('yyyy/MM/dd').format(item.date!),
+                ArabicNumberTransformer.transform(
+                  item.isUndated || item.date == null
+                      ? 'غير مؤرخ'
+                      : DateFormat('yyyy/MM/dd').format(item.date!),
+                ),
               ),
-              trailing: Text(formatKwd(item.amount)),
+              trailing: Text(
+                ArabicNumberTransformer.transform(formatKwd(item.amount)),
+              ),
             ),
       ],
     ),

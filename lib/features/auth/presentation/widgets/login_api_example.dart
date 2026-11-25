@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../../core/constants/endpoints.dart';
+import 'package:rawnaq/core/utils/arabic_number_transformer.dart';
 
 /// Example usage of the login API
 ///
@@ -97,11 +98,11 @@ class LoginApiExample extends StatelessWidget {
           SizedBox(
             width: 120,
             child: Text(
-              label,
+              ArabicNumberTransformer.transform(label),
               style: const TextStyle(fontWeight: FontWeight.bold),
             ),
           ),
-          Expanded(child: Text(value)),
+          Expanded(child: Text(ArabicNumberTransformer.transform(value))),
         ],
       ),
     );

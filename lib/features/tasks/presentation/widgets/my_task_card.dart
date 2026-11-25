@@ -5,6 +5,7 @@ import '../../../../core/constants/app_text_styles.dart';
 import '../../domain/entities/task_entity.dart';
 import '../../domain/enums/task_status.dart';
 import '../../domain/enums/task_type.dart';
+import 'package:rawnaq/core/utils/arabic_number_transformer.dart';
 
 class MyTaskCard extends StatelessWidget {
   final TaskEntity task;
@@ -47,7 +48,7 @@ class MyTaskCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  task.name,
+                  ArabicNumberTransformer.transform(task.name),
                   style: AppTextStyles.of(context).tableCellBold,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
@@ -124,7 +125,7 @@ class _TaskMeta extends StatelessWidget {
         Icon(icon, size: 14, color: AppColors.of(context).textMuted),
         const SizedBox(width: 4),
         Text(
-          text,
+          ArabicNumberTransformer.transform(text),
           style: AppTextStyles.of(
             context,
           ).caption.copyWith(color: AppColors.of(context).textSecondary),
@@ -162,7 +163,7 @@ class _TaskStatusMenu extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(width: 8),
-                    Text(status.arabicName),
+                    Text(ArabicNumberTransformer.transform(status.arabicName)),
                   ],
                 ),
               );
@@ -178,7 +179,7 @@ class _TaskStatusMenu extends StatelessWidget {
           ),
         ),
         child: Text(
-          task.status.arabicName,
+          ArabicNumberTransformer.transform(task.status.arabicName),
           style: TextStyle(
             color: task.status.color(context),
             fontSize: 12,

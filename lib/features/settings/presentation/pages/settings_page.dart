@@ -14,6 +14,7 @@ import '../widgets/settings_notes_editor.dart';
 import '../widgets/settings_section.dart';
 import '../widgets/settings_tile.dart';
 import '../widgets/sign_out_button.dart';
+import 'package:rawnaq/core/utils/arabic_number_transformer.dart';
 
 /// Settings page with language and app configuration
 class SettingsPage extends StatelessWidget {
@@ -31,7 +32,7 @@ class SettingsPage extends StatelessWidget {
             ScaffoldMessenger.of(context).showSnackBar(
               AppToast.build(
                 tone: ToastTone.error,
-                content: Text(state.message),
+                content: Text(ArabicNumberTransformer.transform(state.message)),
                 margin: const EdgeInsets.all(16),
                 duration: const Duration(seconds: 2),
               ),

@@ -3,6 +3,7 @@ import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_text_styles.dart';
 import '../../domain/entities/team_member_entity.dart';
 import '../../domain/enums/project_status.dart';
+import 'package:rawnaq/core/utils/arabic_number_transformer.dart';
 
 /// Widget for filtering projects
 class ProjectFiltersWidget extends StatelessWidget {
@@ -48,7 +49,9 @@ class ProjectFiltersWidget extends StatelessWidget {
             ...ProjectStatus.values.map(
               (status) => DropdownMenuItem(
                 value: status,
-                child: Text(status.arabicName),
+                child: Text(
+                  ArabicNumberTransformer.transform(status.arabicName),
+                ),
               ),
             ),
           ],
@@ -66,7 +69,7 @@ class ProjectFiltersWidget extends StatelessWidget {
             ...managers.map(
               (manager) => DropdownMenuItem(
                 value: manager.id,
-                child: Text(manager.name),
+                child: Text(ArabicNumberTransformer.transform(manager.name)),
               ),
             ),
           ],
@@ -82,8 +85,10 @@ class ProjectFiltersWidget extends StatelessWidget {
           items: [
             const DropdownMenuItem(value: null, child: Text('عضو الفريق')),
             ...teamMembers.map(
-              (member) =>
-                  DropdownMenuItem(value: member.id, child: Text(member.name)),
+              (member) => DropdownMenuItem(
+                value: member.id,
+                child: Text(ArabicNumberTransformer.transform(member.name)),
+              ),
             ),
           ],
           onChanged: onTeamMemberChanged,
@@ -126,7 +131,10 @@ class ProjectFiltersWidget extends StatelessWidget {
             children: [
               Icon(icon, size: 18, color: AppColors.of(context).textMuted),
               const SizedBox(width: 8),
-              Text(hint, style: AppTextStyles.of(context).inputHint),
+              Text(
+                ArabicNumberTransformer.transform(hint),
+                style: AppTextStyles.of(context).inputHint,
+              ),
             ],
           ),
           icon: Icon(

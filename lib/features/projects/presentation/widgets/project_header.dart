@@ -4,6 +4,7 @@ import '../../../../core/constants/app_text_styles.dart';
 import '../../domain/entities/project_entity.dart';
 import '../../domain/enums/project_status.dart';
 import 'project_contact_actions.dart';
+import 'package:rawnaq/core/utils/arabic_number_transformer.dart';
 
 /// Header widget displaying project name and status
 class ProjectHeader extends StatelessWidget {
@@ -20,7 +21,7 @@ class ProjectHeader extends StatelessWidget {
           children: [
             Expanded(
               child: Text(
-                project.name,
+                ArabicNumberTransformer.transform(project.name),
                 style: TextStyle(
                   fontSize: 30,
                   fontWeight: FontWeight.w900,
@@ -73,7 +74,7 @@ class _StatusBadge extends StatelessWidget {
           ),
           const SizedBox(width: 8),
           Text(
-            text,
+            ArabicNumberTransformer.transform(text),
             style: AppTextStyles.of(context).caption.copyWith(
               fontSize: 12,
               fontWeight: FontWeight.w700,

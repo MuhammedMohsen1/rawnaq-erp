@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_text_styles.dart';
 import '../../domain/enums/project_status.dart';
+import 'package:rawnaq/core/utils/arabic_number_transformer.dart';
 
 class ProjectListSearchField extends StatelessWidget {
   final TextEditingController controller;
@@ -173,7 +174,7 @@ class _StatusFilterChip extends StatelessWidget {
               ),
               const SizedBox(width: 7),
               Text(
-                label,
+                ArabicNumberTransformer.transform(label),
                 style: AppTextStyles.of(context).labelSmall.copyWith(
                   color: selected
                       ? accent
@@ -218,7 +219,7 @@ class _CountBubble extends StatelessWidget {
         ),
       ),
       child: Text(
-        '$count',
+        ArabicNumberTransformer.transform('$count'),
         style: TextStyle(
           color: active ? color : AppColors.of(context).textMuted,
           fontSize: 10.5,
@@ -246,7 +247,7 @@ class _PrimaryGlowButton extends StatelessWidget {
     return ElevatedButton.icon(
       onPressed: onTap,
       icon: Icon(icon, size: 17),
-      label: Text(label),
+      label: Text(ArabicNumberTransformer.transform(label)),
       style: ElevatedButton.styleFrom(
         backgroundColor: AppColors.of(context).secondary,
         foregroundColor: AppColors.white,

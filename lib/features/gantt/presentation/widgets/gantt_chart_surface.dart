@@ -9,6 +9,7 @@ import '../../../tasks/domain/entities/task_entity.dart';
 import '../widgets/appointment_widgets.dart';
 import '../widgets/gantt_filters_widget.dart';
 import '../widgets/gantt_chart_surface_support_widgets.dart';
+import 'package:rawnaq/core/utils/arabic_number_transformer.dart';
 
 class GanttChartSurface extends StatelessWidget {
   const GanttChartSurface({
@@ -508,7 +509,9 @@ class _HorizontalEmployeeCell extends StatelessWidget {
               context,
             ).primary.withValues(alpha: 0.2),
             child: Text(
-              member.name.isEmpty ? '-' : member.name.substring(0, 1),
+              ArabicNumberTransformer.transform(
+                member.name.isEmpty ? '-' : member.name.substring(0, 1),
+              ),
               style: TextStyle(
                 color: AppColors.of(context).primary,
                 fontSize: 14,
@@ -523,14 +526,14 @@ class _HorizontalEmployeeCell extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Text(
-                  member.name,
+                  ArabicNumberTransformer.transform(member.name),
                   style: AppTextStyles.of(context).tableCellBold,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  member.role,
+                  ArabicNumberTransformer.transform(member.role),
                   style: AppTextStyles.of(
                     context,
                   ).caption.copyWith(color: AppColors.of(context).textMuted),
@@ -718,7 +721,7 @@ class _HorizontalDateHeader extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Text(
-                    dayFormat.format(date),
+                    ArabicNumberTransformer.transform(dayFormat.format(date)),
                     style: AppTextStyles.of(context).labelSmall.copyWith(
                       color: today
                           ? AppColors.of(context).primary
@@ -739,7 +742,9 @@ class _HorizontalDateHeader extends StatelessWidget {
                     ),
                     child: Center(
                       child: Text(
-                        dateFormat.format(date),
+                        ArabicNumberTransformer.transform(
+                          dateFormat.format(date),
+                        ),
                         style: TextStyle(
                           color: today
                               ? AppColors.of(context).scaffoldBackground
@@ -819,7 +824,11 @@ class _VerticalMembersHeader extends StatelessWidget {
                         context,
                       ).primary.withValues(alpha: 0.2),
                       child: Text(
-                        member.name.isEmpty ? '-' : member.name.substring(0, 1),
+                        ArabicNumberTransformer.transform(
+                          member.name.isEmpty
+                              ? '-'
+                              : member.name.substring(0, 1),
+                        ),
                         style: TextStyle(
                           color: AppColors.of(context).primary,
                           fontSize: 12,
@@ -834,13 +843,13 @@ class _VerticalMembersHeader extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            member.name,
+                            ArabicNumberTransformer.transform(member.name),
                             style: AppTextStyles.of(context).tableCellBold,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),
                           Text(
-                            member.role,
+                            ArabicNumberTransformer.transform(member.role),
                             style: AppTextStyles.of(context).caption.copyWith(
                               color: AppColors.of(context).textMuted,
                             ),
@@ -896,7 +905,7 @@ class _VerticalDateCell extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Text(
-            dayFormat.format(date),
+            ArabicNumberTransformer.transform(dayFormat.format(date)),
             style: AppTextStyles.of(context).labelSmall.copyWith(
               color: isToday
                   ? AppColors.of(context).primary
@@ -923,7 +932,7 @@ class _VerticalDateCell extends StatelessWidget {
               ),
             ),
             child: Text(
-              dateFormat.format(date),
+              ArabicNumberTransformer.transform(dateFormat.format(date)),
               style: AppTextStyles.of(context).tableCellBold.copyWith(
                 color: isToday
                     ? AppColors.of(context).scaffoldBackground

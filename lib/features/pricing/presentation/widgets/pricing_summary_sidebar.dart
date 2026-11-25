@@ -8,6 +8,7 @@ import 'package:flutter/services.dart';
 import '../../../../core/utils/arabic_number_input_formatter.dart';
 import '../../../settings/data/datasources/settings_api_datasource.dart';
 import 'pricing_summary_sidebar_support_widgets.dart';
+import 'package:rawnaq/core/utils/arabic_number_transformer.dart';
 
 class PricingExportOptions {
   final bool showDeductionBreakdown;
@@ -271,7 +272,11 @@ class _PricingSummarySidebarState extends State<PricingSummarySidebar> {
         AppToast.build(
           tone: ToastTone.error,
           duration: const Duration(seconds: 2),
-          content: Text('فشل تحديث الملاحظات: ${e.toString()}'),
+          content: Text(
+            ArabicNumberTransformer.transform(
+              'فشل تحديث الملاحظات: ${e.toString()}',
+            ),
+          ),
         ),
       );
     }
@@ -566,7 +571,9 @@ class _PricingSummarySidebarState extends State<PricingSummarySidebar> {
                         AppToast.build(
                           tone: ToastTone.success,
                           content: Text(
-                            'تم تطبيق نسبة الربح $value% على جميع الفئات الفرعية',
+                            ArabicNumberTransformer.transform(
+                              'تم تطبيق نسبة الربح $value% على جميع الفئات الفرعية',
+                            ),
                           ),
                           duration: const Duration(seconds: 2),
                         ),

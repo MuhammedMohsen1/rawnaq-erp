@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../financial/domain/entities/transaction_entity.dart';
+import 'package:rawnaq/core/utils/arabic_number_transformer.dart';
 
 /// Dialog for confirming transaction deletion
 class DeleteTransactionDialog extends StatelessWidget {
@@ -18,7 +19,11 @@ class DeleteTransactionDialog extends StatelessWidget {
     return AlertDialog(
       backgroundColor: AppColors.of(context).cardBackground,
       title: const Text('حذف المعاملة'),
-      content: Text('هل أنت متأكد من حذف "${transaction.description}"؟'),
+      content: Text(
+        ArabicNumberTransformer.transform(
+          'هل أنت متأكد من حذف "${transaction.description}"؟',
+        ),
+      ),
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(),

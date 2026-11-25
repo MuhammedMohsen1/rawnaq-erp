@@ -13,6 +13,7 @@ import '../bloc/projects_event.dart';
 import '../bloc/projects_state.dart';
 import '../../../pricing/data/datasources/pricing_api_datasource.dart';
 import '../../../pricing/data/models/pricing_version_model.dart';
+import 'package:rawnaq/core/utils/arabic_number_transformer.dart';
 
 class SiteEngineerDashboardPage extends StatefulWidget {
   const SiteEngineerDashboardPage({super.key});
@@ -148,7 +149,9 @@ class _SiteEngineerDashboardPageState extends State<SiteEngineerDashboardPage> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Text(
-                  'حدث خطأ: ${state.message}',
+                  ArabicNumberTransformer.transform(
+                    'حدث خطأ: ${state.message}',
+                  ),
                   style: AppTextStyles.of(context).bodyLarge.copyWith(
                     color: AppColors.of(context).textSecondary,
                   ),
@@ -263,7 +266,7 @@ class _SiteEngineerDashboardPageState extends State<SiteEngineerDashboardPage> {
 
   Widget _buildSectionTitle(String title) {
     return Text(
-      title,
+      ArabicNumberTransformer.transform(title),
       style: AppTextStyles.of(context).h4.copyWith(
         color: AppColors.of(context).textPrimary,
         fontWeight: FontWeight.bold,
@@ -353,7 +356,7 @@ class _SiteEngineerDashboardPageState extends State<SiteEngineerDashboardPage> {
             children: [
               Expanded(
                 child: Text(
-                  project.name,
+                  ArabicNumberTransformer.transform(project.name),
                   style: AppTextStyles.of(context).h6.copyWith(
                     color: AppColors.of(context).textPrimary,
                     fontWeight: FontWeight.bold,
@@ -377,7 +380,7 @@ class _SiteEngineerDashboardPageState extends State<SiteEngineerDashboardPage> {
               ),
               const Spacer(),
               Text(
-                '${project.progress}%',
+                ArabicNumberTransformer.transform('${project.progress}%'),
                 style: AppTextStyles.of(context).bodyMedium.copyWith(
                   color: AppColors.of(context).textPrimary,
                   fontWeight: FontWeight.w600,
@@ -399,7 +402,7 @@ class _SiteEngineerDashboardPageState extends State<SiteEngineerDashboardPage> {
           ),
           const SizedBox(height: 16),
           Text(
-            'آخر تحديث: $lastUpdate',
+            ArabicNumberTransformer.transform('آخر تحديث: $lastUpdate'),
             style: AppTextStyles.of(context).caption.copyWith(
               color: AppColors.of(context).textMuted,
               fontSize: 12,
@@ -493,7 +496,7 @@ class _SiteEngineerDashboardPageState extends State<SiteEngineerDashboardPage> {
         borderRadius: BorderRadius.circular(6),
       ),
       child: Text(
-        label,
+        ArabicNumberTransformer.transform(label),
         style: AppTextStyles.of(
           context,
         ).caption.copyWith(color: Colors.white, fontWeight: FontWeight.w600),
@@ -600,7 +603,7 @@ class _SiteEngineerDashboardPageState extends State<SiteEngineerDashboardPage> {
               children: [
                 Expanded(
                   child: Text(
-                    project.name,
+                    ArabicNumberTransformer.transform(project.name),
                     style: AppTextStyles.of(context).h6.copyWith(
                       color: AppColors.of(context).textPrimary,
                       fontWeight: FontWeight.bold,
@@ -651,7 +654,7 @@ class _SiteEngineerDashboardPageState extends State<SiteEngineerDashboardPage> {
                     ),
                     const SizedBox(width: 6),
                     Text(
-                      statusText,
+                      ArabicNumberTransformer.transform(statusText),
                       style: AppTextStyles.of(context).caption.copyWith(
                         fontSize: 11,
                         fontWeight: FontWeight.w600,
@@ -686,9 +689,11 @@ class _SiteEngineerDashboardPageState extends State<SiteEngineerDashboardPage> {
                         ),
                         const SizedBox(height: 8),
                         Text(
-                          pricingVersion?.totalPrice != null
-                              ? '${pricingVersion!.totalPrice.toStringAsFixed(3)} KD'
-                              : '- KD',
+                          ArabicNumberTransformer.transform(
+                            pricingVersion?.totalPrice != null
+                                ? '${pricingVersion!.totalPrice.toStringAsFixed(3)} KD'
+                                : '- KD',
+                          ),
                           style: AppTextStyles.of(context).h5.copyWith(
                             color: AppColors.of(context).textPrimary,
                             fontWeight: FontWeight.bold,
@@ -727,9 +732,11 @@ class _SiteEngineerDashboardPageState extends State<SiteEngineerDashboardPage> {
                             ),
                             const SizedBox(width: 6),
                             Text(
-                              project.itemsCount != null
-                                  ? '${project.itemsCount}'
-                                  : '-',
+                              ArabicNumberTransformer.transform(
+                                project.itemsCount != null
+                                    ? '${project.itemsCount}'
+                                    : '-',
+                              ),
                               style: AppTextStyles.of(context).h5.copyWith(
                                 color: AppColors.of(context).textPrimary,
                                 fontWeight: FontWeight.bold,
@@ -782,7 +789,7 @@ class _SiteEngineerDashboardPageState extends State<SiteEngineerDashboardPage> {
                     prefixIcon,
                     const SizedBox(width: 4),
                     Text(
-                      actionButton,
+                      ArabicNumberTransformer.transform(actionButton),
                       style: const TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w600,
@@ -808,7 +815,7 @@ class _SiteEngineerDashboardPageState extends State<SiteEngineerDashboardPage> {
       ),
       child: Center(
         child: Text(
-          message,
+          ArabicNumberTransformer.transform(message),
           style: AppTextStyles.of(
             context,
           ).bodyLarge.copyWith(color: AppColors.of(context).textSecondary),

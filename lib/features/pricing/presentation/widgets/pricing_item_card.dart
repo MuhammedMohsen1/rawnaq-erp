@@ -22,6 +22,7 @@ import 'pricing_item_card_local_element.dart';
 import 'pricing_item_card_visuals.dart';
 import 'pricing_item_card_section_widgets.dart';
 import 'pricing_item_card_subitems_list.dart';
+import 'package:rawnaq/core/utils/arabic_number_transformer.dart';
 part 'pricing_item_card_image_actions.dart';
 
 class PricingItemCard extends StatefulWidget {
@@ -250,7 +251,9 @@ class _PricingItemCardState extends State<PricingItemCard>
         );
         // Initialize notes controller
         _notesControllers[subItem.id] = TextEditingController(
-          text: subItem.description,
+          text:
+              _drafts.value<String>(_draftKey(subItem.id, 'description')) ??
+              ArabicNumberTransformer.transformNullable(subItem.description),
         );
         _notesFocusNodes[subItem.id] = FocusNode();
       }
@@ -302,7 +305,9 @@ class _PricingItemCardState extends State<PricingItemCard>
           );
         }
         // Sync notes controller with latest data (only if no pending save)
-        final newNotes = subItem.description ?? '';
+        final newNotes = ArabicNumberTransformer.transform(
+          subItem.description ?? '',
+        );
         final existingController = _notesControllers[subItem.id];
         final notesFocusNode = _notesFocusNodes[subItem.id];
         final hasPendingNoteSave =
@@ -509,7 +514,9 @@ class _PricingItemCardState extends State<PricingItemCard>
           ).h4.copyWith(color: AppColors.of(context).textPrimary),
         ),
         content: Text(
-          'هل أنت متأكد من حذف العنصر "${widget.item.name}"؟\n\nسيتم حذف جميع الفئات الفرعية والعناصر المرتبطة به.',
+          ArabicNumberTransformer.transform(
+            'هل أنت متأكد من حذف العنصر "${widget.item.name}"؟\n\nسيتم حذف جميع الفئات الفرعية والعناصر المرتبطة به.',
+          ),
           style: AppTextStyles.of(
             context,
           ).bodyMedium.copyWith(color: AppColors.of(context).textSecondary),
@@ -558,7 +565,9 @@ class _PricingItemCardState extends State<PricingItemCard>
           ).h4.copyWith(color: AppColors.of(context).textPrimary),
         ),
         content: Text(
-          'هل أنت متأكد من حذف البند الفرعية "$subItemName"؟\n\nسيتم حذف جميع العناصر المرتبطة بها.',
+          ArabicNumberTransformer.transform(
+            'هل أنت متأكد من حذف البند الفرعية "$subItemName"؟\n\nسيتم حذف جميع العناصر المرتبطة بها.',
+          ),
           style: AppTextStyles.of(
             context,
           ).bodyMedium.copyWith(color: AppColors.of(context).textSecondary),
@@ -618,7 +627,11 @@ class _PricingItemCardState extends State<PricingItemCard>
           AppToast.build(
             tone: ToastTone.error,
             duration: const Duration(seconds: 2),
-            content: Text('فشل حذف العنصر: ${e.toString()}'),
+            content: Text(
+              ArabicNumberTransformer.transform(
+                'فشل حذف العنصر: ${e.toString()}',
+              ),
+            ),
           ),
         );
       }
@@ -729,7 +742,7 @@ class _PricingItemCardState extends State<PricingItemCard>
         builder: (context, setDialogState) => AlertDialog(
           backgroundColor: AppColors.of(context).cardBackground,
           title: Text(
-            title,
+            ArabicNumberTransformer.transform(title),
             style: AppTextStyles.of(
               context,
             ).h4.copyWith(color: AppColors.of(context).textPrimary),
@@ -863,9 +876,11 @@ class _PricingItemCardState extends State<PricingItemCard>
           AppToast.build(
             tone: ToastTone.success,
             content: Text(
-              options.count == 1
-                  ? 'تم نسخ العنصر بنجاح'
-                  : 'تم إنشاء ${options.count} نسخ من العنصر بنجاح',
+              ArabicNumberTransformer.transform(
+                options.count == 1
+                    ? 'تم نسخ العنصر بنجاح'
+                    : 'تم إنشاء ${options.count} نسخ من العنصر بنجاح',
+              ),
             ),
             duration: Duration(seconds: 2),
           ),
@@ -877,7 +892,11 @@ class _PricingItemCardState extends State<PricingItemCard>
           AppToast.build(
             tone: ToastTone.error,
             duration: const Duration(seconds: 2),
-            content: Text('فشل نسخ العنصر: ${e.toString()}'),
+            content: Text(
+              ArabicNumberTransformer.transform(
+                'فشل نسخ العنصر: ${e.toString()}',
+              ),
+            ),
           ),
         );
       }
@@ -928,9 +947,11 @@ class _PricingItemCardState extends State<PricingItemCard>
           AppToast.build(
             tone: ToastTone.success,
             content: Text(
-              options.count == 1
-                  ? 'تم نسخ البند الفرعية بنجاح'
-                  : 'تم إنشاء ${options.count} نسخ من البند الفرعية بنجاح',
+              ArabicNumberTransformer.transform(
+                options.count == 1
+                    ? 'تم نسخ البند الفرعية بنجاح'
+                    : 'تم إنشاء ${options.count} نسخ من البند الفرعية بنجاح',
+              ),
             ),
             duration: Duration(seconds: 2),
           ),
@@ -942,7 +963,11 @@ class _PricingItemCardState extends State<PricingItemCard>
           AppToast.build(
             tone: ToastTone.error,
             duration: const Duration(seconds: 2),
-            content: Text('فشل نسخ البند الفرعية: ${e.toString()}'),
+            content: Text(
+              ArabicNumberTransformer.transform(
+                'فشل نسخ البند الفرعية: ${e.toString()}',
+              ),
+            ),
           ),
         );
       }
@@ -950,7 +975,9 @@ class _PricingItemCardState extends State<PricingItemCard>
   }
 
   Future<void> _showEditItemDialog() async {
-    final nameController = TextEditingController(text: widget.item.name);
+    final nameController = TextEditingController(
+      text: ArabicNumberTransformer.transform(widget.item.name),
+    );
 
     final result = await showDialog<Map<String, String>>(
       context: context,
@@ -1067,7 +1094,11 @@ class _PricingItemCardState extends State<PricingItemCard>
             AppToast.build(
               tone: ToastTone.error,
               duration: const Duration(seconds: 2),
-              content: Text('فشل تحديث العنصر: ${e.toString()}'),
+              content: Text(
+                ArabicNumberTransformer.transform(
+                  'فشل تحديث العنصر: ${e.toString()}',
+                ),
+              ),
             ),
           );
         }
@@ -1076,7 +1107,9 @@ class _PricingItemCardState extends State<PricingItemCard>
   }
 
   Future<void> _showEditSubItemDialog(PricingSubItemModel subItem) async {
-    final nameController = TextEditingController(text: subItem.name);
+    final nameController = TextEditingController(
+      text: ArabicNumberTransformer.transform(subItem.name),
+    );
 
     final result = await showDialog<Map<String, String>>(
       context: context,
@@ -1191,7 +1224,11 @@ class _PricingItemCardState extends State<PricingItemCard>
             AppToast.build(
               tone: ToastTone.error,
               duration: const Duration(seconds: 2),
-              content: Text('فشل تحديث البند الفرعية: ${e.toString()}'),
+              content: Text(
+                ArabicNumberTransformer.transform(
+                  'فشل تحديث البند الفرعية: ${e.toString()}',
+                ),
+              ),
             ),
           );
         }
@@ -1202,7 +1239,8 @@ class _PricingItemCardState extends State<PricingItemCard>
   void _stageSubItemDescription(PricingSubItemModel subItem, String value) {
     final key = _draftKey(subItem.id, 'description');
     final description = value.trim();
-    if (description == (subItem.description ?? '').trim()) {
+    if (description ==
+        ArabicNumberTransformer.transform(subItem.description ?? '').trim()) {
       _drafts.remove(key);
       return;
     }
@@ -1275,7 +1313,11 @@ class _PricingItemCardState extends State<PricingItemCard>
           AppToast.build(
             tone: ToastTone.error,
             duration: const Duration(seconds: 2),
-            content: Text('فشل حذف البند الفرعية: ${e.toString()}'),
+            content: Text(
+              ArabicNumberTransformer.transform(
+                'فشل حذف البند الفرعية: ${e.toString()}',
+              ),
+            ),
           ),
         );
       }
@@ -1456,7 +1498,11 @@ class _PricingItemCardState extends State<PricingItemCard>
           AppToast.build(
             tone: ToastTone.error,
             duration: const Duration(seconds: 2),
-            content: Text('فشل حذف العنصر: ${e.toString()}'),
+            content: Text(
+              ArabicNumberTransformer.transform(
+                'فشل حذف العنصر: ${e.toString()}',
+              ),
+            ),
           ),
         );
       }
@@ -1471,7 +1517,8 @@ class _PricingItemCardState extends State<PricingItemCard>
     final key = _draftKey(subItemId, element.id);
     final costType = updatedItem.costType ?? element.costType;
     final isUnitBased = costType == 'UNIT_BASED';
-    if (updatedItem.description.trim() == element.name.trim() &&
+    if (updatedItem.description.trim() ==
+            ArabicNumberTransformer.transform(element.name).trim() &&
         costType == element.costType &&
         (isUnitBased
             ? (updatedItem.unitPrice ?? 0) == (element.unitCost ?? 0) &&
@@ -1572,7 +1619,11 @@ class _PricingItemCardState extends State<PricingItemCard>
           AppToast.build(
             tone: ToastTone.error,
             duration: const Duration(seconds: 2),
-            content: Text('فشل تحديث حالة الظهور: ${e.toString()}'),
+            content: Text(
+              ArabicNumberTransformer.transform(
+                'فشل تحديث حالة الظهور: ${e.toString()}',
+              ),
+            ),
           ),
         );
       }
@@ -1633,7 +1684,11 @@ class _PricingItemCardState extends State<PricingItemCard>
           AppToast.build(
             tone: ToastTone.error,
             duration: const Duration(seconds: 2),
-            content: Text('فشل تحديث حالة ظهور العنصر: ${e.toString()}'),
+            content: Text(
+              ArabicNumberTransformer.transform(
+                'فشل تحديث حالة ظهور العنصر: ${e.toString()}',
+              ),
+            ),
           ),
         );
       }
@@ -1688,7 +1743,11 @@ class _PricingItemCardState extends State<PricingItemCard>
           AppToast.build(
             tone: ToastTone.error,
             duration: const Duration(seconds: 2),
-            content: Text('فشل تحديث حالة الظهور: ${e.toString()}'),
+            content: Text(
+              ArabicNumberTransformer.transform(
+                'فشل تحديث حالة الظهور: ${e.toString()}',
+              ),
+            ),
           ),
         );
       }

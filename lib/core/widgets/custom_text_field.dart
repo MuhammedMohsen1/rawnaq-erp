@@ -2,6 +2,7 @@ import 'package:rawnaq/core/utils/arabic_number_input_formatter.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../constants/app_colors.dart';
+import 'package:rawnaq/core/utils/arabic_number_transformer.dart';
 
 class CustomTextField extends StatefulWidget {
   final String? label;
@@ -85,7 +86,7 @@ class _CustomTextFieldState extends State<CustomTextField> {
       children: [
         if (widget.label != null) ...[
           Text(
-            widget.label!,
+            ArabicNumberTransformer.transform(widget.label!),
             style:
                 widget.labelStyle ??
                 TextStyle(

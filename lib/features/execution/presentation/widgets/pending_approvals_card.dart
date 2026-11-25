@@ -5,6 +5,7 @@ import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_text_styles.dart';
 import '../../data/models/execution_models.dart';
 import 'transaction_attachments.dart';
+import 'package:rawnaq/core/utils/arabic_number_transformer.dart';
 
 class PendingApprovalsCard extends StatelessWidget {
   final List<InstallmentRequestModel> pendingRequests;
@@ -41,7 +42,9 @@ class PendingApprovalsCard extends StatelessWidget {
               ),
               const SizedBox(width: 12),
               Text(
-                'طلبات بنود جدول الدفعات المعلقة (${pendingRequests.length})',
+                ArabicNumberTransformer.transform(
+                  'طلبات بنود جدول الدفعات المعلقة (${pendingRequests.length})',
+                ),
                 style: AppTextStyles.of(
                   context,
                 ).sectionTitle.copyWith(color: AppColors.of(context).warning),
@@ -130,17 +133,21 @@ class _PendingRequestItem extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  request.phaseName,
+                  ArabicNumberTransformer.transform(request.phaseName),
                   style: AppTextStyles.of(context).tableCellBold,
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  'مقدم من: ${request.requestedByName}',
+                  ArabicNumberTransformer.transform(
+                    'مقدم من: ${request.requestedByName}',
+                  ),
                   style: AppTextStyles.of(context).bodySmall,
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  'التاريخ: ${dateFormat.format(request.createdAt)}',
+                  ArabicNumberTransformer.transform(
+                    'التاريخ: ${dateFormat.format(request.createdAt)}',
+                  ),
                   style: AppTextStyles.of(context).bodySmall,
                 ),
                 if (request.attachments.isNotEmpty) ...[

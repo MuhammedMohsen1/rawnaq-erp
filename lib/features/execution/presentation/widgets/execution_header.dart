@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_text_styles.dart';
+import 'package:rawnaq/core/utils/arabic_number_transformer.dart';
 
 class ExecutionHeader extends StatelessWidget {
   final String projectName;
@@ -24,7 +25,7 @@ class ExecutionHeader extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                projectName,
+                ArabicNumberTransformer.transform(projectName),
                 style: AppTextStyles.of(
                   context,
                 ).h2.copyWith(fontWeight: FontWeight.bold),

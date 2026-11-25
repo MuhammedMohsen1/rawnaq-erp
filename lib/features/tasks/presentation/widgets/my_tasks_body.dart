@@ -5,6 +5,7 @@ import '../../../../core/constants/app_text_styles.dart';
 import '../../domain/entities/task_entity.dart';
 import '../../domain/enums/task_status.dart';
 import 'my_task_card.dart';
+import 'package:rawnaq/core/utils/arabic_number_transformer.dart';
 
 class MyTasksBody extends StatelessWidget {
   final bool isLoading;
@@ -40,7 +41,10 @@ class MyTasksBody extends StatelessWidget {
               color: AppColors.of(context).statusDelayed,
             ),
             const SizedBox(height: 12),
-            Text(errorMessage!, style: AppTextStyles.of(context).h5),
+            Text(
+              ArabicNumberTransformer.transform(errorMessage!),
+              style: AppTextStyles.of(context).h5,
+            ),
             const SizedBox(height: 12),
             TextButton.icon(
               onPressed: onRetry,

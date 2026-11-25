@@ -5,6 +5,7 @@ import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_text_styles.dart';
 import '../../../../core/error/exceptions.dart';
 import '../../data/datasources/settings_api_datasource.dart';
+import 'package:rawnaq/core/utils/arabic_number_transformer.dart';
 
 class ContractTermsEditor extends StatefulWidget {
   const ContractTermsEditor({super.key});
@@ -216,7 +217,7 @@ class _ContractTermsEditorState extends State<ContractTermsEditor> {
               Align(
                 alignment: Alignment.centerRight,
                 child: Text(
-                  _errorMessage!,
+                  ArabicNumberTransformer.transform(_errorMessage!),
                   textAlign: TextAlign.right,
                   style: AppTextStyles.of(
                     context,
@@ -229,7 +230,7 @@ class _ContractTermsEditorState extends State<ContractTermsEditor> {
               Align(
                 alignment: Alignment.centerRight,
                 child: Text(
-                  _successMessage!,
+                  ArabicNumberTransformer.transform(_successMessage!),
                   textAlign: TextAlign.right,
                   style: AppTextStyles.of(
                     context,
@@ -249,7 +250,11 @@ class _ContractTermsEditorState extends State<ContractTermsEditor> {
                         child: CircularProgressIndicator(strokeWidth: 2),
                       )
                     : const Icon(Icons.save_outlined),
-                label: Text(_isSaving ? 'جار الحفظ...' : 'حفظ جميع البنود'),
+                label: Text(
+                  ArabicNumberTransformer.transform(
+                    _isSaving ? 'جار الحفظ...' : 'حفظ جميع البنود',
+                  ),
+                ),
               ),
             ),
           ],
@@ -309,14 +314,14 @@ class _TermsSectionCardState extends State<_TermsSectionCard> {
                       crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
                         Text(
-                          widget.title,
+                          ArabicNumberTransformer.transform(widget.title),
                           style: AppTextStyles.of(context).tableCellBold,
                           textDirection: TextDirection.rtl,
                           textAlign: TextAlign.right,
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          widget.subtitle,
+                          ArabicNumberTransformer.transform(widget.subtitle),
                           style: AppTextStyles.of(context).caption.copyWith(
                             color: AppColors.of(context).textMuted,
                           ),
@@ -408,9 +413,11 @@ class _TermAccordionCardState extends State<_TermAccordionCard> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          widget.term.title.text.trim().isEmpty
-                              ? 'بند ${widget.index + 1}'
-                              : widget.term.title.text.trim(),
+                          ArabicNumberTransformer.transform(
+                            widget.term.title.text.trim().isEmpty
+                                ? 'بند ${widget.index + 1}'
+                                : widget.term.title.text.trim(),
+                          ),
                           style: AppTextStyles.of(context).tableCellBold,
                           textDirection: TextDirection.rtl,
                           textAlign: TextAlign.right,
@@ -541,7 +548,7 @@ class ContractTermsMessage extends StatelessWidget {
         ),
       ),
       child: Text(
-        message,
+        ArabicNumberTransformer.transform(message),
         style: AppTextStyles.of(context).caption.copyWith(
           color: isError ? Colors.red[700] : Colors.green[700],
         ),

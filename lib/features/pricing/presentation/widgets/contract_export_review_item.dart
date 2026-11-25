@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:rawnaq/core/utils/arabic_number_transformer.dart';
 
 class ContractExportReviewItem extends StatelessWidget {
   final String label;
@@ -20,7 +21,7 @@ class ContractExportReviewItem extends StatelessWidget {
           SizedBox(
             width: 120,
             child: Text(
-              label,
+              ArabicNumberTransformer.transform(label),
               style: const TextStyle(
                 fontWeight: FontWeight.bold,
                 color: Colors.grey,
@@ -29,7 +30,7 @@ class ContractExportReviewItem extends StatelessWidget {
           ),
           Expanded(
             child: Text(
-              value.isEmpty ? '-' : value,
+              ArabicNumberTransformer.transform(value.isEmpty ? '-' : value),
               textDirection: value.contains(RegExp(r'[ء-ي]'))
                   ? TextDirection.rtl
                   : TextDirection.ltr,

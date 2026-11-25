@@ -15,6 +15,7 @@ import '../cubit/execution_cubit.dart';
 import 'add_expense_compact_form.dart';
 import 'add_income_row_content.dart';
 import 'transaction_attachments.dart';
+import 'package:rawnaq/core/utils/arabic_number_transformer.dart';
 
 /// Converts Arabic numerals (٠١٢٣٤٥٦٧٨٩) to English numerals (0123456789)
 String convertArabicToEnglishNumerals(String input) {
@@ -164,7 +165,7 @@ class _CompactTransactionRow extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  transaction.description,
+                  ArabicNumberTransformer.transform(transaction.description),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: AppTextStyles.of(
@@ -173,13 +174,17 @@ class _CompactTransactionRow extends StatelessWidget {
                 ),
                 if (transaction.subDescription != null)
                   Text(
-                    transaction.subDescription!,
+                    ArabicNumberTransformer.transform(
+                      transaction.subDescription!,
+                    ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: AppTextStyles.of(context).caption,
                   ),
                 Text(
-                  dateFormat.format(transaction.date),
+                  ArabicNumberTransformer.transform(
+                    dateFormat.format(transaction.date),
+                  ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: AppTextStyles.of(context).caption,
@@ -200,7 +205,9 @@ class _CompactTransactionRow extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
               Text(
-                '${isIncome ? '+' : ''}${transaction.amount.toStringAsFixed(3)}',
+                ArabicNumberTransformer.transform(
+                  '${isIncome ? '+' : ''}${transaction.amount.toStringAsFixed(3)}',
+                ),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: AppTextStyles.of(context).tableCellBold.copyWith(
@@ -317,12 +324,14 @@ class _WideTransactionRow extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  transaction.description,
+                  ArabicNumberTransformer.transform(transaction.description),
                   style: AppTextStyles.of(context).tableCellBold,
                 ),
                 if (transaction.subDescription != null)
                   Text(
-                    transaction.subDescription!,
+                    ArabicNumberTransformer.transform(
+                      transaction.subDescription!,
+                    ),
                     style: AppTextStyles.of(context).bodySmall,
                   ),
                 if (transaction.attachments.isNotEmpty) ...[
@@ -338,14 +347,18 @@ class _WideTransactionRow extends StatelessWidget {
           SizedBox(
             width: 120,
             child: Text(
-              dateFormat.format(transaction.date),
+              ArabicNumberTransformer.transform(
+                dateFormat.format(transaction.date),
+              ),
               style: AppTextStyles.of(context).tableCell,
             ),
           ),
           SizedBox(
             width: 140,
             child: Text(
-              '${isIncome ? '+' : ''}${transaction.amount.toStringAsFixed(3)}',
+              ArabicNumberTransformer.transform(
+                '${isIncome ? '+' : ''}${transaction.amount.toStringAsFixed(3)}',
+              ),
               style: AppTextStyles.of(context).tableCellBold.copyWith(
                 color: isIncome
                     ? AppColors.of(context).success
@@ -457,7 +470,7 @@ void showDeleteInstallmentConfirmation(
                   AppToast.build(
                     tone: ToastTone.error,
                     duration: const Duration(seconds: 2),
-                    content: Text(message),
+                    content: Text(ArabicNumberTransformer.transform(message)),
                   ),
                 );
               }
@@ -763,7 +776,11 @@ class _AddExpenseRowState extends State<AddExpenseRow> {
           AppToast.build(
             tone: ToastTone.error,
             duration: Duration(seconds: 2),
-            content: Text('فشل إضافة المصروف: ${e.toString()}'),
+            content: Text(
+              ArabicNumberTransformer.transform(
+                'فشل إضافة المصروف: ${e.toString()}',
+              ),
+            ),
           ),
         );
       }
@@ -1169,7 +1186,11 @@ class _EditableExpenseRowState extends State<EditableExpenseRow> {
           AppToast.build(
             tone: ToastTone.error,
             duration: Duration(seconds: 2),
-            content: Text('فشل تحديث المصروف: ${e.toString()}'),
+            content: Text(
+              ArabicNumberTransformer.transform(
+                'فشل تحديث المصروف: ${e.toString()}',
+              ),
+            ),
           ),
         );
       }
@@ -1476,7 +1497,7 @@ class _EditableInstallmentRowState extends State<EditableInstallmentRow> {
           AppToast.build(
             tone: ToastTone.error,
             duration: Duration(seconds: 2),
-            content: Text(message),
+            content: Text(ArabicNumberTransformer.transform(message)),
           ),
         );
         context.read<ExecutionCubit>().cancelEditing(widget.transaction.id);
@@ -1665,7 +1686,11 @@ class _AddIncomeRowState extends State<AddIncomeRow> {
           AppToast.build(
             tone: ToastTone.error,
             duration: Duration(seconds: 2),
-            content: Text('فشل إضافة الإيراد: ${e.toString()}'),
+            content: Text(
+              ArabicNumberTransformer.transform(
+                'فشل إضافة الإيراد: ${e.toString()}',
+              ),
+            ),
           ),
         );
       }

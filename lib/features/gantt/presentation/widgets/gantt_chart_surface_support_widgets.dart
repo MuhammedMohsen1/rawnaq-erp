@@ -6,6 +6,7 @@ import '../../../tasks/domain/entities/task_entity.dart';
 import '../../../tasks/domain/enums/task_status.dart';
 import '../../../tasks/domain/enums/task_type.dart';
 import '../widgets/appointment_widgets.dart';
+import 'package:rawnaq/core/utils/arabic_number_transformer.dart';
 
 Color ganttTaskColor(BuildContext context, TaskEntity task) =>
     task.status.color(context);
@@ -100,7 +101,7 @@ class _DraftTaskChipContent extends StatelessWidget {
           ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 150),
             child: Text(
-              task.name,
+              ArabicNumberTransformer.transform(task.name),
               style: TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.w500,
@@ -121,7 +122,7 @@ class _DraftTaskChipContent extends StatelessWidget {
                 borderRadius: BorderRadius.circular(4),
               ),
               child: Text(
-                task.projectName!,
+                ArabicNumberTransformer.transform(task.projectName!),
                 style: TextStyle(
                   fontSize: 10,
                   color: AppColors.of(context).primary,
@@ -234,7 +235,7 @@ class _GanttVerticalResizableTaskChipState
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          widget.task.name,
+                          ArabicNumberTransformer.transform(widget.task.name),
                           style: const TextStyle(
                             color: Colors.white,
                             fontSize: 11,
@@ -247,7 +248,9 @@ class _GanttVerticalResizableTaskChipState
                             widget.compactMeta!.isNotEmpty) ...[
                           const SizedBox(height: 2),
                           Text(
-                            widget.compactMeta!,
+                            ArabicNumberTransformer.transform(
+                              widget.compactMeta!,
+                            ),
                             style: TextStyle(
                               color: Colors.white.withValues(alpha: 0.78),
                               fontSize: 9,
@@ -664,7 +667,9 @@ class _GanttResizableTaskBarState extends State<GanttResizableTaskBar> {
                               ],
                               Expanded(
                                 child: Text(
-                                  widget.task.name,
+                                  ArabicNumberTransformer.transform(
+                                    widget.task.name,
+                                  ),
                                   style: const TextStyle(
                                     color: Colors.white,
                                     fontSize: 11,

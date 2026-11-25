@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../../../../core/providers/appearance_provider.dart';
 import '../../../../core/widgets/app_toast.dart';
+import 'package:rawnaq/core/utils/arabic_number_transformer.dart';
 
 class AppearanceSelector extends StatelessWidget {
   const AppearanceSelector({super.key});
@@ -18,11 +19,13 @@ class AppearanceSelector extends StatelessWidget {
       children: [
         for (final mode in ThemeMode.values)
           ChoiceChip(
-            label: Text(switch (mode) {
-              ThemeMode.system => arabic ? 'حسب النظام' : 'System',
-              ThemeMode.light => arabic ? 'فاتح' : 'Light',
-              ThemeMode.dark => arabic ? 'داكن' : 'Dark',
-            }),
+            label: Text(
+              ArabicNumberTransformer.transform(switch (mode) {
+                ThemeMode.system => arabic ? 'حسب النظام' : 'System',
+                ThemeMode.light => arabic ? 'فاتح' : 'Light',
+                ThemeMode.dark => arabic ? 'داكن' : 'Dark',
+              }),
+            ),
             selected: appearance.mode == mode,
             showCheckmark: true,
             checkmarkColor: Theme.of(context).colorScheme.primary,
@@ -35,9 +38,11 @@ class AppearanceSelector extends StatelessWidget {
                   AppToast.build(
                     tone: ToastTone.error,
                     content: Text(
-                      arabic
-                          ? 'تعذّر حفظ إعداد المظهر'
-                          : 'Could not save appearance preference',
+                      ArabicNumberTransformer.transform(
+                        arabic
+                            ? 'تعذّر حفظ إعداد المظهر'
+                            : 'Could not save appearance preference',
+                      ),
                     ),
                   ),
                 );

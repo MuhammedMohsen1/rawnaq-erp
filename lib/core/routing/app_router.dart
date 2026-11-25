@@ -29,6 +29,7 @@ import '../layout/main_layout.dart';
 import '../storage/storage_service.dart';
 import '../di/injection_container.dart';
 import 'custom_page_transitions.dart';
+import 'package:rawnaq/core/utils/arabic_number_transformer.dart';
 
 class AppRoutes {
   static const String login = '/login';
@@ -576,14 +577,14 @@ class _PlaceholderPage extends StatelessWidget {
           ),
           const SizedBox(height: 24),
           Text(
-            title,
+            ArabicNumberTransformer.transform(title),
             style: Theme.of(
               context,
             ).textTheme.headlineMedium?.copyWith(color: Colors.white),
           ),
           const SizedBox(height: 8),
           Text(
-            subtitle,
+            ArabicNumberTransformer.transform(subtitle),
             style: Theme.of(context).textTheme.bodyLarge?.copyWith(
               color: AppColors.of(context).textSecondary,
             ),

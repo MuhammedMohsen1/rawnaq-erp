@@ -13,6 +13,7 @@ import 'package:video_player/video_player.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/network/dio_helper.dart';
 import '../../domain/entities/design_workspace_entities.dart';
+import 'package:rawnaq/core/utils/arabic_number_transformer.dart';
 
 class DesignChatBubble extends StatelessWidget {
   final DesignActivity activity;
@@ -54,7 +55,7 @@ class DesignChatBubble extends StatelessWidget {
           children: [
             if (!isMine) ...[
               Text(
-                activity.author,
+                ArabicNumberTransformer.transform(activity.author),
                 style: Theme.of(context).textTheme.labelSmall,
               ),
               const SizedBox(height: 4),
@@ -84,7 +85,9 @@ class DesignChatBubble extends StatelessWidget {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Text(
-                        relativeTime(activity.createdAt),
+                        ArabicNumberTransformer.transform(
+                          relativeTime(activity.createdAt),
+                        ),
                         style: Theme.of(context).textTheme.labelSmall,
                       ),
                       if (isMine) ...[
@@ -155,7 +158,9 @@ class _LinkifiedMessageTextState extends State<_LinkifiedMessageText> {
           for (var index = 0; index < _segments.length; index++)
             _segments[index].isLink
                 ? TextSpan(
-                    text: _segments[index].text,
+                    text: ArabicNumberTransformer.transformNullable(
+                      _segments[index].text,
+                    ),
                     style: baseStyle?.copyWith(
                       color: linkColor,
                       decoration: TextDecoration.underline,
@@ -163,7 +168,11 @@ class _LinkifiedMessageTextState extends State<_LinkifiedMessageText> {
                     ),
                     recognizer: _recognizers[index],
                   )
-                : TextSpan(text: _segments[index].text),
+                : TextSpan(
+                    text: ArabicNumberTransformer.transformNullable(
+                      _segments[index].text,
+                    ),
+                  ),
         ],
       ),
     );
@@ -456,13 +465,13 @@ class DesignAttachmentBubble extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    media.name,
+                    ArabicNumberTransformer.transform(media.name),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
                   const SizedBox(height: 2),
                   Text(
-                    media.size,
+                    ArabicNumberTransformer.transform(media.size),
                     style: Theme.of(context).textTheme.labelSmall,
                   ),
                 ],
@@ -767,7 +776,7 @@ class _VideoFallbackTile extends StatelessWidget {
             const SizedBox(width: 10),
             Expanded(
               child: Text(
-                media.name,
+                ArabicNumberTransformer.transform(media.name),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
               ),
@@ -1003,7 +1012,7 @@ Future<void> downloadDesignMedia(
       AppToast.build(
         tone: ToastTone.success,
         duration: const Duration(seconds: 2),
-        content: Text('تم تحميل: $fileName'),
+        content: Text(ArabicNumberTransformer.transform('تم تحميل: $fileName')),
         action: SnackBarAction(
           label: 'فتح',
           onPressed: () => OpenFile.open(targetPath),
@@ -1021,7 +1030,7 @@ void _showDesignMediaSnackBar(BuildContext context, String message) {
     AppToast.build(
       tone: ToastTone.error,
       duration: const Duration(seconds: 2),
-      content: Text(message),
+      content: Text(ArabicNumberTransformer.transform(message)),
     ),
   );
 }

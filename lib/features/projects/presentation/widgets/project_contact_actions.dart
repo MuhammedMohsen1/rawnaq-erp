@@ -6,6 +6,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../../../core/constants/app_colors.dart';
 
 import '../../domain/entities/project_entity.dart';
+import 'package:rawnaq/core/utils/arabic_number_transformer.dart';
 
 class ProjectContactActions extends StatelessWidget {
   final List<ProjectPhoneContact> contacts;
@@ -146,7 +147,7 @@ class ProjectContactActionsLoader extends StatelessWidget {
         ScaffoldMessenger.of(context).showSnackBar(
           AppToast.build(
             tone: ToastTone.success,
-            content: Text(message),
+            content: Text(ArabicNumberTransformer.transform(message)),
             duration: const Duration(seconds: 1),
           ),
         );

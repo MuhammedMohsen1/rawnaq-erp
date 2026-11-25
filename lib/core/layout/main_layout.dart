@@ -10,6 +10,7 @@ import '../widgets/top_bar.dart';
 import 'top_bar_title_controller.dart';
 import '../../features/auth/presentation/bloc/auth_bloc.dart';
 import '../../features/pricing/presentation/pages/under_pricing_page.dart';
+import 'package:rawnaq/core/utils/arabic_number_transformer.dart';
 
 /// Main layout with responsive navigation
 /// - Desktop (>= 768px): Sidebar on the left
@@ -1193,7 +1194,7 @@ class _SidebarState extends State<_Sidebar> {
                     const SizedBox(width: 12),
                     Expanded(
                       child: Text(
-                        label,
+                        ArabicNumberTransformer.transform(label),
                         style: isActive
                             ? AppTextStyles.of(context).navItemActive.copyWith(
                                 color: AppColors.of(context).primary,
@@ -1241,7 +1242,7 @@ class _SidebarState extends State<_Sidebar> {
                 const SizedBox(width: 12),
                 Expanded(
                   child: Text(
-                    label,
+                    ArabicNumberTransformer.transform(label),
                     style: AppTextStyles.of(
                       context,
                     ).navItem.copyWith(color: Colors.red),

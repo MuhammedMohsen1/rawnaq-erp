@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:rawnaq/core/utils/arabic_number_transformer.dart';
 
 enum ToastTone { success, error, warning, info }
 
@@ -34,7 +35,7 @@ class AppToast {
     if (content is Text && foreground != null && content.style != null) {
       final text = content;
       content = Text(
-        text.data ?? '',
+        ArabicNumberTransformer.transform(text.data ?? ''),
         style: text.style!.copyWith(color: foreground),
         textDirection: text.textDirection,
       );

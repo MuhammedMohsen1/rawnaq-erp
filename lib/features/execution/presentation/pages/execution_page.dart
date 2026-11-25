@@ -22,6 +22,7 @@ import '../cubit/execution_state.dart';
 import '../widgets/transactions_table.dart';
 import '../widgets/pending_approvals_card.dart';
 import '../widgets/installments_section.dart';
+import 'package:rawnaq/core/utils/arabic_number_transformer.dart';
 
 /// Execution page for projects in EXECUTION or COMPLETED status
 class ExecutionPage extends StatelessWidget {
@@ -51,7 +52,7 @@ class _ExecutionPageContent extends StatelessWidget {
           ScaffoldMessenger.of(context).showSnackBar(
             AppToast.build(
               tone: ToastTone.error,
-              content: Text(state.message),
+              content: Text(ArabicNumberTransformer.transform(state.message)),
               duration: Duration(seconds: 2),
             ),
           );
@@ -276,7 +277,11 @@ class _ExecutionLayout extends StatelessWidget {
         AppToast.build(
           tone: ToastTone.error,
           duration: Duration(seconds: 2),
-          content: Text('فشل إكمال المشروع: ${e.toString()}'),
+          content: Text(
+            ArabicNumberTransformer.transform(
+              'فشل إكمال المشروع: ${e.toString()}',
+            ),
+          ),
         ),
       );
     }
@@ -359,7 +364,11 @@ class _ExecutionLayout extends StatelessWidget {
         AppToast.build(
           tone: ToastTone.error,
           duration: Duration(seconds: 2),
-          content: Text('فشل تحديث جدول الدفعات: ${e.toString()}'),
+          content: Text(
+            ArabicNumberTransformer.transform(
+              'فشل تحديث جدول الدفعات: ${e.toString()}',
+            ),
+          ),
         ),
       );
     }
@@ -454,7 +463,11 @@ class _ExecutionLayout extends StatelessWidget {
         AppToast.build(
           tone: ToastTone.error,
           duration: Duration(seconds: 2),
-          content: Text('فشل إعادة المشروع: ${e.toString()}'),
+          content: Text(
+            ArabicNumberTransformer.transform(
+              'فشل إعادة المشروع: ${e.toString()}',
+            ),
+          ),
         ),
       );
     }
@@ -510,7 +523,11 @@ class _ExecutionLayout extends StatelessWidget {
           AppToast.build(
             tone: ToastTone.error,
             duration: Duration(seconds: 2),
-            content: Text('فشل تحديث حالة التحصيل: ${e.toString()}'),
+            content: Text(
+              ArabicNumberTransformer.transform(
+                'فشل تحديث حالة التحصيل: ${e.toString()}',
+              ),
+            ),
           ),
         );
       }
@@ -571,7 +588,11 @@ class _ExecutionLayout extends StatelessWidget {
             AppToast.build(
               tone: ToastTone.error,
               duration: Duration(seconds: 2),
-              content: Text('فشل إرسال الطلب: ${e.toString()}'),
+              content: Text(
+                ArabicNumberTransformer.transform(
+                  'فشل إرسال الطلب: ${e.toString()}',
+                ),
+              ),
             ),
           );
         }
@@ -625,9 +646,11 @@ class _ExecutionLayout extends StatelessWidget {
             tone: ToastTone.success,
             duration: Duration(seconds: 2),
             content: Text(
-              isAdmin
-                  ? 'تم دفع بند جدول الدفعات'
-                  : 'تم إرسال طلب بند جدول الدفعات للموافقة',
+              ArabicNumberTransformer.transform(
+                isAdmin
+                    ? 'تم دفع بند جدول الدفعات'
+                    : 'تم إرسال طلب بند جدول الدفعات للموافقة',
+              ),
             ),
           ),
         );
@@ -638,7 +661,11 @@ class _ExecutionLayout extends StatelessWidget {
           AppToast.build(
             tone: ToastTone.error,
             duration: Duration(seconds: 2),
-            content: Text('فشل إرسال الطلب: ${e.toString()}'),
+            content: Text(
+              ArabicNumberTransformer.transform(
+                'فشل إرسال الطلب: ${e.toString()}',
+              ),
+            ),
           ),
         );
       }
@@ -669,7 +696,11 @@ class _ExecutionLayout extends StatelessWidget {
           AppToast.build(
             tone: ToastTone.error,
             duration: Duration(seconds: 2),
-            content: Text('فشل قبول الطلب: ${e.toString()}'),
+            content: Text(
+              ArabicNumberTransformer.transform(
+                'فشل قبول الطلب: ${e.toString()}',
+              ),
+            ),
           ),
         );
       }
@@ -702,7 +733,11 @@ class _ExecutionLayout extends StatelessWidget {
           AppToast.build(
             tone: ToastTone.error,
             duration: Duration(seconds: 2),
-            content: Text('فشل رفض الطلب: ${e.toString()}'),
+            content: Text(
+              ArabicNumberTransformer.transform(
+                'فشل رفض الطلب: ${e.toString()}',
+              ),
+            ),
           ),
         );
       }
@@ -740,7 +775,7 @@ class _CompactExecutionHeader extends StatelessWidget {
         // Project name — takes all available space
         Expanded(
           child: Text(
-            project.name,
+            ArabicNumberTransformer.transform(project.name),
             style: AppTextStyles.of(context).h3,
             overflow: TextOverflow.ellipsis,
             maxLines: 1,
@@ -1007,9 +1042,11 @@ class _RequestInstallmentDialogState extends State<_RequestInstallmentDialog> {
           onPressed: _isPreparing ? null : _pickAttachments,
           icon: const Icon(Icons.add_photo_alternate_outlined, size: 16),
           label: Text(
-            _attachments.isEmpty
-                ? 'إرفاق التقاط شاشة'
-                : '${_attachments.length} التقاط',
+            ArabicNumberTransformer.transform(
+              _attachments.isEmpty
+                  ? 'إرفاق التقاط شاشة'
+                  : '${_attachments.length} التقاط',
+            ),
           ),
         ),
         if (_attachments.isNotEmpty) ...[
@@ -1037,7 +1074,7 @@ class _RequestInstallmentDialogState extends State<_RequestInstallmentDialog> {
                     const SizedBox(width: 4),
                     Flexible(
                       child: Text(
-                        file.name,
+                        ArabicNumberTransformer.transform(file.name),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: AppTextStyles.of(context).caption.copyWith(
@@ -1107,7 +1144,7 @@ class _RequestInstallmentDialogState extends State<_RequestInstallmentDialog> {
                         ? AppColors.of(context).primary
                         : AppColors.of(context).textSecondary,
                   ),
-                  title: Text(displayNotes),
+                  title: Text(ArabicNumberTransformer.transform(displayNotes)),
                   subtitle: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -1176,7 +1213,7 @@ class _ErrorView extends StatelessWidget {
             ),
             const SizedBox(height: 16),
             Text(
-              message,
+              ArabicNumberTransformer.transform(message),
               style: AppTextStyles.of(
                 context,
               ).bodyLarge.copyWith(color: AppColors.of(context).error),
