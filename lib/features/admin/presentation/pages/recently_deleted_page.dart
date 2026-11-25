@@ -1,3 +1,4 @@
+import 'package:rawnaq/core/utils/arabic_number_input_formatter.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart' show DateFormat;
@@ -87,6 +88,7 @@ class _RecentlyDeletedPageState extends State<RecentlyDeletedPage> {
                 ),
                 const SizedBox(height: 20),
                 TextField(
+                  inputFormatters: const [ArabicNumberInputFormatter()],
                   controller: _pinController,
                   obscureText: true,
                   keyboardType: TextInputType.number,

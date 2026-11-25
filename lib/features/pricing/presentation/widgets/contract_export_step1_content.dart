@@ -1,3 +1,4 @@
+import 'package:rawnaq/core/utils/arabic_number_input_formatter.dart';
 import 'package:flutter/material.dart';
 import '../../../../core/constants/app_colors.dart';
 
@@ -60,6 +61,7 @@ class ContractExportStep1Content extends StatelessWidget {
         ),
         const SizedBox(height: 20),
         TextField(
+          inputFormatters: const [ArabicNumberInputFormatter()],
           controller: civilIdController,
           decoration: InputDecoration(
             labelText: 'الرقم المدني للعميل (12 رقم)',
@@ -93,6 +95,7 @@ class ContractExportStep1Content extends StatelessWidget {
         ),
         const SizedBox(height: 20),
         TextField(
+          inputFormatters: const [ArabicNumberInputFormatter()],
           controller: projectAddressController,
           decoration: InputDecoration(
             labelText: 'عنوان المشروع',
@@ -125,6 +128,7 @@ class ContractExportStep1Content extends StatelessWidget {
         ),
         const SizedBox(height: 20),
         TextField(
+          inputFormatters: const [ArabicNumberInputFormatter()],
           controller: companySignerNameController,
           decoration: InputDecoration(
             labelText: 'اسم ممثل الشركة بالتوقيع',
@@ -195,6 +199,7 @@ class ContractExportStep1Content extends StatelessWidget {
                   ),
                   const SizedBox(height: 8),
                   TextField(
+                    inputFormatters: const [ArabicNumberInputFormatter()],
                     controller: scope['item'],
                     textDirection: TextDirection.rtl,
                     textAlign: TextAlign.right,
@@ -205,6 +210,7 @@ class ContractExportStep1Content extends StatelessWidget {
                   ),
                   const SizedBox(height: 8),
                   TextField(
+                    inputFormatters: const [ArabicNumberInputFormatter()],
                     controller: scope['description'],
                     minLines: 2,
                     maxLines: 4,
@@ -220,6 +226,7 @@ class ContractExportStep1Content extends StatelessWidget {
             );
           }),
           TextField(
+            inputFormatters: const [ArabicNumberInputFormatter()],
             controller: designNotesController,
             minLines: 3,
             maxLines: 5,
@@ -233,6 +240,7 @@ class ContractExportStep1Content extends StatelessWidget {
           ),
         ] else ...[
           TextField(
+            inputFormatters: const [ArabicNumberInputFormatter()],
             controller: executionDurationDaysController,
             keyboardType: TextInputType.number,
             textDirection: TextDirection.ltr,
@@ -245,6 +253,7 @@ class ContractExportStep1Content extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           TextField(
+            inputFormatters: const [ArabicNumberInputFormatter()],
             controller: executionNotesController,
             minLines: 3,
             maxLines: 5,

@@ -1,3 +1,4 @@
+import 'package:rawnaq/core/utils/arabic_number_input_formatter.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../constants/app_colors.dart';
@@ -119,7 +120,10 @@ class _CustomTextFormFieldState extends State<CustomTextFormField> {
           readOnly: widget.readOnly,
           keyboardType: widget.keyboardType,
           textInputAction: widget.textInputAction,
-          inputFormatters: widget.inputFormatters,
+          inputFormatters: [
+            const ArabicNumberInputFormatter(),
+            ...?widget.inputFormatters,
+          ],
           maxLines: widget.maxLines,
           minLines: widget.minLines,
           maxLength: widget.maxLength,

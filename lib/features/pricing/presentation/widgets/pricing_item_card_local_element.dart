@@ -8,8 +8,6 @@ class LocalElement {
   double? totalCost;
   double? unitCost;
   double? quantity;
-  bool isCompleted;
-  DateTime? lastModified;
 
   LocalElement({
     required this.tempId,
@@ -20,8 +18,6 @@ class LocalElement {
     this.totalCost,
     this.unitCost,
     this.quantity,
-    this.isCompleted = false,
-    this.lastModified,
   });
 
   bool get hasRequiredData {

@@ -252,6 +252,7 @@ class PricingSummaryNotesEditor extends StatelessWidget {
                       ),
                       Expanded(
                         child: TextField(
+                          inputFormatters: const [ArabicNumberInputFormatter()],
                           controller: noteControllers[index],
                           focusNode: noteFocusNodes[index],
                           decoration: InputDecoration(

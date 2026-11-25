@@ -1,3 +1,4 @@
+import 'package:rawnaq/core/utils/arabic_number_input_formatter.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:syncfusion_flutter_datepicker/datepicker.dart';
@@ -35,6 +36,7 @@ class FinancialToolbar extends StatelessWidget {
         final searchField = SizedBox(
           width: constraints.maxWidth < 620 ? double.infinity : 340,
           child: TextField(
+            inputFormatters: const [ArabicNumberInputFormatter()],
             onChanged: onSearchChanged,
             style: AppTextStyles.inputText,
             decoration: InputDecoration(

@@ -1,3 +1,4 @@
+import 'package:rawnaq/core/utils/arabic_number_input_formatter.dart';
 import 'dart:io';
 import 'dart:math' as math;
 import 'dart:ui' as ui;
@@ -463,6 +464,7 @@ class _PdfMarkupEditorDialogState extends State<_PdfMarkupEditorDialog> {
       builder: (context) => AlertDialog(
         title: const Text('إضافة نص'),
         content: TextField(
+          inputFormatters: const [ArabicNumberInputFormatter()],
           controller: controller,
           autofocus: true,
           maxLines: 3,

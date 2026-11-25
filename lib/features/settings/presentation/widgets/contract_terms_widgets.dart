@@ -1,3 +1,4 @@
+import 'package:rawnaq/core/utils/arabic_number_input_formatter.dart';
 import 'package:flutter/material.dart';
 
 import '../../../../core/constants/app_colors.dart';
@@ -454,6 +455,7 @@ class _TermAccordionCardState extends State<_TermAccordionCard> {
                 child: Column(
                   children: [
                     TextField(
+                      inputFormatters: const [ArabicNumberInputFormatter()],
                       controller: widget.term.title,
                       textDirection: TextDirection.rtl,
                       textAlign: TextAlign.right,
@@ -464,6 +466,7 @@ class _TermAccordionCardState extends State<_TermAccordionCard> {
                     ),
                     const SizedBox(height: 10),
                     TextField(
+                      inputFormatters: const [ArabicNumberInputFormatter()],
                       controller: widget.term.description,
                       textDirection: TextDirection.rtl,
                       textAlign: TextAlign.right,

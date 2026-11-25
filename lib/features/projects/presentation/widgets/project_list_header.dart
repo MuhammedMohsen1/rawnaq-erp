@@ -1,3 +1,4 @@
+import 'package:rawnaq/core/utils/arabic_number_input_formatter.dart';
 import 'package:flutter/material.dart';
 
 import '../../../../core/constants/app_colors.dart';
@@ -19,6 +20,7 @@ class ProjectListSearchField extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return TextField(
+      inputFormatters: const [ArabicNumberInputFormatter()],
       controller: controller,
       onChanged: onChanged,
       textInputAction: TextInputAction.search,

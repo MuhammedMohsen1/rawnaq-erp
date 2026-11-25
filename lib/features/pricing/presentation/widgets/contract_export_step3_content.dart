@@ -1,3 +1,4 @@
+import 'package:rawnaq/core/utils/arabic_number_input_formatter.dart';
 import 'package:flutter/material.dart';
 import '../../../../core/constants/app_colors.dart';
 
@@ -187,6 +188,7 @@ class ContractExportStep3Content extends StatelessWidget {
                       ),
                       const SizedBox(height: 10),
                       TextField(
+                        inputFormatters: const [ArabicNumberInputFormatter()],
                         controller: paymentControllers[index]['notes'],
                         onChanged: (value) => onNotesChanged(index, value),
                         maxLines: 2,
@@ -234,6 +236,7 @@ class ContractExportStep3Content extends StatelessWidget {
                         children: [
                           Expanded(
                             child: TextField(
+                              inputFormatters: const [ArabicNumberInputFormatter()],
                               controller:
                                   paymentControllers[index]['percentage'],
                               onChanged: (value) => onPercentageChanged(
@@ -287,6 +290,7 @@ class ContractExportStep3Content extends StatelessWidget {
                           const SizedBox(width: 8),
                           Expanded(
                             child: TextField(
+                              inputFormatters: const [ArabicNumberInputFormatter()],
                               controller: paymentControllers[index]['amount'],
                               onChanged: (value) => onAmountChanged(
                                 index,

@@ -1,3 +1,4 @@
+import 'package:rawnaq/core/utils/arabic_number_input_formatter.dart';
 import 'package:flutter/material.dart';
 
 import '../../../../core/constants/app_colors.dart';
@@ -115,6 +116,7 @@ class _PricingNotesEditorState extends State<PricingNotesEditor> {
           ),
           const SizedBox(height: 14),
           TextField(
+            inputFormatters: const [ArabicNumberInputFormatter()],
             controller: _notesController,
             minLines: 4,
             maxLines: 8,

@@ -1,3 +1,4 @@
+import 'package:rawnaq/core/utils/arabic_number_input_formatter.dart';
 import 'package:flutter/material.dart';
 
 import '../../../../core/constants/app_colors.dart';
@@ -263,6 +264,7 @@ class _DesignWorkspaceInstallmentsEditorDialogState
                                 ),
                                 const SizedBox(height: 10),
                                 TextField(
+                                  inputFormatters: const [ArabicNumberInputFormatter()],
                                   controller: draft.notesController,
                                   maxLines: 2,
                                   decoration: const InputDecoration(
@@ -276,6 +278,7 @@ class _DesignWorkspaceInstallmentsEditorDialogState
                                     Expanded(
                                       flex: 2,
                                       child: TextField(
+                                        inputFormatters: const [ArabicNumberInputFormatter()],
                                         controller: draft.amountController,
                                         keyboardType:
                                             const TextInputType.numberWithOptions(

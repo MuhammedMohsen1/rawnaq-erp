@@ -69,9 +69,9 @@ class _PricingTableRowState extends State<PricingTableRow> {
     for (final node in _fieldFocusNodes) {
       node.addListener(_handleFieldFocusChange);
     }
-    // Check if item already has unit price mode (quantity and unitPrice exist)
     _isUnitPriceMode =
-        widget.item.quantity != null && widget.item.unitPrice != null;
+        widget.item.costType == 'UNIT_BASED' ||
+        (widget.item.quantity != null && widget.item.unitPrice != null);
   }
 
   List<FocusNode> get _fieldFocusNodes => [
@@ -202,6 +202,7 @@ class _PricingTableRowState extends State<PricingTableRow> {
             Expanded(
               flex: 2,
               child: TextField(
+                inputFormatters: const [ArabicNumberInputFormatter()],
                 controller: _descriptionController,
                 focusNode: _descriptionFocusNode,
                 textInputAction: TextInputAction.done,

@@ -1,3 +1,4 @@
+import 'package:rawnaq/core/utils/arabic_number_input_formatter.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -35,6 +36,7 @@ class ProfitMarginInput extends StatelessWidget {
         textAlignVertical: TextAlignVertical.center,
         keyboardType: const TextInputType.numberWithOptions(decimal: true),
         inputFormatters: [
+          const ArabicNumberInputFormatter(),
           FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d{0,2}')),
         ],
         style: AppTextStyles.bodyMedium.copyWith(
@@ -105,6 +107,7 @@ class ProfitMarginInput extends StatelessWidget {
                 decimal: true,
               ),
               inputFormatters: [
+                const ArabicNumberInputFormatter(),
                 FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d{0,2}')),
               ],
               style: AppTextStyles.bodyLarge.copyWith(

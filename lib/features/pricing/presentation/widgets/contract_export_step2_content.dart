@@ -1,3 +1,4 @@
+import 'package:rawnaq/core/utils/arabic_number_input_formatter.dart';
 import 'package:flutter/material.dart';
 import '../../../../core/constants/app_colors.dart';
 
@@ -95,6 +96,7 @@ class ContractExportStep2Content extends StatelessWidget {
                       ),
                       const SizedBox(height: 12),
                       TextField(
+                        inputFormatters: const [ArabicNumberInputFormatter()],
                         controller: term['title'],
                         decoration: InputDecoration(
                           labelText: 'العنوان',
@@ -137,6 +139,7 @@ class ContractExportStep2Content extends StatelessWidget {
                       ),
                       const SizedBox(height: 16),
                       TextField(
+                        inputFormatters: const [ArabicNumberInputFormatter()],
                         controller: term['description'],
                         maxLines: 6,
                         minLines: 4,

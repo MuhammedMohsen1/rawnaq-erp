@@ -194,7 +194,6 @@ class PricingElementRowShell extends StatelessWidget {
     required this.index,
     required this.element,
     required this.isLocal,
-    required this.isSaving,
     required this.canReorderElements,
     required this.showFinancials,
     required this.isNewRow,
@@ -202,7 +201,6 @@ class PricingElementRowShell extends StatelessWidget {
     required this.onToggleVisibility,
     required this.onDelete,
     required this.onChanged,
-    required this.onFieldCompleted,
     required this.onSubmitted,
     required this.pricingItem,
   });
@@ -212,7 +210,6 @@ class PricingElementRowShell extends StatelessWidget {
   final int index;
   final PricingElementModel element;
   final bool isLocal;
-  final bool isSaving;
   final bool canReorderElements;
   final bool showFinancials;
   final bool isNewRow;
@@ -220,7 +217,6 @@ class PricingElementRowShell extends StatelessWidget {
   final ValueChanged<bool> onToggleVisibility;
   final VoidCallback onDelete;
   final ValueChanged<PricingItem> onChanged;
-  final VoidCallback onFieldCompleted;
   final VoidCallback onSubmitted;
   final PricingItem pricingItem;
 
@@ -228,78 +224,58 @@ class PricingElementRowShell extends StatelessWidget {
   Widget build(BuildContext context) {
     final canDragElement = canReorderElements && !isLocal;
 
-    return Stack(
+    return Row(
       key: ValueKey('element-$subItemId-$elementId'),
+      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            SizedBox(
-              width: 36,
-              height: 44,
-              child: isLocal
-                  ? const SizedBox.shrink()
-                  : Tooltip(
-                      message: element.isHidden
-                          ? 'إظهار العنصر في التسعير و PDF'
-                          : 'إخفاء العنصر من التسعير و PDF',
-                      child: Checkbox(
-                        value: !element.isHidden,
-                        onChanged: (value) =>
-                            onToggleVisibility(value ?? false),
-                        activeColor: AppColors.background,
-                        checkColor: AppColors.primary,
-                        side: BorderSide(
-                          color: element.isHidden
-                              ? Colors.red
-                              : AppColors.primary,
-                        ),
-                      ),
+        SizedBox(
+          width: 36,
+          height: 44,
+          child: isLocal
+              ? const SizedBox.shrink()
+              : Tooltip(
+                  message: element.isHidden
+                      ? 'إظهار العنصر في التسعير و PDF'
+                      : 'إخفاء العنصر من التسعير و PDF',
+                  child: Checkbox(
+                    value: !element.isHidden,
+                    onChanged: (value) => onToggleVisibility(value ?? false),
+                    activeColor: AppColors.background,
+                    checkColor: AppColors.primary,
+                    side: BorderSide(
+                      color: element.isHidden ? Colors.red : AppColors.primary,
                     ),
-            ),
-            SizedBox(
-              width: 28,
-              height: 44,
-              child: canDragElement
-                  ? ReorderableDragStartListener(
-                      index: index,
-                      child: const Icon(
-                        Icons.drag_indicator,
-                        color: AppColors.textMuted,
-                        size: 18,
-                      ),
-                    )
-                  : const SizedBox.shrink(),
-            ),
-            Expanded(
-              child: Opacity(
-                opacity: element.isHidden ? 0.55 : 1,
-                child: PricingTableRow(
-                  item: pricingItem,
-                  showFinancials: showFinancials,
-                  isNewRow: isNewRow,
-                  firstFieldFocusNode: firstFieldFocusNode,
-                  onDelete: onDelete,
-                  onChanged: onChanged,
-                  onFieldCompleted: onFieldCompleted,
-                  onSubmitted: onSubmitted,
+                  ),
                 ),
-              ),
-            ),
-          ],
         ),
-        if (isSaving)
-          Positioned.fill(
-            child: Container(
-              color: Colors.black.withOpacity(0.3),
-              child: const Center(
-                child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                  color: AppColors.primary,
-                ),
-              ),
+        SizedBox(
+          width: 28,
+          height: 44,
+          child: canDragElement
+              ? ReorderableDragStartListener(
+                  index: index,
+                  child: const Icon(
+                    Icons.drag_indicator,
+                    color: AppColors.textMuted,
+                    size: 18,
+                  ),
+                )
+              : const SizedBox.shrink(),
+        ),
+        Expanded(
+          child: Opacity(
+            opacity: element.isHidden ? 0.55 : 1,
+            child: PricingTableRow(
+              item: pricingItem,
+              showFinancials: showFinancials,
+              isNewRow: isNewRow,
+              firstFieldFocusNode: firstFieldFocusNode,
+              onDelete: onDelete,
+              onChanged: onChanged,
+              onSubmitted: onSubmitted,
             ),
           ),
+        ),
       ],
     );
   }

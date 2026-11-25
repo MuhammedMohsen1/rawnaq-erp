@@ -1,3 +1,4 @@
+import 'package:rawnaq/core/utils/arabic_number_input_formatter.dart';
 import 'package:dio/dio.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
@@ -833,6 +834,7 @@ class DesignWorkspaceComposer extends StatelessWidget {
             const SizedBox(width: 8),
             Expanded(
               child: TextField(
+                inputFormatters: const [ArabicNumberInputFormatter()],
                 controller: controller,
                 minLines: 1,
                 maxLines: 5,

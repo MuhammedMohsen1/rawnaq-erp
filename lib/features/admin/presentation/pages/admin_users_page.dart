@@ -1,3 +1,4 @@
+import 'package:rawnaq/core/utils/arabic_number_input_formatter.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -97,6 +98,7 @@ class _Toolbar extends StatelessWidget {
         Expanded(
           flex: 2,
           child: TextField(
+            inputFormatters: const [ArabicNumberInputFormatter()],
             onChanged: context.read<AdminUsersCubit>().updateSearch,
             style: AppTextStyles.bodyMedium.copyWith(
               color: AppColors.textPrimary,
@@ -698,6 +700,7 @@ class _UserFormDialogState extends State<_UserFormDialog> {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   TextFormField(
+                    inputFormatters: const [ArabicNumberInputFormatter()],
                     controller: _nameController,
                     decoration: _inputDecoration(hintText: 'الاسم'),
                     validator: (value) =>
@@ -707,6 +710,7 @@ class _UserFormDialogState extends State<_UserFormDialog> {
                   ),
                   const SizedBox(height: 12),
                   TextFormField(
+                    inputFormatters: const [ArabicNumberInputFormatter()],
                     controller: _emailController,
                     enabled: !_isEditing,
                     decoration: _inputDecoration(hintText: 'البريد الإلكتروني'),
@@ -718,11 +722,13 @@ class _UserFormDialogState extends State<_UserFormDialog> {
                   ),
                   const SizedBox(height: 12),
                   TextFormField(
+                    inputFormatters: const [ArabicNumberInputFormatter()],
                     controller: _phoneController,
                     decoration: _inputDecoration(hintText: 'الهاتف اختياري'),
                   ),
                   const SizedBox(height: 12),
                   TextFormField(
+                    inputFormatters: const [ArabicNumberInputFormatter()],
                     controller: _passwordController,
                     obscureText: true,
                     decoration: _inputDecoration(

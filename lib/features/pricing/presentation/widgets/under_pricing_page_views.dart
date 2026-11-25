@@ -1,4 +1,7 @@
+import 'pricing_save_button.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter/foundation.dart' show defaultTargetPlatform;
 import 'package:flutter_ionicons/flutter_ionicons.dart';
 
 import '../../../../core/constants/app_colors.dart';
@@ -267,7 +270,7 @@ class _PricingLayout extends StatelessWidget {
     final showMobileFinancialToggle =
         hideFinancialsInitially && ResponsiveLayout.isMobile(context);
 
-    return SingleChildScrollView(
+    final content = SingleChildScrollView(
       padding: EdgeInsets.all(padding),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -275,6 +278,9 @@ class _PricingLayout extends StatelessWidget {
           PricingHeader(
             statusText: state.getStatusText(),
             statusColor: statusColor,
+            trailing: canEditPricing
+                ? PricingSaveButton(projectId: projectId, state: state)
+                : null,
           ),
           const SizedBox(height: 24),
           if (showMobileFinancialToggle) ...[
@@ -322,6 +328,21 @@ class _PricingLayout extends StatelessWidget {
           if (showFinancials) buildSidebar(context, state),
         ],
       ),
+    );
+
+    if (!canEditPricing) return content;
+
+    return CallbackShortcuts(
+      bindings: {
+        SingleActivator(
+          LogicalKeyboardKey.keyS,
+          control: defaultTargetPlatform != TargetPlatform.macOS,
+          meta: defaultTargetPlatform == TargetPlatform.macOS,
+          includeRepeats: false,
+        ): () =>
+            PricingSaveButton.save(context, projectId, state),
+      },
+      child: FocusScope(autofocus: true, child: content),
     );
   }
 }

@@ -505,6 +505,7 @@ class AppRouter {
           // Pricing
           GoRoute(
             path: '/pricing/:projectId',
+            onExit: UnderPricingPage.confirmExit,
             pageBuilder: (context, state) {
               final projectId = state.pathParameters['projectId'] ?? '';
               return FadePageTransition(

@@ -2,6 +2,29 @@ import 'package:flutter/material.dart';
 
 /// Collection of confirmation dialogs for pricing actions
 class PricingConfirmationDialogs {
+  static Future<bool> showDiscardChangesDialog(BuildContext context) async {
+    return await showDialog<bool>(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: const Text('مغادرة بدون حفظ؟'),
+            content: const Text(
+              'عندك تعديلات غير محفوظة. هل أنت متأكد من مغادرة الصفحة بدون حفظها؟',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context, false),
+                child: const Text('البقاء في الصفحة'),
+              ),
+              FilledButton(
+                onPressed: () => Navigator.pop(context, true),
+                child: const Text('مغادرة بدون حفظ'),
+              ),
+            ],
+          ),
+        ) ??
+        false;
+  }
+
   /// Show return to pricing confirmation dialog
   static Future<(bool, String?)> showReturnToPricingDialog(
     BuildContext context,

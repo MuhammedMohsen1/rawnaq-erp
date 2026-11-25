@@ -1,3 +1,4 @@
+import 'package:rawnaq/core/utils/arabic_number_input_formatter.dart';
 import 'package:flutter/material.dart';
 
 import '../../../../core/constants/app_colors.dart';
@@ -116,6 +117,7 @@ class PricingSubItemBody extends StatelessWidget {
 
                         final descriptionField = Center(
                           child: TextField(
+                            inputFormatters: const [ArabicNumberInputFormatter()],
                             controller: descriptionController,
                             focusNode: descriptionFocusNode,
                             onChanged: onDescriptionChanged,

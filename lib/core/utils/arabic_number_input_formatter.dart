@@ -1,40 +1,20 @@
 import 'package:flutter/services.dart';
+
 import 'arabic_number_transformer.dart';
 
-/// TextInputFormatter that automatically transforms Arabic-Indic numerals to Western numerals
-///
-/// This formatter should be used with numeric input fields to allow users to type
-/// Arabic numerals (٠-٩) which will automatically be converted to Western numerals (0-9).
-///
-/// Example usage:
-/// ```dart
-/// TextField(
-///   inputFormatters: [
-///     ArabicNumberInputFormatter(),
-///     FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*')),
-///   ],
-///   keyboardType: TextInputType.number,
-/// )
-/// ```
+/// Normalizes Arabic and Persian digits in committed text input.
+/// Put this before formatters that restrict input to ASCII digits.
 class ArabicNumberInputFormatter extends TextInputFormatter {
+  const ArabicNumberInputFormatter();
+
   @override
   TextEditingValue formatEditUpdate(
     TextEditingValue oldValue,
     TextEditingValue newValue,
   ) {
-    // Transform Arabic numerals to English
-    final transformed = ArabicNumberTransformer.transform(newValue.text);
+    if (!newValue.composing.isCollapsed) return newValue;
 
-    // If the text hasn't changed after transformation, return as-is
-    if (transformed == newValue.text) {
-      return newValue;
-    }
-
-    // Return new value with transformed text
-    // Maintain cursor position at the end of the text
-    return TextEditingValue(
-      text: transformed,
-      selection: TextSelection.collapsed(offset: transformed.length),
-    );
+    final text = ArabicNumberTransformer.transform(newValue.text);
+    return text == newValue.text ? newValue : newValue.copyWith(text: text);
   }
 }

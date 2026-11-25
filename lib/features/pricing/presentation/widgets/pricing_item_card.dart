@@ -1,7 +1,7 @@
-import 'dart:async';
 import 'dart:io';
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/foundation.dart'
     show kIsWeb, defaultTargetPlatform, TargetPlatform;
@@ -16,6 +16,7 @@ import '../../data/datasources/pricing_api_datasource.dart';
 import '../../data/models/pricing_version_model.dart';
 import '../../domain/entities/pricing_item.dart';
 import 'image_crop_dialog.dart';
+import 'pricing_drafts.dart';
 import 'pricing_item_card_local_element.dart';
 import 'pricing_item_card_visuals.dart';
 import 'pricing_item_card_section_widgets.dart';
@@ -184,21 +185,25 @@ class _TrailingNumberName {
 class _PricingItemCardState extends State<PricingItemCard>
     with PricingItemCardImageActions {
   final _apiDataSource = PricingApiDataSource();
+  late final _drafts = context.read<PricingDrafts>();
+
+  PricingDraftKey _draftKey(String subItemId, String field) =>
+      (itemId: widget.item.id, subItemId: subItemId, field: field);
+
+  List<LocalElement> _localRows(String subItemId) => [
+    ..._drafts
+        .valuesFor<LocalElement>(widget.item.id, subItemId)
+        .toList()
+        .reversed,
+    ...?_localElements[subItemId],
+  ];
   final _imagePicker = ImagePicker();
   late bool _isExpanded;
   final Map<String, bool> _expandedSubItems = {};
   final Map<String, List<LocalElement>> _localElements =
       {}; // subItemId -> List<LocalElement>
-  final Map<String, bool> _savingElements = {}; // tempId -> isSaving
-  final Map<String, Timer?> _saveTimers = {}; // tempId -> debounce timer
   final Map<String, FocusNode> _localElementFocusNodes =
       {}; // tempId -> first field focus node
-  final Map<String, bool> _updatingElements = {}; // elementId -> isUpdating
-  final Map<String, Timer?> _updateTimers = {}; // elementId -> debounce timer
-  final Map<String, PricingItem> _pendingUpdates =
-      {}; // elementId -> latest PricingItem values
-  final Map<String, Timer?> _profitMarginTimers =
-      {}; // subItemId -> debounce timer for profit margin updates
   final Map<String, bool> _uploadingImages = {}; // subItemId -> isUploading
   final Map<String, bool> _deletingImages = {}; // imageUrl -> isDeleting
   final Map<String, double> _profitMargins =
@@ -209,8 +214,6 @@ class _PricingItemCardState extends State<PricingItemCard>
       {}; // subItemId -> TextEditingController for notes input
   final Map<String, FocusNode> _notesFocusNodes =
       {}; // subItemId -> FocusNode for notes input
-  final Map<String, Timer?> _notesTimers =
-      {}; // subItemId -> debounce timer for notes saving
   final Map<String, int> _selectedImageIndex =
       {}; // subItemId -> selected image index
   final bool _isRestoringState =
@@ -240,15 +243,15 @@ class _PricingItemCardState extends State<PricingItemCard>
         // Keep local controller state in sync with backend profit margins.
         _profitMargins[subItem.id] = subItem.profitMargin;
         _profitControllers[subItem.id] = TextEditingController(
-          text: subItem.profitMargin.toStringAsFixed(2),
+          text:
+              _drafts.value<String>(_draftKey(subItem.id, 'profitMargin')) ??
+              subItem.profitMargin.toStringAsFixed(2),
         );
         // Initialize notes controller
         _notesControllers[subItem.id] = TextEditingController(
           text: subItem.description,
         );
-        _notesFocusNodes[subItem.id] = _createSubItemDescriptionFocusNode(
-          subItem.id,
-        );
+        _notesFocusNodes[subItem.id] = FocusNode();
       }
       setState(() {});
     }
@@ -265,6 +268,14 @@ class _PricingItemCardState extends State<PricingItemCard>
     // Update main expanded state from parent if changed
     if (widget.initialIsExpanded != _isExpanded) {
       _isExpanded = widget.initialIsExpanded;
+    }
+
+    final localRowIds = {
+      for (final subItem in widget.item.subItems ?? <PricingSubItemModel>[])
+        for (final row in _localRows(subItem.id)) row.tempId,
+    };
+    for (final id in _localElementFocusNodes.keys.toList()) {
+      if (!localRowIds.contains(id)) _disposeLocalElementFocusNode(id);
     }
 
     // Update sub-item expanded states from parent (only for new sub-items)
@@ -284,19 +295,24 @@ class _PricingItemCardState extends State<PricingItemCard>
         if (!_profitControllers.containsKey(subItem.id)) {
           _profitMargins[subItem.id] = subItem.profitMargin;
           _profitControllers[subItem.id] = TextEditingController(
-            text: subItem.profitMargin.toStringAsFixed(2),
+            text:
+                _drafts.value<String>(_draftKey(subItem.id, 'profitMargin')) ??
+                subItem.profitMargin.toStringAsFixed(2),
           );
         }
         // Sync notes controller with latest data (only if no pending save)
         final newNotes = subItem.description ?? '';
         final existingController = _notesControllers[subItem.id];
         final notesFocusNode = _notesFocusNodes[subItem.id];
-        final hasPendingNoteSave = _notesTimers[subItem.id]?.isActive ?? false;
+        final hasPendingNoteSave =
+            _drafts.value<String>(_draftKey(subItem.id, 'description')) != null;
         if (existingController == null) {
-          _notesControllers[subItem.id] = TextEditingController(text: newNotes);
-          _notesFocusNodes[subItem.id] = _createSubItemDescriptionFocusNode(
-            subItem.id,
+          _notesControllers[subItem.id] = TextEditingController(
+            text:
+                _drafts.value<String>(_draftKey(subItem.id, 'description')) ??
+                newNotes,
           );
+          _notesFocusNodes[subItem.id] = FocusNode();
         } else if (existingController.text != newNotes &&
             !hasPendingNoteSave &&
             !(notesFocusNode?.hasFocus ?? false)) {
@@ -312,7 +328,8 @@ class _PricingItemCardState extends State<PricingItemCard>
         // Sync profit margin from external source (e.g., bulk update)
         // Only sync if there's no pending profit margin save (user isn't actively editing)
         final hasPendingProfitSave =
-            _profitMarginTimers[subItem.id]?.isActive ?? false;
+            _drafts.value<String>(_draftKey(subItem.id, 'profitMargin')) !=
+            null;
         if (widget.externalProfitMargins != null && !hasPendingProfitSave) {
           final externalMargin = widget.externalProfitMargins![subItem.id];
           if (externalMargin != null &&
@@ -344,25 +361,10 @@ class _PricingItemCardState extends State<PricingItemCard>
       controller.dispose();
     }
     _profitControllers.clear();
-    // Cancel all pending save timers
-    for (var timer in _saveTimers.values) {
-      timer?.cancel();
-    }
-    _saveTimers.clear();
     for (var focusNode in _localElementFocusNodes.values) {
       focusNode.dispose();
     }
     _localElementFocusNodes.clear();
-    // Cancel all pending update timers
-    for (var timer in _updateTimers.values) {
-      timer?.cancel();
-    }
-    _updateTimers.clear();
-    // Cancel all pending profit margin update timers
-    for (var timer in _profitMarginTimers.values) {
-      timer?.cancel();
-    }
-    _profitMarginTimers.clear();
     // Dispose notes controllers
     for (var controller in _notesControllers.values) {
       controller.dispose();
@@ -373,11 +375,6 @@ class _PricingItemCardState extends State<PricingItemCard>
       focusNode.dispose();
     }
     _notesFocusNodes.clear();
-    // Cancel notes timers
-    for (var timer in _notesTimers.values) {
-      timer?.cancel();
-    }
-    _notesTimers.clear();
     super.dispose();
   }
 
@@ -597,6 +594,7 @@ class _PricingItemCardState extends State<PricingItemCard>
         widget.version,
         widget.item.id,
       );
+      if (mounted) _drafts.removeFor(widget.item.id);
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -960,6 +958,7 @@ class _PricingItemCardState extends State<PricingItemCard>
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   TextField(
+                    inputFormatters: const [ArabicNumberInputFormatter()],
                     controller: nameController,
                     autofocus: true,
                     style: const TextStyle(color: AppColors.textPrimary),
@@ -1077,6 +1076,7 @@ class _PricingItemCardState extends State<PricingItemCard>
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   TextField(
+                    inputFormatters: const [ArabicNumberInputFormatter()],
                     controller: nameController,
                     autofocus: true,
                     style: const TextStyle(color: AppColors.textPrimary),
@@ -1166,168 +1166,53 @@ class _PricingItemCardState extends State<PricingItemCard>
     }
   }
 
-  void _scheduleSubItemDescriptionUpdate(
-    PricingSubItemModel subItem,
-    String description,
-  ) {
-    final normalizedDescription = description.trim();
-    final currentDescription = (subItem.description ?? '').trim();
-
-    _notesTimers[subItem.id]?.cancel();
-    if (normalizedDescription == currentDescription) {
-      _notesTimers.remove(subItem.id);
+  void _stageSubItemDescription(PricingSubItemModel subItem, String value) {
+    final key = _draftKey(subItem.id, 'description');
+    final description = value.trim();
+    if (description == (subItem.description ?? '').trim()) {
+      _drafts.remove(key);
       return;
     }
 
-    _notesTimers[subItem.id] = Timer(const Duration(milliseconds: 800), () {
-      _flushSubItemDescription(subItem.id);
-    });
-  }
-
-  FocusNode _createSubItemDescriptionFocusNode(String subItemId) {
-    final focusNode = FocusNode();
-    focusNode.addListener(() {
-      if (!focusNode.hasFocus) {
-        _flushSubItemDescription(subItemId);
-      }
-    });
-    return focusNode;
-  }
-
-  PricingSubItemModel? _findSubItem(String subItemId) {
-    final subItems = widget.item.subItems;
-    if (subItems == null) return null;
-
-    for (final subItem in subItems) {
-      if (subItem.id == subItemId) {
-        return subItem;
-      }
-    }
-
-    return null;
-  }
-
-  void _flushSubItemDescription(String subItemId) {
-    final subItem = _findSubItem(subItemId);
-    final controller = _notesControllers[subItemId];
-    if (subItem == null || controller == null) return;
-
-    final description = controller.text.trim();
-    final currentDescription = (subItem.description ?? '').trim();
-
-    _notesTimers[subItemId]?.cancel();
-    _notesTimers.remove(subItemId);
-
-    if (description == currentDescription) return;
-
-    _saveSubItemDescription(subItem, description);
-  }
-
-  void _scheduleSubItemProfitMarginUpdate(
-    PricingSubItemModel subItem,
-    String value,
-  ) {
-    final parsedMargin = double.tryParse(value.trim());
-    if (parsedMargin == null) {
-      _profitMarginTimers[subItem.id]?.cancel();
-      _profitMarginTimers.remove(subItem.id);
-      return;
-    }
-
-    _profitMargins[subItem.id] = parsedMargin;
-    _profitMarginTimers[subItem.id]?.cancel();
-    _profitMarginTimers[subItem.id] = Timer(
-      const Duration(milliseconds: 800),
-      () {
-        _flushSubItemProfitMargin(subItem.id);
-      },
-    );
-  }
-
-  void _flushSubItemProfitMargin(String subItemId) {
-    final subItem = _findSubItem(subItemId);
-    final controller = _profitControllers[subItemId];
-    if (subItem == null || controller == null) return;
-
-    final profitMargin = double.tryParse(controller.text.trim());
-    _profitMarginTimers[subItemId]?.cancel();
-    _profitMarginTimers.remove(subItemId);
-
-    if (profitMargin == null || profitMargin == subItem.profitMargin) {
-      return;
-    }
-
-    _saveSubItemProfitMargin(subItem, profitMargin);
-  }
-
-  Future<void> _saveSubItemProfitMargin(
-    PricingSubItemModel subItem,
-    double profitMargin,
-  ) async {
-    try {
-      final updatedSubItem = await _apiDataSource.updateSubItemProfitMargin(
-        widget.projectId,
-        widget.version,
-        widget.item.id,
-        subItem.id,
-        profitMargin,
-      );
-
-      if (mounted) {
-        widget.onSubItemChanged?.call(updatedSubItem);
-        widget.onItemChanged?.call(widget.item);
-      }
-    } catch (e) {
-      if (mounted) {
-        final controller = _profitControllers[subItem.id];
-        if (controller != null) {
-          controller.text = subItem.profitMargin.toStringAsFixed(2);
-        }
-        _profitMargins[subItem.id] = subItem.profitMargin;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            duration: const Duration(seconds: 2),
-            content: Text('فشل تحديث نسبة الربح: ${e.toString()}'),
-          ),
-        );
-      }
-    }
-  }
-
-  Future<void> _saveSubItemDescription(
-    PricingSubItemModel subItem,
-    String description,
-  ) async {
-    try {
+    final projectId = widget.projectId;
+    final version = widget.version;
+    _drafts.stage(key, value, () async {
       await _apiDataSource.updatePricingSubItem(
-        widget.projectId,
-        widget.version,
-        widget.item.id,
+        projectId,
+        version,
+        key.itemId,
         subItem.id,
         description: description,
       );
+    });
+  }
 
-      final updatedVersion = await _apiDataSource.getPricingVersion(
-        widget.projectId,
-        widget.version,
-      );
-      final updatedItem = updatedVersion.items?.firstWhere(
-        (i) => i.id == widget.item.id,
-      );
-
-      if (updatedItem != null && mounted) {
-        widget.onItemChanged?.call(updatedItem);
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            duration: const Duration(seconds: 2),
-            content: Text('فشل تحديث وصف البند الفرعية: ${e.toString()}'),
-          ),
-        );
-      }
+  void _stageSubItemProfitMargin(PricingSubItemModel subItem, String value) {
+    final key = _draftKey(subItem.id, 'profitMargin');
+    final margin = double.tryParse(value.trim());
+    if (margin == subItem.profitMargin ||
+        value.trim() == subItem.profitMargin.toStringAsFixed(2)) {
+      _drafts.remove(key);
+      return;
     }
+
+    final projectId = widget.projectId;
+    final version = widget.version;
+    _drafts.stage(
+      key,
+      value,
+      margin == null || !margin.isFinite
+          ? null
+          : () async {
+              await _apiDataSource.updateSubItemProfitMargin(
+                projectId,
+                version,
+                key.itemId,
+                subItem.id,
+                margin,
+              );
+            },
+    );
   }
 
   Future<void> _deleteSubItem(String subItemId) async {
@@ -1338,6 +1223,7 @@ class _PricingItemCardState extends State<PricingItemCard>
         widget.item.id,
         subItemId,
       );
+      if (mounted) _drafts.removeFor(widget.item.id, subItemId);
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -1364,7 +1250,7 @@ class _PricingItemCardState extends State<PricingItemCard>
   void _addLocalElement(String subItemId) {
     LocalElement? existingEmptyElement;
     for (final element in _localElements[subItemId] ?? <LocalElement>[]) {
-      if (element.isEmpty && !element.isCompleted) {
+      if (element.isEmpty) {
         existingEmptyElement = element;
         break;
       }
@@ -1425,35 +1311,49 @@ class _PricingItemCardState extends State<PricingItemCard>
     String tempId,
     LocalElement updatedElement,
   ) {
+    final key = _draftKey(subItemId, tempId);
+    final hasInput =
+        updatedElement.name.isNotEmpty ||
+        updatedElement.quantity != null ||
+        updatedElement.unitCost != null ||
+        (updatedElement.totalCost ?? 0) != 0;
+    final projectId = widget.projectId;
+    final version = widget.version;
     setState(() {
-      final elements = _localElements[subItemId] ?? [];
-      final index = elements.indexWhere((e) => e.tempId == tempId);
-      if (index != -1) {
-        updatedElement.lastModified = DateTime.now();
-        elements[index] = updatedElement;
-
-        // Cancel existing timer for this element
-        _saveTimers[tempId]?.cancel();
-
-        // Only auto-save if element has all required data and user has stopped typing
-        if (updatedElement.hasRequiredData && !updatedElement.isCompleted) {
-          // Add debounce: wait 2 seconds after last change before saving
-          _saveTimers[tempId] = Timer(const Duration(seconds: 2), () {
-            if (mounted) {
-              _saveElementToBackend(subItemId, updatedElement);
-            }
-          });
-        }
+      final emptyRows = _localElements[subItemId];
+      emptyRows?.removeWhere((element) => element.tempId == tempId);
+      if (!hasInput) {
+        _drafts.remove(key);
+        (_localElements[subItemId] ??= []).add(updatedElement);
+        return;
       }
+
+      _drafts.stage(
+        key,
+        updatedElement,
+        !updatedElement.hasRequiredData
+            ? null
+            : () async {
+                await _apiDataSource.addPricingElement(
+                  projectId,
+                  version,
+                  key.itemId,
+                  subItemId,
+                  name: updatedElement.name,
+                  costType: updatedElement.costType,
+                  unitCost: updatedElement.unitCost,
+                  quantity: updatedElement.quantity,
+                  totalCost: updatedElement.totalCost,
+                );
+              },
+      );
     });
   }
 
   void _removeLocalElement(String subItemId, String tempId) {
     setState(() {
       _localElements[subItemId]?.removeWhere((e) => e.tempId == tempId);
-      _savingElements.remove(tempId);
-      _saveTimers[tempId]?.cancel();
-      _saveTimers.remove(tempId);
+      _drafts.remove(_draftKey(subItemId, tempId));
       _disposeLocalElementFocusNode(tempId);
     });
   }
@@ -1486,6 +1386,7 @@ class _PricingItemCardState extends State<PricingItemCard>
         subItemId,
         elementId,
       );
+      if (mounted) _drafts.remove(_draftKey(subItemId, elementId));
 
       // Refresh the item data to reflect the deletion
       try {
@@ -1525,184 +1426,39 @@ class _PricingItemCardState extends State<PricingItemCard>
     }
   }
 
-  Future<void> _saveElementToBackend(
+  void _stageSavedElement(
     String subItemId,
-    LocalElement localElement,
-  ) async {
-    if (_savingElements[localElement.tempId] == true) return; // Already saving
-
-    // Cancel the timer since we're saving now
-    _saveTimers[localElement.tempId]?.cancel();
-    _saveTimers.remove(localElement.tempId);
-
-    // Double-check that element still has required data
-    if (!localElement.hasRequiredData) return;
-
-    setState(() {
-      _savingElements[localElement.tempId] = true;
-      localElement.isCompleted = true;
-    });
-
-    try {
-      // Ensure the sub-item is expanded and notify parent before saving
-      setState(() {
-        _expandedSubItems[subItemId] = true;
-      });
-      widget.onSubItemExpandedChanged?.call(
-        Map<String, bool>.from(_expandedSubItems),
-      );
-
-      await _apiDataSource.addPricingElement(
-        widget.projectId,
-        widget.version,
-        widget.item.id,
-        subItemId,
-        name: localElement.name.trim(),
-        costType: localElement.costType,
-        unitCost: localElement.unitCost,
-        quantity: localElement.quantity,
-        totalCost: localElement.totalCost,
-      );
-
-      // Refresh data to show the newly saved element - parent will preserve expanded states
-      try {
-        final updatedVersion = await _apiDataSource.getPricingVersion(
-          widget.projectId,
-          widget.version,
-        );
-        final updatedItem = updatedVersion.items?.firstWhere(
-          (i) => i.id == widget.item.id,
-        );
-
-        if (updatedItem != null && mounted) {
-          // Remove from local elements AFTER getting updated data to prevent visual jump
-          setState(() {
-            _localElements[subItemId]?.removeWhere(
-              (e) => e.tempId == localElement.tempId,
-            );
-            _savingElements.remove(localElement.tempId);
-            _disposeLocalElementFocusNode(localElement.tempId);
-          });
-
-          // Update the widget with new data - parent will preserve expanded states
-          widget.onItemChanged?.call(updatedItem);
-        } else {
-          // If item not found, still remove from local elements
-          setState(() {
-            _localElements[subItemId]?.removeWhere(
-              (e) => e.tempId == localElement.tempId,
-            );
-            _savingElements.remove(localElement.tempId);
-            _disposeLocalElementFocusNode(localElement.tempId);
-          });
-        }
-      } catch (e) {
-        // If refresh fails, still remove from local elements
-        setState(() {
-          _localElements[subItemId]?.removeWhere(
-            (e) => e.tempId == localElement.tempId,
-          );
-          _savingElements.remove(localElement.tempId);
-          _disposeLocalElementFocusNode(localElement.tempId);
-        });
-      }
-
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('تم حفظ العنصر بنجاح'),
-            duration: Duration(seconds: 1),
-          ),
-        );
-      }
-    } catch (e) {
-      setState(() {
-        _savingElements[localElement.tempId] = false;
-        localElement.isCompleted = false;
-      });
-
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            duration: const Duration(seconds: 2),
-            content: Text('فشل حفظ العنصر: ${e.toString()}'),
-          ),
-        );
-      }
-    }
-  }
-
-  Future<void> _completeElementEditing({
-    required PricingSubItemModel subItem,
-    required PricingElementModel element,
-    required bool isLocal,
-    required LocalElement? localElement,
-    required bool addNext,
-  }) async {
-    if (isLocal && localElement != null) {
-      if (localElement.hasRequiredData && !localElement.isCompleted) {
-        _saveTimers[element.id]?.cancel();
-        _saveTimers.remove(element.id);
-        await _saveElementToBackend(subItem.id, localElement);
-      }
-
-      if (addNext && localElement.hasRequiredData && mounted) {
-        _addLocalElement(subItem.id);
-      }
+    PricingElementModel element,
+    PricingItem updatedItem,
+  ) {
+    final key = _draftKey(subItemId, element.id);
+    final costType = updatedItem.costType ?? element.costType;
+    final isUnitBased = costType == 'UNIT_BASED';
+    if (updatedItem.description.trim() == element.name.trim() &&
+        costType == element.costType &&
+        (isUnitBased
+            ? (updatedItem.unitPrice ?? 0) == (element.unitCost ?? 0) &&
+                  (updatedItem.quantity ?? 0) == (element.quantity ?? 0)
+            : updatedItem.total == element.calculatedCost)) {
+      _drafts.remove(key);
       return;
     }
 
-    _updateTimers[element.id]?.cancel();
-    _updateTimers.remove(element.id);
-    final pendingItem = _pendingUpdates.remove(element.id);
-    if (pendingItem != null) {
-      await _updateSavedElement(
-        subItem.id,
+    final projectId = widget.projectId;
+    final version = widget.version;
+    _drafts.stage(key, updatedItem, () async {
+      await _apiDataSource.updatePricingElement(
+        projectId,
+        version,
+        key.itemId,
+        subItemId,
         element.id,
-        pendingItem,
-        element.costType,
+        name: updatedItem.description.trim(),
+        costType: costType,
+        unitCost: updatedItem.unitPrice,
+        quantity: updatedItem.quantity,
+        totalCost: isUnitBased ? null : updatedItem.total,
       );
-    }
-
-    if (addNext && mounted) {
-      _addLocalElement(subItem.id);
-    }
-  }
-
-  void _scheduleUpdateElement(
-    String subItemId,
-    String elementId,
-    PricingItem updatedItem,
-    String currentCostType,
-  ) {
-    // Store the latest update values
-    _pendingUpdates[elementId] = updatedItem;
-
-    // Cancel existing timer for this element
-    _updateTimers[elementId]?.cancel();
-
-    // Ensure the sub-item is expanded
-    setState(() {
-      _expandedSubItems[subItemId] = true;
-    });
-    widget.onSubItemExpandedChanged?.call(
-      Map<String, bool>.from(_expandedSubItems),
-    );
-
-    // Add debounce: wait 2 seconds after last change before updating
-    _updateTimers[elementId] = Timer(const Duration(seconds: 2), () {
-      if (mounted) {
-        final pendingItem = _pendingUpdates[elementId];
-        if (pendingItem != null) {
-          _pendingUpdates.remove(elementId);
-          _updateSavedElement(
-            subItemId,
-            elementId,
-            pendingItem,
-            currentCostType,
-          );
-        }
-      }
     });
   }
 
@@ -1899,82 +1655,6 @@ class _PricingItemCardState extends State<PricingItemCard>
     }
   }
 
-  Future<void> _updateSavedElement(
-    String subItemId,
-    String elementId,
-    PricingItem updatedItem,
-    String currentCostType,
-  ) async {
-    // Cancel the timer since we're updating now
-    _updateTimers[elementId]?.cancel();
-    _updateTimers.remove(elementId);
-
-    setState(() {
-      _updatingElements[elementId] = true;
-    });
-
-    try {
-      final newCostType = updatedItem.costType ?? currentCostType;
-
-      await _apiDataSource.updatePricingElement(
-        widget.projectId,
-        widget.version,
-        widget.item.id,
-        subItemId,
-        elementId,
-        name: updatedItem.description.trim(),
-        costType: newCostType,
-        unitCost: updatedItem.unitPrice,
-        quantity: updatedItem.quantity,
-        totalCost: newCostType == 'TOTAL' ? updatedItem.total : null,
-      );
-
-      // Refresh data to show the updated element - parent will preserve expanded states
-      try {
-        final updatedVersion = await _apiDataSource.getPricingVersion(
-          widget.projectId,
-          widget.version,
-        );
-        final updatedItem = updatedVersion.items?.firstWhere(
-          (i) => i.id == widget.item.id,
-        );
-
-        if (updatedItem != null && mounted) {
-          // Update the widget with new data - parent will preserve expanded states
-          widget.onItemChanged?.call(updatedItem);
-        }
-      } catch (e) {
-        // If refresh fails, the parent will still preserve states
-      }
-
-      setState(() {
-        _updatingElements.remove(elementId);
-      });
-
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('تم تحديث العنصر بنجاح'),
-            duration: Duration(seconds: 1),
-          ),
-        );
-      }
-    } catch (e) {
-      setState(() {
-        _updatingElements.remove(elementId);
-      });
-
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            duration: const Duration(seconds: 2),
-            content: Text('فشل تحديث العنصر: ${e.toString()}'),
-          ),
-        );
-      }
-    }
-  }
-
   List<PricingElementModel> _getAllElementsForSubItem(String subItemId) {
     final subItem = widget.item.subItems?.firstWhere(
       (si) => si.id == subItemId,
@@ -1984,7 +1664,7 @@ class _PricingItemCardState extends State<PricingItemCard>
     final savedElements = (subItem?.elements ?? []).toList();
 
     // Get local elements (not yet saved)
-    final localElementsList = _localElements[subItemId] ?? [];
+    final localElementsList = _localRows(subItemId);
 
     // Convert local elements to PricingElementModel for display
     // Local elements list has newest at index 0 (from insert(0, ...))
@@ -2093,9 +1773,13 @@ class _PricingItemCardState extends State<PricingItemCard>
                     canReorderSubItems: widget.canReorderSubItems,
                     canReorderElements: widget.canReorderElements,
                     expandedSubItems: _expandedSubItems,
-                    localElements: _localElements,
-                    savingElements: _savingElements,
-                    updatingElements: _updatingElements,
+                    localElements: {
+                      for (final subItem
+                          in widget.item.subItems ?? <PricingSubItemModel>[])
+                        subItem.id: _localRows(subItem.id),
+                    },
+                    elementDraft: (subItemId, elementId) => _drafts
+                        .value<PricingItem>(_draftKey(subItemId, elementId)),
                     uploadingImages: _uploadingImages,
                     deletingImages: _deletingImages,
                     selectedImageIndex: _selectedImageIndex,
@@ -2107,12 +1791,8 @@ class _PricingItemCardState extends State<PricingItemCard>
                         : <String, TextEditingController>{},
                     onToggleSubItem: _toggleSubItem,
                     onToggleSubItemVisibility: _toggleSubItemVisibility,
-                    onSubItemDescriptionChanged:
-                        _scheduleSubItemDescriptionUpdate,
-                    onSubItemProfitMarginChanged:
-                        _scheduleSubItemProfitMarginUpdate,
-                    onSubItemProfitMarginEditingComplete:
-                        _flushSubItemProfitMargin,
+                    onSubItemDescriptionChanged: _stageSubItemDescription,
+                    onSubItemProfitMarginChanged: _stageSubItemProfitMargin,
                     onShowSubItemContextMenu: _showSubItemContextMenu,
                     onPickImages: _pickImages,
                     onPickImagesWithFilePicker: _pickImagesWithFilePicker,
@@ -2157,51 +1837,18 @@ class _PricingItemCardState extends State<PricingItemCard>
                               totalCost: newCostType == 'TOTAL'
                                   ? updatedItem.total
                                   : null,
-                              isCompleted: localElement.isCompleted,
                             );
                             _updateLocalElement(subItemId, elementId, updated);
                           } else {
-                            _pendingUpdates[element.id] = updatedItem;
-                            _scheduleUpdateElement(
-                              subItemId,
-                              elementId,
-                              updatedItem,
-                              element.costType,
-                            );
+                            _stageSavedElement(subItemId, element, updatedItem);
                           }
                         },
-                    onElementFieldCompleted:
-                        ({
-                          required subItem,
-                          required element,
-                          required isLocal,
-                          required localElement,
-                          required addNext,
-                        }) {
-                          _completeElementEditing(
-                            subItem: subItem,
-                            element: element,
-                            isLocal: isLocal,
-                            localElement: localElement,
-                            addNext: addNext,
-                          );
-                        },
-                    onElementSubmitted:
-                        ({
-                          required subItem,
-                          required element,
-                          required isLocal,
-                          required localElement,
-                          required addNext,
-                        }) {
-                          _completeElementEditing(
-                            subItem: subItem,
-                            element: element,
-                            isLocal: isLocal,
-                            localElement: localElement,
-                            addNext: addNext,
-                          );
-                        },
+                    onElementSubmitted: (subItemId, localElement) {
+                      if (localElement == null ||
+                          localElement.hasRequiredData) {
+                        _addLocalElement(subItemId);
+                      }
+                    },
                     getAllElementsForSubItem: _getAllElementsForSubItem,
                   ),
                   PricingAddSubItemFooter(

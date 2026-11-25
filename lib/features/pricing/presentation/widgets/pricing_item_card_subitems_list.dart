@@ -18,8 +18,7 @@ class PricingItemCardSubItemsList extends StatelessWidget {
     required this.canReorderElements,
     required this.expandedSubItems,
     required this.localElements,
-    required this.savingElements,
-    required this.updatingElements,
+    required this.elementDraft,
     required this.uploadingImages,
     required this.deletingImages,
     required this.selectedImageIndex,
@@ -31,7 +30,6 @@ class PricingItemCardSubItemsList extends StatelessWidget {
     required this.onToggleSubItemVisibility,
     required this.onSubItemDescriptionChanged,
     required this.onSubItemProfitMarginChanged,
-    required this.onSubItemProfitMarginEditingComplete,
     required this.onShowSubItemContextMenu,
     required this.onPickImages,
     required this.onPickImagesWithFilePicker,
@@ -44,7 +42,6 @@ class PricingItemCardSubItemsList extends StatelessWidget {
     required this.onToggleElementVisibility,
     required this.onDeleteElement,
     required this.onElementChanged,
-    required this.onElementFieldCompleted,
     required this.onElementSubmitted,
     required this.getAllElementsForSubItem,
   });
@@ -56,8 +53,7 @@ class PricingItemCardSubItemsList extends StatelessWidget {
   final bool canReorderElements;
   final Map<String, bool> expandedSubItems;
   final Map<String, List<LocalElement>> localElements;
-  final Map<String, bool> savingElements;
-  final Map<String, bool> updatingElements;
+  final PricingItem? Function(String subItemId, String elementId) elementDraft;
   final Map<String, bool> uploadingImages;
   final Map<String, bool> deletingImages;
   final Map<String, int> selectedImageIndex;
@@ -72,7 +68,6 @@ class PricingItemCardSubItemsList extends StatelessWidget {
   onSubItemDescriptionChanged;
   final void Function(PricingSubItemModel subItem, String value)
   onSubItemProfitMarginChanged;
-  final void Function(String subItemId) onSubItemProfitMarginEditingComplete;
   final void Function(PricingSubItemModel subItem) onShowSubItemContextMenu;
   final void Function(String subItemId) onPickImages;
   final void Function(String subItemId) onPickImagesWithFilePicker;
@@ -106,21 +101,7 @@ class PricingItemCardSubItemsList extends StatelessWidget {
     PricingItem updatedItem,
   )
   onElementChanged;
-  final void Function({
-    required PricingSubItemModel subItem,
-    required PricingElementModel element,
-    required bool isLocal,
-    required LocalElement? localElement,
-    required bool addNext,
-  })
-  onElementFieldCompleted;
-  final void Function({
-    required PricingSubItemModel subItem,
-    required PricingElementModel element,
-    required bool isLocal,
-    required LocalElement? localElement,
-    required bool addNext,
-  })
+  final void Function(String subItemId, LocalElement? localElement)
   onElementSubmitted;
   final List<PricingElementModel> Function(String subItemId)
   getAllElementsForSubItem;
@@ -176,24 +157,20 @@ class PricingItemCardSubItemsList extends StatelessWidget {
             }
           }
 
-          final isSaving =
-              (isLocal &&
-                  localElement != null &&
-                  (savingElements[element.id] == true)) ||
-              (!isLocal && updatingElements[element.id] == true);
-
-          final pricingItem = PricingItem(
-            id: element.id,
-            description: element.name,
-            quantity: element.costType == 'UNIT_BASED'
-                ? element.quantity
-                : null,
-            unitPrice: element.costType == 'UNIT_BASED'
-                ? element.unitCost
-                : null,
-            total: element.calculatedCost,
-            costType: element.costType,
-          );
+          final pricingItem =
+              (isLocal ? null : elementDraft(subItem.id, element.id)) ??
+              PricingItem(
+                id: element.id,
+                description: element.name,
+                quantity: element.costType == 'UNIT_BASED'
+                    ? element.quantity
+                    : null,
+                unitPrice: element.costType == 'UNIT_BASED'
+                    ? element.unitCost
+                    : null,
+                total: element.calculatedCost,
+                costType: element.costType,
+              );
 
           return PricingElementRowShell(
             key: ValueKey(element.id),
@@ -202,7 +179,6 @@ class PricingItemCardSubItemsList extends StatelessWidget {
             index: index,
             element: element,
             isLocal: isLocal,
-            isSaving: isSaving,
             canReorderElements: canReorderElements,
             showFinancials: showFinancials,
             isNewRow:
@@ -225,20 +201,7 @@ class PricingItemCardSubItemsList extends StatelessWidget {
                 updatedItem,
               );
             },
-            onFieldCompleted: () => onElementFieldCompleted(
-              subItem: subItem,
-              element: element,
-              isLocal: isLocal,
-              localElement: localElement,
-              addNext: false,
-            ),
-            onSubmitted: () => onElementSubmitted(
-              subItem: subItem,
-              element: element,
-              isLocal: isLocal,
-              localElement: localElement,
-              addNext: true,
-            ),
+            onSubmitted: () => onElementSubmitted(subItem.id, localElement),
             pricingItem: pricingItem,
           );
         }).toList();
@@ -315,8 +278,6 @@ class PricingItemCardSubItemsList extends StatelessWidget {
           profitMarginController: subItemProfitControllers[subItem.id],
           onProfitMarginChanged: (value) =>
               onSubItemProfitMarginChanged(subItem, value),
-          onProfitMarginEditingComplete: () =>
-              onSubItemProfitMarginEditingComplete(subItem.id),
         );
       }).toList(),
     );

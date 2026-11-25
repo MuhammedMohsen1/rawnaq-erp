@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:provider/provider.dart' show ChangeNotifierProvider;
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:file_picker/file_picker.dart';
@@ -25,6 +26,7 @@ import '../utils/pricing_status_utils.dart';
 import '../widgets/add_item_dialog.dart';
 import '../widgets/contract_export_dialog.dart';
 import '../widgets/pricing_confirmation_dialogs.dart';
+import '../widgets/pricing_drafts.dart';
 import '../widgets/pricing_summary_sidebar.dart';
 import '../widgets/under_pricing_page_views.dart';
 
@@ -42,6 +44,51 @@ class UnderPricingPage extends StatelessWidget {
     this.hideFinancials = false,
     this.initialVersion,
   });
+
+  static final _openEditors =
+      <(GoRouter, LocalKey), _UnderPricingContentState>{};
+
+  static _UnderPricingContentState? _activeEditor(GoRouter router) {
+    final configuration = router.routerDelegate.currentConfiguration;
+    if (configuration.isEmpty) return null;
+    return _openEditors[(router, configuration.last.pageKey)];
+  }
+
+  static Future<bool> confirmExit(BuildContext context) async {
+    final router = GoRouter.of(context);
+    final editor =
+        _activeEditor(router) ??
+        _openEditors.entries
+            .where((entry) => identical(entry.key.$1, router))
+            .lastOrNull
+            ?.value;
+    if (editor == null) return true;
+    if (editor._backApproved) {
+      editor._backApproved = false;
+      return true;
+    }
+    return editor._confirmExit(context);
+  }
+
+  static Future<void> goBack(BuildContext context) async {
+    final router = GoRouter.of(context);
+    final editor = _activeEditor(router);
+    if (editor == null) {
+      if (router.canPop()) router.pop();
+      return;
+    }
+
+    if (editor._backApproved || !await editor._confirmExit(context)) return;
+    if (!editor.mounted || _activeEditor(router) != editor) return;
+
+    editor._backApproved = true;
+    final navigator = Navigator.of(editor.context);
+    if (navigator.canPop()) {
+      navigator.pop();
+    } else {
+      router.go(AppRoutes.projects);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -81,6 +128,23 @@ class _UnderPricingContent extends StatefulWidget {
 }
 
 class _UnderPricingContentState extends State<_UnderPricingContent> {
+  final _drafts = PricingDrafts();
+  bool _confirmingExit = false;
+  bool _backApproved = false;
+  (GoRouter, LocalKey)? _routeIdentity;
+
+  Future<bool> _confirmExit(BuildContext context) async {
+    if (_drafts.isSaving || _confirmingExit) return false;
+    if (!_drafts.hasChanges) return true;
+
+    _confirmingExit = true;
+    try {
+      return await PricingConfirmationDialogs.showDiscardChangesDialog(context);
+    } finally {
+      _confirmingExit = false;
+    }
+  }
+
   late bool _showFinancials = !widget.hideFinancials;
   bool _hasExistingContract = false;
   bool _isCheckingExistingContract = false;
@@ -95,6 +159,20 @@ class _UnderPricingContentState extends State<_UnderPricingContent> {
   }
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final settings = ModalRoute.of(context)?.settings;
+    final pageKey = settings is Page ? settings.key : null;
+    if (pageKey == null) return;
+
+    final identity = (GoRouter.of(context), pageKey);
+    if (identity == _routeIdentity) return;
+    UnderPricingPage._openEditors.remove(_routeIdentity);
+    _routeIdentity = identity;
+    UnderPricingPage._openEditors[identity] = this;
+  }
+
+  @override
   void didUpdateWidget(_UnderPricingContent oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.hideFinancials != widget.hideFinancials) {
@@ -105,6 +183,10 @@ class _UnderPricingContentState extends State<_UnderPricingContent> {
 
   @override
   void dispose() {
+    if (UnderPricingPage._openEditors[_routeIdentity] == this) {
+      UnderPricingPage._openEditors.remove(_routeIdentity);
+    }
+    _drafts.dispose();
     TopBarTitleController.clearPricingTitle();
     TopBarTitleController.clearPricingAction();
     super.dispose();
@@ -162,151 +244,167 @@ class _UnderPricingContentState extends State<_UnderPricingContent> {
 
   @override
   Widget build(BuildContext context) {
-    return BlocConsumer<PricingCubit, PricingState>(
-      listener: (context, state) {
-        if (state is PricingLoaded) {
-          _refreshExistingContractFlag();
-          final projectName = state.projectName?.trim();
-          if (projectName != null && projectName.isNotEmpty) {
-            TopBarTitleController.setPricingTitle('$projectName - التسعير');
-          } else {
-            TopBarTitleController.clearPricingTitle();
-          }
-        } else if (state is PricingEmptyReadOnly) {
-          final projectName = state.projectName?.trim();
-          if (projectName != null && projectName.isNotEmpty) {
-            TopBarTitleController.setPricingTitle('$projectName - التسعير');
-          } else {
-            TopBarTitleController.clearPricingTitle();
-          }
-        } else {
-          TopBarTitleController.clearPricingTitle();
-        }
-
-        // Handle errors
-        if (state is PricingError) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(state.message),
-              backgroundColor: AppColors.error,
-              duration: const Duration(seconds: 2),
-            ),
-          );
-        }
-      },
-      builder: (context, state) {
-        if (state is PricingLoading) {
-          return const PricingLoadingView();
-        }
-
-        if (state is PricingError) {
-          return PricingErrorView(
-            message: state.message,
-            onRetry: () => context.read<PricingCubit>().loadPricingData(
-              widget.projectId,
-              readOnly: widget.readOnly,
-              version: widget.initialVersion,
-            ),
-          );
-        }
-
-        if (state is PricingLoaded) {
-          final authState = context.read<AuthBloc>().state;
-          final siteEngineerLocked =
-              authState is AuthAuthenticated &&
-              _shouldLockSiteEngineerPricing(
-                authState,
-                state.pricingVersion.status,
-              );
-          final displayState = siteEngineerLocked
-              ? state.copyWith(readOnly: true)
-              : state;
-          final adminCanEditReadOnly =
-              state.readOnly &&
-              authState is AuthAuthenticated &&
-              authState.user.isAdmin;
-          final canEditPricing = !displayState.readOnly || adminCanEditReadOnly;
-
-          return PricingLoadedLayout(
-            projectId: widget.projectId,
-            state: displayState,
-            canEditPricing: canEditPricing,
-            hideFinancials: widget.hideFinancials,
-            showFinancials: _showFinancials,
-            onToggleFinancials: _toggleFinancialVisibility,
-            buildSidebar: _buildSidebar,
-            onAddItem: () => _handleAddItem(context),
-            onAddSubItem: (itemId) =>
-                () => _handleAddSubItem(context, itemId),
-            onReorderItems: !canEditPricing
-                ? null
-                : (oldIndex, newIndex) async {
-                    await context.read<PricingCubit>().reorderItems(
-                      widget.projectId,
-                      oldIndex,
-                      newIndex,
-                    );
-                  },
-            onReorderSubItems: !canEditPricing
-                ? null
-                : (itemId, oldIndex, newIndex) async {
-                    await context.read<PricingCubit>().reorderSubItems(
-                      widget.projectId,
-                      itemId,
-                      oldIndex,
-                      newIndex,
-                    );
-                  },
-            onReorderElements: !canEditPricing
-                ? null
-                : (itemId, subItemId, elementId, targetOrder) async {
-                    await context.read<PricingCubit>().reorderElement(
-                      widget.projectId,
-                      itemId,
-                      subItemId,
-                      elementId,
-                      targetOrder,
-                    );
-                  },
-            onItemExpandedChanged: (itemId, isExpanded) {
-              context.read<PricingCubit>().toggleItemExpanded(itemId);
-            },
-            onSubItemExpandedChanged: (itemId, subItemStates) {
-              for (var entry in subItemStates.entries) {
-                context.read<PricingCubit>().toggleSubItemExpanded(
-                  itemId,
-                  entry.key,
-                );
+    return ChangeNotifierProvider<PricingDrafts>.value(
+      value: _drafts,
+      child: ListenableBuilder(
+        listenable: _drafts,
+        builder: (context, child) => PopScope(
+          canPop: !_drafts.hasChanges && !_drafts.isSaving,
+          onPopInvokedWithResult: (didPop, _) {
+            if (!didPop && _drafts.hasChanges) {
+              UnderPricingPage.goBack(context);
+            }
+          },
+          child: AbsorbPointer(absorbing: _drafts.isSaving, child: child),
+        ),
+        child: BlocConsumer<PricingCubit, PricingState>(
+          listener: (context, state) {
+            if (state is PricingLoaded) {
+              _refreshExistingContractFlag();
+              final projectName = state.projectName?.trim();
+              if (projectName != null && projectName.isNotEmpty) {
+                TopBarTitleController.setPricingTitle('$projectName - التسعير');
+              } else {
+                TopBarTitleController.clearPricingTitle();
               }
-            },
-            onSubItemProfitMarginChanged: (subItemId, profitMargin) async {
-              if (displayState.readOnly) return;
-              await context.read<PricingCubit>().loadPricingData(
-                widget.projectId,
-                readOnly: displayState.readOnly,
-              );
-              await context.read<PricingCubit>().updateSubItemProfitMargin(
-                subItemId,
-                profitMargin,
-                widget.projectId,
-              );
-            },
-            onDataChanged: () {
-              context.read<PricingCubit>().loadPricingData(
-                widget.projectId,
-                readOnly: displayState.readOnly,
-                version: widget.initialVersion,
-              );
-            },
-          );
-        }
+            } else if (state is PricingEmptyReadOnly) {
+              final projectName = state.projectName?.trim();
+              if (projectName != null && projectName.isNotEmpty) {
+                TopBarTitleController.setPricingTitle('$projectName - التسعير');
+              } else {
+                TopBarTitleController.clearPricingTitle();
+              }
+            } else {
+              TopBarTitleController.clearPricingTitle();
+            }
 
-        if (state is PricingEmptyReadOnly) {
-          return const PricingEmptyReadOnlyView();
-        }
+            // Handle errors
+            if (state is PricingError) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(state.message),
+                  backgroundColor: AppColors.error,
+                  duration: const Duration(seconds: 2),
+                ),
+              );
+            }
+          },
+          builder: (context, state) {
+            if (state is PricingLoading) {
+              return const PricingLoadingView();
+            }
 
-        return const SizedBox.shrink();
-      },
+            if (state is PricingError) {
+              return PricingErrorView(
+                message: state.message,
+                onRetry: () => context.read<PricingCubit>().loadPricingData(
+                  widget.projectId,
+                  readOnly: widget.readOnly,
+                  version: widget.initialVersion,
+                ),
+              );
+            }
+
+            if (state is PricingLoaded) {
+              final authState = context.read<AuthBloc>().state;
+              final siteEngineerLocked =
+                  authState is AuthAuthenticated &&
+                  _shouldLockSiteEngineerPricing(
+                    authState,
+                    state.pricingVersion.status,
+                  );
+              final displayState = siteEngineerLocked
+                  ? state.copyWith(readOnly: true)
+                  : state;
+              final adminCanEditReadOnly =
+                  state.readOnly &&
+                  authState is AuthAuthenticated &&
+                  authState.user.isAdmin;
+              final canEditPricing =
+                  !displayState.readOnly || adminCanEditReadOnly;
+
+              return PricingLoadedLayout(
+                projectId: widget.projectId,
+                state: displayState,
+                canEditPricing: canEditPricing,
+                hideFinancials: widget.hideFinancials,
+                showFinancials: _showFinancials,
+                onToggleFinancials: _toggleFinancialVisibility,
+                buildSidebar: _buildSidebar,
+                onAddItem: () => _handleAddItem(context),
+                onAddSubItem: (itemId) =>
+                    () => _handleAddSubItem(context, itemId),
+                onReorderItems: !canEditPricing
+                    ? null
+                    : (oldIndex, newIndex) async {
+                        await context.read<PricingCubit>().reorderItems(
+                          widget.projectId,
+                          oldIndex,
+                          newIndex,
+                        );
+                      },
+                onReorderSubItems: !canEditPricing
+                    ? null
+                    : (itemId, oldIndex, newIndex) async {
+                        await context.read<PricingCubit>().reorderSubItems(
+                          widget.projectId,
+                          itemId,
+                          oldIndex,
+                          newIndex,
+                        );
+                      },
+                onReorderElements: !canEditPricing
+                    ? null
+                    : (itemId, subItemId, elementId, targetOrder) async {
+                        await context.read<PricingCubit>().reorderElement(
+                          widget.projectId,
+                          itemId,
+                          subItemId,
+                          elementId,
+                          targetOrder,
+                        );
+                      },
+                onItemExpandedChanged: (itemId, isExpanded) {
+                  context.read<PricingCubit>().toggleItemExpanded(itemId);
+                },
+                onSubItemExpandedChanged: (itemId, subItemStates) {
+                  for (var entry in subItemStates.entries) {
+                    context.read<PricingCubit>().toggleSubItemExpanded(
+                      itemId,
+                      entry.key,
+                    );
+                  }
+                },
+                onSubItemProfitMarginChanged: (subItemId, profitMargin) async {
+                  if (displayState.readOnly) return;
+                  await context.read<PricingCubit>().loadPricingData(
+                    widget.projectId,
+                    readOnly: displayState.readOnly,
+                  );
+                  await context.read<PricingCubit>().updateSubItemProfitMargin(
+                    subItemId,
+                    profitMargin,
+                    widget.projectId,
+                  );
+                },
+                onDataChanged: () {
+                  context.read<PricingCubit>().loadPricingData(
+                    widget.projectId,
+                    readOnly: displayState.readOnly,
+                    version: widget.initialVersion,
+                  );
+                },
+              );
+            }
+
+            if (state is PricingEmptyReadOnly) {
+              return const PricingEmptyReadOnlyView();
+            }
+
+            return const SizedBox.shrink();
+          },
+        ),
+      ),
     );
   }
 

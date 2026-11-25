@@ -1,3 +1,4 @@
+import 'package:rawnaq/core/utils/arabic_number_input_formatter.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 
@@ -156,6 +157,7 @@ class AddIncomeRowContent extends StatelessWidget {
         ),
         const SizedBox(height: 12),
         TextField(
+          inputFormatters: const [ArabicNumberInputFormatter()],
           controller: amountController,
           keyboardType: const TextInputType.numberWithOptions(
             decimal: true,
@@ -176,6 +178,7 @@ class AddIncomeRowContent extends StatelessWidget {
         ),
         const SizedBox(height: 8),
         TextField(
+          inputFormatters: const [ArabicNumberInputFormatter()],
           controller: descriptionController,
           decoration: const InputDecoration(
             hintText: 'وصف الإيراد (مثال: دفعة العميل)',
@@ -233,6 +236,7 @@ class AddIncomeRowContent extends StatelessWidget {
         Expanded(
           flex: 2,
           child: TextField(
+            inputFormatters: const [ArabicNumberInputFormatter()],
             controller: descriptionController,
             decoration: const InputDecoration(
               hintText: 'وصف الإيراد (مثال: دفعة العميل)',
@@ -255,6 +259,7 @@ class AddIncomeRowContent extends StatelessWidget {
         SizedBox(
           width: 120,
           child: TextField(
+            inputFormatters: const [ArabicNumberInputFormatter()],
             controller: amountController,
             keyboardType: const TextInputType.numberWithOptions(
               decimal: true,

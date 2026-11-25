@@ -1,3 +1,4 @@
+import 'package:rawnaq/core/utils/arabic_number_input_formatter.dart';
 import 'package:flutter/material.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_text_styles.dart';
@@ -50,6 +51,7 @@ class _PricingCategoryCardState extends State<PricingCategoryCard> {
             mainAxisSize: MainAxisSize.min,
             children: [
               TextField(
+                inputFormatters: const [ArabicNumberInputFormatter()],
                 controller: nameController,
                 decoration: const InputDecoration(
                   labelText: 'عنوان البند الفرعي',
@@ -59,6 +61,7 @@ class _PricingCategoryCardState extends State<PricingCategoryCard> {
               ),
               const SizedBox(height: 16),
               TextField(
+                inputFormatters: const [ArabicNumberInputFormatter()],
                 controller: descriptionController,
                 decoration: const InputDecoration(
                   labelText: 'وصف البند الفرعي',
@@ -139,6 +142,7 @@ class _PricingCategoryCardState extends State<PricingCategoryCard> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 TextField(
+                  inputFormatters: const [ArabicNumberInputFormatter()],
                   controller: nameController,
                   decoration: const InputDecoration(
                     labelText: 'اسم العنصر',
@@ -166,6 +170,7 @@ class _PricingCategoryCardState extends State<PricingCategoryCard> {
                 const SizedBox(height: 16),
                 if (costTypeController.text == 'UNIT_BASED') ...[
                   TextField(
+                    inputFormatters: const [ArabicNumberInputFormatter()],
                     controller: unitCostController,
                     decoration: const InputDecoration(
                       labelText: 'تكلفة الوحدة',
@@ -175,6 +180,7 @@ class _PricingCategoryCardState extends State<PricingCategoryCard> {
                   ),
                   const SizedBox(height: 16),
                   TextField(
+                    inputFormatters: const [ArabicNumberInputFormatter()],
                     controller: quantityController,
                     decoration: const InputDecoration(
                       labelText: 'الكمية',
@@ -184,6 +190,7 @@ class _PricingCategoryCardState extends State<PricingCategoryCard> {
                   ),
                 ] else ...[
                   TextField(
+                    inputFormatters: const [ArabicNumberInputFormatter()],
                     controller: totalCostController,
                     decoration: const InputDecoration(
                       labelText: 'التكلفة الإجمالية',

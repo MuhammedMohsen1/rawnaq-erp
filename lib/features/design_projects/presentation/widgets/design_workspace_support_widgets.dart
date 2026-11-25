@@ -1,3 +1,4 @@
+import 'package:rawnaq/core/utils/arabic_number_input_formatter.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:file_picker/file_picker.dart';
@@ -677,6 +678,7 @@ class _InstallmentsEditorDialogState extends State<_InstallmentsEditorDialog> {
                                     Expanded(
                                       flex: 2,
                                       child: TextField(
+                                        inputFormatters: const [ArabicNumberInputFormatter()],
                                         controller: draft.amountController,
                                         keyboardType:
                                             const TextInputType.numberWithOptions(

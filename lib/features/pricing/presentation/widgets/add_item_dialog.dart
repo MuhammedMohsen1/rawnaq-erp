@@ -1,3 +1,4 @@
+import 'package:rawnaq/core/utils/arabic_number_input_formatter.dart';
 import 'package:flutter/material.dart';
 
 import '../../../../core/widgets/dialog_keyboard_actions.dart';
@@ -38,6 +39,7 @@ class AddItemDialog extends StatelessWidget {
       child: AlertDialog(
         title: Text(title),
         content: TextField(
+          inputFormatters: const [ArabicNumberInputFormatter()],
           controller: nameController,
           decoration: InputDecoration(labelText: labelText, hintText: hintText),
           autofocus: true,
@@ -101,6 +103,7 @@ class AddItemDialog extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   TextField(
+                    inputFormatters: const [ArabicNumberInputFormatter()],
                     controller: nameController,
                     decoration: const InputDecoration(
                       labelText: 'عنوان البند الفرعي',
@@ -110,6 +113,7 @@ class AddItemDialog extends StatelessWidget {
                   ),
                   const SizedBox(height: 16),
                   TextField(
+                    inputFormatters: const [ArabicNumberInputFormatter()],
                     controller: descriptionController,
                     decoration: const InputDecoration(
                       labelText: 'وصف البند الفرعي',

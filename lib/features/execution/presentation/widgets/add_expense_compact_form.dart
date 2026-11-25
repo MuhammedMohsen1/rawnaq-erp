@@ -1,3 +1,4 @@
+import 'package:rawnaq/core/utils/arabic_number_input_formatter.dart';
 import 'package:flutter/material.dart';
 
 import '../../../../core/constants/app_colors.dart';
@@ -57,6 +58,7 @@ class AddExpenseCompactForm extends StatelessWidget {
         const SizedBox(height: 12),
         if (showTotalAmount)
           TextField(
+            inputFormatters: const [ArabicNumberInputFormatter()],
             controller: amountController,
             keyboardType: const TextInputType.numberWithOptions(
               decimal: true,
@@ -76,6 +78,7 @@ class AddExpenseCompactForm extends StatelessWidget {
             children: [
               Expanded(
                 child: TextField(
+                  inputFormatters: const [ArabicNumberInputFormatter()],
                   controller: unitCostController,
                   keyboardType: const TextInputType.numberWithOptions(
                     decimal: true,
@@ -94,6 +97,7 @@ class AddExpenseCompactForm extends StatelessWidget {
               const SizedBox(width: 8),
               Expanded(
                 child: TextField(
+                  inputFormatters: const [ArabicNumberInputFormatter()],
                   controller: quantityController,
                   keyboardType: const TextInputType.numberWithOptions(
                     decimal: true,
@@ -113,6 +117,7 @@ class AddExpenseCompactForm extends StatelessWidget {
           ),
         const SizedBox(height: 8),
         TextField(
+          inputFormatters: const [ArabicNumberInputFormatter()],
           controller: nameController,
           decoration: const InputDecoration(
             hintText: 'اسم البند',

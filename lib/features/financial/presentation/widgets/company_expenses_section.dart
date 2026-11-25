@@ -1,3 +1,4 @@
+import 'package:rawnaq/core/utils/arabic_number_input_formatter.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
@@ -817,6 +818,7 @@ class _CompanyExpenseDialogState extends State<_CompanyExpenseDialog> {
                   builder: (context, constraints) {
                     final isNarrow = constraints.maxWidth < 520;
                     final amountField = TextFormField(
+                      inputFormatters: const [ArabicNumberInputFormatter()],
                       controller: amountController,
                       keyboardType: const TextInputType.numberWithOptions(
                         decimal: true,
@@ -859,6 +861,7 @@ class _CompanyExpenseDialogState extends State<_CompanyExpenseDialog> {
                 ),
                 const SizedBox(height: 12),
                 TextFormField(
+                  inputFormatters: const [ArabicNumberInputFormatter()],
                   controller: titleController,
                   style: AppTextStyles.inputText,
                   decoration: _inputDecoration(
@@ -893,6 +896,7 @@ class _CompanyExpenseDialogState extends State<_CompanyExpenseDialog> {
                 ),
                 const SizedBox(height: 12),
                 TextFormField(
+                  inputFormatters: const [ArabicNumberInputFormatter()],
                   controller: descriptionController,
                   style: AppTextStyles.inputText,
                   minLines: 3,

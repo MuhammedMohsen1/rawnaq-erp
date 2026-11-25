@@ -1,3 +1,4 @@
+import 'package:rawnaq/core/utils/arabic_number_input_formatter.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../../../core/constants/app_colors.dart';
@@ -526,6 +527,7 @@ class _AddTaskDialogSimpleState extends State<AddTaskDialogSimple>
         Text('$label${required ? ' *' : ''}', style: AppTextStyles.inputLabel),
         const SizedBox(height: 8),
         TextFormField(
+          inputFormatters: const [ArabicNumberInputFormatter()],
           controller: controller,
           maxLines: maxLines,
           keyboardType: keyboardType,

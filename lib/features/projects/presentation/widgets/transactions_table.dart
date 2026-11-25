@@ -1,3 +1,4 @@
+import 'package:rawnaq/core/utils/arabic_number_input_formatter.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../../../core/constants/app_colors.dart';
@@ -282,6 +283,7 @@ class _TransactionsTableState extends State<TransactionsTable> {
             flex: 3,
             child: isEditing
                 ? TextField(
+                    inputFormatters: const [ArabicNumberInputFormatter()],
                     controller: _descriptionControllers[transaction.id],
                     style: AppTextStyles.tableCellBold,
                     textInputAction: TextInputAction.next,
@@ -350,6 +352,7 @@ class _TransactionsTableState extends State<TransactionsTable> {
             flex: 1,
             child: isEditing
                 ? TextField(
+                    inputFormatters: const [ArabicNumberInputFormatter()],
                     controller: _amountControllers[transaction.id],
                     style: AppTextStyles.tableCellBold.copyWith(
                       color: amountColor,

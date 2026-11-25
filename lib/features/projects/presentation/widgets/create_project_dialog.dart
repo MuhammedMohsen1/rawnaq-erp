@@ -1,3 +1,4 @@
+import 'package:rawnaq/core/utils/arabic_number_input_formatter.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/constants/app_colors.dart';
@@ -576,6 +577,7 @@ class _CreateProjectDialogState extends State<CreateProjectDialog> {
         ),
         const SizedBox(height: 8),
         TextFormField(
+          inputFormatters: const [ArabicNumberInputFormatter()],
           controller: controller,
           maxLines: maxLines,
           keyboardType: keyboardType,

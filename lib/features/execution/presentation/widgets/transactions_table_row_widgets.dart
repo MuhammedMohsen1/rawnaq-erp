@@ -1,3 +1,4 @@
+import 'package:rawnaq/core/utils/arabic_number_input_formatter.dart';
 import 'package:dio/dio.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
@@ -545,6 +546,7 @@ class _AddExpenseRowState extends State<AddExpenseRow> {
         Expanded(
           flex: 2,
           child: TextField(
+            inputFormatters: const [ArabicNumberInputFormatter()],
             controller: _nameController,
             decoration: const InputDecoration(
               hintText: 'اسم البند',
@@ -558,6 +560,7 @@ class _AddExpenseRowState extends State<AddExpenseRow> {
           SizedBox(
             width: 120,
             child: TextField(
+              inputFormatters: const [ArabicNumberInputFormatter()],
               controller: _amountController,
               keyboardType: const TextInputType.numberWithOptions(
                 decimal: true,
@@ -577,6 +580,7 @@ class _AddExpenseRowState extends State<AddExpenseRow> {
           SizedBox(
             width: 80,
             child: TextField(
+              inputFormatters: const [ArabicNumberInputFormatter()],
               controller: _unitCostController,
               keyboardType: const TextInputType.numberWithOptions(
                 decimal: true,
@@ -599,6 +603,7 @@ class _AddExpenseRowState extends State<AddExpenseRow> {
           SizedBox(
             width: 60,
             child: TextField(
+              inputFormatters: const [ArabicNumberInputFormatter()],
               controller: _quantityController,
               keyboardType: const TextInputType.numberWithOptions(
                 decimal: true,
@@ -845,6 +850,7 @@ class _EditableExpenseRowState extends State<EditableExpenseRow> {
         const SizedBox(height: 8),
         if (_costType == CostType.total)
           TextField(
+            inputFormatters: const [ArabicNumberInputFormatter()],
             controller: _amountController,
             keyboardType: const TextInputType.numberWithOptions(
               decimal: true,
@@ -864,6 +870,7 @@ class _EditableExpenseRowState extends State<EditableExpenseRow> {
             children: [
               Expanded(
                 child: TextField(
+                  inputFormatters: const [ArabicNumberInputFormatter()],
                   controller: _unitCostController,
                   keyboardType: const TextInputType.numberWithOptions(
                     decimal: true,
@@ -882,6 +889,7 @@ class _EditableExpenseRowState extends State<EditableExpenseRow> {
               const SizedBox(width: 8),
               Expanded(
                 child: TextField(
+                  inputFormatters: const [ArabicNumberInputFormatter()],
                   controller: _quantityController,
                   keyboardType: const TextInputType.numberWithOptions(
                     decimal: true,
@@ -901,6 +909,7 @@ class _EditableExpenseRowState extends State<EditableExpenseRow> {
           ),
         const SizedBox(height: 12),
         TextField(
+          inputFormatters: const [ArabicNumberInputFormatter()],
           controller: _nameController,
           decoration: const InputDecoration(
             hintText: 'اسم المصروف',
@@ -956,6 +965,7 @@ class _EditableExpenseRowState extends State<EditableExpenseRow> {
         Expanded(
           flex: 2,
           child: TextField(
+            inputFormatters: const [ArabicNumberInputFormatter()],
             controller: _nameController,
             decoration: const InputDecoration(
               hintText: 'اسم المصروف',
@@ -969,6 +979,7 @@ class _EditableExpenseRowState extends State<EditableExpenseRow> {
           SizedBox(
             width: 120,
             child: TextField(
+              inputFormatters: const [ArabicNumberInputFormatter()],
               controller: _amountController,
               keyboardType: const TextInputType.numberWithOptions(
                 decimal: true,
@@ -988,6 +999,7 @@ class _EditableExpenseRowState extends State<EditableExpenseRow> {
           SizedBox(
             width: 80,
             child: TextField(
+              inputFormatters: const [ArabicNumberInputFormatter()],
               controller: _unitCostController,
               keyboardType: const TextInputType.numberWithOptions(
                 decimal: true,
@@ -1010,6 +1022,7 @@ class _EditableExpenseRowState extends State<EditableExpenseRow> {
           SizedBox(
             width: 60,
             child: TextField(
+              inputFormatters: const [ArabicNumberInputFormatter()],
               controller: _quantityController,
               keyboardType: const TextInputType.numberWithOptions(
                 decimal: true,
@@ -1226,6 +1239,7 @@ class _EditableInstallmentRowState extends State<EditableInstallmentRow> {
         ),
         const SizedBox(height: 12),
         TextField(
+          inputFormatters: const [ArabicNumberInputFormatter()],
           controller: _nameController,
           decoration: const InputDecoration(
             hintText: 'اسم الدفعة',
@@ -1235,6 +1249,7 @@ class _EditableInstallmentRowState extends State<EditableInstallmentRow> {
         ),
         const SizedBox(height: 8),
         TextField(
+          inputFormatters: const [ArabicNumberInputFormatter()],
           controller: _originalAmountController,
           keyboardType: const TextInputType.numberWithOptions(
             decimal: true,
@@ -1248,6 +1263,7 @@ class _EditableInstallmentRowState extends State<EditableInstallmentRow> {
         ),
         const SizedBox(height: 8),
         TextField(
+          inputFormatters: const [ArabicNumberInputFormatter()],
           controller: _requestedAmountController,
           keyboardType: const TextInputType.numberWithOptions(
             decimal: true,
@@ -1307,6 +1323,7 @@ class _EditableInstallmentRowState extends State<EditableInstallmentRow> {
         Expanded(
           flex: 2,
           child: TextField(
+            inputFormatters: const [ArabicNumberInputFormatter()],
             controller: _nameController,
             decoration: const InputDecoration(
               hintText: 'اسم الدفعة',
@@ -1319,6 +1336,7 @@ class _EditableInstallmentRowState extends State<EditableInstallmentRow> {
         Expanded(
           flex: 1,
           child: TextField(
+            inputFormatters: const [ArabicNumberInputFormatter()],
             controller: _originalAmountController,
             keyboardType: const TextInputType.numberWithOptions(
               decimal: true,
@@ -1335,6 +1353,7 @@ class _EditableInstallmentRowState extends State<EditableInstallmentRow> {
         Expanded(
           flex: 1,
           child: TextField(
+            inputFormatters: const [ArabicNumberInputFormatter()],
             controller: _requestedAmountController,
             keyboardType: const TextInputType.numberWithOptions(
               decimal: true,

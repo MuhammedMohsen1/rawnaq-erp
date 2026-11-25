@@ -1,3 +1,4 @@
+import 'package:rawnaq/core/utils/arabic_number_input_formatter.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../../../core/constants/app_colors.dart';
@@ -62,6 +63,7 @@ class PendingApprovalsCard extends StatelessWidget {
       builder: (context) => AlertDialog(
         title: const Text('رفض طلب بند جدول الدفعات'),
         content: TextField(
+          inputFormatters: const [ArabicNumberInputFormatter()],
           controller: reasonController,
           decoration: const InputDecoration(
             labelText: 'سبب الرفض',

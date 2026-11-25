@@ -9,6 +9,7 @@ import '../widgets/logout_confirmation_dialog.dart';
 import '../widgets/top_bar.dart';
 import 'top_bar_title_controller.dart';
 import '../../features/auth/presentation/bloc/auth_bloc.dart';
+import '../../features/pricing/presentation/pages/under_pricing_page.dart';
 
 /// Main layout with responsive navigation
 /// - Desktop (>= 768px): Sidebar on the left
@@ -62,7 +63,8 @@ class MainLayout extends StatelessWidget {
                                     showBackButton: _shouldShowBackButton(
                                       currentPath,
                                     ),
-                                    onBackPressed: () => context.pop(),
+                                    onBackPressed: () =>
+                                        UnderPricingPage.goBack(context),
                                     action: pricingAction,
                                   );
                                 },

@@ -19,6 +19,7 @@ class PricingCubit extends Cubit<PricingState> {
     String projectId, {
     bool readOnly = false,
     int? version,
+    bool refreshProfitMargins = false,
   }) async {
     // Preserve existing state if reloading
     Map<String, bool> preservedItemStates = {};
@@ -34,7 +35,9 @@ class PricingCubit extends Cubit<PricingState> {
       for (var entry in currentState.subItemExpandedStates.entries) {
         preservedSubItemStates[entry.key] = Map.from(entry.value);
       }
-      preservedProfitMargins = Map.from(currentState.subItemProfitMargins);
+      if (!refreshProfitMargins) {
+        preservedProfitMargins = Map.from(currentState.subItemProfitMargins);
+      }
     }
 
     // Only show loading on initial load
