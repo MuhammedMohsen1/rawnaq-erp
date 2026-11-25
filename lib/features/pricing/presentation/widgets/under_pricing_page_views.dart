@@ -1,4 +1,5 @@
 import 'pricing_save_button.dart';
+import 'pricing_keyboard_dismissal.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/foundation.dart' show defaultTargetPlatform;
@@ -280,7 +281,8 @@ class _PricingLayout extends StatelessWidget {
     final showMobileFinancialToggle =
         hideFinancialsInitially && ResponsiveLayout.isMobile(context);
 
-    final content = SingleChildScrollView(
+    final scrollView = SingleChildScrollView(
+      keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
       padding: EdgeInsets.all(padding),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -288,9 +290,6 @@ class _PricingLayout extends StatelessWidget {
           PricingHeader(
             statusText: state.getStatusText(),
             statusColor: statusColor,
-            trailing: canEditPricing
-                ? PricingSaveButton(projectId: projectId, state: state)
-                : null,
           ),
           const SizedBox(height: 24),
           if (showMobileFinancialToggle) ...[
@@ -332,6 +331,11 @@ class _PricingLayout extends StatelessWidget {
           ),
           const SizedBox(height: 24),
           if (canEditPricing) ...[
+            SizedBox(
+              width: double.infinity,
+              child: PricingSaveButton(projectId: projectId, state: state),
+            ),
+            const SizedBox(height: 16),
             AddPricingItemButton(onTap: onAddItem),
             const SizedBox(height: 24),
           ],
@@ -339,6 +343,8 @@ class _PricingLayout extends StatelessWidget {
         ],
       ),
     );
+
+    final content = PricingKeyboardDismissal(child: scrollView);
 
     if (!canEditPricing) return content;
 

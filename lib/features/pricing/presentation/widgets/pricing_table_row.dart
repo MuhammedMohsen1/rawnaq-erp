@@ -186,284 +186,286 @@ class _PricingTableRowState extends State<PricingTableRow> {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: _handleTripleTap,
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 8),
-        height: 60.5,
-        padding: const EdgeInsets.symmetric(vertical: 8),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(4),
-          color: AppColors.of(context).surfaceColor.withOpacity(0.3),
-        ),
-        child: Row(
-          children: [
-            SizedBox(width: 8),
-            // Item Description
-            Expanded(
-              flex: 2,
-              child: TextField(
-                inputFormatters: const [ArabicNumberInputFormatter()],
-                controller: _descriptionController,
-                focusNode: _descriptionFocusNode,
-                textInputAction: TextInputAction.done,
-                style: AppTextStyles.of(context).bodyMedium.copyWith(
-                  color: AppColors.of(context).textPrimary,
-                  fontSize: 14,
-                ),
-                decoration: InputDecoration(
-                  border: InputBorder.none,
-                  hintText: '-',
-                  hintStyle: TextStyle(
-                    color: AppColors.of(context).textPrimary.withOpacity(0.5),
-                    fontSize: 14,
-                  ),
-                  contentPadding: EdgeInsets.zero,
-                  filled: false,
-                ),
-                onChanged: (_) {
-                  if (widget.onChanged != null) {
-                    _updateTotal();
-                  }
-                },
-                onEditingComplete: () {
-                  widget.onFieldCompleted?.call();
-                },
-                onSubmitted: (_) {
-                  widget.onSubmitted?.call();
-                },
-              ),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final compact = constraints.maxWidth < 500;
+        final description = TextField(
+          inputFormatters: const [ArabicNumberInputFormatter()],
+          controller: _descriptionController,
+          focusNode: _descriptionFocusNode,
+          maxLines: compact ? null : 1,
+          textInputAction: TextInputAction.done,
+          style: AppTextStyles.of(context).bodyMedium.copyWith(
+            color: AppColors.of(context).textPrimary,
+            fontSize: 14,
+          ),
+          decoration: InputDecoration(
+            border: InputBorder.none,
+            hintText: '-',
+            hintStyle: TextStyle(
+              color: AppColors.of(context).textPrimary.withOpacity(0.5),
+              fontSize: 14,
             ),
-            const SizedBox(width: 8),
-            // Cost (KD) - Direct total input or unit price mode
-            Expanded(
-              flex: 2,
-              child: !widget.showFinancials
-                  ? const SizedBox.shrink()
-                  : _isUnitPriceMode
-                  ? Row(
-                      children: [
-                        // Quantity input
-                        Expanded(
-                          child: TextField(
-                            controller: _quantityController,
-                            focusNode: _quantityFocusNode,
-                            textInputAction: TextInputAction.done,
-                            keyboardType: const TextInputType.numberWithOptions(
-                              decimal: true,
+            contentPadding: EdgeInsets.zero,
+            filled: false,
+          ),
+          onChanged: (_) {
+            if (widget.onChanged != null) {
+              _updateTotal();
+            }
+          },
+          onEditingComplete: () {
+            widget.onFieldCompleted?.call();
+          },
+          onSubmitted: (_) {
+            widget.onSubmitted?.call();
+          },
+        );
+        final cost = !widget.showFinancials
+            ? const SizedBox.shrink()
+            : _isUnitPriceMode
+            ? Row(
+                children: [
+                  // Quantity input
+                  Expanded(
+                    child: TextField(
+                      controller: _quantityController,
+                      focusNode: _quantityFocusNode,
+                      textInputAction: TextInputAction.done,
+                      keyboardType: const TextInputType.numberWithOptions(
+                        decimal: true,
+                      ),
+                      inputFormatters: [
+                        ArabicNumberInputFormatter(),
+                        FilteringTextInputFormatter.allow(
+                          RegExp(r'^\d*\.?\d*'),
+                        ),
+                      ],
+                      style: AppTextStyles.of(context).bodyMedium.copyWith(
+                        color: AppColors.of(context).textPrimary,
+                        fontSize: 14,
+                      ),
+                      textAlign: TextAlign.center,
+                      decoration: InputDecoration(
+                        border: InputBorder.none,
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(4),
+                          borderSide: BorderSide(
+                            color: AppColors.of(context).primary,
+                          ),
+                        ),
+                        hintText: '-',
+                        hintStyle: TextStyle(
+                          color: AppColors.of(context).textMuted,
+                          fontSize: 18,
+                        ),
+                        contentPadding: EdgeInsets.zero,
+                        filled: false,
+                      ),
+                      onChanged: (_) => _updateTotal(),
+                      onEditingComplete: () {
+                        widget.onFieldCompleted?.call();
+                      },
+                      onSubmitted: (_) {
+                        widget.onSubmitted?.call();
+                      },
+                    ),
+                  ),
+                  const SizedBox(width: 4),
+                  Text(
+                    '×',
+                    style: TextStyle(
+                      color: AppColors.of(context).textSecondary,
+                      fontSize: 16,
+                    ),
+                  ),
+                  const SizedBox(width: 4),
+                  // Unit price input
+                  Expanded(
+                    child: TextField(
+                      controller: _unitPriceController,
+                      focusNode: _unitPriceFocusNode,
+                      textInputAction: TextInputAction.done,
+                      keyboardType: const TextInputType.numberWithOptions(
+                        decimal: true,
+                      ),
+                      inputFormatters: [
+                        ArabicNumberInputFormatter(),
+                        FilteringTextInputFormatter.allow(
+                          RegExp(r'^\d*\.?\d*'),
+                        ),
+                      ],
+                      style: AppTextStyles.of(context).bodyMedium.copyWith(
+                        color: AppColors.of(context).textPrimary,
+                        fontSize: 14,
+                      ),
+                      textAlign: TextAlign.center,
+                      decoration: InputDecoration(
+                        border: InputBorder.none,
+                        hintText: '-',
+                        hintStyle: TextStyle(
+                          color: AppColors.of(context).textMuted,
+                          fontSize: 14,
+                        ),
+                        contentPadding: EdgeInsets.zero,
+                        filled: false,
+                      ),
+                      onChanged: (_) => _updateTotal(),
+                      onEditingComplete: () {
+                        widget.onFieldCompleted?.call();
+                      },
+                      onSubmitted: (_) {
+                        widget.onSubmitted?.call();
+                      },
+                    ),
+                  ),
+                  const SizedBox(width: 4),
+                  Text(
+                    '=',
+                    style: TextStyle(
+                      color: AppColors.of(context).textSecondary,
+                      fontSize: 16,
+                    ),
+                  ),
+                  const SizedBox(width: 4),
+                  // Total display (read-only, calculated)
+                  Expanded(
+                    child: Container(
+                      height: 44,
+                      padding: const EdgeInsets.symmetric(horizontal: 8),
+                      decoration: BoxDecoration(
+                        color: AppColors.of(context).surfaceColor,
+                        border: Border.all(color: AppColors.of(context).border),
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      child: Center(
+                        child: FittedBox(
+                          fit: BoxFit.scaleDown,
+                          child: Text(
+                            ArabicNumberTransformer.transform(
+                              widget.item.total > 0
+                                  ? widget.item.total.toStringAsFixed(3)
+                                  : '-',
                             ),
-                            inputFormatters: [
-                              ArabicNumberInputFormatter(),
-                              FilteringTextInputFormatter.allow(
-                                RegExp(r'^\d*\.?\d*'),
-                              ),
-                            ],
                             style: AppTextStyles.of(context).bodyMedium
                                 .copyWith(
                                   color: AppColors.of(context).textPrimary,
-                                  fontSize: 14,
+                                  fontSize: 13,
                                 ),
                             textAlign: TextAlign.center,
-                            decoration: InputDecoration(
-                              border: InputBorder.none,
-                              focusedBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(4),
-                                borderSide: BorderSide(
-                                  color: AppColors.of(context).primary,
-                                ),
-                              ),
-                              hintText: '-',
-                              hintStyle: TextStyle(
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              )
+            : Row(
+                mainAxisSize: MainAxisSize.min,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    '=',
+                    style: TextStyle(
+                      color: AppColors.of(context).textSecondary,
+                      fontSize: 16,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+
+                  Expanded(
+                    child: GestureDetector(
+                      onTap: _handleTripleTap,
+                      child: TextField(
+                        controller: _totalController,
+                        focusNode: _totalFocusNode,
+                        textInputAction: TextInputAction.done,
+                        keyboardType: const TextInputType.numberWithOptions(
+                          decimal: true,
+                        ),
+                        inputFormatters: [
+                          ArabicNumberInputFormatter(),
+                          FilteringTextInputFormatter.allow(
+                            RegExp(r'^\d*\.?\d*'),
+                          ),
+                        ],
+                        style: AppTextStyles.of(context).bodyMedium.copyWith(
+                          color: AppColors.of(context).textPrimary,
+                          fontSize: 14,
+                        ),
+                        textAlign: TextAlign.center,
+                        decoration: InputDecoration(
+                          border: InputBorder.none,
+                          hintText: '-',
+                          hintStyle: Theme.of(context).textTheme.bodyMedium
+                              ?.copyWith(
                                 color: AppColors.of(context).textMuted,
                                 fontSize: 18,
                               ),
-                              contentPadding: EdgeInsets.zero,
-                              filled: false,
-                            ),
-                            onChanged: (_) => _updateTotal(),
-                            onEditingComplete: () {
-                              widget.onFieldCompleted?.call();
-                            },
-                            onSubmitted: (_) {
-                              widget.onSubmitted?.call();
-                            },
-                          ),
+                          contentPadding: EdgeInsets.zero,
+                          filled: false,
                         ),
-                        const SizedBox(width: 4),
-                        Text(
-                          '×',
-                          style: TextStyle(
-                            color: AppColors.of(context).textSecondary,
-                            fontSize: 16,
-                          ),
-                        ),
-                        const SizedBox(width: 4),
-                        // Unit price input
-                        Expanded(
-                          child: TextField(
-                            controller: _unitPriceController,
-                            focusNode: _unitPriceFocusNode,
-                            textInputAction: TextInputAction.done,
-                            keyboardType: const TextInputType.numberWithOptions(
-                              decimal: true,
-                            ),
-                            inputFormatters: [
-                              ArabicNumberInputFormatter(),
-                              FilteringTextInputFormatter.allow(
-                                RegExp(r'^\d*\.?\d*'),
-                              ),
-                            ],
-                            style: AppTextStyles.of(context).bodyMedium
-                                .copyWith(
-                                  color: AppColors.of(context).textPrimary,
-                                  fontSize: 14,
-                                ),
-                            textAlign: TextAlign.center,
-                            decoration: InputDecoration(
-                              border: InputBorder.none,
-                              hintText: '-',
-                              hintStyle: TextStyle(
-                                color: AppColors.of(context).textMuted,
-                                fontSize: 14,
-                              ),
-                              contentPadding: EdgeInsets.zero,
-                              filled: false,
-                            ),
-                            onChanged: (_) => _updateTotal(),
-                            onEditingComplete: () {
-                              widget.onFieldCompleted?.call();
-                            },
-                            onSubmitted: (_) {
-                              widget.onSubmitted?.call();
-                            },
-                          ),
-                        ),
-                        const SizedBox(width: 4),
-                        Text(
-                          '=',
-                          style: TextStyle(
-                            color: AppColors.of(context).textSecondary,
-                            fontSize: 16,
-                          ),
-                        ),
-                        const SizedBox(width: 4),
-                        // Total display (read-only, calculated)
-                        Expanded(
-                          child: Container(
-                            height: 44,
-                            padding: const EdgeInsets.symmetric(horizontal: 8),
-                            decoration: BoxDecoration(
-                              color: AppColors.of(context).surfaceColor,
-                              border: Border.all(
-                                color: AppColors.of(context).border,
-                              ),
-                              borderRadius: BorderRadius.circular(4),
-                            ),
-                            child: Center(
-                              child: FittedBox(
-                                fit: BoxFit.scaleDown,
-                                child: Text(
-                                  ArabicNumberTransformer.transform(
-                                    widget.item.total > 0
-                                        ? widget.item.total.toStringAsFixed(3)
-                                        : '-',
-                                  ),
-                                  style: AppTextStyles.of(context).bodyMedium
-                                      .copyWith(
-                                        color: AppColors.of(
-                                          context,
-                                        ).textPrimary,
-                                        fontSize: 13,
-                                      ),
-                                  textAlign: TextAlign.center,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
-                    )
-                  : Row(
-                      mainAxisSize: MainAxisSize.min,
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          '=',
-                          style: TextStyle(
-                            color: AppColors.of(context).textSecondary,
-                            fontSize: 16,
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-
-                        Expanded(
-                          child: GestureDetector(
-                            onTap: _handleTripleTap,
-                            child: TextField(
-                              controller: _totalController,
-                              focusNode: _totalFocusNode,
-                              textInputAction: TextInputAction.done,
-                              keyboardType:
-                                  const TextInputType.numberWithOptions(
-                                    decimal: true,
-                                  ),
-                              inputFormatters: [
-                                ArabicNumberInputFormatter(),
-                                FilteringTextInputFormatter.allow(
-                                  RegExp(r'^\d*\.?\d*'),
-                                ),
-                              ],
-                              style: AppTextStyles.of(context).bodyMedium
-                                  .copyWith(
-                                    color: AppColors.of(context).textPrimary,
-                                    fontSize: 14,
-                                  ),
-                              textAlign: TextAlign.center,
-                              decoration: InputDecoration(
-                                border: InputBorder.none,
-                                hintText: '-',
-                                hintStyle: Theme.of(context)
-                                    .textTheme
-                                    .bodyMedium
-                                    ?.copyWith(
-                                      color: AppColors.of(context).textMuted,
-                                      fontSize: 18,
-                                    ),
-                                contentPadding: EdgeInsets.zero,
-                                filled: false,
-                              ),
-                              onChanged: (_) => _updateTotal(),
-                              onEditingComplete: () {
-                                widget.onFieldCompleted?.call();
-                              },
-                              onSubmitted: (_) {
-                                widget.onSubmitted?.call();
-                              },
-                            ),
-                          ),
-                        ),
-                      ],
+                        onChanged: (_) => _updateTotal(),
+                        onEditingComplete: () {
+                          widget.onFieldCompleted?.call();
+                        },
+                        onSubmitted: (_) {
+                          widget.onSubmitted?.call();
+                        },
+                      ),
                     ),
-            ),
-            const SizedBox(width: 8),
-            // Delete Button
-            if (widget.onDelete != null)
-              SizedBox(
-                width: 36,
-                height: 36,
-                child: IconButton(
-                  onPressed: widget.onDelete,
-                  icon: Icon(
-                    Icons.delete_outline,
-                    color: AppColors.of(context).delete,
-                    size: 20,
                   ),
-                  padding: EdgeInsets.zero,
-                ),
-              ),
-          ],
-        ),
-      ),
+                ],
+              );
+        final deleteButton = SizedBox(
+          width: 36,
+          height: 36,
+          child: IconButton(
+            onPressed: widget.onDelete,
+            icon: Icon(
+              Icons.delete_outline,
+              color: AppColors.of(context).delete,
+              size: 20,
+            ),
+            padding: EdgeInsets.zero,
+          ),
+        );
+
+        return GestureDetector(
+          onTap: _handleTripleTap,
+          child: Container(
+            margin: const EdgeInsets.only(bottom: 8),
+            constraints: const BoxConstraints(minHeight: 60.5),
+            padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(4),
+              color: AppColors.of(context).surfaceColor.withValues(alpha: 0.3),
+            ),
+            child: compact
+                ? Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      description,
+                      if (widget.showFinancials || widget.onDelete != null)
+                        Row(
+                          children: [
+                            Expanded(child: cost),
+                            if (widget.onDelete != null) deleteButton,
+                          ],
+                        ),
+                    ],
+                  )
+                : Row(
+                    children: [
+                      Expanded(flex: 2, child: description),
+                      const SizedBox(width: 8),
+                      Expanded(flex: 2, child: cost),
+                      if (widget.onDelete != null) deleteButton,
+                    ],
+                  ),
+          ),
+        );
+      },
     );
   }
 }

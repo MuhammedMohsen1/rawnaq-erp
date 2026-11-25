@@ -475,9 +475,9 @@ class PricingSummaryExportActions extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final buttons = <Widget>[];
-    final buttonHeight = isMobile ? 30.0 : 28.0;
-    final buttonFontSize = 10.0;
-    final iconSize = isMobile ? 14.0 : 12.0;
+    final buttonHeight = isMobile ? 52.0 : 48.0;
+    final buttonFontSize = 16.0;
+    const iconSize = 18.0;
     final buttonSpacing = isMobile ? 3.0 : 4.0;
 
     Widget buildButton({
@@ -489,7 +489,7 @@ class PricingSummaryExportActions extends StatelessWidget {
       bool isOutlined = false,
       Color? borderColor,
     }) {
-      final btnHeight = height ?? buttonHeight;
+      final btnHeight = isMobile ? buttonHeight : height ?? buttonHeight;
       return isOutlined
           ? OutlinedButton(
               onPressed: onPressed,
@@ -531,12 +531,14 @@ class PricingSummaryExportActions extends StatelessWidget {
               children: [
                 Icon(Icons.picture_as_pdf, size: iconSize),
                 SizedBox(width: isMobile ? 6 : 8),
-                Text(
-                  'تصدير العقد',
-                  style: AppTextStyles.of(context).buttonLarge.copyWith(
-                    fontSize: buttonFontSize,
-                    fontWeight: FontWeight.w700,
-                    color: const Color(0xFF6366F1),
+                Flexible(
+                  child: Text(
+                    'تصدير العقد',
+                    style: AppTextStyles.of(context).buttonLarge.copyWith(
+                      fontSize: buttonFontSize,
+                      fontWeight: FontWeight.w700,
+                      color: const Color(0xFF6366F1),
+                    ),
                   ),
                 ),
               ],
@@ -554,11 +556,13 @@ class PricingSummaryExportActions extends StatelessWidget {
               children: [
                 Icon(Icons.check_circle, size: iconSize),
                 SizedBox(width: isMobile ? 6 : 8),
-                Text(
-                  'تأكيد العقد',
-                  style: AppTextStyles.of(context).buttonLarge.copyWith(
-                    fontSize: buttonFontSize,
-                    fontWeight: FontWeight.w700,
+                Flexible(
+                  child: Text(
+                    'تأكيد العقد',
+                    style: AppTextStyles.of(context).buttonLarge.copyWith(
+                      fontSize: buttonFontSize,
+                      fontWeight: FontWeight.w700,
+                    ),
                   ),
                 ),
               ],
@@ -580,12 +584,14 @@ class PricingSummaryExportActions extends StatelessWidget {
               children: [
                 Icon(Icons.picture_as_pdf, size: iconSize),
                 SizedBox(width: isMobile ? 6 : 8),
-                Text(
-                  'تصدير PDF',
-                  style: AppTextStyles.of(context).buttonLarge.copyWith(
-                    fontSize: buttonFontSize,
-                    fontWeight: FontWeight.w600,
-                    color: const Color(0xFF6366F1),
+                Flexible(
+                  child: Text(
+                    'تصدير PDF',
+                    style: AppTextStyles.of(context).buttonLarge.copyWith(
+                      fontSize: buttonFontSize,
+                      fontWeight: FontWeight.w600,
+                      color: const Color(0xFF6366F1),
+                    ),
                   ),
                 ),
               ],
@@ -606,12 +612,14 @@ class PricingSummaryExportActions extends StatelessWidget {
               children: [
                 Icon(Icons.image, size: iconSize),
                 SizedBox(width: isMobile ? 6 : 8),
-                Text(
-                  'تصدير كصورة',
-                  style: AppTextStyles.of(context).buttonLarge.copyWith(
-                    fontSize: buttonFontSize,
-                    fontWeight: FontWeight.w600,
-                    color: const Color(0xFF10B981),
+                Flexible(
+                  child: Text(
+                    'تصدير كصورة',
+                    style: AppTextStyles.of(context).buttonLarge.copyWith(
+                      fontSize: buttonFontSize,
+                      fontWeight: FontWeight.w600,
+                      color: const Color(0xFF10B981),
+                    ),
                   ),
                 ),
               ],
@@ -634,11 +642,13 @@ class PricingSummaryExportActions extends StatelessWidget {
             children: [
               Icon(Icons.send, size: iconSize),
               SizedBox(width: isMobile ? 6 : 8),
-              Text(
-                'إرسال التسعير للتوقيع',
-                style: AppTextStyles.of(context).buttonLarge.copyWith(
-                  fontSize: buttonFontSize,
-                  fontWeight: FontWeight.w700,
+              Flexible(
+                child: Text(
+                  'إرسال التسعير للتوقيع',
+                  style: AppTextStyles.of(context).buttonLarge.copyWith(
+                    fontSize: buttonFontSize,
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
               ),
             ],
@@ -660,12 +670,14 @@ class PricingSummaryExportActions extends StatelessWidget {
             children: [
               Icon(Icons.arrow_back, size: iconSize),
               SizedBox(width: isMobile ? 6 : 8),
-              Text(
-                'إرجاع للتسعير',
-                style: AppTextStyles.of(context).buttonLarge.copyWith(
-                  fontSize: buttonFontSize,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.of(context).error,
+              Flexible(
+                child: Text(
+                  'إرجاع للتسعير',
+                  style: AppTextStyles.of(context).buttonLarge.copyWith(
+                    fontSize: buttonFontSize,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.of(context).error,
+                  ),
                 ),
               ),
             ],
@@ -687,12 +699,14 @@ class PricingSummaryExportActions extends StatelessWidget {
             children: [
               Icon(Icons.archive_outlined, size: iconSize),
               SizedBox(width: isMobile ? 6 : 8),
-              Text(
-                'أرشفة المشروع',
-                style: AppTextStyles.of(context).buttonLarge.copyWith(
-                  fontSize: buttonFontSize,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.of(context).error,
+              Flexible(
+                child: Text(
+                  'أرشفة المشروع',
+                  style: AppTextStyles.of(context).buttonLarge.copyWith(
+                    fontSize: buttonFontSize,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.of(context).error,
+                  ),
                 ),
               ),
             ],
@@ -762,7 +776,12 @@ class _PdfOptionCheckbox extends StatelessWidget {
             child: Checkbox(
               value: value,
               onChanged: (nextValue) => onChanged(nextValue ?? false),
-              activeColor: AppColors.of(context).background,
+              activeColor: AppColors.of(context).buttonPrimary,
+              checkColor: AppColors.white,
+              side: BorderSide(
+                color: AppColors.of(context).inputBorder,
+                width: 1.5,
+              ),
               materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
               visualDensity: VisualDensity.compact,
             ),
@@ -771,7 +790,6 @@ class _PdfOptionCheckbox extends StatelessWidget {
           Expanded(
             child: Text(
               ArabicNumberTransformer.transform(label),
-              overflow: TextOverflow.ellipsis,
               style: AppTextStyles.of(context).caption.copyWith(
                 fontSize: isMobile ? 10 : 11,
                 color: AppColors.of(context).textSecondary,
@@ -780,6 +798,34 @@ class _PdfOptionCheckbox extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+class PricingSummaryControls extends StatelessWidget {
+  const PricingSummaryControls({super.key, required this.children});
+
+  final List<Widget> children;
+
+  @override
+  Widget build(BuildContext context) {
+    if (children.isEmpty) return const SizedBox.shrink();
+    if (children.length == 1) return children.single;
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        if (constraints.maxWidth < 270 ||
+            MediaQuery.textScalerOf(context).scale(16) > 20) {
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: children,
+          );
+        }
+        return Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [for (final child in children) Expanded(child: child)],
+        );
+      },
     );
   }
 }

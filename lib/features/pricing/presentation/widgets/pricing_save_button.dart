@@ -1,3 +1,4 @@
+import 'package:rawnaq/core/constants/app_colors.dart';
 import 'package:rawnaq/core/widgets/app_toast.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -20,9 +21,19 @@ class PricingSaveButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final drafts = context.read<PricingDrafts>();
+    final colors = AppColors.of(context);
+    final isLight = colors.brightness == Brightness.light;
     return ListenableBuilder(
       listenable: drafts,
       builder: (context, _) => FilledButton.icon(
+        style: FilledButton.styleFrom(
+          minimumSize: const Size(48, 52),
+          textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+          disabledBackgroundColor: isLight
+              ? Color.alphaBlend(colors.selectedSurface, colors.cardBackground)
+              : null,
+          disabledForegroundColor: isLight ? colors.primaryDark : null,
+        ),
         onPressed: drafts.hasChanges && !drafts.isSaving
             ? () => save(context, projectId, state)
             : null,

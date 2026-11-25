@@ -499,148 +499,167 @@ class _PricingSummarySidebarState extends State<PricingSummarySidebar> {
           ],
         ),
       ),
-      if (widget.isAdminOrManager &&
-          (widget.isApproved || widget.isProfitPending) &&
-          widget.onBulkProfitMarginUpdate != null)
-        Container(
-          padding: EdgeInsets.symmetric(
-            horizontal: isMobile ? 4 : 6,
-            vertical: isMobile ? 3 : 4,
-          ),
-          child: Container(
-            padding: EdgeInsets.all(isMobile ? 4 : 6),
-            decoration: BoxDecoration(
-              color: AppColors.of(context).scaffoldBackground,
-              borderRadius: BorderRadius.circular(6),
-              border: Border.all(color: AppColors.of(context).border),
-            ),
-            child: Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    controller: _bulkProfitController,
-                    keyboardType: const TextInputType.numberWithOptions(
-                      decimal: true,
-                    ),
-                    inputFormatters: [
-                      ArabicNumberInputFormatter(),
-                      FilteringTextInputFormatter.allow(
-                        RegExp(r'^\d*\.?\d{0,2}'),
-                      ),
-                    ],
-                    style: TextStyle(fontSize: isMobile ? 11 : 12),
-                    decoration: InputDecoration(
-                      hintText: 'هامش ربح موحد %',
-                      hintStyle: TextStyle(
-                        color: Theme.of(context).hintColor,
-                        fontSize: isMobile ? 10 : 11,
-                      ),
-                      filled: true,
-                      fillColor: AppColors.of(context).inputBackground,
-                      isDense: true,
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(4),
-                        borderSide: BorderSide(
-                          color: AppColors.of(context).border,
-                        ),
-                      ),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(4),
-                        borderSide: BorderSide(
-                          color: AppColors.of(context).border,
-                        ),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(4),
-                        borderSide: const BorderSide(color: Color(0xFF135BEC)),
-                      ),
-                      contentPadding: EdgeInsets.symmetric(
-                        horizontal: isMobile ? 8 : 10,
-                        vertical: isMobile ? 6 : 8,
-                      ),
-                    ),
-                  ),
+      PricingSummaryControls(
+        children: [
+          if (widget.isAdminOrManager &&
+              (widget.isApproved || widget.isProfitPending) &&
+              widget.onBulkProfitMarginUpdate != null)
+            Container(
+              padding: EdgeInsets.symmetric(
+                horizontal: isMobile ? 4 : 6,
+                vertical: isMobile ? 3 : 4,
+              ),
+              child: Container(
+                padding: EdgeInsets.all(isMobile ? 4 : 6),
+                decoration: BoxDecoration(
+                  color: AppColors.of(context).scaffoldBackground,
+                  borderRadius: BorderRadius.circular(6),
+                  border: Border.all(color: AppColors.of(context).border),
                 ),
-                SizedBox(width: isMobile ? 4 : 6),
-                ElevatedButton(
-                  onPressed: () {
-                    final value = double.tryParse(_bulkProfitController.text);
-                    if (value != null && value >= 0) {
-                      widget.onBulkProfitMarginUpdate!(value);
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        AppToast.build(
-                          tone: ToastTone.success,
-                          content: Text(
-                            ArabicNumberTransformer.transform(
-                              'تم تطبيق نسبة الربح $value% على جميع الفئات الفرعية',
-                            ),
-                          ),
-                          duration: const Duration(seconds: 2),
+                child: LayoutBuilder(
+                  builder: (context, constraints) {
+                    final input = TextField(
+                      controller: _bulkProfitController,
+                      keyboardType: const TextInputType.numberWithOptions(
+                        decimal: true,
+                      ),
+                      inputFormatters: [
+                        ArabicNumberInputFormatter(),
+                        FilteringTextInputFormatter.allow(
+                          RegExp(r'^\d*\.?\d{0,2}'),
                         ),
+                      ],
+                      style: TextStyle(fontSize: isMobile ? 11 : 12),
+                      decoration: InputDecoration(
+                        hintText: 'هامش الربح %',
+                        hintStyle: TextStyle(
+                          color: Theme.of(context).hintColor,
+                          fontSize: isMobile ? 10 : 11,
+                        ),
+                        filled: true,
+                        fillColor: AppColors.of(context).inputBackground,
+                        isDense: true,
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(4),
+                          borderSide: BorderSide(
+                            color: AppColors.of(context).border,
+                          ),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(4),
+                          borderSide: BorderSide(
+                            color: AppColors.of(context).border,
+                          ),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(4),
+                          borderSide: const BorderSide(
+                            color: Color(0xFF135BEC),
+                          ),
+                        ),
+                        contentPadding: EdgeInsets.symmetric(
+                          horizontal: isMobile ? 8 : 10,
+                          vertical: isMobile ? 6 : 8,
+                        ),
+                      ),
+                    );
+                    final apply = ElevatedButton(
+                      onPressed: () {
+                        final value = double.tryParse(
+                          _bulkProfitController.text,
+                        );
+                        if (value != null && value >= 0) {
+                          widget.onBulkProfitMarginUpdate!(value);
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            AppToast.build(
+                              tone: ToastTone.success,
+                              content: Text(
+                                ArabicNumberTransformer.transform(
+                                  'تم تطبيق نسبة الربح $value% على جميع الفئات الفرعية',
+                                ),
+                              ),
+                              duration: const Duration(seconds: 2),
+                            ),
+                          );
+                        }
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF10B981),
+                        foregroundColor: Colors.white,
+                        padding: EdgeInsets.symmetric(
+                          horizontal: isMobile ? 10 : 12,
+                          vertical: isMobile ? 6 : 8,
+                        ),
+                        minimumSize: Size(0, isMobile ? 48 : 0),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                      ),
+                      child: Text(
+                        'تطبيق',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    );
+                    if (constraints.maxWidth < 220 ||
+                        MediaQuery.textScalerOf(context).scale(16) > 20) {
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [input, const SizedBox(height: 4), apply],
                       );
                     }
+                    return Row(
+                      children: [
+                        Expanded(child: input),
+                        const SizedBox(width: 6),
+                        apply,
+                      ],
+                    );
                   },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF10B981),
-                    foregroundColor: Colors.white,
-                    padding: EdgeInsets.symmetric(
-                      horizontal: isMobile ? 10 : 12,
-                      vertical: isMobile ? 6 : 8,
-                    ),
-                    minimumSize: Size.zero,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(4),
-                    ),
-                  ),
-                  child: Text(
-                    'تطبيق',
-                    style: TextStyle(
-                      fontSize: isMobile ? 11 : 12,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
                 ),
-              ],
+              ),
             ),
-          ),
-        ),
-      if (widget.isAdminOrManager &&
-          widget.onDeductionAmountChanged != null &&
-          widget.onDeductionAmountApplied != null)
-        PricingSummaryDeductionControl(
-          isAdminOrManager: widget.isAdminOrManager,
-          isMobile: isMobile,
-          deductionController: _deductionController,
-          deductionFocusNode: _deductionFocusNode,
-          showLineItemPricesInPdf: _showLineItemPricesInPdf,
-          onShowLineItemPricesChanged: (value) {
-            setState(() {
-              _showLineItemPricesInPdf = value;
-            });
-          },
-          onDeductionChanged: (value) {
-            if (value.trim().isEmpty) {
-              widget.onDeductionAmountChanged!(0.0);
-              _deductionSaveTimer?.cancel();
-              if (widget.onDeductionAmountApplied != null) {
-                _deductionSaveTimer = Timer(
-                  const Duration(milliseconds: 600),
-                  () => widget.onDeductionAmountApplied!(0.0),
-                );
-              }
-              return;
-            }
-            final parsed = double.tryParse(value) ?? 0.0;
-            widget.onDeductionAmountChanged!(parsed);
-            if (widget.onDeductionAmountApplied != null) {
-              _deductionSaveTimer?.cancel();
-              _deductionSaveTimer = Timer(
-                const Duration(milliseconds: 600),
-                () => widget.onDeductionAmountApplied!(parsed),
-              );
-            }
-          },
-        ),
+          if (widget.isAdminOrManager &&
+              widget.onDeductionAmountChanged != null &&
+              widget.onDeductionAmountApplied != null)
+            PricingSummaryDeductionControl(
+              isAdminOrManager: widget.isAdminOrManager,
+              isMobile: isMobile,
+              deductionController: _deductionController,
+              deductionFocusNode: _deductionFocusNode,
+              showLineItemPricesInPdf: _showLineItemPricesInPdf,
+              onShowLineItemPricesChanged: (value) {
+                setState(() {
+                  _showLineItemPricesInPdf = value;
+                });
+              },
+              onDeductionChanged: (value) {
+                if (value.trim().isEmpty) {
+                  widget.onDeductionAmountChanged!(0.0);
+                  _deductionSaveTimer?.cancel();
+                  if (widget.onDeductionAmountApplied != null) {
+                    _deductionSaveTimer = Timer(
+                      const Duration(milliseconds: 600),
+                      () => widget.onDeductionAmountApplied!(0.0),
+                    );
+                  }
+                  return;
+                }
+                final parsed = double.tryParse(value) ?? 0.0;
+                widget.onDeductionAmountChanged!(parsed);
+                if (widget.onDeductionAmountApplied != null) {
+                  _deductionSaveTimer?.cancel();
+                  _deductionSaveTimer = Timer(
+                    const Duration(milliseconds: 600),
+                    () => widget.onDeductionAmountApplied!(parsed),
+                  );
+                }
+              },
+            ),
+        ],
+      ),
       if (widget.isAdminOrManager && widget.onUpdateNotes != null)
         PricingSummaryNotesEditor(
           isAdminOrManager: widget.isAdminOrManager,

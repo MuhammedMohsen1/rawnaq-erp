@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_text_styles.dart';
 import 'pricing_item_card_support_widgets.dart';
+import 'pricing_responsive_header.dart';
 import 'package:rawnaq/core/utils/arabic_number_transformer.dart';
 
 class PricingItemCardHeader extends StatelessWidget {
@@ -38,9 +39,9 @@ class PricingItemCardHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: 71,
+      constraints: const BoxConstraints(minHeight: 71),
       clipBehavior: Clip.antiAlias,
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 21),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
         color: AppColors.of(context).sectionHeader,
         borderRadius: BorderRadius.only(
@@ -48,8 +49,12 @@ class PricingItemCardHeader extends StatelessWidget {
           topRight: Radius.circular(12),
         ),
       ),
-      child: Row(
-        children: [
+      child: PricingResponsiveHeader(
+        title: ArabicNumberTransformer.transform(itemName),
+        titleStyle: AppTextStyles.of(
+          context,
+        ).h4.copyWith(fontSize: 18, fontWeight: FontWeight.w700),
+        leading: [
           const Icon(Icons.architecture, color: Color(0xFF135BEC), size: 24),
           Checkbox(
             value: !itemIsHidden,
@@ -63,18 +68,8 @@ class PricingItemCardHeader extends StatelessWidget {
               width: 1.5,
             ),
           ),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Text(
-              ArabicNumberTransformer.transform(itemName),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: AppTextStyles.of(
-                context,
-              ).h4.copyWith(fontSize: 18, fontWeight: FontWeight.w700),
-            ),
-          ),
-          const SizedBox(width: 16),
+        ],
+        metrics: [
           if (pricingStatus != null &&
               showFinancials &&
               canViewFinancials &&
@@ -142,6 +137,8 @@ class PricingItemCardHeader extends StatelessWidget {
             ),
             const SizedBox(width: 16),
           ],
+        ],
+        actions: [
           IconButton(
             onPressed: onMenuPressed,
             icon: Icon(
@@ -183,10 +180,20 @@ class PricingItemCardAddButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
+    final light = colors.brightness == Brightness.light;
+    final foreground = light
+        ? AppColors.white
+        : outlined
+        ? colors.textSecondary
+        : colors.primary;
+
     return Container(
-      height: 46,
+      constraints: const BoxConstraints(minHeight: 48),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        border: outlined
+        color: light ? colors.buttonPrimary : null,
+        border: outlined && !light
             ? Border.all(color: AppColors.of(context).textDisabled)
             : null,
         borderRadius: BorderRadius.circular(8),
@@ -197,22 +204,16 @@ class PricingItemCardAddButton extends StatelessWidget {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              Icons.add,
-              color: outlined
-                  ? AppColors.of(context).textSecondary
-                  : AppColors.of(context).primary,
-              size: 20,
-            ),
+            Icon(Icons.add, color: foreground, size: 20),
             const SizedBox(width: 8),
-            Text(
-              ArabicNumberTransformer.transform(label),
-              style: AppTextStyles.of(context).bodyMedium.copyWith(
-                fontSize: 14,
-                fontWeight: FontWeight.w500,
-                color: outlined
-                    ? AppColors.of(context).textSecondary
-                    : AppColors.of(context).primary,
+            Flexible(
+              child: Text(
+                ArabicNumberTransformer.transform(label),
+                style: AppTextStyles.of(context).bodyMedium.copyWith(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w500,
+                  color: foreground,
+                ),
               ),
             ),
           ],

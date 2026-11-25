@@ -165,8 +165,9 @@ class PricingSubItemStats extends StatelessWidget {
       return const SizedBox.shrink();
     }
 
-    return Row(
-      mainAxisSize: MainAxisSize.min,
+    return Wrap(
+      spacing: 4,
+      runSpacing: 4,
       children: [
         PricingStatCard(
           label: 'تكلفة',
@@ -174,7 +175,6 @@ class PricingSubItemStats extends StatelessWidget {
           color: AppColors.of(context).delete,
           showFinancials: showFinancials,
         ),
-        const SizedBox(width: 4),
         PricingStatCard(
           label: 'صافي الربح',
           value: subItem.profitAmount,
@@ -183,7 +183,6 @@ class PricingSubItemStats extends StatelessWidget {
               : const Color(0xFF10B981)),
           showFinancials: showFinancials,
         ),
-        const SizedBox(width: 4),
         PricingStatChip(
           value: subItem.totalCost > 0
               ? (subItem.profitAmount / subItem.totalCost * 100)

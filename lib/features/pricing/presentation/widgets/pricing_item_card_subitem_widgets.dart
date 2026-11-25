@@ -6,6 +6,7 @@ import '../../data/models/pricing_version_model.dart';
 import '../../domain/entities/pricing_item.dart';
 import 'pricing_item_card_support_widgets.dart';
 import 'pricing_table_row.dart';
+import 'pricing_responsive_header.dart';
 import 'package:rawnaq/core/utils/arabic_number_transformer.dart';
 
 class PricingSubItemHeader extends StatelessWidget {
@@ -51,8 +52,12 @@ class PricingSubItemHeader extends StatelessWidget {
             topRight: Radius.circular(8),
           ),
         ),
-        child: Row(
-          children: [
+        child: PricingResponsiveHeader(
+          title: ArabicNumberTransformer.transform(subItem.name),
+          titleStyle: AppTextStyles.of(
+            context,
+          ).bodyLarge.copyWith(fontWeight: FontWeight.w600),
+          leading: [
             Icon(
               isExpanded ? Icons.expand_less : Icons.expand_more,
               color: AppColors.of(context).textSecondary,
@@ -70,17 +75,8 @@ class PricingSubItemHeader extends StatelessWidget {
                 width: 1.5,
               ),
             ),
-            const SizedBox(width: 8),
-            Expanded(
-              child: Text(
-                ArabicNumberTransformer.transform(subItem.name),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: AppTextStyles.of(
-                  context,
-                ).bodyLarge.copyWith(fontWeight: FontWeight.w600),
-              ),
-            ),
+          ],
+          metrics: [
             if (hasSubItemImages) ...[
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -174,6 +170,8 @@ class PricingSubItemHeader extends StatelessWidget {
                 },
               ),
             const SizedBox(width: 8),
+          ],
+          actions: [
             IconButton(
               onPressed: onShowMenu,
               icon: Icon(
@@ -235,61 +233,75 @@ class PricingElementRowShell extends StatelessWidget {
   Widget build(BuildContext context) {
     final canDragElement = canReorderElements && !isLocal;
 
-    return Row(
-      key: ValueKey('element-$subItemId-$elementId'),
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: [
-        SizedBox(
-          width: 36,
-          height: 44,
-          child: isLocal
-              ? const SizedBox.shrink()
-              : Tooltip(
-                  message: element.isHidden
-                      ? 'إظهار العنصر في التسعير و PDF'
-                      : 'إخفاء العنصر من التسعير و PDF',
-                  child: Checkbox(
-                    value: !element.isHidden,
-                    onChanged: (value) => onToggleVisibility(value ?? false),
-                    activeColor: AppColors.of(context).primary,
-                    checkColor: Theme.of(context).colorScheme.onPrimary,
-                    side: BorderSide(
-                      color: element.isHidden
-                          ? Colors.red
-                          : AppColors.of(context).primary,
-                    ),
+    final controls = [
+      SizedBox(
+        width: 36,
+        height: 44,
+        child: isLocal
+            ? const SizedBox.shrink()
+            : Tooltip(
+                message: element.isHidden
+                    ? 'إظهار العنصر في التسعير و PDF'
+                    : 'إخفاء العنصر من التسعير و PDF',
+                child: Checkbox(
+                  value: !element.isHidden,
+                  onChanged: (value) => onToggleVisibility(value ?? false),
+                  activeColor: AppColors.of(context).primary,
+                  checkColor: Theme.of(context).colorScheme.onPrimary,
+                  side: BorderSide(
+                    color: element.isHidden
+                        ? Colors.red
+                        : AppColors.of(context).primary,
                   ),
                 ),
-        ),
-        SizedBox(
-          width: 28,
-          height: 44,
-          child: canDragElement
-              ? ReorderableDragStartListener(
-                  index: index,
-                  child: Icon(
-                    Icons.drag_indicator,
-                    color: AppColors.of(context).textMuted,
-                    size: 18,
-                  ),
-                )
-              : const SizedBox.shrink(),
-        ),
-        Expanded(
-          child: Opacity(
-            opacity: element.isHidden ? 0.55 : 1,
-            child: PricingTableRow(
-              item: pricingItem,
-              showFinancials: showFinancials,
-              isNewRow: isNewRow,
-              firstFieldFocusNode: firstFieldFocusNode,
-              onDelete: onDelete,
-              onChanged: onChanged,
-              onSubmitted: onSubmitted,
-            ),
-          ),
-        ),
-      ],
+              ),
+      ),
+      SizedBox(
+        width: 28,
+        height: 44,
+        child: canDragElement
+            ? ReorderableDragStartListener(
+                index: index,
+                child: Icon(
+                  Icons.drag_indicator,
+                  color: AppColors.of(context).textMuted,
+                  size: 18,
+                ),
+              )
+            : const SizedBox.shrink(),
+      ),
+    ];
+    final editor = Opacity(
+      opacity: element.isHidden ? 0.55 : 1,
+      child: PricingTableRow(
+        item: pricingItem,
+        showFinancials: showFinancials,
+        isNewRow: isNewRow,
+        firstFieldFocusNode: firstFieldFocusNode,
+        onDelete: onDelete,
+        onChanged: onChanged,
+        onSubmitted: onSubmitted,
+      ),
+    );
+    return LayoutBuilder(
+      key: ValueKey('element-$subItemId-$elementId'),
+      builder: (context, constraints) {
+        if (constraints.maxWidth < 570) {
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              editor,
+              if (!isLocal) Wrap(children: controls),
+            ],
+          );
+        }
+        return Row(
+          children: [
+            ...controls,
+            Expanded(child: editor),
+          ],
+        );
+      },
     );
   }
 }

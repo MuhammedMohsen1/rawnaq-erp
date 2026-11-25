@@ -6,28 +6,18 @@ import 'package:rawnaq/core/utils/arabic_number_transformer.dart';
 class PricingHeader extends StatelessWidget {
   final String statusText;
   final Color statusColor;
-  final Widget? trailing;
 
   const PricingHeader({
     super.key,
     required this.statusText,
     required this.statusColor,
-    this.trailing,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            const Spacer(),
-            if (trailing != null) ...[trailing!, const SizedBox(width: 10)],
-            _StatusBadge(statusText: statusText, statusColor: statusColor),
-          ],
-        ),
-      ],
+    return Align(
+      alignment: AlignmentDirectional.centerEnd,
+      child: _StatusBadge(statusText: statusText, statusColor: statusColor),
     );
   }
 }

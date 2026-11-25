@@ -58,308 +58,309 @@ class PricingSubItemBody extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 12),
-      child: Row(
+    final colors = AppColors.of(context);
+    final light = colors.brightness == Brightness.light;
+    final addForeground = light ? AppColors.white : colors.textSecondary;
+    final images = PricingSubItemImagesPanel(
+      subItem: subItem,
+      showFinancials: showFinancials,
+      isUploadingImage: isUploadingImage,
+      selectedImageIndex: selectedImageIndex,
+      deletingImages: deletingImages,
+      uploadingImages: uploadingImages,
+      onPickImages: onPickImages,
+      onPickImagesWithFilePicker: onPickImagesWithFilePicker,
+      onDeleteCurrentImage: onDeleteCurrentImage,
+      onCropCurrentImage: onCropCurrentImage,
+      onShowFullScreenImage: onShowFullScreenImage,
+    );
+    final content = Padding(
+      padding: const EdgeInsets.only(top: 16),
+      child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          if (hasImagesOrUploading)
-            Flexible(
-              flex: 1,
-              fit: FlexFit.loose,
-              child: Container(
-                margin: const EdgeInsets.only(
-                  right: 12,
-                  top: 12,
-                  bottom: 12,
-                  left: 12,
-                ),
-                constraints: const BoxConstraints(
-                  maxWidth: 200,
-                  minWidth: 100,
-                  maxHeight: 300,
-                ),
-                child: PricingSubItemImagesPanel(
-                  subItem: subItem,
-                  showFinancials: showFinancials,
-                  isUploadingImage: isUploadingImage,
-                  selectedImageIndex: selectedImageIndex,
-                  deletingImages: deletingImages,
-                  uploadingImages: uploadingImages,
-                  onPickImages: onPickImages,
-                  onPickImagesWithFilePicker: onPickImagesWithFilePicker,
-                  onDeleteCurrentImage: onDeleteCurrentImage,
-                  onCropCurrentImage: onCropCurrentImage,
-                  onShowFullScreenImage: onShowFullScreenImage,
-                ),
-              ),
+          if (!hasImagesOrUploading) ...[
+            PricingSubItemAddImagesButton(
+              onPickImages: onPickImages,
+              onPickImagesWithFilePicker: onPickImagesWithFilePicker,
             ),
-          Expanded(
-            flex: 2,
-            child: Padding(
-              padding: const EdgeInsets.only(top: 16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  if (!hasImagesOrUploading) ...[
-                    PricingSubItemAddImagesButton(
-                      onPickImages: onPickImages,
-                      onPickImagesWithFilePicker: onPickImagesWithFilePicker,
+            const SizedBox(height: 12),
+          ],
+          if (descriptionController != null &&
+              descriptionFocusNode != null) ...[
+            LayoutBuilder(
+              builder: (context, constraints) {
+                final showCompactProfitInput =
+                    profitMarginController != null &&
+                    constraints.maxWidth >= 560;
+
+                final descriptionField = Center(
+                  child: TextField(
+                    inputFormatters: const [ArabicNumberInputFormatter()],
+                    controller: descriptionController,
+                    focusNode: descriptionFocusNode,
+                    onChanged: onDescriptionChanged,
+                    minLines: 2,
+                    maxLines: 4,
+                    textInputAction: TextInputAction.newline,
+                    style: AppTextStyles.of(context).bodyMedium.copyWith(
+                      color: AppColors.of(context).textPrimary,
+                      height: 1.35,
                     ),
-                    const SizedBox(height: 12),
-                  ],
-                  if (descriptionController != null &&
-                      descriptionFocusNode != null) ...[
-                    LayoutBuilder(
-                      builder: (context, constraints) {
-                        final showCompactProfitInput =
-                            profitMarginController != null &&
-                            constraints.maxWidth >= 560;
-
-                        final descriptionField = Center(
-                          child: TextField(
-                            inputFormatters: const [
-                              ArabicNumberInputFormatter(),
-                            ],
-                            controller: descriptionController,
-                            focusNode: descriptionFocusNode,
-                            onChanged: onDescriptionChanged,
-                            minLines: 2,
-                            maxLines: 4,
-                            textInputAction: TextInputAction.newline,
-                            style: AppTextStyles.of(context).bodyMedium
-                                .copyWith(
-                                  color: AppColors.of(context).textPrimary,
-                                  height: 1.35,
-                                ),
-                            decoration: InputDecoration(
-                              labelText: 'وصف البند الفرعي',
-                              hintText: 'اكتب وصف البند الفرعي',
-                              labelStyle: AppTextStyles.of(context).caption
-                                  .copyWith(
-                                    color: AppColors.of(context).textSecondary,
-                                  ),
-                              hintStyle: AppTextStyles.of(context).bodySmall
-                                  .copyWith(
-                                    color: AppColors.of(context).textMuted,
-                                  ),
-                              filled: true,
-                              fillColor: AppColors.of(context).inputBackground,
-                              contentPadding: const EdgeInsets.symmetric(
-                                horizontal: 12,
-                                vertical: 10,
-                              ),
-                              enabledBorder: OutlineInputBorder(
-                                borderSide: BorderSide(
-                                  color: AppColors.of(context).border,
-                                ),
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              focusedBorder: OutlineInputBorder(
-                                borderSide: BorderSide(
-                                  color: AppColors.of(context).primary,
-                                ),
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                            ),
-                          ),
-                        );
-
-                        if (showCompactProfitInput) {
-                          return IntrinsicHeight(
-                            child: Row(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Expanded(flex: 3, child: descriptionField),
-                                const SizedBox(width: 12),
-                                SizedBox(
-                                  width: 150,
-                                  child: ProfitMarginInput(
-                                    controller: profitMarginController!,
-                                    onChanged: onProfitMarginChanged ?? (_) {},
-                                    onEditingComplete:
-                                        onProfitMarginEditingComplete,
-                                    compact: true,
-                                    fillHeight: true,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          );
-                        }
-
-                        return Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            descriptionField,
-                            if (profitMarginController != null) ...[
-                              const SizedBox(height: 12),
-                              ProfitMarginInput(
-                                controller: profitMarginController!,
-                                onChanged: onProfitMarginChanged ?? (_) {},
-                                onEditingComplete:
-                                    onProfitMarginEditingComplete,
-                                compact: true,
-                              ),
-                            ],
-                          ],
-                        );
-                      },
-                    ),
-                    const SizedBox(height: 12),
-                  ],
-                  if (elementRows.isNotEmpty) ...[
-                    Container(
-                      height: 41.5,
-                      padding: const EdgeInsets.symmetric(horizontal: 8),
-                      child: Row(
-                        children: [
-                          Expanded(
-                            flex: 2,
-                            child: Text(
-                              'وصف العنصر',
-                              style: AppTextStyles.of(context).caption.copyWith(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w500,
-                                color: AppColors.of(context).textMuted,
-                              ),
-                            ),
-                          ),
-                          if (showFinancials) ...[
-                            const SizedBox(width: 8),
-                            Expanded(
-                              flex: 2,
-                              child: Text(
-                                'التكلفة (دينار)',
-                                style: AppTextStyles.of(context).caption
-                                    .copyWith(
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.w500,
-                                      color: AppColors.of(context).textMuted,
-                                    ),
-                                textAlign: TextAlign.center,
-                              ),
-                            ),
-                          ],
-                        ],
+                    decoration: InputDecoration(
+                      labelText: 'وصف البند الفرعي',
+                      hintText: 'اكتب وصف البند الفرعي',
+                      labelStyle: AppTextStyles.of(context).caption.copyWith(
+                        color: AppColors.of(context).textSecondary,
                       ),
-                    ),
-                    const SizedBox(height: 12),
-                    ReorderableListView(
-                      shrinkWrap: true,
-                      physics: const NeverScrollableScrollPhysics(),
-                      buildDefaultDragHandles: false,
-                      onReorder: onReorderElements,
-                      proxyDecorator: (child, index, animation) {
-                        return AnimatedBuilder(
-                          animation: animation,
-                          builder: (context, _) {
-                            return Material(
-                              color: Colors.transparent,
-                              child: child,
-                            );
-                          },
-                        );
-                      },
-                      children: elementRows,
-                    ),
-                  ] else ...[
-                    Padding(
-                      padding: const EdgeInsets.all(16),
-                      child: Center(
-                        child: Text(
-                          'لا توجد فئات فرعية بعد',
-                          style: AppTextStyles.of(context).bodyMedium.copyWith(
-                            color: AppColors.of(context).textMuted,
-                          ),
+                      hintStyle: AppTextStyles.of(context).bodySmall.copyWith(
+                        color: AppColors.of(context).textMuted,
+                      ),
+                      filled: true,
+                      fillColor: AppColors.of(context).inputBackground,
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 10,
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderSide: BorderSide(
+                          color: AppColors.of(context).border,
                         ),
+                        borderRadius: BorderRadius.circular(8),
                       ),
-                    ),
-                  ],
-                  const SizedBox(height: 12),
-                  Container(
-                    height: 46,
-                    decoration: BoxDecoration(
-                      border: Border.all(
-                        color: AppColors.of(context).textDisabled,
-                      ),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: InkWell(
-                      onTap: onAddElement,
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            Icons.add,
-                            color: AppColors.of(context).textSecondary,
-                            size: 20,
-                          ),
-                          const SizedBox(width: 8),
-                          Text(
-                            'إضافة عنصر',
-                            style: AppTextStyles.of(context).bodyMedium
-                                .copyWith(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w500,
-                                  color: AppColors.of(context).textSecondary,
-                                ),
-                          ),
-                        ],
+                      focusedBorder: OutlineInputBorder(
+                        borderSide: BorderSide(
+                          color: AppColors.of(context).primary,
+                        ),
+                        borderRadius: BorderRadius.circular(8),
                       ),
                     ),
                   ),
-                  if (showFinancials) const SizedBox(height: 16),
-                  if (showFinancials)
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        vertical: 17.22,
-                        horizontal: 20,
-                      ),
-                      decoration: BoxDecoration(
-                        border: Border(
-                          top: BorderSide(color: AppColors.of(context).border),
+                );
+
+                if (showCompactProfitInput) {
+                  return IntrinsicHeight(
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Expanded(flex: 3, child: descriptionField),
+                        const SizedBox(width: 12),
+                        SizedBox(
+                          width: 150,
+                          child: ProfitMarginInput(
+                            controller: profitMarginController!,
+                            onChanged: onProfitMarginChanged ?? (_) {},
+                            onEditingComplete: onProfitMarginEditingComplete,
+                            compact: true,
+                            fillHeight: true,
+                          ),
                         ),
+                      ],
+                    ),
+                  );
+                }
+
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    descriptionField,
+                    if (profitMarginController != null) ...[
+                      const SizedBox(height: 12),
+                      ProfitMarginInput(
+                        controller: profitMarginController!,
+                        onChanged: onProfitMarginChanged ?? (_) {},
+                        onEditingComplete: onProfitMarginEditingComplete,
+                        compact: true,
                       ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            'المجموع الفرعي',
-                            style: AppTextStyles.of(context).bodyMedium
-                                .copyWith(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w500,
-                                  color: AppColors.of(context).textSecondary,
-                                ),
-                          ),
-                          Row(
-                            children: [
-                              Text(
-                                'KD',
-                                style: AppTextStyles.of(context).bodyMedium
-                                    .copyWith(
-                                      fontSize: 14,
-                                      color: AppColors.of(context).textMuted,
-                                    ),
-                              ),
-                              const SizedBox(width: 8),
-                              PricingFormattedNumber(
-                                value: subItem.totalCost,
-                                showFinancials: showFinancials,
-                                fontSize: 20,
-                                fontWeight: FontWeight.w700,
-                              ),
-                            ],
-                          ),
-                        ],
+                    ],
+                  ],
+                );
+              },
+            ),
+            const SizedBox(height: 12),
+          ],
+          if (elementRows.isNotEmpty) ...[
+            Container(
+              height: 41.5,
+              padding: const EdgeInsets.symmetric(horizontal: 8),
+              child: Row(
+                children: [
+                  Expanded(
+                    flex: 2,
+                    child: Text(
+                      'وصف العنصر',
+                      style: AppTextStyles.of(context).caption.copyWith(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
+                        color: AppColors.of(context).textMuted,
                       ),
                     ),
+                  ),
+                  if (showFinancials) ...[
+                    const SizedBox(width: 8),
+                    Expanded(
+                      flex: 2,
+                      child: Text(
+                        'التكلفة (دينار)',
+                        style: AppTextStyles.of(context).caption.copyWith(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                          color: AppColors.of(context).textMuted,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+            const SizedBox(height: 12),
+            ReorderableListView(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              buildDefaultDragHandles: false,
+              onReorder: onReorderElements,
+              proxyDecorator: (child, index, animation) {
+                return AnimatedBuilder(
+                  animation: animation,
+                  builder: (context, _) {
+                    return Material(color: Colors.transparent, child: child);
+                  },
+                );
+              },
+              children: elementRows,
+            ),
+          ] else ...[
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Center(
+                child: Text(
+                  'لا توجد فئات فرعية بعد',
+                  style: AppTextStyles.of(
+                    context,
+                  ).bodyMedium.copyWith(color: AppColors.of(context).textMuted),
+                ),
+              ),
+            ),
+          ],
+          const SizedBox(height: 12),
+          Container(
+            constraints: const BoxConstraints(minHeight: 48),
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            decoration: BoxDecoration(
+              color: light ? colors.buttonPrimary : null,
+              border: light ? null : Border.all(color: colors.textDisabled),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: InkWell(
+              onTap: onAddElement,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.add, color: addForeground, size: 20),
+                  const SizedBox(width: 8),
+                  Flexible(
+                    child: Text(
+                      'إضافة عنصر',
+                      style: AppTextStyles.of(context).bodyMedium.copyWith(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w500,
+                        color: addForeground,
+                      ),
+                    ),
+                  ),
                 ],
               ),
             ),
           ),
+          if (showFinancials) const SizedBox(height: 16),
+          if (showFinancials)
+            Container(
+              padding: const EdgeInsets.symmetric(
+                vertical: 17.22,
+                horizontal: 20,
+              ),
+              decoration: BoxDecoration(
+                border: Border(
+                  top: BorderSide(color: AppColors.of(context).border),
+                ),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Flexible(
+                    child: Text(
+                      'المجموع الفرعي',
+                      style: AppTextStyles.of(context).bodyMedium.copyWith(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                        color: AppColors.of(context).textSecondary,
+                      ),
+                    ),
+                  ),
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        'KD',
+                        style: AppTextStyles.of(context).bodyMedium.copyWith(
+                          fontSize: 14,
+                          color: AppColors.of(context).textMuted,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      PricingFormattedNumber(
+                        value: subItem.totalCost,
+                        showFinancials: showFinancials,
+                        fontSize: 20,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
         ],
+      ),
+    );
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 12),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          if (constraints.maxWidth < 570) {
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                if (hasImagesOrUploading)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 12),
+                    child: SizedBox(height: 260, child: images),
+                  ),
+                content,
+              ],
+            );
+          }
+
+          return Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              if (hasImagesOrUploading)
+                Flexible(
+                  child: Container(
+                    margin: const EdgeInsets.all(12),
+                    constraints: const BoxConstraints(
+                      maxWidth: 200,
+                      minWidth: 100,
+                      maxHeight: 300,
+                    ),
+                    child: images,
+                  ),
+                ),
+              Expanded(flex: 2, child: content),
+            ],
+          );
+        },
       ),
     );
   }
@@ -415,17 +416,19 @@ class PricingSubItemImagesPanel extends StatelessWidget {
             ),
             child: Row(
               children: [
-                Text(
-                  ArabicNumberTransformer.transform(
-                    subItem.images.isEmpty
-                        ? '0/0 Photos'
-                        : '${selectedImageIndex[subItem.id] != null ? (selectedImageIndex[subItem.id]!.clamp(0, subItem.images.length - 1) + 1) : 1}/${subItem.images.length} Photos',
+                Expanded(
+                  child: Text(
+                    ArabicNumberTransformer.transform(
+                      subItem.images.isEmpty
+                          ? '0/0 Photos'
+                          : '${selectedImageIndex[subItem.id] != null ? (selectedImageIndex[subItem.id]!.clamp(0, subItem.images.length - 1) + 1) : 1}/${subItem.images.length} Photos',
+                    ),
+                    style: AppTextStyles.of(
+                      context,
+                    ).bodyMedium.copyWith(fontWeight: FontWeight.w600),
                   ),
-                  style: AppTextStyles.of(
-                    context,
-                  ).bodyMedium.copyWith(fontWeight: FontWeight.w600),
                 ),
-                const Spacer(),
+                const SizedBox(width: 4),
                 if (isUploadingImage)
                   SizedBox(
                     width: 16,
@@ -494,17 +497,21 @@ class PricingSubItemAddImagesButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
+    final light = colors.brightness == Brightness.light;
+    final foreground = light ? AppColors.white : colors.textSecondary;
     return Material(
-      color: Colors.transparent,
+      color: light ? colors.buttonPrimary : Colors.transparent,
       borderRadius: BorderRadius.circular(8),
       child: InkWell(
         onTap: onPickImages,
         onLongPress: onPickImagesWithFilePicker,
         borderRadius: BorderRadius.circular(8),
         child: Container(
-          height: 46,
+          constraints: const BoxConstraints(minHeight: 48),
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
           decoration: BoxDecoration(
-            border: Border.all(color: AppColors.of(context).border),
+            border: light ? null : Border.all(color: colors.border),
             borderRadius: BorderRadius.circular(8),
           ),
           child: Row(
@@ -512,15 +519,18 @@ class PricingSubItemAddImagesButton extends StatelessWidget {
             children: [
               Icon(
                 Icons.add_photo_alternate_outlined,
-                color: AppColors.of(context).textSecondary,
+                color: foreground,
                 size: 20,
               ),
               const SizedBox(width: 8),
-              Text(
-                'إضافة صورة',
-                style: AppTextStyles.of(context).bodyMedium.copyWith(
-                  color: AppColors.of(context).textSecondary,
-                  fontWeight: FontWeight.w500,
+              Flexible(
+                child: Text(
+                  'إضافة صورة',
+                  style: AppTextStyles.of(context).bodyMedium.copyWith(
+                    color: foreground,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w500,
+                  ),
                 ),
               ),
             ],

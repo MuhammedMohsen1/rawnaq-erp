@@ -13,6 +13,7 @@ import 'package:rawnaq/features/pricing/presentation/cubit/pricing_cubit.dart';
 import 'package:rawnaq/features/pricing/presentation/cubit/pricing_state.dart';
 import 'package:rawnaq/features/pricing/presentation/pages/under_pricing_page.dart';
 import 'package:rawnaq/features/pricing/presentation/widgets/pricing_drafts.dart';
+import 'package:rawnaq/features/pricing/presentation/widgets/add_pricing_item_button.dart';
 import 'package:rawnaq/features/projects/presentation/cubit/project_attachments_cubit.dart';
 import 'package:rawnaq/features/projects/presentation/cubit/project_attachments_state.dart';
 
@@ -143,6 +144,12 @@ void main() {
         of: find.text('حفظ التعديلات'),
         matching: find.byWidgetPredicate((widget) => widget is FilledButton),
       );
+      final addItem = find.byType(AddPricingItemButton);
+      expect(
+        tester.getBottomLeft(save).dy,
+        lessThan(tester.getTopLeft(addItem).dy),
+      );
+      expect(tester.getSize(save).width, tester.getSize(addItem).width);
       expect(tester.widget<FilledButton>(save).onPressed, isNotNull);
 
       router.push<void>('/pricing/2');
@@ -229,6 +236,7 @@ void main() {
 
       ScaffoldMessenger.of(tester.element(save)).removeCurrentSnackBar();
       failSave = false;
+      await tester.ensureVisible(save);
       await tester.tap(save);
       await tester.pumpAndSettle();
       expect(writes, 1);
@@ -240,7 +248,16 @@ void main() {
         ),
         findsOneWidget,
       );
-      expect(tester.widget<FilledButton>(save).onPressed, isNull);
+      final disabledSave = tester.widget<FilledButton>(save);
+      expect(disabledSave.onPressed, isNull);
+      final disabled = {WidgetState.disabled};
+      final fill = disabledSave.style!.backgroundColor!.resolve(disabled)!;
+      final text = disabledSave.style!.foregroundColor!.resolve(disabled)!;
+      expect(fill.b, greaterThan(fill.r));
+      expect(
+        (fill.computeLuminance() + 0.05) / (text.computeLuminance() + 0.05),
+        greaterThanOrEqualTo(4.5),
+      );
 
       await tester.tap(find.byTooltip('رجوع'));
       await tester.pumpAndSettle();
