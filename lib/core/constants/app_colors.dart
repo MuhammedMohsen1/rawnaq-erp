@@ -12,17 +12,17 @@ class AppColors {
   final Brightness brightness;
   bool get _isDark => brightness == Brightness.dark;
 
-  // Background colors (unified with sidebar)
+  // Workspace and panel surfaces.
   Color get scaffoldBackground =>
-      _isDark ? const Color(0xFF161B22) : const Color(0xFFF5F7FA);
+      _isDark ? const Color(0xFF161B22) : const Color(0xFFFCFCFC);
   Color get cardBackground =>
       _isDark ? const Color(0xFF1C2128) : const Color(0xFFFFFFFF);
   Color get surfaceColor =>
-      _isDark ? const Color(0xFF21262D) : const Color(0xFFEEF2F6);
+      _isDark ? const Color(0xFF21262D) : const Color(0xFFF7F7F7);
   Color get sidebarBackground =>
-      _isDark ? const Color(0xFF161B22) : const Color(0xFFF8FAFC);
-  Color get background =>
-      _isDark ? const Color(0xFF161B22) : const Color(0xFFF5F7FA);
+      _isDark ? const Color(0xFF161B22) : const Color(0xFFFFFFFF);
+  Color get sectionHeader => _isDark ? surfaceColor : cardBackground;
+  Color get background => scaffoldBackground;
   Color get surface =>
       _isDark ? const Color(0xFF1C2128) : const Color(0xFFFFFFFF);
 
@@ -35,7 +35,8 @@ class AppColors {
       _isDark ? const Color(0xFF2563EB) : const Color(0xFF1E40AF);
   Color get selectedSurface => const Color(0x263B82F6);
   Color get selectedSurfaceStrong => const Color(0x403B82F6);
-  Color get hoverSurface => const Color(0x1A3B82F6);
+  Color get hoverSurface =>
+      _isDark ? const Color(0x1A3B82F6) : const Color(0x0D000000);
   Color get buttonPrimary => const Color(0xFF1D4ED8);
   Color get buttonHover =>
       _isDark ? const Color(0xFF2563EB) : const Color(0xFF1E40AF);
@@ -48,13 +49,13 @@ class AppColors {
 
   // Text colors
   Color get textPrimary =>
-      _isDark ? const Color(0xFFFFFFFF) : const Color(0xFF172033);
+      _isDark ? const Color(0xFFFFFFFF) : const Color(0xFF171717);
   Color get textSecondary =>
-      _isDark ? const Color(0xFF8B949E) : const Color(0xFF38475B);
+      _isDark ? const Color(0xFF8B949E) : const Color(0xFF333333);
   Color get textMuted =>
-      _isDark ? const Color(0xFF6E7681) : const Color(0xFF536278);
+      _isDark ? const Color(0xFF6E7681) : const Color(0xFF555555);
   Color get textDisabled =>
-      _isDark ? const Color(0xFF484F58) : const Color(0xFF64748B);
+      _isDark ? const Color(0xFF484F58) : const Color(0xFF666666);
 
   // Status colors
   Color get statusActive =>
@@ -79,44 +80,44 @@ class AppColors {
 
   // Border and dividers
   Color get border =>
-      _isDark ? const Color(0xFF30363D) : const Color(0xFFCBD5E1);
+      _isDark ? const Color(0xFF30363D) : const Color(0xFFD8D8D8);
   Color get divider =>
-      _isDark ? const Color(0xFF21262D) : const Color(0xFFDFE6EE);
+      _isDark ? const Color(0xFF21262D) : const Color(0xFFE6E6E6);
 
   // Basic colors
   static const Color white = Color(0xFFFFFFFF);
   static const Color black = Color(0xFF000000);
-  Color get grey => _isDark ? const Color(0xFF8B949E) : const Color(0xFF536278);
+  Color get grey => _isDark ? const Color(0xFF8B949E) : const Color(0xFF555555);
   Color get lightGrey =>
-      _isDark ? const Color(0xFF6E7681) : const Color(0xFF536278);
+      _isDark ? const Color(0xFF6E7681) : const Color(0xFF555555);
   Color get darkGrey =>
-      _isDark ? const Color(0xFF484F58) : const Color(0xFFD4DCE6);
+      _isDark ? const Color(0xFF484F58) : const Color(0xFFDDDDDD);
 
   // Shadow colors
   Color get shadow =>
-      _isDark ? const Color(0x94000000) : const Color(0x291C2B40);
+      _isDark ? const Color(0x94000000) : const Color(0x1A000000);
 
   // Table colors
   Color get tableHeader =>
-      _isDark ? const Color(0xFF21262D) : const Color(0xFFE7EDF5);
+      _isDark ? const Color(0xFF21262D) : const Color(0xFFF5F5F5);
   Color get tableRowEven =>
       _isDark ? const Color(0xFF161B22) : const Color(0xFFFFFFFF);
   Color get tableRowOdd =>
-      _isDark ? const Color(0xFF0D1117) : const Color(0xFFF5F7FA);
+      _isDark ? const Color(0xFF0D1117) : const Color(0xFFFAFAFA);
   Color get tableRowHover =>
-      _isDark ? const Color(0xFF1F2937) : const Color(0xFFE7EFFB);
+      _isDark ? const Color(0xFF1F2937) : const Color(0xFFEEEEEE);
 
   // Input colors
   Color get inputBackground =>
       _isDark ? const Color(0xFF0D1117) : const Color(0xFFFFFFFF);
   Color get inputBorder =>
-      _isDark ? const Color(0xFF30363D) : const Color(0xFF94A3B8);
+      _isDark ? const Color(0xFF30363D) : const Color(0xFF8C8C8C);
   Color get inputFocusBorder =>
       _isDark ? const Color(0xFF3B82F6) : const Color(0xFF1D4ED8);
 
   // Progress bar colors
   Color get progressBackground =>
-      _isDark ? const Color(0xFF30363D) : const Color(0xFFDCE5EF);
+      _isDark ? const Color(0xFF30363D) : const Color(0xFFE5E5E5);
   Color get progressFill =>
       _isDark ? const Color(0xFF3B82F6) : const Color(0xFF1D4ED8);
 }

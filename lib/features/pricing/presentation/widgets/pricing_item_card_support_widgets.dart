@@ -173,7 +173,9 @@ class PricingSubItemStats extends StatelessWidget {
         PricingStatCard(
           label: 'إيرادات',
           value: subItem.profitAmount,
-          color: const Color(0xFF10B981),
+          color: (Theme.of(context).brightness == Brightness.light
+              ? AppColors.light.success
+              : const Color(0xFF10B981)),
           showFinancials: showFinancials,
         ),
         const SizedBox(width: 4),
@@ -181,7 +183,9 @@ class PricingSubItemStats extends StatelessWidget {
           value: subItem.totalCost > 0
               ? (subItem.profitAmount / subItem.totalCost * 100)
               : 0.0,
-          color: const Color(0xFFF59E0B),
+          color: (Theme.of(context).brightness == Brightness.light
+              ? AppColors.light.warning
+              : const Color(0xFFF59E0B)),
           suffix: '%',
           showFinancials: showFinancials,
         ),

@@ -11,13 +11,18 @@ class AddPricingItemButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
+    final isLight = colors.brightness == Brightness.light;
     return Container(
       width: double.infinity,
       height: 152,
-      decoration: BoxDecoration(borderRadius: BorderRadius.circular(12)),
+      decoration: BoxDecoration(
+        color: isLight ? colors.cardBackground : null,
+        borderRadius: BorderRadius.circular(12),
+      ),
       child: CustomPaint(
         painter: DashedBorderPainter(
-          color: AppColors.of(context).textDisabled,
+          color: isLight ? colors.inputBorder : colors.textDisabled,
           strokeWidth: 2,
         ),
         child: InkWell(

@@ -25,7 +25,7 @@ class TopBar extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
       decoration: BoxDecoration(
-        color: AppColors.of(context).scaffoldBackground,
+        color: AppColors.of(context).sidebarBackground,
         border: Border(
           bottom: BorderSide(color: AppColors.of(context).border, width: 1),
         ),

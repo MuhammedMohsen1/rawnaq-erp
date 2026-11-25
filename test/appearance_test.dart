@@ -64,6 +64,22 @@ void main() {
 
   test('light surfaces and foregrounds have readable contrast', () {
     final palette = AppColors.light;
+    expect(palette.sidebarBackground, Colors.white);
+    expect(palette.sectionHeader, Colors.white);
+    expect(
+      AppTheme.lightTheme.scaffoldBackgroundColor,
+      palette.scaffoldBackground,
+    );
+    expect(palette.scaffoldBackground.computeLuminance(), greaterThan(0.95));
+    expect(
+      palette.scaffoldBackground.computeLuminance(),
+      lessThan(palette.cardBackground.computeLuminance()),
+    );
+    expect(
+      (palette.inputBackground.computeLuminance() + 0.05) /
+          (palette.inputBorder.computeLuminance() + 0.05),
+      greaterThanOrEqualTo(3),
+    );
     for (final surface in [
       palette.scaffoldBackground,
       palette.sidebarBackground,
@@ -75,6 +91,8 @@ void main() {
       palette.tableRowHover,
     ]) {
       expect(surface.computeLuminance(), greaterThan(0.75));
+      expect(surface.r, surface.g);
+      expect(surface.g, surface.b);
       for (final foreground in [
         palette.textPrimary,
         palette.textSecondary,

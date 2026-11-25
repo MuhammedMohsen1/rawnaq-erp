@@ -44,7 +44,7 @@ class PricingSubItemHeader extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
         decoration: BoxDecoration(
-          color: AppColors.of(context).surfaceColor,
+          color: AppColors.of(context).sectionHeader,
           borderRadius: BorderRadius.only(
             topLeft: Radius.circular(8),
             topRight: Radius.circular(8),
@@ -61,7 +61,7 @@ class PricingSubItemHeader extends StatelessWidget {
               value: !subItem.isHidden,
               onChanged: (value) => onToggleVisibility(value ?? false),
               activeColor: AppColors.of(context).primary,
-              checkColor: AppColors.black,
+              checkColor: Theme.of(context).colorScheme.onPrimary,
               side: BorderSide(
                 color: subItem.isHidden
                     ? AppColors.of(context).lightGrey

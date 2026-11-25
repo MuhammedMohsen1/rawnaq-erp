@@ -41,7 +41,7 @@ class PricingItemCardHeader extends StatelessWidget {
       clipBehavior: Clip.antiAlias,
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 21),
       decoration: BoxDecoration(
-        color: AppColors.of(context).surfaceColor,
+        color: AppColors.of(context).sectionHeader,
         borderRadius: BorderRadius.only(
           topLeft: Radius.circular(12),
           topRight: Radius.circular(12),
@@ -54,7 +54,7 @@ class PricingItemCardHeader extends StatelessWidget {
             value: !itemIsHidden,
             onChanged: (value) => onVisibilityChanged(value ?? false),
             activeColor: AppColors.of(context).primary,
-            checkColor: AppColors.black,
+            checkColor: Theme.of(context).colorScheme.onPrimary,
             side: BorderSide(
               color: itemIsHidden
                   ? AppColors.of(context).lightGrey
@@ -81,19 +81,25 @@ class PricingItemCardHeader extends StatelessWidget {
                   pricingStatus!.toUpperCase() == 'PENDING_SIGNATURE')) ...[
             PricingStatChip(
               value: totalCost,
-              color: const Color.fromARGB(255, 235, 16, 8),
+              color: (Theme.of(context).brightness == Brightness.light
+                  ? AppColors.light.error
+                  : const Color.fromARGB(255, 235, 16, 8)),
               showFinancials: showFinancials,
             ),
             const SizedBox(width: 6),
             PricingStatChip(
               value: profitAmount,
-              color: const Color(0xFF10B981),
+              color: (Theme.of(context).brightness == Brightness.light
+                  ? AppColors.light.success
+                  : const Color(0xFF10B981)),
               showFinancials: showFinancials,
             ),
             const SizedBox(width: 6),
             PricingStatChip(
               value: totalCost > 0 ? (profitAmount / totalCost * 100) : 0.0,
-              color: const Color(0xFFF59E0B),
+              color: (Theme.of(context).brightness == Brightness.light
+                  ? AppColors.light.warning
+                  : const Color(0xFFF59E0B)),
               suffix: '%',
               showFinancials: showFinancials,
             ),

@@ -5,9 +5,8 @@ class AppTheme {
   static final darkTheme = _theme(AppColors.dark);
   static final lightTheme = _theme(AppColors.light);
   static ThemeData _theme(AppColors colors) {
-    final onAccent = colors.brightness == Brightness.dark
-        ? AppColors.black
-        : AppColors.white;
+    final isLight = colors.brightness == Brightness.light;
+    final onAccent = !isLight ? AppColors.black : AppColors.white;
     return ThemeData(
       useMaterial3: true,
       brightness: colors.brightness,
@@ -25,6 +24,14 @@ class AppTheme {
         secondaryContainer: colors.tableRowHover,
         onSecondaryContainer: colors.textPrimary,
         surface: colors.surface,
+        surfaceTint: isLight ? Colors.transparent : null,
+        surfaceContainerLowest: isLight ? colors.cardBackground : null,
+        surfaceContainerLow: isLight ? colors.tableRowOdd : null,
+        surfaceContainer: isLight ? colors.surfaceColor : null,
+        surfaceContainerHigh: isLight ? colors.tableHeader : null,
+        surfaceContainerHighest: isLight ? colors.tableRowHover : null,
+        surfaceDim: isLight ? colors.scaffoldBackground : null,
+        surfaceBright: isLight ? colors.cardBackground : null,
         error: colors.error,
         onPrimary: onAccent,
         onSecondary: onAccent,
