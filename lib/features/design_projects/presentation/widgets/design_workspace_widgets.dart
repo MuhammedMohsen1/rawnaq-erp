@@ -1,3 +1,4 @@
+import 'package:rawnaq/core/widgets/app_toast.dart';
 import 'dart:io' as io;
 
 import 'package:file_picker/file_picker.dart';
@@ -94,11 +95,13 @@ class _DesignTimelinePanelState extends State<DesignTimelinePanel> {
                       children: [
                         Container(
                           decoration: BoxDecoration(
-                            color: AppColors.inputBackground.withValues(
-                              alpha: 0.62,
-                            ),
+                            color: AppColors.of(
+                              context,
+                            ).inputBackground.withValues(alpha: 0.62),
                             borderRadius: BorderRadius.circular(18),
-                            border: Border.all(color: AppColors.border),
+                            border: Border.all(
+                              color: AppColors.of(context).border,
+                            ),
                           ),
                           child: ListView.separated(
                             controller: scrollController,
@@ -119,20 +122,20 @@ class _DesignTimelinePanelState extends State<DesignTimelinePanel> {
                           Positioned.fill(
                             child: Container(
                               decoration: BoxDecoration(
-                                color: AppColors.primary.withValues(
-                                  alpha: 0.12,
-                                ),
+                                color: AppColors.of(
+                                  context,
+                                ).primary.withValues(alpha: 0.12),
                                 borderRadius: BorderRadius.circular(18),
                                 border: Border.all(
-                                  color: AppColors.primaryLight,
+                                  color: AppColors.of(context).primaryLight,
                                   width: 2,
                                 ),
                               ),
-                              child: const Center(
+                              child: Center(
                                 child: Icon(
                                   Icons.upload_file,
                                   size: 42,
-                                  color: AppColors.primaryLight,
+                                  color: AppColors.of(context).primaryLight,
                                 ),
                               ),
                             ),
@@ -323,7 +326,8 @@ class _DesignTimelinePanelState extends State<DesignTimelinePanel> {
 
   void _showOversizedFileMessage() {
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
+      AppToast.build(
+        tone: ToastTone.warning,
         duration: const Duration(seconds: 2),
         content: Text('حجم الملف يجب ألا يتجاوز 1GB'),
       ),
@@ -381,7 +385,7 @@ class DesignTimelineSurface extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(6),
-      decoration: _workspaceShellDecoration(),
+      decoration: _workspaceShellDecoration(context),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -404,10 +408,10 @@ class DesignTimelineSurface extends StatelessWidget {
   }
 }
 
-BoxDecoration _workspaceShellDecoration() => BoxDecoration(
-  color: AppColors.cardBackground,
+BoxDecoration _workspaceShellDecoration(BuildContext context) => BoxDecoration(
+  color: AppColors.of(context).cardBackground,
   borderRadius: BorderRadius.circular(18),
-  border: Border.all(color: AppColors.border),
+  border: Border.all(color: AppColors.of(context).border),
   boxShadow: const [
     BoxShadow(color: Color(0x18000000), blurRadius: 18, offset: Offset(0, 8)),
   ],

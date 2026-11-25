@@ -113,7 +113,8 @@ mixin PricingItemCardImageActions on State<PricingItemCard> {
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
+          AppToast.build(
+            tone: ToastTone.error,
             content: Text('فشل اختيار الصور: $e'),
             duration: const Duration(seconds: 2),
           ),
@@ -159,7 +160,8 @@ mixin PricingItemCardImageActions on State<PricingItemCard> {
         }
 
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
+          AppToast.build(
+            tone: ToastTone.error,
             content: Text(errorMessage),
             duration: const Duration(seconds: 2),
           ),
@@ -220,7 +222,8 @@ mixin PricingItemCardImageActions on State<PricingItemCard> {
       } catch (e) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
+            AppToast.build(
+              tone: ToastTone.error,
               duration: const Duration(seconds: 2),
               content: Text(
                 'تم حذف الصورة ولكن فشل تحديث البيانات: ${e.toString()}',
@@ -233,7 +236,8 @@ mixin PricingItemCardImageActions on State<PricingItemCard> {
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
+          AppToast.build(
+            tone: ToastTone.success,
             content: Text('تم حذف الصورة بنجاح'),
             duration: Duration(seconds: 2),
           ),
@@ -242,7 +246,8 @@ mixin PricingItemCardImageActions on State<PricingItemCard> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
+          AppToast.build(
+            tone: ToastTone.error,
             duration: const Duration(seconds: 2),
             content: Text('فشل حذف الصورة: ${e.toString()}'),
           ),
@@ -297,7 +302,8 @@ mixin PricingItemCardImageActions on State<PricingItemCard> {
       }
 
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
+        AppToast.build(
+          tone: ToastTone.success,
           content: Text('تم رفع الصور بنجاح'),
           duration: Duration(seconds: 2),
         ),
@@ -308,7 +314,8 @@ mixin PricingItemCardImageActions on State<PricingItemCard> {
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
+          AppToast.build(
+            tone: ToastTone.error,
             content: Text('فشل رفع الصور: $e'),
             duration: const Duration(seconds: 2),
           ),
@@ -405,7 +412,8 @@ mixin PricingItemCardImageActions on State<PricingItemCard> {
       if (updatedItem != null && mounted) {
         widget.onItemChanged?.call(updatedItem);
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
+          AppToast.build(
+            tone: ToastTone.success,
             content: Text('تم قص الصورة بنجاح'),
             duration: Duration(seconds: 2),
           ),
@@ -414,7 +422,8 @@ mixin PricingItemCardImageActions on State<PricingItemCard> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
+          AppToast.build(
+            tone: ToastTone.error,
             duration: const Duration(seconds: 2),
             content: Text('فشل قص الصورة: ${e.toString()}'),
           ),

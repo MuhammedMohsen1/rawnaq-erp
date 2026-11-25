@@ -1,3 +1,4 @@
+import 'package:rawnaq/core/widgets/app_toast.dart';
 import 'package:rawnaq/core/utils/arabic_number_input_formatter.dart';
 import 'package:dio/dio.dart';
 import 'package:file_picker/file_picker.dart';
@@ -131,7 +132,9 @@ class _CompactTransactionRow extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
         border: Border(
-          bottom: BorderSide(color: AppColors.border.withValues(alpha: 0.5)),
+          bottom: BorderSide(
+            color: AppColors.of(context).border.withValues(alpha: 0.5),
+          ),
         ),
       ),
       child: Row(
@@ -142,13 +145,15 @@ class _CompactTransactionRow extends StatelessWidget {
             height: 28,
             decoration: BoxDecoration(
               color: isIncome
-                  ? AppColors.success.withValues(alpha: 0.1)
-                  : AppColors.error.withValues(alpha: 0.1),
+                  ? AppColors.of(context).success.withValues(alpha: 0.1)
+                  : AppColors.of(context).error.withValues(alpha: 0.1),
               shape: BoxShape.circle,
             ),
             child: Icon(
               isIncome ? Icons.arrow_downward : Icons.arrow_upward,
-              color: isIncome ? AppColors.success : AppColors.error,
+              color: isIncome
+                  ? AppColors.of(context).success
+                  : AppColors.of(context).error,
               size: 14,
             ),
           ),
@@ -162,20 +167,22 @@ class _CompactTransactionRow extends StatelessWidget {
                   transaction.description,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: AppTextStyles.tableCellBold.copyWith(fontSize: 13),
+                  style: AppTextStyles.of(
+                    context,
+                  ).tableCellBold.copyWith(fontSize: 13),
                 ),
                 if (transaction.subDescription != null)
                   Text(
                     transaction.subDescription!,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: AppTextStyles.caption,
+                    style: AppTextStyles.of(context).caption,
                   ),
                 Text(
                   dateFormat.format(transaction.date),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: AppTextStyles.caption,
+                  style: AppTextStyles.of(context).caption,
                 ),
                 if (transaction.attachments.isNotEmpty) ...[
                   const SizedBox(height: 4),
@@ -196,8 +203,10 @@ class _CompactTransactionRow extends StatelessWidget {
                 '${isIncome ? '+' : ''}${transaction.amount.toStringAsFixed(3)}',
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: AppTextStyles.tableCellBold.copyWith(
-                  color: isIncome ? AppColors.success : AppColors.error,
+                style: AppTextStyles.of(context).tableCellBold.copyWith(
+                  color: isIncome
+                      ? AppColors.of(context).success
+                      : AppColors.of(context).error,
                   fontSize: 13,
                 ),
                 textAlign: TextAlign.end,
@@ -216,7 +225,7 @@ class _CompactTransactionRow extends StatelessWidget {
                             .toggleEditing(transaction.id),
                         icon: const Icon(Icons.edit, size: 15),
                         tooltip: 'تعديل',
-                        color: AppColors.textSecondary,
+                        color: AppColors.of(context).textSecondary,
                       ),
                     ),
                     SizedBox(
@@ -237,7 +246,7 @@ class _CompactTransactionRow extends StatelessWidget {
                               ),
                         icon: const Icon(Icons.delete_outline, size: 15),
                         tooltip: 'حذف',
-                        color: AppColors.error,
+                        color: AppColors.of(context).error,
                       ),
                     ),
                   ],
@@ -275,7 +284,9 @@ class _WideTransactionRow extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
         border: Border(
-          bottom: BorderSide(color: AppColors.border.withValues(alpha: 0.5)),
+          bottom: BorderSide(
+            color: AppColors.of(context).border.withValues(alpha: 0.5),
+          ),
         ),
       ),
       child: Row(
@@ -287,13 +298,15 @@ class _WideTransactionRow extends StatelessWidget {
               height: 36,
               decoration: BoxDecoration(
                 color: isIncome
-                    ? AppColors.success.withValues(alpha: 0.1)
-                    : AppColors.error.withValues(alpha: 0.1),
+                    ? AppColors.of(context).success.withValues(alpha: 0.1)
+                    : AppColors.of(context).error.withValues(alpha: 0.1),
                 shape: BoxShape.circle,
               ),
               child: Icon(
                 isIncome ? Icons.arrow_downward : Icons.arrow_upward,
-                color: isIncome ? AppColors.success : AppColors.error,
+                color: isIncome
+                    ? AppColors.of(context).success
+                    : AppColors.of(context).error,
                 size: 18,
               ),
             ),
@@ -305,12 +318,12 @@ class _WideTransactionRow extends StatelessWidget {
               children: [
                 Text(
                   transaction.description,
-                  style: AppTextStyles.tableCellBold,
+                  style: AppTextStyles.of(context).tableCellBold,
                 ),
                 if (transaction.subDescription != null)
                   Text(
                     transaction.subDescription!,
-                    style: AppTextStyles.bodySmall,
+                    style: AppTextStyles.of(context).bodySmall,
                   ),
                 if (transaction.attachments.isNotEmpty) ...[
                   const SizedBox(height: 6),
@@ -326,15 +339,17 @@ class _WideTransactionRow extends StatelessWidget {
             width: 120,
             child: Text(
               dateFormat.format(transaction.date),
-              style: AppTextStyles.tableCell,
+              style: AppTextStyles.of(context).tableCell,
             ),
           ),
           SizedBox(
             width: 140,
             child: Text(
               '${isIncome ? '+' : ''}${transaction.amount.toStringAsFixed(3)}',
-              style: AppTextStyles.tableCellBold.copyWith(
-                color: isIncome ? AppColors.success : AppColors.error,
+              style: AppTextStyles.of(context).tableCellBold.copyWith(
+                color: isIncome
+                    ? AppColors.of(context).success
+                    : AppColors.of(context).error,
               ),
               textAlign: TextAlign.end,
             ),
@@ -351,7 +366,7 @@ class _WideTransactionRow extends StatelessWidget {
                             .toggleEditing(transaction.id),
                         icon: const Icon(Icons.edit, size: 18),
                         tooltip: 'تعديل',
-                        color: AppColors.textSecondary,
+                        color: AppColors.of(context).textSecondary,
                       ),
                       IconButton(
                         onPressed: () => isInstallment
@@ -367,7 +382,7 @@ class _WideTransactionRow extends StatelessWidget {
                               ),
                         icon: const Icon(Icons.delete_outline, size: 18),
                         tooltip: 'حذف',
-                        color: AppColors.error,
+                        color: AppColors.of(context).error,
                       ),
                     ],
                   )
@@ -402,7 +417,9 @@ void showDeleteConfirmation(
               transactionId,
             );
           },
-          style: ElevatedButton.styleFrom(backgroundColor: AppColors.error),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: AppColors.of(context).error,
+          ),
           child: const Text('حذف'),
         ),
       ],
@@ -437,15 +454,18 @@ void showDeleteInstallmentConfirmation(
               if (context.mounted) {
                 final message = 'فشل حذف الدفعة: ${e.toString()}';
                 ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    duration: Duration(seconds: 2),
+                  AppToast.build(
+                    tone: ToastTone.error,
+                    duration: const Duration(seconds: 2),
                     content: Text(message),
                   ),
                 );
               }
             }
           },
-          style: ElevatedButton.styleFrom(backgroundColor: AppColors.error),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: AppColors.of(context).error,
+          ),
           child: const Text('حذف'),
         ),
       ],
@@ -500,7 +520,7 @@ class _AddExpenseRowState extends State<AddExpenseRow> {
         value: widget.cubit,
         child: Container(
           padding: const EdgeInsets.all(16),
-          color: AppColors.background.withValues(alpha: 0.05),
+          color: AppColors.of(context).background.withValues(alpha: 0.05),
           child: widget.isCompact ? _buildCompactForm() : _buildWideForm(),
         ),
       ),
@@ -533,12 +553,12 @@ class _AddExpenseRowState extends State<AddExpenseRow> {
             width: 36,
             height: 36,
             decoration: BoxDecoration(
-              color: AppColors.error.withValues(alpha: 0.1),
+              color: AppColors.of(context).error.withValues(alpha: 0.1),
               shape: BoxShape.circle,
             ),
-            child: const Icon(
+            child: Icon(
               Icons.arrow_upward,
-              color: AppColors.error,
+              color: AppColors.of(context).error,
               size: 18,
             ),
           ),
@@ -633,7 +653,9 @@ class _AddExpenseRowState extends State<AddExpenseRow> {
             contentPadding: EdgeInsets.zero,
             title: Text(
               'مرتجع',
-              style: AppTextStyles.caption.copyWith(color: AppColors.success),
+              style: AppTextStyles.of(
+                context,
+              ).caption.copyWith(color: AppColors.of(context).success),
             ),
           ),
         ),
@@ -643,7 +665,7 @@ class _AddExpenseRowState extends State<AddExpenseRow> {
           children: [
             IconButton(
               onPressed: widget.onCancel,
-              icon: const Icon(Icons.close, color: AppColors.error),
+              icon: Icon(Icons.close, color: AppColors.of(context).error),
               tooltip: 'إلغاء',
             ),
             IconButton(
@@ -654,7 +676,7 @@ class _AddExpenseRowState extends State<AddExpenseRow> {
                       height: 18,
                       child: CircularProgressIndicator(strokeWidth: 2),
                     )
-                  : const Icon(Icons.check, color: AppColors.success),
+                  : Icon(Icons.check, color: AppColors.of(context).success),
               tooltip: 'حفظ',
             ),
           ],
@@ -667,7 +689,8 @@ class _AddExpenseRowState extends State<AddExpenseRow> {
     final name = _nameController.text.trim();
     if (name.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
+        AppToast.build(
+          tone: ToastTone.warning,
           duration: Duration(seconds: 2),
           content: Text('يرجى إدخال اسم المصروف'),
         ),
@@ -683,7 +706,8 @@ class _AddExpenseRowState extends State<AddExpenseRow> {
       amount = parseNumber(_amountController.text);
       if (amount == null || amount <= 0) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
+          AppToast.build(
+            tone: ToastTone.warning,
             duration: Duration(seconds: 2),
             content: Text('يرجى إدخال مبلغ صحيح'),
           ),
@@ -698,7 +722,8 @@ class _AddExpenseRowState extends State<AddExpenseRow> {
           unitCost <= 0 ||
           quantity <= 0) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
+          AppToast.build(
+            tone: ToastTone.warning,
             duration: Duration(seconds: 2),
             content: Text('يرجى إدخال سعر الوحدة والكمية'),
           ),
@@ -724,10 +749,10 @@ class _AddExpenseRowState extends State<AddExpenseRow> {
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
+          AppToast.build(
+            tone: ToastTone.success,
             duration: Duration(seconds: 2),
             content: Text('تم إضافة المصروف بنجاح'),
-            backgroundColor: AppColors.success,
           ),
         );
         widget.onCancel();
@@ -735,10 +760,10 @@ class _AddExpenseRowState extends State<AddExpenseRow> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
+          AppToast.build(
+            tone: ToastTone.error,
             duration: Duration(seconds: 2),
             content: Text('فشل إضافة المصروف: ${e.toString()}'),
-            backgroundColor: AppColors.error,
           ),
         );
       }
@@ -818,7 +843,7 @@ class _EditableExpenseRowState extends State<EditableExpenseRow> {
       onClose: widget.onCancel,
       child: Container(
         padding: const EdgeInsets.all(16),
-        color: AppColors.primary.withValues(alpha: 0.05),
+        color: AppColors.of(context).primary.withValues(alpha: 0.05),
         child: widget.isCompact ? _buildCompactForm() : _buildWideForm(),
       ),
     );
@@ -834,17 +859,20 @@ class _EditableExpenseRowState extends State<EditableExpenseRow> {
               width: 36,
               height: 36,
               decoration: BoxDecoration(
-                color: AppColors.error.withValues(alpha: 0.1),
+                color: AppColors.of(context).error.withValues(alpha: 0.1),
                 shape: BoxShape.circle,
               ),
-              child: const Icon(
+              child: Icon(
                 Icons.arrow_upward,
-                color: AppColors.error,
+                color: AppColors.of(context).error,
                 size: 18,
               ),
             ),
             const SizedBox(width: 12),
-            Text('تعديل المصروف', style: AppTextStyles.tableCellBold),
+            Text(
+              'تعديل المصروف',
+              style: AppTextStyles.of(context).tableCellBold,
+            ),
           ],
         ),
         const SizedBox(height: 8),
@@ -923,7 +951,7 @@ class _EditableExpenseRowState extends State<EditableExpenseRow> {
           children: [
             IconButton(
               onPressed: widget.onCancel,
-              icon: const Icon(Icons.close, color: AppColors.error),
+              icon: Icon(Icons.close, color: AppColors.of(context).error),
               tooltip: 'إلغاء',
             ),
             IconButton(
@@ -934,7 +962,7 @@ class _EditableExpenseRowState extends State<EditableExpenseRow> {
                       height: 18,
                       child: CircularProgressIndicator(strokeWidth: 2),
                     )
-                  : const Icon(Icons.check, color: AppColors.success),
+                  : Icon(Icons.check, color: AppColors.of(context).success),
               tooltip: 'حفظ',
             ),
           ],
@@ -952,12 +980,12 @@ class _EditableExpenseRowState extends State<EditableExpenseRow> {
             width: 36,
             height: 36,
             decoration: BoxDecoration(
-              color: AppColors.error.withValues(alpha: 0.1),
+              color: AppColors.of(context).error.withValues(alpha: 0.1),
               shape: BoxShape.circle,
             ),
-            child: const Icon(
+            child: Icon(
               Icons.arrow_upward,
-              color: AppColors.error,
+              color: AppColors.of(context).error,
               size: 18,
             ),
           ),
@@ -1045,7 +1073,7 @@ class _EditableExpenseRowState extends State<EditableExpenseRow> {
           children: [
             IconButton(
               onPressed: widget.onCancel,
-              icon: const Icon(Icons.close, color: AppColors.error),
+              icon: Icon(Icons.close, color: AppColors.of(context).error),
               tooltip: 'إلغاء',
             ),
             IconButton(
@@ -1056,7 +1084,7 @@ class _EditableExpenseRowState extends State<EditableExpenseRow> {
                       height: 18,
                       child: CircularProgressIndicator(strokeWidth: 2),
                     )
-                  : const Icon(Icons.check, color: AppColors.success),
+                  : Icon(Icons.check, color: AppColors.of(context).success),
               tooltip: 'حفظ',
             ),
           ],
@@ -1069,7 +1097,8 @@ class _EditableExpenseRowState extends State<EditableExpenseRow> {
     final name = _nameController.text.trim();
     if (name.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
+        AppToast.build(
+          tone: ToastTone.warning,
           duration: Duration(seconds: 2),
           content: Text('يرجى إدخال اسم المصروف'),
         ),
@@ -1085,7 +1114,8 @@ class _EditableExpenseRowState extends State<EditableExpenseRow> {
       amount = double.tryParse(_amountController.text);
       if (amount == null || amount <= 0) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
+          AppToast.build(
+            tone: ToastTone.warning,
             duration: Duration(seconds: 2),
             content: Text('يرجى إدخال مبلغ صحيح'),
           ),
@@ -1100,7 +1130,8 @@ class _EditableExpenseRowState extends State<EditableExpenseRow> {
           unitCost <= 0 ||
           quantity <= 0) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
+          AppToast.build(
+            tone: ToastTone.warning,
             duration: Duration(seconds: 2),
             content: Text('يرجى إدخال سعر الوحدة والكمية'),
           ),
@@ -1125,20 +1156,20 @@ class _EditableExpenseRowState extends State<EditableExpenseRow> {
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
+          AppToast.build(
+            tone: ToastTone.success,
             duration: Duration(seconds: 2),
             content: Text('تم تحديث المصروف بنجاح'),
-            backgroundColor: AppColors.success,
           ),
         );
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
+          AppToast.build(
+            tone: ToastTone.error,
             duration: Duration(seconds: 2),
             content: Text('فشل تحديث المصروف: ${e.toString()}'),
-            backgroundColor: AppColors.error,
           ),
         );
       }
@@ -1208,7 +1239,7 @@ class _EditableInstallmentRowState extends State<EditableInstallmentRow> {
       onClose: widget.onCancel,
       child: Container(
         padding: const EdgeInsets.all(16),
-        color: AppColors.primary.withValues(alpha: 0.05),
+        color: AppColors.of(context).primary.withValues(alpha: 0.05),
         child: widget.isCompact ? _buildCompactForm() : _buildWideForm(),
       ),
     );
@@ -1224,17 +1255,20 @@ class _EditableInstallmentRowState extends State<EditableInstallmentRow> {
               width: 36,
               height: 36,
               decoration: BoxDecoration(
-                color: AppColors.success.withValues(alpha: 0.1),
+                color: AppColors.of(context).success.withValues(alpha: 0.1),
                 shape: BoxShape.circle,
               ),
-              child: const Icon(
+              child: Icon(
                 Icons.arrow_downward,
-                color: AppColors.success,
+                color: AppColors.of(context).success,
                 size: 18,
               ),
             ),
             const SizedBox(width: 12),
-            Text('تعديل الدفعة', style: AppTextStyles.tableCellBold),
+            Text(
+              'تعديل الدفعة',
+              style: AppTextStyles.of(context).tableCellBold,
+            ),
           ],
         ),
         const SizedBox(height: 12),
@@ -1281,7 +1315,7 @@ class _EditableInstallmentRowState extends State<EditableInstallmentRow> {
           children: [
             IconButton(
               onPressed: widget.onCancel,
-              icon: const Icon(Icons.close, color: AppColors.error),
+              icon: Icon(Icons.close, color: AppColors.of(context).error),
               tooltip: 'إلغاء',
             ),
             IconButton(
@@ -1292,7 +1326,7 @@ class _EditableInstallmentRowState extends State<EditableInstallmentRow> {
                       height: 18,
                       child: CircularProgressIndicator(strokeWidth: 2),
                     )
-                  : const Icon(Icons.check, color: AppColors.success),
+                  : Icon(Icons.check, color: AppColors.of(context).success),
               tooltip: 'حفظ',
             ),
           ],
@@ -1310,12 +1344,12 @@ class _EditableInstallmentRowState extends State<EditableInstallmentRow> {
             width: 36,
             height: 36,
             decoration: BoxDecoration(
-              color: AppColors.success.withValues(alpha: 0.1),
+              color: AppColors.of(context).success.withValues(alpha: 0.1),
               shape: BoxShape.circle,
             ),
-            child: const Icon(
+            child: Icon(
               Icons.arrow_downward,
-              color: AppColors.success,
+              color: AppColors.of(context).success,
               size: 18,
             ),
           ),
@@ -1372,7 +1406,7 @@ class _EditableInstallmentRowState extends State<EditableInstallmentRow> {
           children: [
             IconButton(
               onPressed: widget.onCancel,
-              icon: const Icon(Icons.close, color: AppColors.error),
+              icon: Icon(Icons.close, color: AppColors.of(context).error),
               tooltip: 'إلغاء',
             ),
             IconButton(
@@ -1383,7 +1417,7 @@ class _EditableInstallmentRowState extends State<EditableInstallmentRow> {
                       height: 18,
                       child: CircularProgressIndicator(strokeWidth: 2),
                     )
-                  : const Icon(Icons.check, color: AppColors.success),
+                  : Icon(Icons.check, color: AppColors.of(context).success),
               tooltip: 'حفظ',
             ),
           ],
@@ -1402,7 +1436,8 @@ class _EditableInstallmentRowState extends State<EditableInstallmentRow> {
 
     if (name.isEmpty && !hasOriginal && !hasRequested) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
+        AppToast.build(
+          tone: ToastTone.warning,
           duration: Duration(seconds: 2),
           content: Text('يرجى إدخال الاسم أو المبالغ'),
         ),
@@ -1427,10 +1462,10 @@ class _EditableInstallmentRowState extends State<EditableInstallmentRow> {
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
+          AppToast.build(
+            tone: ToastTone.success,
             duration: Duration(seconds: 2),
             content: Text('تم تحديث الدفعة بنجاح'),
-            backgroundColor: AppColors.success,
           ),
         );
       }
@@ -1438,10 +1473,10 @@ class _EditableInstallmentRowState extends State<EditableInstallmentRow> {
       if (mounted) {
         final message = 'فشل تحديث الدفعة: ${e.toString()}';
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
+          AppToast.build(
+            tone: ToastTone.error,
             duration: Duration(seconds: 2),
             content: Text(message),
-            backgroundColor: AppColors.error,
           ),
         );
         context.read<ExecutionCubit>().cancelEditing(widget.transaction.id);
@@ -1475,7 +1510,7 @@ class LoadMoreButton extends StatelessWidget {
                 onPressed: onLoadMore,
                 child: Text(
                   'تحميل المزيد من المعاملات',
-                  style: AppTextStyles.link,
+                  style: AppTextStyles.of(context).link,
                 ),
               ),
       ),
@@ -1524,7 +1559,7 @@ class _AddIncomeRowState extends State<AddIncomeRow> {
         value: widget.cubit,
         child: Container(
           padding: const EdgeInsets.all(16),
-          color: AppColors.background.withValues(alpha: 0.05),
+          color: AppColors.of(context).background.withValues(alpha: 0.05),
           child: AddIncomeRowContent(
             isCompact: widget.isCompact,
             isSubmitting: _isSubmitting,
@@ -1577,7 +1612,8 @@ class _AddIncomeRowState extends State<AddIncomeRow> {
     final description = _descriptionController.text.trim();
     if (description.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
+        AppToast.build(
+          tone: ToastTone.warning,
           duration: Duration(seconds: 2),
           content: Text('يرجى إدخال وصف الإيراد'),
         ),
@@ -1588,7 +1624,8 @@ class _AddIncomeRowState extends State<AddIncomeRow> {
     final amount = double.tryParse(_amountController.text);
     if (amount == null || amount <= 0) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
+        AppToast.build(
+          tone: ToastTone.warning,
           duration: Duration(seconds: 2),
           content: Text('يرجى إدخال مبلغ صحيح'),
         ),
@@ -1614,10 +1651,10 @@ class _AddIncomeRowState extends State<AddIncomeRow> {
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
+          AppToast.build(
+            tone: ToastTone.success,
             duration: Duration(seconds: 2),
             content: Text('تم إضافة الإيراد بنجاح'),
-            backgroundColor: AppColors.success,
           ),
         );
         widget.onCancel();
@@ -1625,10 +1662,10 @@ class _AddIncomeRowState extends State<AddIncomeRow> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
+          AppToast.build(
+            tone: ToastTone.error,
             duration: Duration(seconds: 2),
             content: Text('فشل إضافة الإيراد: ${e.toString()}'),
-            backgroundColor: AppColors.error,
           ),
         );
       }

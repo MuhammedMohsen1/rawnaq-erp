@@ -1,3 +1,4 @@
+import 'package:rawnaq/core/widgets/app_toast.dart';
 import 'dart:developer' show log;
 
 import 'package:flutter/material.dart';
@@ -22,7 +23,7 @@ class _LoginPageState extends State<LoginPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.scaffoldBackground,
+      backgroundColor: AppColors.of(context).scaffoldBackground,
       body: BlocListener<AuthBloc, AuthState>(
         listener: (context, state) {
           log('🚩 UI: AuthBloc state changed to: ${state.runtimeType}');
@@ -34,10 +35,9 @@ class _LoginPageState extends State<LoginPage> {
             log('🚩 UI: AuthError received: ${state.message}');
             ScaffoldMessenger.of(context).clearSnackBars();
             ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
+              AppToast.build(
+                tone: ToastTone.error,
                 content: Text(state.message),
-                backgroundColor: AppColors.error,
-                behavior: SnackBarBehavior.floating,
                 margin: const EdgeInsets.all(16),
                 duration: const Duration(seconds: 2),
               ),

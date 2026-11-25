@@ -35,14 +35,14 @@ class ProjectListSearchField extends StatelessWidget {
                 icon: const Icon(Icons.close_rounded),
               ),
         filled: true,
-        fillColor: AppColors.cardBackground,
+        fillColor: AppColors.of(context).cardBackground,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: AppColors.border),
+          borderSide: BorderSide(color: AppColors.of(context).border),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: AppColors.border),
+          borderSide: BorderSide(color: AppColors.of(context).border),
         ),
       ),
     );
@@ -87,7 +87,7 @@ class ProjectListStatusFilterBar extends StatelessWidget {
                     label: 'الكل',
                     count: totalCount,
                     icon: Icons.grid_view_rounded,
-                    accent: AppColors.primary,
+                    accent: AppColors.of(context).primary,
                     selected: selectedStatus == null,
                     onTap: () => onSelected(null),
                   );
@@ -95,6 +95,7 @@ class ProjectListStatusFilterBar extends StatelessWidget {
 
                 final status = availableStatuses[index - 1];
                 final meta = _statusMetaOf(
+                  context,
                   status,
                   useDesignStatusLabels: useDesignStatusLabels,
                 );
@@ -154,10 +155,12 @@ class _StatusFilterChip extends StatelessWidget {
           decoration: BoxDecoration(
             color: selected
                 ? accent.withOpacity(0.12)
-                : AppColors.cardBackground,
+                : AppColors.of(context).cardBackground,
             borderRadius: BorderRadius.circular(999),
             border: Border.all(
-              color: selected ? accent.withOpacity(0.40) : AppColors.border,
+              color: selected
+                  ? accent.withOpacity(0.40)
+                  : AppColors.of(context).border,
             ),
           ),
           child: Row(
@@ -166,13 +169,15 @@ class _StatusFilterChip extends StatelessWidget {
               Icon(
                 icon,
                 size: 15,
-                color: selected ? accent : AppColors.textMuted,
+                color: selected ? accent : AppColors.of(context).textMuted,
               ),
               const SizedBox(width: 7),
               Text(
                 label,
-                style: AppTextStyles.labelSmall.copyWith(
-                  color: selected ? accent : AppColors.textSecondary,
+                style: AppTextStyles.of(context).labelSmall.copyWith(
+                  color: selected
+                      ? accent
+                      : AppColors.of(context).textSecondary,
                   fontWeight: selected ? FontWeight.w800 : FontWeight.w600,
                 ),
               ),
@@ -202,16 +207,20 @@ class _CountBubble extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
       decoration: BoxDecoration(
-        color: active ? color.withOpacity(0.16) : AppColors.surfaceColor,
+        color: active
+            ? color.withOpacity(0.16)
+            : AppColors.of(context).surfaceColor,
         borderRadius: BorderRadius.circular(999),
         border: Border.all(
-          color: active ? color.withOpacity(0.25) : AppColors.border,
+          color: active
+              ? color.withOpacity(0.25)
+              : AppColors.of(context).border,
         ),
       ),
       child: Text(
         '$count',
         style: TextStyle(
-          color: active ? color : AppColors.textMuted,
+          color: active ? color : AppColors.of(context).textMuted,
           fontSize: 10.5,
           fontWeight: FontWeight.w800,
           height: 1.1,
@@ -239,7 +248,7 @@ class _PrimaryGlowButton extends StatelessWidget {
       icon: Icon(icon, size: 17),
       label: Text(label),
       style: ElevatedButton.styleFrom(
-        backgroundColor: AppColors.secondary,
+        backgroundColor: AppColors.of(context).secondary,
         foregroundColor: AppColors.white,
       ),
     );
@@ -247,21 +256,22 @@ class _PrimaryGlowButton extends StatelessWidget {
 }
 
 _StatusMeta _statusMetaOf(
+  BuildContext context,
   ProjectStatus status, {
   bool useDesignStatusLabels = false,
 }) {
   switch (status) {
     case ProjectStatus.underPricing:
-      return const _StatusMeta(
+      return _StatusMeta(
         label: 'التسعير والتوقيع',
         icon: Icons.calculate_rounded,
-        accent: AppColors.primary,
+        accent: AppColors.of(context).primary,
       );
     case ProjectStatus.pendingSignature:
-      return const _StatusMeta(
+      return _StatusMeta(
         label: 'بانتظار التوقيع',
         icon: Icons.draw_rounded,
-        accent: AppColors.statusOnHold,
+        accent: AppColors.of(context).statusOnHold,
       );
     case ProjectStatus.execution:
       return _StatusMeta(
@@ -269,25 +279,25 @@ _StatusMeta _statusMetaOf(
         icon: useDesignStatusLabels
             ? Icons.design_services_rounded
             : Icons.rocket_launch_rounded,
-        accent: AppColors.secondary,
+        accent: AppColors.of(context).secondary,
       );
     case ProjectStatus.completed:
-      return const _StatusMeta(
+      return _StatusMeta(
         label: 'مكتمل',
         icon: Icons.verified_rounded,
-        accent: AppColors.statusCompleted,
+        accent: AppColors.of(context).statusCompleted,
       );
     case ProjectStatus.draft:
-      return const _StatusMeta(
+      return _StatusMeta(
         label: 'مسودة',
         icon: Icons.description_outlined,
-        accent: AppColors.textMuted,
+        accent: AppColors.of(context).textMuted,
       );
     default:
-      return const _StatusMeta(
+      return _StatusMeta(
         label: 'أخرى',
         icon: Icons.folder_rounded,
-        accent: AppColors.textMuted,
+        accent: AppColors.of(context).textMuted,
       );
   }
 }

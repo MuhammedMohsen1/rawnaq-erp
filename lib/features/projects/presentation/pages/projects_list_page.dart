@@ -1,3 +1,4 @@
+import 'package:rawnaq/core/widgets/app_toast.dart';
 import 'dart:async';
 import 'dart:math' as math;
 
@@ -447,7 +448,8 @@ class _ProjectsListPageState extends State<ProjectsListPage> {
       );
 
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
+        AppToast.build(
+          tone: ToastTone.success,
           content: Text('تم نقل المشروع إلى مرحلة التنفيذ بنجاح.'),
           duration: Duration(seconds: 3),
         ),
@@ -456,7 +458,8 @@ class _ProjectsListPageState extends State<ProjectsListPage> {
       if (!context.mounted) return;
 
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
+        AppToast.build(
+          tone: ToastTone.error,
           content: Text('فشل نقل المشروع إلى التنفيذ: $e'),
           duration: const Duration(seconds: 2),
         ),

@@ -1,3 +1,4 @@
+import 'package:rawnaq/core/widgets/app_toast.dart';
 import 'dart:io';
 import 'dart:convert';
 import 'dart:typed_data';
@@ -11,7 +12,6 @@ import 'package:open_file/open_file.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:rawnaq/core/routing/app_router.dart';
 import 'package:flutter_ionicons/flutter_ionicons.dart';
-import '../../../../core/constants/app_colors.dart';
 import '../../../../core/di/injection_container.dart';
 import '../../../../core/error/exceptions.dart';
 import '../../../../core/layout/top_bar_title_controller.dart';
@@ -155,7 +155,7 @@ class _UnderPricingContentState extends State<_UnderPricingContent> {
   @override
   void initState() {
     super.initState();
-    _syncToolbarAction();
+    _scheduleToolbarSync();
   }
 
   @override
@@ -177,8 +177,8 @@ class _UnderPricingContentState extends State<_UnderPricingContent> {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.hideFinancials != widget.hideFinancials) {
       _showFinancials = !widget.hideFinancials;
+      _scheduleToolbarSync();
     }
-    _syncToolbarAction();
   }
 
   @override
@@ -190,6 +190,12 @@ class _UnderPricingContentState extends State<_UnderPricingContent> {
     TopBarTitleController.clearPricingTitle();
     TopBarTitleController.clearPricingAction();
     super.dispose();
+  }
+
+  void _scheduleToolbarSync() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _syncToolbarAction();
+    });
   }
 
   void _syncToolbarAction() {
@@ -281,9 +287,9 @@ class _UnderPricingContentState extends State<_UnderPricingContent> {
             // Handle errors
             if (state is PricingError) {
               ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
+                AppToast.build(
+                  tone: ToastTone.error,
                   content: Text(state.message),
-                  backgroundColor: AppColors.error,
                   duration: const Duration(seconds: 2),
                 ),
               );
@@ -516,7 +522,8 @@ class _UnderPricingContentState extends State<_UnderPricingContent> {
                   await cubit.calculateProfitForSubItems(projectId);
                   if (context.mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
+                      AppToast.build(
+                        tone: ToastTone.success,
                         content: Text('تم تحديث الخصم بنجاح'),
                         duration: Duration(seconds: 2),
                       ),
@@ -540,7 +547,8 @@ class _UnderPricingContentState extends State<_UnderPricingContent> {
             ? null
             : () {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
+                  AppToast.build(
+                    tone: ToastTone.success,
                     duration: const Duration(seconds: 2),
                     content: Text('تم حفظ المسودة'),
                   ),
@@ -593,7 +601,8 @@ class _UnderPricingContentState extends State<_UnderPricingContent> {
       if (!context.mounted) return;
       context.go(AppRoutes.archivedProjects);
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
+        AppToast.build(
+          tone: ToastTone.success,
           duration: const Duration(seconds: 2),
           content: Text('تمت أرشفة المشروع'),
         ),
@@ -612,7 +621,8 @@ class _UnderPricingContentState extends State<_UnderPricingContent> {
         await context.read<PricingCubit>().addItem(projectId, name);
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
+            AppToast.build(
+              tone: ToastTone.success,
               duration: const Duration(seconds: 2),
               content: Text('تم إضافة البند بنجاح'),
             ),
@@ -621,7 +631,8 @@ class _UnderPricingContentState extends State<_UnderPricingContent> {
       } catch (e) {
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
+            AppToast.build(
+              tone: ToastTone.error,
               duration: const Duration(seconds: 2),
               content: Text('فشل إضافة البند: ${e.toString()}'),
             ),
@@ -644,7 +655,8 @@ class _UnderPricingContentState extends State<_UnderPricingContent> {
         );
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
+            AppToast.build(
+              tone: ToastTone.success,
               duration: const Duration(seconds: 2),
               content: Text('تم إضافة البند الفرعية بنجاح'),
             ),
@@ -653,7 +665,8 @@ class _UnderPricingContentState extends State<_UnderPricingContent> {
       } catch (e) {
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
+            AppToast.build(
+              tone: ToastTone.error,
               content: Text('فشل إضافة البند الفرعية: ${e.toString()}'),
               duration: const Duration(seconds: 2),
             ),
@@ -672,7 +685,8 @@ class _UnderPricingContentState extends State<_UnderPricingContent> {
         await context.read<PricingCubit>().returnToPricing(projectId, reason);
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
+            AppToast.build(
+              tone: ToastTone.success,
               content: Text('تم إرجاع التسعير بنجاح. يمكنك الآن التعديل'),
               duration: Duration(seconds: 3),
             ),
@@ -691,7 +705,8 @@ class _UnderPricingContentState extends State<_UnderPricingContent> {
       await context.read<PricingCubit>().calculateProfitForSubItems(projectId);
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
+          AppToast.build(
+            tone: ToastTone.success,
             content: Text('تم حساب الربح بنجاح'),
             duration: Duration(seconds: 3),
           ),
@@ -715,7 +730,8 @@ class _UnderPricingContentState extends State<_UnderPricingContent> {
         context.go(AppRoutes.projects);
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
+            AppToast.build(
+              tone: ToastTone.success,
               content: Text(
                 'تم تأكيد التسعير وإنشاء العقد بنجاح. تم نقل المشروع إلى مرحلة التنفيذ.',
               ),
@@ -780,7 +796,8 @@ class _UnderPricingContentState extends State<_UnderPricingContent> {
       if (context.mounted) {
         context.go(AppRoutes.execution(projectId));
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
+          AppToast.build(
+            tone: ToastTone.success,
             content: Text(
               'تم تأكيد العقد بنجاح. تم نقل المشروع إلى مرحلة التنفيذ.',
             ),
@@ -880,7 +897,8 @@ class _UnderPricingContentState extends State<_UnderPricingContent> {
         );
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
+            AppToast.build(
+              tone: ToastTone.success,
               content: Text(
                 'تم إرجاع العقد بنجاح. تم نقل المشروع إلى مرحلة التسعير.',
               ),
@@ -905,7 +923,8 @@ class _UnderPricingContentState extends State<_UnderPricingContent> {
     } catch (e) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
+          AppToast.build(
+            tone: ToastTone.error,
             content: Text('فشل حفظ الملاحظات: ${e.toString()}'),
             duration: const Duration(seconds: 2),
           ),
@@ -919,7 +938,8 @@ class _UnderPricingContentState extends State<_UnderPricingContent> {
       await context.read<PricingCubit>().submitForApproval(projectId);
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
+          AppToast.build(
+            tone: ToastTone.success,
             duration: const Duration(seconds: 2),
             content: Text('تم إرسال التسعير للتوقيع'),
           ),
@@ -928,7 +948,8 @@ class _UnderPricingContentState extends State<_UnderPricingContent> {
     } catch (e) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
+          AppToast.build(
+            tone: ToastTone.error,
             duration: const Duration(seconds: 2),
             content: Text('فشل إرسال التسعير للتوقيع: ${e.toString()}'),
           ),
@@ -1066,7 +1087,8 @@ class _UnderPricingContentState extends State<_UnderPricingContent> {
       if (outputFile == null) {
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
+            AppToast.build(
+              tone: ToastTone.info,
               content: Text('تم إلغاء حفظ الملف'),
               duration: Duration(seconds: 2),
             ),
@@ -1086,7 +1108,8 @@ class _UnderPricingContentState extends State<_UnderPricingContent> {
 
     if (context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
+        AppToast.build(
+          tone: ToastTone.success,
           content: Text('تم حفظ PDF بنجاح: ${savedFile.path}'),
           duration: const Duration(seconds: 2),
           action: Platform.isWindows || Platform.isMacOS || Platform.isLinux
@@ -1151,7 +1174,8 @@ class _UnderPricingContentState extends State<_UnderPricingContent> {
       if (outputFile == null) {
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
+            AppToast.build(
+              tone: ToastTone.info,
               content: Text('تم إلغاء حفظ الملف'),
               duration: Duration(seconds: 2),
             ),
@@ -1171,7 +1195,8 @@ class _UnderPricingContentState extends State<_UnderPricingContent> {
 
     if (context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
+        AppToast.build(
+          tone: ToastTone.success,
           content: Text('تم حفظ الصورة بنجاح: ${savedFile.path}'),
           duration: const Duration(seconds: 2),
         ),
@@ -1190,7 +1215,8 @@ class _UnderPricingContentState extends State<_UnderPricingContent> {
     if (images.isEmpty) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
+          AppToast.build(
+            tone: ToastTone.info,
             duration: const Duration(seconds: 2),
             content: Text('لم يتم العثور على صور'),
           ),
@@ -1210,7 +1236,8 @@ class _UnderPricingContentState extends State<_UnderPricingContent> {
       if (outputDir == null) {
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
+            AppToast.build(
+              tone: ToastTone.info,
               duration: const Duration(seconds: 2),
               content: Text('تم إلغاء حفظ الملفات'),
             ),
@@ -1251,7 +1278,8 @@ class _UnderPricingContentState extends State<_UnderPricingContent> {
 
     if (context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
+        AppToast.build(
+          tone: ToastTone.success,
           content: Text('تم حفظ ${savedFiles.length} صورة بنجاح'),
           duration: const Duration(seconds: 2),
         ),
@@ -1270,7 +1298,8 @@ class _UnderPricingContentState extends State<_UnderPricingContent> {
     }
 
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
+      AppToast.build(
+        tone: ToastTone.error,
         content: Text(errorMessage),
         duration: const Duration(seconds: 2),
       ),

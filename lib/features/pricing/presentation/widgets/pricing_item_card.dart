@@ -1,3 +1,4 @@
+import 'package:rawnaq/core/widgets/app_toast.dart';
 import 'dart:io';
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
@@ -500,32 +501,34 @@ class _PricingItemCardState extends State<PricingItemCard>
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: const Color(0xFF1C212B),
+        backgroundColor: AppColors.of(context).cardBackground,
         title: Text(
           'تأكيد الحذف',
-          style: AppTextStyles.h4.copyWith(color: AppColors.textPrimary),
+          style: AppTextStyles.of(
+            context,
+          ).h4.copyWith(color: AppColors.of(context).textPrimary),
         ),
         content: Text(
           'هل أنت متأكد من حذف العنصر "${widget.item.name}"؟\n\nسيتم حذف جميع الفئات الفرعية والعناصر المرتبطة به.',
-          style: AppTextStyles.bodyMedium.copyWith(
-            color: AppColors.textSecondary,
-          ),
+          style: AppTextStyles.of(
+            context,
+          ).bodyMedium.copyWith(color: AppColors.of(context).textSecondary),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
             child: Text(
               'إلغاء',
-              style: AppTextStyles.bodyMedium.copyWith(
-                color: AppColors.textSecondary,
-              ),
+              style: AppTextStyles.of(
+                context,
+              ).bodyMedium.copyWith(color: AppColors.of(context).textSecondary),
             ),
           ),
           TextButton(
             onPressed: () => Navigator.of(context).pop(true),
             child: Text(
               'حذف',
-              style: AppTextStyles.bodyMedium.copyWith(
+              style: AppTextStyles.of(context).bodyMedium.copyWith(
                 color: Colors.red,
                 fontWeight: FontWeight.w600,
               ),
@@ -547,32 +550,34 @@ class _PricingItemCardState extends State<PricingItemCard>
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: const Color(0xFF1C212B),
+        backgroundColor: AppColors.of(context).cardBackground,
         title: Text(
           'تأكيد الحذف',
-          style: AppTextStyles.h4.copyWith(color: AppColors.textPrimary),
+          style: AppTextStyles.of(
+            context,
+          ).h4.copyWith(color: AppColors.of(context).textPrimary),
         ),
         content: Text(
           'هل أنت متأكد من حذف البند الفرعية "$subItemName"؟\n\nسيتم حذف جميع العناصر المرتبطة بها.',
-          style: AppTextStyles.bodyMedium.copyWith(
-            color: AppColors.textSecondary,
-          ),
+          style: AppTextStyles.of(
+            context,
+          ).bodyMedium.copyWith(color: AppColors.of(context).textSecondary),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
             child: Text(
               'إلغاء',
-              style: AppTextStyles.bodyMedium.copyWith(
-                color: AppColors.textSecondary,
-              ),
+              style: AppTextStyles.of(
+                context,
+              ).bodyMedium.copyWith(color: AppColors.of(context).textSecondary),
             ),
           ),
           TextButton(
             onPressed: () => Navigator.of(context).pop(true),
             child: Text(
               'حذف',
-              style: AppTextStyles.bodyMedium.copyWith(
+              style: AppTextStyles.of(context).bodyMedium.copyWith(
                 color: Colors.red,
                 fontWeight: FontWeight.w600,
               ),
@@ -598,7 +603,8 @@ class _PricingItemCardState extends State<PricingItemCard>
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
+          AppToast.build(
+            tone: ToastTone.success,
             content: Text('تم حذف العنصر بنجاح'),
             duration: Duration(seconds: 2),
           ),
@@ -609,7 +615,8 @@ class _PricingItemCardState extends State<PricingItemCard>
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
+          AppToast.build(
+            tone: ToastTone.error,
             duration: const Duration(seconds: 2),
             content: Text('فشل حذف العنصر: ${e.toString()}'),
           ),
@@ -621,7 +628,7 @@ class _PricingItemCardState extends State<PricingItemCard>
   Future<void> _showItemContextMenu() async {
     final result = await showModalBottomSheet<String>(
       context: context,
-      backgroundColor: const Color(0xFF1C212B),
+      backgroundColor: AppColors.of(context).cardBackground,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
       ),
@@ -630,18 +637,18 @@ class _PricingItemCardState extends State<PricingItemCard>
           mainAxisSize: MainAxisSize.min,
           children: [
             ListTile(
-              leading: const Icon(Icons.edit, color: AppColors.primary),
-              title: const Text(
+              leading: Icon(Icons.edit, color: AppColors.of(context).primary),
+              title: Text(
                 'تعديل البند الفرعية',
-                style: TextStyle(color: AppColors.textPrimary),
+                style: TextStyle(color: AppColors.of(context).textPrimary),
               ),
               onTap: () => Navigator.pop(context, 'edit'),
             ),
             ListTile(
-              leading: const Icon(Icons.copy, color: AppColors.primary),
-              title: const Text(
+              leading: Icon(Icons.copy, color: AppColors.of(context).primary),
+              title: Text(
                 'انشاء نسخة مطابقة',
-                style: TextStyle(color: AppColors.textPrimary),
+                style: TextStyle(color: AppColors.of(context).textPrimary),
               ),
               onTap: () => Navigator.pop(context, 'duplicate'),
             ),
@@ -668,7 +675,7 @@ class _PricingItemCardState extends State<PricingItemCard>
   Future<void> _showSubItemContextMenu(PricingSubItemModel subItem) async {
     final result = await showModalBottomSheet<String>(
       context: context,
-      backgroundColor: const Color(0xFF1C212B),
+      backgroundColor: AppColors.of(context).cardBackground,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
       ),
@@ -677,18 +684,18 @@ class _PricingItemCardState extends State<PricingItemCard>
           mainAxisSize: MainAxisSize.min,
           children: [
             ListTile(
-              leading: const Icon(Icons.edit, color: AppColors.primary),
-              title: const Text(
+              leading: Icon(Icons.edit, color: AppColors.of(context).primary),
+              title: Text(
                 'تعديل الاسم',
-                style: TextStyle(color: AppColors.textPrimary),
+                style: TextStyle(color: AppColors.of(context).textPrimary),
               ),
               onTap: () => Navigator.pop(context, 'edit'),
             ),
             ListTile(
-              leading: const Icon(Icons.copy, color: AppColors.primary),
-              title: const Text(
+              leading: Icon(Icons.copy, color: AppColors.of(context).primary),
+              title: Text(
                 'انشاء نسخة مطابقة',
-                style: TextStyle(color: AppColors.textPrimary),
+                style: TextStyle(color: AppColors.of(context).textPrimary),
               ),
               onTap: () => Navigator.pop(context, 'duplicate'),
             ),
@@ -720,10 +727,12 @@ class _PricingItemCardState extends State<PricingItemCard>
       context: context,
       builder: (context) => StatefulBuilder(
         builder: (context, setDialogState) => AlertDialog(
-          backgroundColor: const Color(0xFF1C212B),
+          backgroundColor: AppColors.of(context).cardBackground,
           title: Text(
             title,
-            style: AppTextStyles.h4.copyWith(color: AppColors.textPrimary),
+            style: AppTextStyles.of(
+              context,
+            ).h4.copyWith(color: AppColors.of(context).textPrimary),
           ),
           content: Column(
             mainAxisSize: MainAxisSize.min,
@@ -731,8 +740,8 @@ class _PricingItemCardState extends State<PricingItemCard>
             children: [
               Text(
                 'اكتب عدد النسخ المطلوبة. إذا كان الاسم ينتهي برقم سيتم زيادته تلقائياً.',
-                style: AppTextStyles.bodyMedium.copyWith(
-                  color: AppColors.textSecondary,
+                style: AppTextStyles.of(context).bodyMedium.copyWith(
+                  color: AppColors.of(context).textSecondary,
                 ),
               ),
               const SizedBox(height: 16),
@@ -744,25 +753,29 @@ class _PricingItemCardState extends State<PricingItemCard>
                   ArabicNumberInputFormatter(),
                   FilteringTextInputFormatter.digitsOnly,
                 ],
-                style: const TextStyle(color: AppColors.textPrimary),
+                style: TextStyle(color: AppColors.of(context).textPrimary),
                 decoration: InputDecoration(
                   labelText: 'عدد النسخ',
                   errorText: errorText,
-                  labelStyle: const TextStyle(color: AppColors.textSecondary),
+                  labelStyle: TextStyle(
+                    color: AppColors.of(context).textSecondary,
+                  ),
                   enabledBorder: OutlineInputBorder(
-                    borderSide: const BorderSide(color: Color(0xFF363C4A)),
+                    borderSide: BorderSide(color: AppColors.of(context).border),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   focusedBorder: OutlineInputBorder(
-                    borderSide: const BorderSide(color: AppColors.primary),
+                    borderSide: BorderSide(
+                      color: AppColors.of(context).primary,
+                    ),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   errorBorder: OutlineInputBorder(
-                    borderSide: const BorderSide(color: AppColors.error),
+                    borderSide: BorderSide(color: AppColors.of(context).error),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   focusedErrorBorder: OutlineInputBorder(
-                    borderSide: const BorderSide(color: AppColors.error),
+                    borderSide: BorderSide(color: AppColors.of(context).error),
                     borderRadius: BorderRadius.circular(8),
                   ),
                 ),
@@ -785,8 +798,8 @@ class _PricingItemCardState extends State<PricingItemCard>
               onPressed: () => Navigator.pop(context),
               child: Text(
                 'إلغاء',
-                style: AppTextStyles.bodyMedium.copyWith(
-                  color: AppColors.textSecondary,
+                style: AppTextStyles.of(context).bodyMedium.copyWith(
+                  color: AppColors.of(context).textSecondary,
                 ),
               ),
             ),
@@ -804,8 +817,8 @@ class _PricingItemCardState extends State<PricingItemCard>
               },
               child: Text(
                 'تكرار',
-                style: AppTextStyles.bodyMedium.copyWith(
-                  color: AppColors.primary,
+                style: AppTextStyles.of(context).bodyMedium.copyWith(
+                  color: AppColors.of(context).primary,
                   fontWeight: FontWeight.w600,
                 ),
               ),
@@ -847,7 +860,8 @@ class _PricingItemCardState extends State<PricingItemCard>
       if (mounted) {
         widget.onItemChanged?.call(widget.item);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
+          AppToast.build(
+            tone: ToastTone.success,
             content: Text(
               options.count == 1
                   ? 'تم نسخ العنصر بنجاح'
@@ -860,7 +874,8 @@ class _PricingItemCardState extends State<PricingItemCard>
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
+          AppToast.build(
+            tone: ToastTone.error,
             duration: const Duration(seconds: 2),
             content: Text('فشل نسخ العنصر: ${e.toString()}'),
           ),
@@ -910,7 +925,8 @@ class _PricingItemCardState extends State<PricingItemCard>
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
+          AppToast.build(
+            tone: ToastTone.success,
             content: Text(
               options.count == 1
                   ? 'تم نسخ البند الفرعية بنجاح'
@@ -923,7 +939,8 @@ class _PricingItemCardState extends State<PricingItemCard>
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
+          AppToast.build(
+            tone: ToastTone.error,
             duration: const Duration(seconds: 2),
             content: Text('فشل نسخ البند الفرعية: ${e.toString()}'),
           ),
@@ -948,10 +965,12 @@ class _PricingItemCardState extends State<PricingItemCard>
           onSubmit: submit,
           onClose: () => Navigator.pop(context),
           child: AlertDialog(
-            backgroundColor: const Color(0xFF1C212B),
+            backgroundColor: AppColors.of(context).cardBackground,
             title: Text(
               'تعديل العنصر',
-              style: AppTextStyles.h4.copyWith(color: AppColors.textPrimary),
+              style: AppTextStyles.of(
+                context,
+              ).h4.copyWith(color: AppColors.of(context).textPrimary),
             ),
             content: SingleChildScrollView(
               child: Column(
@@ -961,18 +980,22 @@ class _PricingItemCardState extends State<PricingItemCard>
                     inputFormatters: const [ArabicNumberInputFormatter()],
                     controller: nameController,
                     autofocus: true,
-                    style: const TextStyle(color: AppColors.textPrimary),
+                    style: TextStyle(color: AppColors.of(context).textPrimary),
                     decoration: InputDecoration(
                       labelText: 'اسم العنصر',
-                      labelStyle: const TextStyle(
-                        color: AppColors.textSecondary,
+                      labelStyle: TextStyle(
+                        color: AppColors.of(context).textSecondary,
                       ),
                       enabledBorder: OutlineInputBorder(
-                        borderSide: const BorderSide(color: Color(0xFF363C4A)),
+                        borderSide: BorderSide(
+                          color: AppColors.of(context).border,
+                        ),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       focusedBorder: OutlineInputBorder(
-                        borderSide: const BorderSide(color: AppColors.primary),
+                        borderSide: BorderSide(
+                          color: AppColors.of(context).primary,
+                        ),
                         borderRadius: BorderRadius.circular(8),
                       ),
                     ),
@@ -985,8 +1008,8 @@ class _PricingItemCardState extends State<PricingItemCard>
                 onPressed: () => Navigator.pop(context),
                 child: Text(
                   'إلغاء',
-                  style: AppTextStyles.bodyMedium.copyWith(
-                    color: AppColors.textSecondary,
+                  style: AppTextStyles.of(context).bodyMedium.copyWith(
+                    color: AppColors.of(context).textSecondary,
                   ),
                 ),
               ),
@@ -994,8 +1017,8 @@ class _PricingItemCardState extends State<PricingItemCard>
                 onPressed: submit,
                 child: Text(
                   'حفظ',
-                  style: AppTextStyles.bodyMedium.copyWith(
-                    color: AppColors.primary,
+                  style: AppTextStyles.of(context).bodyMedium.copyWith(
+                    color: AppColors.of(context).primary,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
@@ -1031,7 +1054,8 @@ class _PricingItemCardState extends State<PricingItemCard>
         if (updatedItem != null && mounted) {
           widget.onItemChanged?.call(updatedItem);
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
+            AppToast.build(
+              tone: ToastTone.success,
               content: Text('تم تحديث العنصر بنجاح'),
               duration: Duration(seconds: 2),
             ),
@@ -1040,7 +1064,8 @@ class _PricingItemCardState extends State<PricingItemCard>
       } catch (e) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
+            AppToast.build(
+              tone: ToastTone.error,
               duration: const Duration(seconds: 2),
               content: Text('فشل تحديث العنصر: ${e.toString()}'),
             ),
@@ -1066,10 +1091,12 @@ class _PricingItemCardState extends State<PricingItemCard>
           onSubmit: submit,
           onClose: () => Navigator.pop(context),
           child: AlertDialog(
-            backgroundColor: const Color(0xFF1C212B),
+            backgroundColor: AppColors.of(context).cardBackground,
             title: Text(
               'تعديل البند الفرعية',
-              style: AppTextStyles.h4.copyWith(color: AppColors.textPrimary),
+              style: AppTextStyles.of(
+                context,
+              ).h4.copyWith(color: AppColors.of(context).textPrimary),
             ),
             content: SingleChildScrollView(
               child: Column(
@@ -1079,18 +1106,22 @@ class _PricingItemCardState extends State<PricingItemCard>
                     inputFormatters: const [ArabicNumberInputFormatter()],
                     controller: nameController,
                     autofocus: true,
-                    style: const TextStyle(color: AppColors.textPrimary),
+                    style: TextStyle(color: AppColors.of(context).textPrimary),
                     decoration: InputDecoration(
                       labelText: 'اسم البند الفرعية',
-                      labelStyle: const TextStyle(
-                        color: AppColors.textSecondary,
+                      labelStyle: TextStyle(
+                        color: AppColors.of(context).textSecondary,
                       ),
                       enabledBorder: OutlineInputBorder(
-                        borderSide: const BorderSide(color: Color(0xFF363C4A)),
+                        borderSide: BorderSide(
+                          color: AppColors.of(context).border,
+                        ),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       focusedBorder: OutlineInputBorder(
-                        borderSide: const BorderSide(color: AppColors.primary),
+                        borderSide: BorderSide(
+                          color: AppColors.of(context).primary,
+                        ),
                         borderRadius: BorderRadius.circular(8),
                       ),
                     ),
@@ -1103,8 +1134,8 @@ class _PricingItemCardState extends State<PricingItemCard>
                 onPressed: () => Navigator.pop(context),
                 child: Text(
                   'إلغاء',
-                  style: AppTextStyles.bodyMedium.copyWith(
-                    color: AppColors.textSecondary,
+                  style: AppTextStyles.of(context).bodyMedium.copyWith(
+                    color: AppColors.of(context).textSecondary,
                   ),
                 ),
               ),
@@ -1112,8 +1143,8 @@ class _PricingItemCardState extends State<PricingItemCard>
                 onPressed: submit,
                 child: Text(
                   'حفظ',
-                  style: AppTextStyles.bodyMedium.copyWith(
-                    color: AppColors.primary,
+                  style: AppTextStyles.of(context).bodyMedium.copyWith(
+                    color: AppColors.of(context).primary,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
@@ -1147,7 +1178,8 @@ class _PricingItemCardState extends State<PricingItemCard>
         if (updatedItem != null && mounted) {
           widget.onItemChanged?.call(updatedItem);
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
+            AppToast.build(
+              tone: ToastTone.success,
               content: Text('تم تحديث البند الفرعية بنجاح'),
               duration: Duration(seconds: 2),
             ),
@@ -1156,7 +1188,8 @@ class _PricingItemCardState extends State<PricingItemCard>
       } catch (e) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
+            AppToast.build(
+              tone: ToastTone.error,
               duration: const Duration(seconds: 2),
               content: Text('فشل تحديث البند الفرعية: ${e.toString()}'),
             ),
@@ -1227,7 +1260,8 @@ class _PricingItemCardState extends State<PricingItemCard>
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
+          AppToast.build(
+            tone: ToastTone.success,
             content: Text('تم حذف البند الفرعية بنجاح'),
             duration: Duration(seconds: 2),
           ),
@@ -1238,7 +1272,8 @@ class _PricingItemCardState extends State<PricingItemCard>
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
+          AppToast.build(
+            tone: ToastTone.error,
             duration: const Duration(seconds: 2),
             content: Text('فشل حذف البند الفرعية: ${e.toString()}'),
           ),
@@ -1408,7 +1443,8 @@ class _PricingItemCardState extends State<PricingItemCard>
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
+          AppToast.build(
+            tone: ToastTone.success,
             content: Text('تم حذف العنصر بنجاح'),
             duration: Duration(seconds: 1),
           ),
@@ -1417,7 +1453,8 @@ class _PricingItemCardState extends State<PricingItemCard>
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
+          AppToast.build(
+            tone: ToastTone.error,
             duration: const Duration(seconds: 2),
             content: Text('فشل حذف العنصر: ${e.toString()}'),
           ),
@@ -1532,7 +1569,8 @@ class _PricingItemCardState extends State<PricingItemCard>
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
+          AppToast.build(
+            tone: ToastTone.error,
             duration: const Duration(seconds: 2),
             content: Text('فشل تحديث حالة الظهور: ${e.toString()}'),
           ),
@@ -1592,7 +1630,8 @@ class _PricingItemCardState extends State<PricingItemCard>
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
+          AppToast.build(
+            tone: ToastTone.error,
             duration: const Duration(seconds: 2),
             content: Text('فشل تحديث حالة ظهور العنصر: ${e.toString()}'),
           ),
@@ -1646,7 +1685,8 @@ class _PricingItemCardState extends State<PricingItemCard>
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
+          AppToast.build(
+            tone: ToastTone.error,
             duration: const Duration(seconds: 2),
             content: Text('فشل تحديث حالة الظهور: ${e.toString()}'),
           ),
@@ -1735,8 +1775,8 @@ class _PricingItemCardState extends State<PricingItemCard>
 
       margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
-        color: const Color(0xFF1C212B),
-        border: Border.all(color: const Color(0xFF363C4A)),
+        color: AppColors.of(context).cardBackground,
+        border: Border.all(color: AppColors.of(context).border),
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(

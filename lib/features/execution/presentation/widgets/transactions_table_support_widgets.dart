@@ -56,16 +56,16 @@ class _ExpenseSummaryStripState extends State<ExpenseSummaryStrip> {
   }
 
   Color get _netCashColor {
-    if (widget.netCashFlow < 0) return AppColors.error;
-    if (widget.netCashFlow == 0) return AppColors.warning;
-    return AppColors.primary;
+    if (widget.netCashFlow < 0) return AppColors.of(context).error;
+    if (widget.netCashFlow == 0) return AppColors.of(context).warning;
+    return AppColors.of(context).primary;
   }
 
   Color get _deliveryColor {
-    if (widget.endDate == null) return AppColors.textSecondary;
+    if (widget.endDate == null) return AppColors.of(context).textSecondary;
     return _dateOnly(widget.endDate!).isBefore(_dateOnly(DateTime.now()))
-        ? AppColors.warning
-        : AppColors.info;
+        ? AppColors.of(context).warning
+        : AppColors.of(context).info;
   }
 
   double get _netCashProgress {
@@ -170,9 +170,9 @@ class _StatsDetailsPanel extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: AppColors.surfaceColor,
+        color: AppColors.of(context).surfaceColor,
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: AppColors.border),
+        border: Border.all(color: AppColors.of(context).border),
       ),
       child: LayoutBuilder(
         builder: (context, constraints) {
@@ -194,7 +194,7 @@ class _StatsDetailsPanel extends StatelessWidget {
                     ? 'الباقي ${_formatMoney(remainingFromCost)} من ${_formatMoney(totalCost)}'
                     : 'لا توجد تكلفة إجمالية',
                 icon: Icons.south_west_rounded,
-                color: AppColors.success,
+                color: AppColors.of(context).success,
               ),
             ),
             _ExpenseSummaryTile(
@@ -202,7 +202,7 @@ class _StatsDetailsPanel extends StatelessWidget {
               value: _formatMoney(totalExpenses),
               detail: 'إجمالي الخارج',
               icon: Icons.north_east_rounded,
-              color: AppColors.error,
+              color: AppColors.of(context).error,
             ),
             _ExpenseSummaryTile(
               title: 'السيولة',
@@ -261,9 +261,9 @@ class _CompactProgressStrip extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(
-        color: AppColors.surfaceColor,
+        color: AppColors.of(context).surfaceColor,
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: AppColors.border),
+        border: Border.all(color: AppColors.of(context).border),
       ),
       child: Row(
         children: [
@@ -275,7 +275,7 @@ class _CompactProgressStrip extends StatelessWidget {
               color: netCashColor,
             ),
           ),
-          Container(width: 1, height: 58, color: AppColors.border),
+          Container(width: 1, height: 58, color: AppColors.of(context).border),
           Expanded(
             child: _ProgressSummaryCircle(
               title: 'يوم التسليم',
@@ -293,7 +293,7 @@ class _CompactProgressStrip extends StatelessWidget {
                   ? Icons.keyboard_arrow_up_rounded
                   : Icons.keyboard_arrow_down_rounded,
             ),
-            color: AppColors.textSecondary,
+            color: AppColors.of(context).textSecondary,
             tooltip: 'تفاصيل الإحصائيات',
           ),
         ],
@@ -336,14 +336,14 @@ class _ProgressSummaryCircle extends StatelessWidget {
                 child: CircularProgressIndicator(
                   value: progress,
                   strokeWidth: 5,
-                  backgroundColor: AppColors.border,
+                  backgroundColor: AppColors.of(context).border,
                   valueColor: AlwaysStoppedAnimation<Color>(color),
                 ),
               ),
               Text(
                 '$percent%',
-                style: AppTextStyles.caption.copyWith(
-                  color: AppColors.textPrimary,
+                style: AppTextStyles.of(context).caption.copyWith(
+                  color: AppColors.of(context).textPrimary,
                   fontWeight: FontWeight.w600,
                 ),
               ),
@@ -360,8 +360,8 @@ class _ProgressSummaryCircle extends StatelessWidget {
                 title,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: AppTextStyles.labelSmall.copyWith(
-                  color: AppColors.textSecondary,
+                style: AppTextStyles.of(context).labelSmall.copyWith(
+                  color: AppColors.of(context).textSecondary,
                 ),
               ),
               const SizedBox(height: 4),
@@ -371,7 +371,9 @@ class _ProgressSummaryCircle extends StatelessWidget {
                 child: Text(
                   value,
                   maxLines: 1,
-                  style: AppTextStyles.tableCellBold.copyWith(color: color),
+                  style: AppTextStyles.of(
+                    context,
+                  ).tableCellBold.copyWith(color: color),
                 ),
               ),
               if (detail != null) ...[
@@ -380,7 +382,7 @@ class _ProgressSummaryCircle extends StatelessWidget {
                   detail!,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: AppTextStyles.caption,
+                  style: AppTextStyles.of(context).caption,
                 ),
               ],
             ],
@@ -412,7 +414,7 @@ class _ExpenseSummaryTile extends StatelessWidget {
       constraints: const BoxConstraints(minHeight: 70),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: AppColors.surfaceColor,
+        color: AppColors.of(context).surfaceColor,
         borderRadius: BorderRadius.circular(8),
         border: Border.all(color: color.withValues(alpha: 0.28)),
       ),
@@ -437,8 +439,8 @@ class _ExpenseSummaryTile extends StatelessWidget {
                   title,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: AppTextStyles.labelSmall.copyWith(
-                    color: AppColors.textSecondary,
+                  style: AppTextStyles.of(context).labelSmall.copyWith(
+                    color: AppColors.of(context).textSecondary,
                   ),
                 ),
                 const SizedBox(height: 6),
@@ -448,7 +450,7 @@ class _ExpenseSummaryTile extends StatelessWidget {
                   child: Text(
                     value,
                     maxLines: 1,
-                    style: AppTextStyles.h6.copyWith(color: color),
+                    style: AppTextStyles.of(context).h6.copyWith(color: color),
                   ),
                 ),
                 const SizedBox(height: 4),
@@ -456,9 +458,9 @@ class _ExpenseSummaryTile extends StatelessWidget {
                   detail,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: AppTextStyles.caption.copyWith(
-                    color: AppColors.textMuted,
-                  ),
+                  style: AppTextStyles.of(
+                    context,
+                  ).caption.copyWith(color: AppColors.of(context).textMuted),
                 ),
               ],
             ),
@@ -494,7 +496,7 @@ class TransactionsTableHeader extends StatelessWidget {
           icon: const Icon(Icons.arrow_downward, size: 18),
           label: const Text('إضافة إيراد'),
           style: ElevatedButton.styleFrom(
-            backgroundColor: AppColors.success,
+            backgroundColor: AppColors.of(context).success,
             foregroundColor: AppColors.white,
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           ),
@@ -505,7 +507,7 @@ class TransactionsTableHeader extends StatelessWidget {
           icon: const Icon(Icons.arrow_upward, size: 18),
           label: const Text('إضافة مصروف'),
           style: ElevatedButton.styleFrom(
-            backgroundColor: AppColors.error,
+            backgroundColor: AppColors.of(context).error,
             foregroundColor: AppColors.white,
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           ),
@@ -536,26 +538,32 @@ class TransactionsColumnHeaders extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      color: AppColors.scaffoldBackground,
+      color: AppColors.of(context).scaffoldBackground,
       child: Row(
         children: [
           SizedBox(
             width: 60,
-            child: Text('النوع', style: AppTextStyles.tableHeader),
+            child: Text('النوع', style: AppTextStyles.of(context).tableHeader),
           ),
           Expanded(
             flex: 3,
-            child: Text('الوصف / البند', style: AppTextStyles.tableHeader),
+            child: Text(
+              'الوصف / البند',
+              style: AppTextStyles.of(context).tableHeader,
+            ),
           ),
           SizedBox(
             width: 120,
-            child: Text('التاريخ', style: AppTextStyles.tableHeader),
+            child: Text(
+              'التاريخ',
+              style: AppTextStyles.of(context).tableHeader,
+            ),
           ),
           SizedBox(
             width: 140,
             child: Text(
               'المبلغ',
-              style: AppTextStyles.tableHeader,
+              style: AppTextStyles.of(context).tableHeader,
               textAlign: TextAlign.end,
             ),
           ),
@@ -563,7 +571,7 @@ class TransactionsColumnHeaders extends StatelessWidget {
             width: 80,
             child: Text(
               'إجراءات',
-              style: AppTextStyles.tableHeader,
+              style: AppTextStyles.of(context).tableHeader,
               textAlign: TextAlign.center,
             ),
           ),

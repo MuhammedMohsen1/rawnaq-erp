@@ -26,8 +26,8 @@ class GanttHorizontalDateHeader extends StatelessWidget {
     final dateFormat = DateFormat('d', 'ar');
     return Container(
       height: 56,
-      decoration: const BoxDecoration(
-        color: AppColors.tableHeader,
+      decoration: BoxDecoration(
+        color: AppColors.of(context).tableHeader,
         borderRadius: BorderRadius.only(
           topLeft: Radius.circular(12),
           topRight: Radius.circular(12),
@@ -39,12 +39,15 @@ class GanttHorizontalDateHeader extends StatelessWidget {
             width: 200,
             padding: const EdgeInsets.symmetric(horizontal: 16),
             alignment: Alignment.centerRight,
-            decoration: const BoxDecoration(
+            decoration: BoxDecoration(
               border: Border(
-                left: BorderSide(color: AppColors.border, width: 1),
+                left: BorderSide(color: AppColors.of(context).border, width: 1),
               ),
             ),
-            child: Text('الموظفين', style: AppTextStyles.tableHeader),
+            child: Text(
+              'الموظفين',
+              style: AppTextStyles.of(context).tableHeader,
+            ),
           ),
           Expanded(
             child: Row(
@@ -60,12 +63,17 @@ class GanttHorizontalDateHeader extends StatelessWidget {
                   child: Container(
                     decoration: BoxDecoration(
                       color: today
-                          ? AppColors.primary.withValues(alpha: 0.1)
+                          ? AppColors.of(context).primary.withValues(alpha: 0.1)
                           : (weekend
-                                ? AppColors.surfaceColor.withValues(alpha: 0.3)
+                                ? AppColors.of(
+                                    context,
+                                  ).surfaceColor.withValues(alpha: 0.3)
                                 : null),
-                      border: const Border(
-                        left: BorderSide(color: AppColors.border, width: 1),
+                      border: Border(
+                        left: BorderSide(
+                          color: AppColors.of(context).border,
+                          width: 1,
+                        ),
                       ),
                     ),
                     padding: const EdgeInsets.symmetric(vertical: 4),
@@ -74,10 +82,10 @@ class GanttHorizontalDateHeader extends StatelessWidget {
                       children: [
                         Text(
                           dayFormat.format(date),
-                          style: AppTextStyles.labelSmall.copyWith(
+                          style: AppTextStyles.of(context).labelSmall.copyWith(
                             color: today
-                                ? AppColors.primary
-                                : AppColors.textSecondary,
+                                ? AppColors.of(context).primary
+                                : AppColors.of(context).textSecondary,
                             fontWeight: today
                                 ? FontWeight.bold
                                 : FontWeight.normal,
@@ -89,7 +97,7 @@ class GanttHorizontalDateHeader extends StatelessWidget {
                           width: 28,
                           height: 28,
                           decoration: BoxDecoration(
-                            color: today ? AppColors.primary : null,
+                            color: today ? AppColors.of(context).primary : null,
                             shape: BoxShape.circle,
                           ),
                           child: Center(
@@ -97,8 +105,8 @@ class GanttHorizontalDateHeader extends StatelessWidget {
                               dateFormat.format(date),
                               style: TextStyle(
                                 color: today
-                                    ? AppColors.scaffoldBackground
-                                    : AppColors.textPrimary,
+                                    ? AppColors.of(context).scaffoldBackground
+                                    : AppColors.of(context).textPrimary,
                                 fontSize: 13,
                                 fontWeight: FontWeight.w600,
                               ),
@@ -134,8 +142,8 @@ class GanttVerticalMembersHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       height: 58,
-      decoration: const BoxDecoration(
-        color: AppColors.tableHeader,
+      decoration: BoxDecoration(
+        color: AppColors.of(context).tableHeader,
         borderRadius: BorderRadius.only(
           topLeft: Radius.circular(12),
           topRight: Radius.circular(12),
@@ -146,28 +154,37 @@ class GanttVerticalMembersHeader extends StatelessWidget {
           Container(
             width: dateRailWidth,
             alignment: Alignment.center,
-            decoration: const BoxDecoration(
-              border: Border(left: BorderSide(color: AppColors.border)),
+            decoration: BoxDecoration(
+              border: Border(
+                left: BorderSide(color: AppColors.of(context).border),
+              ),
             ),
-            child: Text('التاريخ', style: AppTextStyles.tableHeader),
+            child: Text(
+              'التاريخ',
+              style: AppTextStyles.of(context).tableHeader,
+            ),
           ),
           ...teamMembers.map(
             (member) => SizedBox(
               width: employeeColumnWidth,
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 12),
-                decoration: const BoxDecoration(
-                  border: Border(left: BorderSide(color: AppColors.border)),
+                decoration: BoxDecoration(
+                  border: Border(
+                    left: BorderSide(color: AppColors.of(context).border),
+                  ),
                 ),
                 child: Row(
                   children: [
                     CircleAvatar(
                       radius: 15,
-                      backgroundColor: AppColors.primary.withValues(alpha: 0.2),
+                      backgroundColor: AppColors.of(
+                        context,
+                      ).primary.withValues(alpha: 0.2),
                       child: Text(
                         member.name.isEmpty ? '-' : member.name.substring(0, 1),
                         style: TextStyle(
-                          color: AppColors.primary,
+                          color: AppColors.of(context).primary,
                           fontSize: 12,
                           fontWeight: FontWeight.bold,
                         ),
@@ -181,14 +198,14 @@ class GanttVerticalMembersHeader extends StatelessWidget {
                         children: [
                           Text(
                             member.name,
-                            style: AppTextStyles.tableCellBold,
+                            style: AppTextStyles.of(context).tableCellBold,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),
                           Text(
                             member.role,
-                            style: AppTextStyles.caption.copyWith(
-                              color: AppColors.textMuted,
+                            style: AppTextStyles.of(context).caption.copyWith(
+                              color: AppColors.of(context).textMuted,
                             ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
@@ -229,13 +246,13 @@ class GanttVerticalDateCell extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(
         color: isToday
-            ? AppColors.primary.withValues(alpha: 0.1)
+            ? AppColors.of(context).primary.withValues(alpha: 0.1)
             : isWeekend
-            ? AppColors.surfaceColor.withValues(alpha: 0.28)
-            : AppColors.cardBackground,
-        border: const Border(
-          left: BorderSide(color: AppColors.border),
-          bottom: BorderSide(color: AppColors.divider),
+            ? AppColors.of(context).surfaceColor.withValues(alpha: 0.28)
+            : AppColors.of(context).cardBackground,
+        border: Border(
+          left: BorderSide(color: AppColors.of(context).border),
+          bottom: BorderSide(color: AppColors.of(context).divider),
         ),
       ),
       child: Column(
@@ -244,8 +261,10 @@ class GanttVerticalDateCell extends StatelessWidget {
         children: [
           Text(
             dayFormat.format(date),
-            style: AppTextStyles.labelSmall.copyWith(
-              color: isToday ? AppColors.primary : AppColors.textSecondary,
+            style: AppTextStyles.of(context).labelSmall.copyWith(
+              color: isToday
+                  ? AppColors.of(context).primary
+                  : AppColors.of(context).textSecondary,
               fontWeight: isToday ? FontWeight.w700 : FontWeight.w500,
             ),
             maxLines: 1,
@@ -257,18 +276,22 @@ class GanttVerticalDateCell extends StatelessWidget {
             height: 30,
             alignment: Alignment.center,
             decoration: BoxDecoration(
-              color: isToday ? AppColors.primary : AppColors.surfaceColor,
+              color: isToday
+                  ? AppColors.of(context).primary
+                  : AppColors.of(context).surfaceColor,
               borderRadius: BorderRadius.circular(6),
               border: Border.all(
-                color: isToday ? AppColors.primary : AppColors.border,
+                color: isToday
+                    ? AppColors.of(context).primary
+                    : AppColors.of(context).border,
               ),
             ),
             child: Text(
               dateFormat.format(date),
-              style: AppTextStyles.tableCellBold.copyWith(
+              style: AppTextStyles.of(context).tableCellBold.copyWith(
                 color: isToday
-                    ? AppColors.scaffoldBackground
-                    : AppColors.textPrimary,
+                    ? AppColors.of(context).scaffoldBackground
+                    : AppColors.of(context).textPrimary,
               ),
             ),
           ),
@@ -345,28 +368,32 @@ class GanttEmployeeRow extends StatelessWidget {
 
     return Container(
       height: rowHeight,
-      decoration: const BoxDecoration(
-        border: Border(bottom: BorderSide(color: AppColors.divider)),
+      decoration: BoxDecoration(
+        border: Border(
+          bottom: BorderSide(color: AppColors.of(context).divider),
+        ),
       ),
       child: Row(
         children: [
           Container(
             width: 200,
             padding: const EdgeInsets.all(12),
-            decoration: const BoxDecoration(
+            decoration: BoxDecoration(
               border: Border(
-                left: BorderSide(color: AppColors.border, width: 1),
+                left: BorderSide(color: AppColors.of(context).border, width: 1),
               ),
             ),
             child: Row(
               children: [
                 CircleAvatar(
                   radius: 18,
-                  backgroundColor: AppColors.primary.withValues(alpha: 0.2),
+                  backgroundColor: AppColors.of(
+                    context,
+                  ).primary.withValues(alpha: 0.2),
                   child: Text(
                     member.name.isEmpty ? '-' : member.name.substring(0, 1),
                     style: TextStyle(
-                      color: AppColors.primary,
+                      color: AppColors.of(context).primary,
                       fontSize: 14,
                       fontWeight: FontWeight.bold,
                     ),
@@ -380,15 +407,15 @@ class GanttEmployeeRow extends StatelessWidget {
                     children: [
                       Text(
                         member.name,
-                        style: AppTextStyles.tableCellBold,
+                        style: AppTextStyles.of(context).tableCellBold,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
                       const SizedBox(height: 2),
                       Text(
                         member.role,
-                        style: AppTextStyles.caption.copyWith(
-                          color: AppColors.textMuted,
+                        style: AppTextStyles.of(context).caption.copyWith(
+                          color: AppColors.of(context).textMuted,
                         ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
@@ -488,24 +515,30 @@ class GanttBarsForEmployee extends StatelessWidget {
                       return Container(
                         decoration: BoxDecoration(
                           color: hovering
-                              ? AppColors.primary.withValues(alpha: 0.2)
+                              ? AppColors.of(
+                                  context,
+                                ).primary.withValues(alpha: 0.2)
                               : (today
-                                    ? AppColors.primary.withValues(alpha: 0.05)
+                                    ? AppColors.of(
+                                        context,
+                                      ).primary.withValues(alpha: 0.05)
                                     : (weekend
-                                          ? AppColors.surfaceColor.withValues(
-                                              alpha: 0.2,
-                                            )
+                                          ? AppColors.of(context).surfaceColor
+                                                .withValues(alpha: 0.2)
                                           : null)),
-                          border: const Border(
-                            left: BorderSide(color: AppColors.border, width: 1),
+                          border: Border(
+                            left: BorderSide(
+                              color: AppColors.of(context).border,
+                              width: 1,
+                            ),
                           ),
                         ),
                         child: hovering
                             ? Center(
                                 child: Container(
                                   padding: const EdgeInsets.all(4),
-                                  decoration: const BoxDecoration(
-                                    color: AppColors.primary,
+                                  decoration: BoxDecoration(
+                                    color: AppColors.of(context).primary,
                                     shape: BoxShape.circle,
                                   ),
                                   child: const Icon(
@@ -692,22 +725,32 @@ class GanttVerticalEmployeeTimeline extends StatelessWidget {
                         padding: const EdgeInsets.all(10),
                         decoration: BoxDecoration(
                           color: hovering
-                              ? AppColors.primary.withValues(alpha: 0.14)
+                              ? AppColors.of(
+                                  context,
+                                ).primary.withValues(alpha: 0.14)
                               : isToday(date)
-                              ? AppColors.primary.withValues(alpha: 0.035)
+                              ? AppColors.of(
+                                  context,
+                                ).primary.withValues(alpha: 0.035)
                               : date.weekday == DateTime.friday
-                              ? AppColors.surfaceColor.withValues(alpha: 0.12)
-                              : AppColors.cardBackground,
-                          border: const Border(
-                            left: BorderSide(color: AppColors.border),
-                            bottom: BorderSide(color: AppColors.divider),
+                              ? AppColors.of(
+                                  context,
+                                ).surfaceColor.withValues(alpha: 0.12)
+                              : AppColors.of(context).cardBackground,
+                          border: Border(
+                            left: BorderSide(
+                              color: AppColors.of(context).border,
+                            ),
+                            bottom: BorderSide(
+                              color: AppColors.of(context).divider,
+                            ),
                           ),
                         ),
                         child: hovering
                             ? Center(
                                 child: Icon(
                                   Icons.add_circle,
-                                  color: AppColors.primary,
+                                  color: AppColors.of(context).primary,
                                   size: 22,
                                 ),
                               )
@@ -766,7 +809,7 @@ class GanttVerticalEmployeeTimeline extends StatelessWidget {
                       height: height,
                       child: GanttVerticalResizableTaskChip(
                         task: task,
-                        color: ganttTaskColor(task),
+                        color: ganttTaskColor(context, task),
                         compactMeta:
                             '${task.formattedStartTime} - ${task.formattedEndTime}',
                         rowHeight: rowHeight,
@@ -789,7 +832,7 @@ class GanttVerticalEmployeeTimeline extends StatelessWidget {
                       message: 'اسحب لنقل • انقر مرتين للتعديل',
                       child: GanttVerticalResizableTaskChip(
                         task: task,
-                        color: ganttTaskColor(task),
+                        color: ganttTaskColor(context, task),
                         compactMeta:
                             '${task.formattedStartTime} - ${task.formattedEndTime}',
                         rowHeight: rowHeight,

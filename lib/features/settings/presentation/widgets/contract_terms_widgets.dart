@@ -190,9 +190,9 @@ class _ContractTermsEditorState extends State<ContractTermsEditor> {
               child: Text(
                 'يمكنك إدارة البنود الافتراضية بشكل منفصل لعقد التصميم وعقد التنفيذ.',
                 textAlign: TextAlign.right,
-                style: AppTextStyles.caption.copyWith(
-                  color: AppColors.textMuted,
-                ),
+                style: AppTextStyles.of(
+                  context,
+                ).caption.copyWith(color: AppColors.of(context).textMuted),
               ),
             ),
             const SizedBox(height: 16),
@@ -218,7 +218,9 @@ class _ContractTermsEditorState extends State<ContractTermsEditor> {
                 child: Text(
                   _errorMessage!,
                   textAlign: TextAlign.right,
-                  style: AppTextStyles.caption.copyWith(color: Colors.red[700]),
+                  style: AppTextStyles.of(
+                    context,
+                  ).caption.copyWith(color: Colors.red[700]),
                 ),
               ),
             ],
@@ -229,9 +231,9 @@ class _ContractTermsEditorState extends State<ContractTermsEditor> {
                 child: Text(
                   _successMessage!,
                   textAlign: TextAlign.right,
-                  style: AppTextStyles.caption.copyWith(
-                    color: Colors.green[700],
-                  ),
+                  style: AppTextStyles.of(
+                    context,
+                  ).caption.copyWith(color: Colors.green[700]),
                 ),
               ),
             ],
@@ -283,9 +285,9 @@ class _TermsSectionCardState extends State<_TermsSectionCard> {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: AppColors.cardBackground,
+        color: AppColors.of(context).cardBackground,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.border),
+        border: Border.all(color: AppColors.of(context).border),
       ),
       child: Column(
         children: [
@@ -308,15 +310,15 @@ class _TermsSectionCardState extends State<_TermsSectionCard> {
                       children: [
                         Text(
                           widget.title,
-                          style: AppTextStyles.tableCellBold,
+                          style: AppTextStyles.of(context).tableCellBold,
                           textDirection: TextDirection.rtl,
                           textAlign: TextAlign.right,
                         ),
                         const SizedBox(height: 4),
                         Text(
                           widget.subtitle,
-                          style: AppTextStyles.caption.copyWith(
-                            color: AppColors.textMuted,
+                          style: AppTextStyles.of(context).caption.copyWith(
+                            color: AppColors.of(context).textMuted,
                           ),
                           textDirection: TextDirection.rtl,
                           textAlign: TextAlign.right,
@@ -388,9 +390,9 @@ class _TermAccordionCardState extends State<_TermAccordionCard> {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
-        color: AppColors.surfaceColor,
+        color: AppColors.of(context).surfaceColor,
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: AppColors.border),
+        border: Border.all(color: AppColors.of(context).border),
       ),
       child: Column(
         children: [
@@ -409,15 +411,15 @@ class _TermAccordionCardState extends State<_TermAccordionCard> {
                           widget.term.title.text.trim().isEmpty
                               ? 'بند ${widget.index + 1}'
                               : widget.term.title.text.trim(),
-                          style: AppTextStyles.tableCellBold,
+                          style: AppTextStyles.of(context).tableCellBold,
                           textDirection: TextDirection.rtl,
                           textAlign: TextAlign.right,
                         ),
                         const SizedBox(height: 4),
                         Text(
                           'اضغط لعرض وتعديل العنوان والوصف',
-                          style: AppTextStyles.caption.copyWith(
-                            color: AppColors.textMuted,
+                          style: AppTextStyles.of(context).caption.copyWith(
+                            color: AppColors.of(context).textMuted,
                           ),
                           textDirection: TextDirection.rtl,
                           textAlign: TextAlign.right,
@@ -540,7 +542,7 @@ class ContractTermsMessage extends StatelessWidget {
       ),
       child: Text(
         message,
-        style: AppTextStyles.caption.copyWith(
+        style: AppTextStyles.of(context).caption.copyWith(
           color: isError ? Colors.red[700] : Colors.green[700],
         ),
       ),

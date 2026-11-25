@@ -1,3 +1,4 @@
+import 'package:rawnaq/core/widgets/app_toast.dart';
 import 'package:rawnaq/core/utils/arabic_number_input_formatter.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -88,7 +89,7 @@ class _AddTaskDialogSimpleState extends State<AddTaskDialogSimple>
       onSubmit: _submitForm,
       onClose: () => Navigator.pop(context),
       child: Dialog(
-        backgroundColor: AppColors.cardBackground,
+        backgroundColor: AppColors.of(context).cardBackground,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         child: Container(
           width: 520,
@@ -138,20 +139,22 @@ class _AddTaskDialogSimpleState extends State<AddTaskDialogSimple>
   Widget _buildHeader() {
     return Container(
       padding: const EdgeInsets.all(20),
-      decoration: const BoxDecoration(
-        border: Border(bottom: BorderSide(color: AppColors.divider)),
+      decoration: BoxDecoration(
+        border: Border(
+          bottom: BorderSide(color: AppColors.of(context).divider),
+        ),
       ),
       child: Row(
         children: [
           Container(
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
-              color: AppColors.statusOnHold.withValues(alpha: 0.15),
+              color: AppColors.of(context).statusOnHold.withValues(alpha: 0.15),
               borderRadius: BorderRadius.circular(10),
             ),
             child: Icon(
               Icons.add_task,
-              color: AppColors.statusOnHold,
+              color: AppColors.of(context).statusOnHold,
               size: 24,
             ),
           ),
@@ -160,19 +163,19 @@ class _AddTaskDialogSimpleState extends State<AddTaskDialogSimple>
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('إضافة مهمة جديدة', style: AppTextStyles.h5),
+                Text('إضافة مهمة جديدة', style: AppTextStyles.of(context).h5),
                 const SizedBox(height: 4),
                 Row(
                   children: [
                     Icon(
                       Icons.info_outline,
                       size: 14,
-                      color: AppColors.textMuted,
+                      color: AppColors.of(context).textMuted,
                     ),
                     const SizedBox(width: 4),
                     Text(
                       'ستُضاف للمهام المعلقة - اسحبها للتعيين',
-                      style: AppTextStyles.caption,
+                      style: AppTextStyles.of(context).caption,
                     ),
                   ],
                 ),
@@ -180,7 +183,7 @@ class _AddTaskDialogSimpleState extends State<AddTaskDialogSimple>
             ),
           ),
           IconButton(
-            icon: const Icon(Icons.close, color: AppColors.textMuted),
+            icon: Icon(Icons.close, color: AppColors.of(context).textMuted),
             onPressed: () => Navigator.pop(context),
           ),
         ],
@@ -190,13 +193,13 @@ class _AddTaskDialogSimpleState extends State<AddTaskDialogSimple>
 
   Widget _buildTaskTypeTabs() {
     return Container(
-      decoration: const BoxDecoration(color: AppColors.surfaceColor),
+      decoration: BoxDecoration(color: AppColors.of(context).surfaceColor),
       child: TabBar(
         controller: _tabController,
-        indicatorColor: AppColors.primary,
+        indicatorColor: AppColors.of(context).primary,
         indicatorWeight: 3,
-        labelColor: AppColors.primary,
-        unselectedLabelColor: AppColors.textMuted,
+        labelColor: AppColors.of(context).primary,
+        unselectedLabelColor: AppColors.of(context).textMuted,
         tabs: [
           Tab(
             child: Row(
@@ -263,13 +266,13 @@ class _AddTaskDialogSimpleState extends State<AddTaskDialogSimple>
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('المشروع *', style: AppTextStyles.inputLabel),
+        Text('المشروع *', style: AppTextStyles.of(context).inputLabel),
         const SizedBox(height: 8),
         Container(
           decoration: BoxDecoration(
-            color: AppColors.inputBackground,
+            color: AppColors.of(context).inputBackground,
             borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: AppColors.inputBorder),
+            border: Border.all(color: AppColors.of(context).inputBorder),
           ),
           child: DropdownButtonFormField<String>(
             initialValue: _selectedProjectId,
@@ -277,9 +280,12 @@ class _AddTaskDialogSimpleState extends State<AddTaskDialogSimple>
               contentPadding: EdgeInsets.symmetric(horizontal: 12),
               border: InputBorder.none,
             ),
-            dropdownColor: AppColors.cardBackground,
-            style: AppTextStyles.inputText,
-            hint: const Text('اختر المشروع', style: AppTextStyles.inputHint),
+            dropdownColor: AppColors.of(context).cardBackground,
+            style: AppTextStyles.of(context).inputText,
+            hint: Text(
+              'اختر المشروع',
+              style: AppTextStyles.of(context).inputHint,
+            ),
             items: widget.projects.map((project) {
               return DropdownMenuItem(
                 value: project['id'],
@@ -339,7 +345,9 @@ class _AddTaskDialogSimpleState extends State<AddTaskDialogSimple>
         // Start Date & Time
         Text(
           'تاريخ ووقت الموعد *',
-          style: AppTextStyles.inputLabel.copyWith(fontWeight: FontWeight.w600),
+          style: AppTextStyles.of(
+            context,
+          ).inputLabel.copyWith(fontWeight: FontWeight.w600),
         ),
         const SizedBox(height: 8),
         Row(
@@ -377,20 +385,24 @@ class _AddTaskDialogSimpleState extends State<AddTaskDialogSimple>
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
         decoration: BoxDecoration(
-          color: AppColors.inputBackground,
+          color: AppColors.of(context).inputBackground,
           borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: AppColors.inputBorder),
+          border: Border.all(color: AppColors.of(context).inputBorder),
         ),
         child: Row(
           children: [
-            Icon(Icons.calendar_today, color: AppColors.primary, size: 18),
+            Icon(
+              Icons.calendar_today,
+              color: AppColors.of(context).primary,
+              size: 18,
+            ),
             const SizedBox(width: 10),
             Expanded(
               child: Text(
                 value != null ? dateFormat.format(value) : 'اختر التاريخ',
                 style: value != null
-                    ? AppTextStyles.inputText
-                    : AppTextStyles.inputHint,
+                    ? AppTextStyles.of(context).inputText
+                    : AppTextStyles.of(context).inputHint,
               ),
             ),
           ],
@@ -409,20 +421,24 @@ class _AddTaskDialogSimpleState extends State<AddTaskDialogSimple>
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
         decoration: BoxDecoration(
-          color: AppColors.inputBackground,
+          color: AppColors.of(context).inputBackground,
           borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: AppColors.inputBorder),
+          border: Border.all(color: AppColors.of(context).inputBorder),
         ),
         child: Row(
           children: [
-            Icon(Icons.access_time, color: AppColors.primary, size: 18),
+            Icon(
+              Icons.access_time,
+              color: AppColors.of(context).primary,
+              size: 18,
+            ),
             const SizedBox(width: 10),
             Expanded(
               child: Text(
                 value != null ? _formatTime(value) : 'الوقت',
                 style: value != null
-                    ? AppTextStyles.inputText
-                    : AppTextStyles.inputHint,
+                    ? AppTextStyles.of(context).inputText
+                    : AppTextStyles.of(context).inputHint,
               ),
             ),
           ],
@@ -447,9 +463,9 @@ class _AddTaskDialogSimpleState extends State<AddTaskDialogSimple>
       builder: (context, child) {
         return Theme(
           data: Theme.of(context).copyWith(
-            colorScheme: const ColorScheme.dark(
-              primary: AppColors.primary,
-              surface: AppColors.cardBackground,
+            colorScheme: ColorScheme.dark(
+              primary: AppColors.of(context).primary,
+              surface: AppColors.of(context).cardBackground,
             ),
           ),
           child: child!,
@@ -480,9 +496,9 @@ class _AddTaskDialogSimpleState extends State<AddTaskDialogSimple>
       builder: (context, child) {
         return Theme(
           data: Theme.of(context).copyWith(
-            colorScheme: const ColorScheme.dark(
-              primary: AppColors.primary,
-              surface: AppColors.cardBackground,
+            colorScheme: ColorScheme.dark(
+              primary: AppColors.of(context).primary,
+              surface: AppColors.of(context).cardBackground,
             ),
           ),
           child: child!,
@@ -524,30 +540,33 @@ class _AddTaskDialogSimpleState extends State<AddTaskDialogSimple>
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('$label${required ? ' *' : ''}', style: AppTextStyles.inputLabel),
+        Text(
+          '$label${required ? ' *' : ''}',
+          style: AppTextStyles.of(context).inputLabel,
+        ),
         const SizedBox(height: 8),
         TextFormField(
           inputFormatters: const [ArabicNumberInputFormatter()],
           controller: controller,
           maxLines: maxLines,
           keyboardType: keyboardType,
-          style: AppTextStyles.inputText,
+          style: AppTextStyles.of(context).inputText,
           decoration: InputDecoration(
             hintText: hint,
-            hintStyle: AppTextStyles.inputHint,
+            hintStyle: AppTextStyles.of(context).inputHint,
             filled: true,
-            fillColor: AppColors.inputBackground,
+            fillColor: AppColors.of(context).inputBackground,
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
-              borderSide: const BorderSide(color: AppColors.inputBorder),
+              borderSide: BorderSide(color: AppColors.of(context).inputBorder),
             ),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
-              borderSide: const BorderSide(color: AppColors.inputBorder),
+              borderSide: BorderSide(color: AppColors.of(context).inputBorder),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
-              borderSide: const BorderSide(color: AppColors.primary),
+              borderSide: BorderSide(color: AppColors.of(context).primary),
             ),
             contentPadding: const EdgeInsets.symmetric(
               horizontal: 12,
@@ -565,8 +584,8 @@ class _AddTaskDialogSimpleState extends State<AddTaskDialogSimple>
   Widget _buildActions() {
     return Container(
       padding: const EdgeInsets.all(20),
-      decoration: const BoxDecoration(
-        border: Border(top: BorderSide(color: AppColors.divider)),
+      decoration: BoxDecoration(
+        border: Border(top: BorderSide(color: AppColors.of(context).divider)),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.end,
@@ -574,8 +593,8 @@ class _AddTaskDialogSimpleState extends State<AddTaskDialogSimple>
           OutlinedButton(
             onPressed: () => Navigator.pop(context),
             style: OutlinedButton.styleFrom(
-              foregroundColor: AppColors.textSecondary,
-              side: const BorderSide(color: AppColors.border),
+              foregroundColor: AppColors.of(context).textSecondary,
+              side: BorderSide(color: AppColors.of(context).border),
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
             ),
             child: const Text('إلغاء'),
@@ -586,7 +605,7 @@ class _AddTaskDialogSimpleState extends State<AddTaskDialogSimple>
             icon: const Icon(Icons.pending_actions, size: 18),
             label: const Text('إضافة للمعلقة'),
             style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.statusOnHold,
+              backgroundColor: AppColors.of(context).statusOnHold,
               foregroundColor: Colors.white,
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
             ),
@@ -685,10 +704,10 @@ class _AddTaskDialogSimpleState extends State<AddTaskDialogSimple>
 
   void _showError(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
+      AppToast.build(
+        tone: ToastTone.error,
         duration: const Duration(seconds: 2),
         content: Text(message),
-        backgroundColor: AppColors.statusDelayed,
       ),
     );
   }

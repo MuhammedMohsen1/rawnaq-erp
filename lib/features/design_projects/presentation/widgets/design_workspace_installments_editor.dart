@@ -117,11 +117,11 @@ class _DesignWorkspaceInstallmentsEditorDialogState
       builder: (context, child) {
         return Theme(
           data: Theme.of(context).copyWith(
-            colorScheme: const ColorScheme.dark(
-              primary: AppColors.primary,
-              onPrimary: AppColors.scaffoldBackground,
-              surface: AppColors.cardBackground,
-              onSurface: AppColors.textPrimary,
+            colorScheme: ColorScheme.dark(
+              primary: AppColors.of(context).primary,
+              onPrimary: AppColors.of(context).scaffoldBackground,
+              surface: AppColors.of(context).cardBackground,
+              onSurface: AppColors.of(context).textPrimary,
             ),
           ),
           child: child!,
@@ -171,16 +171,18 @@ class _DesignWorkspaceInstallmentsEditorDialogState
   @override
   Widget build(BuildContext context) {
     final buttonStyle = FilledButton.styleFrom(
-      backgroundColor: AppColors.secondary,
+      backgroundColor: AppColors.of(context).secondary,
       foregroundColor: AppColors.white,
-      disabledBackgroundColor: AppColors.secondary.withValues(alpha: 0.45),
+      disabledBackgroundColor: AppColors.of(
+        context,
+      ).secondary.withValues(alpha: 0.45),
       disabledForegroundColor: AppColors.white.withValues(alpha: 0.7),
       padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
     );
 
     return Dialog(
-      backgroundColor: AppColors.cardBackground,
+      backgroundColor: AppColors.of(context).cardBackground,
       insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
       child: SizedBox(
         width: 760,
@@ -233,11 +235,13 @@ class _DesignWorkspaceInstallmentsEditorDialogState
                           return Container(
                             padding: const EdgeInsets.all(14),
                             decoration: BoxDecoration(
-                              color: AppColors.surfaceColor.withValues(
-                                alpha: 0.58,
-                              ),
+                              color: AppColors.of(
+                                context,
+                              ).surfaceColor.withValues(alpha: 0.58),
                               borderRadius: BorderRadius.circular(14),
-                              border: Border.all(color: AppColors.border),
+                              border: Border.all(
+                                color: AppColors.of(context).border,
+                              ),
                             ),
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
@@ -257,14 +261,16 @@ class _DesignWorkspaceInstallmentsEditorDialogState
                                           ? () => _removeDraft(index)
                                           : null,
                                       icon: const Icon(Icons.delete_outline),
-                                      color: AppColors.error,
+                                      color: AppColors.of(context).error,
                                       tooltip: 'حذف الدفعة',
                                     ),
                                   ],
                                 ),
                                 const SizedBox(height: 10),
                                 TextField(
-                                  inputFormatters: const [ArabicNumberInputFormatter()],
+                                  inputFormatters: const [
+                                    ArabicNumberInputFormatter(),
+                                  ],
                                   controller: draft.notesController,
                                   maxLines: 2,
                                   decoration: const InputDecoration(
@@ -278,7 +284,9 @@ class _DesignWorkspaceInstallmentsEditorDialogState
                                     Expanded(
                                       flex: 2,
                                       child: TextField(
-                                        inputFormatters: const [ArabicNumberInputFormatter()],
+                                        inputFormatters: const [
+                                          ArabicNumberInputFormatter(),
+                                        ],
                                         controller: draft.amountController,
                                         keyboardType:
                                             const TextInputType.numberWithOptions(
@@ -302,12 +310,16 @@ class _DesignWorkspaceInstallmentsEditorDialogState
                                             vertical: 14,
                                           ),
                                           decoration: BoxDecoration(
-                                            color: AppColors.inputBackground,
+                                            color: AppColors.of(
+                                              context,
+                                            ).inputBackground,
                                             borderRadius: BorderRadius.circular(
                                               12,
                                             ),
                                             border: Border.all(
-                                              color: AppColors.border,
+                                              color: AppColors.of(
+                                                context,
+                                              ).border,
                                             ),
                                           ),
                                           child: Text(
@@ -382,9 +394,9 @@ class _DesignWorkspaceInstallmentsEditorDialogState
                 const SizedBox(height: 12),
                 Text(
                   _errorMessage!,
-                  style: Theme.of(
-                    context,
-                  ).textTheme.bodySmall?.copyWith(color: AppColors.error),
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: AppColors.of(context).error,
+                  ),
                 ),
               ],
               const SizedBox(height: 12),
@@ -399,7 +411,7 @@ class _DesignWorkspaceInstallmentsEditorDialogState
                   TextButton(
                     onPressed: () => Navigator.of(context).pop(),
                     style: TextButton.styleFrom(
-                      foregroundColor: AppColors.textSecondary,
+                      foregroundColor: AppColors.of(context).textSecondary,
                     ),
                     child: const Text('إلغاء'),
                   ),
@@ -465,7 +477,7 @@ class _InstallmentCaptureChip extends StatelessWidget {
     showDialog(
       context: context,
       builder: (dialogContext) => Dialog(
-        backgroundColor: AppColors.cardBackground,
+        backgroundColor: AppColors.of(context).cardBackground,
         insetPadding: const EdgeInsets.all(24),
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 900, maxHeight: 720),

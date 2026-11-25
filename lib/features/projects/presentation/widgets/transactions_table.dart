@@ -1,3 +1,4 @@
+import 'package:rawnaq/core/widgets/app_toast.dart';
 import 'package:rawnaq/core/utils/arabic_number_input_formatter.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -130,16 +131,16 @@ class _TransactionsTableState extends State<TransactionsTable> {
       return Container(
         padding: const EdgeInsets.all(40),
         decoration: BoxDecoration(
-          color: AppColors.cardBackground,
+          color: AppColors.of(context).cardBackground,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: AppColors.border),
+          border: Border.all(color: AppColors.of(context).border),
         ),
         child: Center(
           child: Text(
             'لا توجد معاملات',
-            style: AppTextStyles.bodyMedium.copyWith(
-              color: AppColors.textMuted,
-            ),
+            style: AppTextStyles.of(
+              context,
+            ).bodyMedium.copyWith(color: AppColors.of(context).textMuted),
           ),
         ),
       );
@@ -147,18 +148,21 @@ class _TransactionsTableState extends State<TransactionsTable> {
 
     return Container(
       decoration: BoxDecoration(
-        color: AppColors.cardBackground,
+        color: AppColors.of(context).cardBackground,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.border),
+        border: Border.all(color: AppColors.of(context).border),
       ),
       child: Column(
         children: [
           // Table header
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            decoration: const BoxDecoration(
+            decoration: BoxDecoration(
               border: Border(
-                bottom: BorderSide(color: AppColors.divider, width: 1),
+                bottom: BorderSide(
+                  color: AppColors.of(context).divider,
+                  width: 1,
+                ),
               ),
             ),
             child: Row(
@@ -166,25 +170,34 @@ class _TransactionsTableState extends State<TransactionsTable> {
                 // Type column (tighter)
                 SizedBox(
                   width: 50,
-                  child: Text('النوع', style: AppTextStyles.tableHeader),
+                  child: Text(
+                    'النوع',
+                    style: AppTextStyles.of(context).tableHeader,
+                  ),
                 ),
                 // Description column
                 Expanded(
                   flex: 3,
                   child: Text(
                     'الوصف / العنصر',
-                    style: AppTextStyles.tableHeader,
+                    style: AppTextStyles.of(context).tableHeader,
                   ),
                 ),
                 // Date column
                 Expanded(
                   flex: 1,
-                  child: Text('التاريخ', style: AppTextStyles.tableHeader),
+                  child: Text(
+                    'التاريخ',
+                    style: AppTextStyles.of(context).tableHeader,
+                  ),
                 ),
                 // Amount column
                 Expanded(
                   flex: 1,
-                  child: Text('المبلغ', style: AppTextStyles.tableHeader),
+                  child: Text(
+                    'المبلغ',
+                    style: AppTextStyles.of(context).tableHeader,
+                  ),
                 ),
                 // Actions column
                 Expanded(
@@ -192,7 +205,10 @@ class _TransactionsTableState extends State<TransactionsTable> {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text('الإجراءات', style: AppTextStyles.tableHeader),
+                      Text(
+                        'الإجراءات',
+                        style: AppTextStyles.of(context).tableHeader,
+                      ),
                       if (widget.onAddNew != null)
                         IconButton(
                           icon: const Icon(Icons.add, size: 20),
@@ -203,7 +219,7 @@ class _TransactionsTableState extends State<TransactionsTable> {
                             minWidth: 36,
                             minHeight: 36,
                           ),
-                          color: AppColors.primary,
+                          color: AppColors.of(context).primary,
                         ),
                     ],
                   ),
@@ -219,9 +235,12 @@ class _TransactionsTableState extends State<TransactionsTable> {
           if (widget.onLoadMore != null)
             Container(
               padding: const EdgeInsets.all(16),
-              decoration: const BoxDecoration(
+              decoration: BoxDecoration(
                 border: Border(
-                  top: BorderSide(color: AppColors.divider, width: 1),
+                  top: BorderSide(
+                    color: AppColors.of(context).divider,
+                    width: 1,
+                  ),
                 ),
               ),
               child: Center(
@@ -229,7 +248,7 @@ class _TransactionsTableState extends State<TransactionsTable> {
                   onPressed: widget.onLoadMore,
                   child: Text(
                     'تحميل المزيد من المعاملات',
-                    style: AppTextStyles.link,
+                    style: AppTextStyles.of(context).link,
                   ),
                 ),
               ),
@@ -245,7 +264,9 @@ class _TransactionsTableState extends State<TransactionsTable> {
   ) {
     final dateFormat = DateFormat('dd MMM yyyy', 'ar');
     final isDeposit = transaction.type == tx.TransactionType.deposit;
-    final amountColor = isDeposit ? AppColors.success : AppColors.error;
+    final amountColor = isDeposit
+        ? AppColors.of(context).success
+        : AppColors.of(context).error;
     final amountPrefix = isDeposit ? '+' : '-';
     final isEditing = _editingStates[transaction.id] ?? false;
     final canEdit = !transaction.metadata.isLocked;
@@ -264,8 +285,10 @@ class _TransactionsTableState extends State<TransactionsTable> {
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
-      decoration: const BoxDecoration(
-        border: Border(bottom: BorderSide(color: AppColors.divider, width: 1)),
+      decoration: BoxDecoration(
+        border: Border(
+          bottom: BorderSide(color: AppColors.of(context).divider, width: 1),
+        ),
       ),
       child: Row(
         children: [
@@ -285,7 +308,7 @@ class _TransactionsTableState extends State<TransactionsTable> {
                 ? TextField(
                     inputFormatters: const [ArabicNumberInputFormatter()],
                     controller: _descriptionControllers[transaction.id],
-                    style: AppTextStyles.tableCellBold,
+                    style: AppTextStyles.of(context).tableCellBold,
                     textInputAction: TextInputAction.next,
                     onSubmitted: (_) {
                       // Focus on amount field when done on description
@@ -299,21 +322,27 @@ class _TransactionsTableState extends State<TransactionsTable> {
                       ),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(4),
-                        borderSide: const BorderSide(color: AppColors.border),
+                        borderSide: BorderSide(
+                          color: AppColors.of(context).border,
+                        ),
                       ),
                       enabledBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(4),
-                        borderSide: const BorderSide(color: AppColors.border),
+                        borderSide: BorderSide(
+                          color: AppColors.of(context).border,
+                        ),
                       ),
                       focusedBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(4),
-                        borderSide: const BorderSide(color: AppColors.primary),
+                        borderSide: BorderSide(
+                          color: AppColors.of(context).primary,
+                        ),
                       ),
                     ),
                   )
                 : Text(
                     transaction.description,
-                    style: AppTextStyles.tableCellBold,
+                    style: AppTextStyles.of(context).tableCellBold,
                   ),
           ),
           // Date column
@@ -329,7 +358,8 @@ class _TransactionsTableState extends State<TransactionsTable> {
                 onLongPress: () {
                   // Show time on long press (mobile)
                   ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
+                    AppToast.build(
+                      tone: ToastTone.info,
                       content: Text(
                         DateFormat(
                           'dd MMM yyyy, hh:mm a',
@@ -342,7 +372,7 @@ class _TransactionsTableState extends State<TransactionsTable> {
                 },
                 child: Text(
                   dateFormat.format(transaction.date),
-                  style: AppTextStyles.tableCell,
+                  style: AppTextStyles.of(context).tableCell,
                 ),
               ),
             ),
@@ -354,9 +384,9 @@ class _TransactionsTableState extends State<TransactionsTable> {
                 ? TextField(
                     inputFormatters: const [ArabicNumberInputFormatter()],
                     controller: _amountControllers[transaction.id],
-                    style: AppTextStyles.tableCellBold.copyWith(
-                      color: amountColor,
-                    ),
+                    style: AppTextStyles.of(
+                      context,
+                    ).tableCellBold.copyWith(color: amountColor),
                     keyboardType: const TextInputType.numberWithOptions(
                       decimal: true,
                     ),
@@ -376,15 +406,21 @@ class _TransactionsTableState extends State<TransactionsTable> {
                       ),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(4),
-                        borderSide: const BorderSide(color: AppColors.border),
+                        borderSide: BorderSide(
+                          color: AppColors.of(context).border,
+                        ),
                       ),
                       enabledBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(4),
-                        borderSide: const BorderSide(color: AppColors.border),
+                        borderSide: BorderSide(
+                          color: AppColors.of(context).border,
+                        ),
                       ),
                       focusedBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(4),
-                        borderSide: const BorderSide(color: AppColors.primary),
+                        borderSide: BorderSide(
+                          color: AppColors.of(context).primary,
+                        ),
                       ),
                     ),
                   )
@@ -398,15 +434,19 @@ class _TransactionsTableState extends State<TransactionsTable> {
           Expanded(
             flex: 1,
             child: transaction.metadata.isLocked
-                ? Icon(Icons.lock, color: AppColors.textMuted, size: 20)
+                ? Icon(
+                    Icons.lock,
+                    color: AppColors.of(context).textMuted,
+                    size: 20,
+                  )
                 : isEditing
                 ? Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       IconButton(
-                        icon: const Icon(
+                        icon: Icon(
                           Icons.check,
-                          color: AppColors.success,
+                          color: AppColors.of(context).success,
                           size: 22,
                         ),
                         onPressed: () => _saveTransaction(transaction.id),
@@ -418,9 +458,9 @@ class _TransactionsTableState extends State<TransactionsTable> {
                       ),
                       const SizedBox(width: 12),
                       IconButton(
-                        icon: const Icon(
+                        icon: Icon(
                           Icons.close,
-                          color: AppColors.error,
+                          color: AppColors.of(context).error,
                           size: 22,
                         ),
                         onPressed: () => _cancelEdit(transaction.id),
@@ -437,9 +477,9 @@ class _TransactionsTableState extends State<TransactionsTable> {
                     children: [
                       if (canEdit)
                         IconButton(
-                          icon: const Icon(
+                          icon: Icon(
                             Icons.edit_outlined,
-                            color: AppColors.info,
+                            color: AppColors.of(context).info,
                             size: 22,
                           ),
                           onPressed: () => _toggleEdit(transaction.id),
@@ -451,9 +491,9 @@ class _TransactionsTableState extends State<TransactionsTable> {
                         ),
                       if (canEdit) const SizedBox(width: 12),
                       IconButton(
-                        icon: const Icon(
+                        icon: Icon(
                           Icons.delete_outline,
-                          color: AppColors.error,
+                          color: AppColors.of(context).error,
                           size: 22,
                         ),
                         onPressed: widget.onDelete != null
@@ -488,15 +528,14 @@ class _TransactionsTableState extends State<TransactionsTable> {
 
     return RichText(
       text: TextSpan(
-        style: AppTextStyles.tableCellBold.copyWith(color: color),
+        style: AppTextStyles.of(context).tableCellBold.copyWith(color: color),
         children: [
           TextSpan(text: '$prefix$integerPart.'),
           TextSpan(
             text: decimalPart,
-            style: AppTextStyles.tableCellBold.copyWith(
-              fontSize: 10,
-              color: color,
-            ),
+            style: AppTextStyles.of(
+              context,
+            ).tableCellBold.copyWith(fontSize: 10, color: color),
           ),
         ],
       ),

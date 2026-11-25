@@ -84,7 +84,7 @@ class PricingSubItemSection extends StatelessWidget {
       key: ValueKey('pricing-sub-item-$subItemId'),
       margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
-        border: Border.all(color: const Color(0xFF363C4A), width: 1),
+        border: Border.all(color: AppColors.of(context).border, width: 1),
         borderRadius: BorderRadius.circular(8),
       ),
       child: Column(
@@ -172,27 +172,29 @@ class PricingAddSubItemFooter extends StatelessWidget {
               vertical: 17.22,
               horizontal: 20,
             ),
-            decoration: const BoxDecoration(
-              border: Border(top: BorderSide(color: Color(0xFF363C4A))),
+            decoration: BoxDecoration(
+              border: Border(
+                top: BorderSide(color: AppColors.of(context).border),
+              ),
             ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
                   'المجموع الفرعي',
-                  style: AppTextStyles.bodyMedium.copyWith(
+                  style: AppTextStyles.of(context).bodyMedium.copyWith(
                     fontSize: 14,
                     fontWeight: FontWeight.w500,
-                    color: AppColors.textSecondary,
+                    color: AppColors.of(context).textSecondary,
                   ),
                 ),
                 Row(
                   children: [
                     Text(
                       'KD',
-                      style: AppTextStyles.bodyMedium.copyWith(
+                      style: AppTextStyles.of(context).bodyMedium.copyWith(
                         fontSize: 14,
-                        color: const Color(0xFF6B7280),
+                        color: AppColors.of(context).textMuted,
                       ),
                     ),
                     const SizedBox(width: 8),

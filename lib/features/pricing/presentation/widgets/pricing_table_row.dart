@@ -193,7 +193,7 @@ class _PricingTableRowState extends State<PricingTableRow> {
         padding: const EdgeInsets.symmetric(vertical: 8),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(4),
-          color: const Color(0xFF2A313D).withOpacity(0.3),
+          color: AppColors.of(context).surfaceColor.withOpacity(0.3),
         ),
         child: Row(
           children: [
@@ -206,15 +206,15 @@ class _PricingTableRowState extends State<PricingTableRow> {
                 controller: _descriptionController,
                 focusNode: _descriptionFocusNode,
                 textInputAction: TextInputAction.done,
-                style: AppTextStyles.bodyMedium.copyWith(
-                  color: AppColors.textPrimary,
+                style: AppTextStyles.of(context).bodyMedium.copyWith(
+                  color: AppColors.of(context).textPrimary,
                   fontSize: 14,
                 ),
                 decoration: InputDecoration(
                   border: InputBorder.none,
                   hintText: '-',
                   hintStyle: TextStyle(
-                    color: AppColors.textPrimary.withOpacity(0.5),
+                    color: AppColors.of(context).textPrimary.withOpacity(0.5),
                     fontSize: 14,
                   ),
                   contentPadding: EdgeInsets.zero,
@@ -257,22 +257,23 @@ class _PricingTableRowState extends State<PricingTableRow> {
                                 RegExp(r'^\d*\.?\d*'),
                               ),
                             ],
-                            style: AppTextStyles.bodyMedium.copyWith(
-                              color: AppColors.textPrimary,
-                              fontSize: 14,
-                            ),
+                            style: AppTextStyles.of(context).bodyMedium
+                                .copyWith(
+                                  color: AppColors.of(context).textPrimary,
+                                  fontSize: 14,
+                                ),
                             textAlign: TextAlign.center,
                             decoration: InputDecoration(
                               border: InputBorder.none,
                               focusedBorder: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(4),
                                 borderSide: BorderSide(
-                                  color: AppColors.primary,
+                                  color: AppColors.of(context).primary,
                                 ),
                               ),
                               hintText: '-',
                               hintStyle: TextStyle(
-                                color: AppColors.textMuted,
+                                color: AppColors.of(context).textMuted,
                                 fontSize: 18,
                               ),
                               contentPadding: EdgeInsets.zero,
@@ -288,10 +289,10 @@ class _PricingTableRowState extends State<PricingTableRow> {
                           ),
                         ),
                         const SizedBox(width: 4),
-                        const Text(
+                        Text(
                           '×',
                           style: TextStyle(
-                            color: AppColors.textSecondary,
+                            color: AppColors.of(context).textSecondary,
                             fontSize: 16,
                           ),
                         ),
@@ -311,16 +312,17 @@ class _PricingTableRowState extends State<PricingTableRow> {
                                 RegExp(r'^\d*\.?\d*'),
                               ),
                             ],
-                            style: AppTextStyles.bodyMedium.copyWith(
-                              color: AppColors.textPrimary,
-                              fontSize: 14,
-                            ),
+                            style: AppTextStyles.of(context).bodyMedium
+                                .copyWith(
+                                  color: AppColors.of(context).textPrimary,
+                                  fontSize: 14,
+                                ),
                             textAlign: TextAlign.center,
-                            decoration: const InputDecoration(
+                            decoration: InputDecoration(
                               border: InputBorder.none,
                               hintText: '-',
                               hintStyle: TextStyle(
-                                color: AppColors.textMuted,
+                                color: AppColors.of(context).textMuted,
                                 fontSize: 14,
                               ),
                               contentPadding: EdgeInsets.zero,
@@ -336,10 +338,10 @@ class _PricingTableRowState extends State<PricingTableRow> {
                           ),
                         ),
                         const SizedBox(width: 4),
-                        const Text(
+                        Text(
                           '=',
                           style: TextStyle(
-                            color: AppColors.textSecondary,
+                            color: AppColors.of(context).textSecondary,
                             fontSize: 16,
                           ),
                         ),
@@ -350,9 +352,9 @@ class _PricingTableRowState extends State<PricingTableRow> {
                             height: 44,
                             padding: const EdgeInsets.symmetric(horizontal: 8),
                             decoration: BoxDecoration(
-                              color: const Color(0xFF2A313D),
+                              color: AppColors.of(context).surfaceColor,
                               border: Border.all(
-                                color: const Color(0xFF363C4A),
+                                color: AppColors.of(context).border,
                               ),
                               borderRadius: BorderRadius.circular(4),
                             ),
@@ -363,10 +365,13 @@ class _PricingTableRowState extends State<PricingTableRow> {
                                   widget.item.total > 0
                                       ? widget.item.total.toStringAsFixed(3)
                                       : '-',
-                                  style: AppTextStyles.bodyMedium.copyWith(
-                                    color: AppColors.textPrimary,
-                                    fontSize: 13,
-                                  ),
+                                  style: AppTextStyles.of(context).bodyMedium
+                                      .copyWith(
+                                        color: AppColors.of(
+                                          context,
+                                        ).textPrimary,
+                                        fontSize: 13,
+                                      ),
                                   textAlign: TextAlign.center,
                                 ),
                               ),
@@ -379,10 +384,10 @@ class _PricingTableRowState extends State<PricingTableRow> {
                       mainAxisSize: MainAxisSize.min,
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        const Text(
+                        Text(
                           '=',
                           style: TextStyle(
-                            color: AppColors.textSecondary,
+                            color: AppColors.of(context).textSecondary,
                             fontSize: 16,
                           ),
                         ),
@@ -405,10 +410,11 @@ class _PricingTableRowState extends State<PricingTableRow> {
                                   RegExp(r'^\d*\.?\d*'),
                                 ),
                               ],
-                              style: AppTextStyles.bodyMedium.copyWith(
-                                color: AppColors.textPrimary,
-                                fontSize: 14,
-                              ),
+                              style: AppTextStyles.of(context).bodyMedium
+                                  .copyWith(
+                                    color: AppColors.of(context).textPrimary,
+                                    fontSize: 14,
+                                  ),
                               textAlign: TextAlign.center,
                               decoration: InputDecoration(
                                 border: InputBorder.none,
@@ -417,7 +423,7 @@ class _PricingTableRowState extends State<PricingTableRow> {
                                     .textTheme
                                     .bodyMedium
                                     ?.copyWith(
-                                      color: AppColors.textMuted,
+                                      color: AppColors.of(context).textMuted,
                                       fontSize: 18,
                                     ),
                                 contentPadding: EdgeInsets.zero,
@@ -444,9 +450,9 @@ class _PricingTableRowState extends State<PricingTableRow> {
                 height: 36,
                 child: IconButton(
                   onPressed: widget.onDelete,
-                  icon: const Icon(
+                  icon: Icon(
                     Icons.delete_outline,
-                    color: AppColors.delete,
+                    color: AppColors.of(context).delete,
                     size: 20,
                   ),
                   padding: EdgeInsets.zero,

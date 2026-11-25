@@ -43,9 +43,9 @@ class CustomButton extends StatelessWidget {
         style:
             style ??
             ElevatedButton.styleFrom(
-              backgroundColor: backgroundColor ?? AppColors.primary,
+              backgroundColor: backgroundColor ?? AppColors.of(context).primary,
               foregroundColor: textColor ?? AppColors.white,
-              disabledBackgroundColor: AppColors.grey,
+              disabledBackgroundColor: AppColors.of(context).grey,
               disabledForegroundColor: AppColors.white,
               padding:
                   padding ??
@@ -126,12 +126,12 @@ class CustomOutlinedButton extends StatelessWidget {
         style:
             style ??
             OutlinedButton.styleFrom(
-              foregroundColor: textColor ?? AppColors.primary,
-              disabledForegroundColor: AppColors.grey,
+              foregroundColor: textColor ?? AppColors.of(context).primary,
+              disabledForegroundColor: AppColors.of(context).grey,
               side: BorderSide(
                 color: shouldDisable
-                    ? AppColors.grey
-                    : (borderColor ?? AppColors.primary),
+                    ? AppColors.of(context).grey
+                    : (borderColor ?? AppColors.of(context).primary),
               ),
               padding:
                   padding ??
@@ -147,7 +147,7 @@ class CustomOutlinedButton extends StatelessWidget {
                 child: CircularProgressIndicator(
                   strokeWidth: 2,
                   valueColor: AlwaysStoppedAnimation<Color>(
-                    textColor ?? AppColors.primary,
+                    textColor ?? AppColors.of(context).primary,
                   ),
                 ),
               )
@@ -161,7 +161,7 @@ class CustomOutlinedButton extends StatelessWidget {
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
-                      color: textColor ?? AppColors.primary,
+                      color: textColor ?? AppColors.of(context).primary,
                     ),
                   ),
                 ],

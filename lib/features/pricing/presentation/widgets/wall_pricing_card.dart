@@ -53,7 +53,7 @@ class _WallPricingCardState extends State<WallPricingCard> {
       case WallStatus.completed:
         return const Color(0xFF60A5FA);
       case WallStatus.underPricing:
-        return AppColors.statusOnHold;
+        return AppColors.of(context).statusOnHold;
     }
   }
 
@@ -62,8 +62,8 @@ class _WallPricingCardState extends State<WallPricingCard> {
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
-        color: const Color(0xFF1C212B),
-        border: Border.all(color: const Color(0xFF363C4A)),
+        color: AppColors.of(context).cardBackground,
+        border: Border.all(color: AppColors.of(context).border),
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
@@ -80,8 +80,8 @@ class _WallPricingCardState extends State<WallPricingCard> {
           Container(
             height: 71,
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 21),
-            decoration: const BoxDecoration(
-              color: Color(0xFF232936),
+            decoration: BoxDecoration(
+              color: AppColors.of(context).surfaceColor,
               borderRadius: BorderRadius.only(
                 topLeft: Radius.circular(12),
                 topRight: Radius.circular(12),
@@ -98,10 +98,9 @@ class _WallPricingCardState extends State<WallPricingCard> {
                 Expanded(
                   child: Text(
                     widget.wall.name,
-                    style: AppTextStyles.h4.copyWith(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w700,
-                    ),
+                    style: AppTextStyles.of(
+                      context,
+                    ).h4.copyWith(fontSize: 18, fontWeight: FontWeight.w700),
                   ),
                 ),
                 const SizedBox(width: 16),
@@ -112,8 +111,8 @@ class _WallPricingCardState extends State<WallPricingCard> {
                     vertical: 5,
                   ),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF2A313D),
-                    border: Border.all(color: const Color(0xFF363C4A)),
+                    color: AppColors.of(context).surfaceColor,
+                    border: Border.all(color: AppColors.of(context).border),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Row(
@@ -142,7 +141,7 @@ class _WallPricingCardState extends State<WallPricingCard> {
                       const SizedBox(width: 8),
                       Text(
                         _getStatusText(widget.wall.status),
-                        style: AppTextStyles.caption.copyWith(
+                        style: AppTextStyles.of(context).caption.copyWith(
                           fontSize: 12,
                           fontWeight: FontWeight.w700,
                           color: _getStatusColor(widget.wall.status),
@@ -152,9 +151,9 @@ class _WallPricingCardState extends State<WallPricingCard> {
                       const SizedBox(width: 8),
                       Text(
                         'Status',
-                        style: AppTextStyles.caption.copyWith(
+                        style: AppTextStyles.of(context).caption.copyWith(
                           fontSize: 12,
-                          color: AppColors.textSecondary,
+                          color: AppColors.of(context).textSecondary,
                         ),
                       ),
                     ],
@@ -174,7 +173,7 @@ class _WallPricingCardState extends State<WallPricingCard> {
                   },
                   icon: Icon(
                     _isExpanded ? Icons.expand_less : Icons.expand_more,
-                    color: AppColors.textSecondary,
+                    color: AppColors.of(context).textSecondary,
                     size: 24,
                   ),
                   padding: EdgeInsets.zero,
@@ -221,11 +220,12 @@ class _WallPricingCardState extends State<WallPricingCard> {
                                 flex: 2,
                                 child: Text(
                                   'وصف العنصر',
-                                  style: AppTextStyles.caption.copyWith(
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w500,
-                                    color: const Color(0xFF6B7280),
-                                  ),
+                                  style: AppTextStyles.of(context).caption
+                                      .copyWith(
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w500,
+                                        color: AppColors.of(context).textMuted,
+                                      ),
                                 ),
                               ),
                               const SizedBox(width: 8),
@@ -233,11 +233,12 @@ class _WallPricingCardState extends State<WallPricingCard> {
                                 flex: 2,
                                 child: Text(
                                   'التكلفة (دينار)',
-                                  style: AppTextStyles.caption.copyWith(
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w500,
-                                    color: const Color(0xFF6B7280),
-                                  ),
+                                  style: AppTextStyles.of(context).caption
+                                      .copyWith(
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w500,
+                                        color: AppColors.of(context).textMuted,
+                                      ),
                                   textAlign: TextAlign.center,
                                 ),
                               ),
@@ -288,7 +289,9 @@ class _WallPricingCardState extends State<WallPricingCard> {
                         Container(
                           height: 46,
                           decoration: BoxDecoration(
-                            border: Border.all(color: const Color(0xFF4B5563)),
+                            border: Border.all(
+                              color: AppColors.of(context).textDisabled,
+                            ),
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: InkWell(
@@ -296,19 +299,22 @@ class _WallPricingCardState extends State<WallPricingCard> {
                             child: Row(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                const Icon(
+                                Icon(
                                   Icons.add,
-                                  color: AppColors.textSecondary,
+                                  color: AppColors.of(context).textSecondary,
                                   size: 20,
                                 ),
                                 const SizedBox(width: 8),
                                 Text(
                                   'إضافة صف',
-                                  style: AppTextStyles.bodyMedium.copyWith(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w500,
-                                    color: AppColors.textSecondary,
-                                  ),
+                                  style: AppTextStyles.of(context).bodyMedium
+                                      .copyWith(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w500,
+                                        color: AppColors.of(
+                                          context,
+                                        ).textSecondary,
+                                      ),
                                 ),
                               ],
                             ),
@@ -321,9 +327,11 @@ class _WallPricingCardState extends State<WallPricingCard> {
                             vertical: 17.22,
                             horizontal: 20,
                           ),
-                          decoration: const BoxDecoration(
+                          decoration: BoxDecoration(
                             border: Border(
-                              top: BorderSide(color: Color(0xFF363C4A)),
+                              top: BorderSide(
+                                color: AppColors.of(context).border,
+                              ),
                             ),
                           ),
                           child: Row(
@@ -331,11 +339,14 @@ class _WallPricingCardState extends State<WallPricingCard> {
                             children: [
                               Text(
                                 'المجموع الفرعي',
-                                style: AppTextStyles.bodyMedium.copyWith(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w500,
-                                  color: AppColors.textSecondary,
-                                ),
+                                style: AppTextStyles.of(context).bodyMedium
+                                    .copyWith(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w500,
+                                      color: AppColors.of(
+                                        context,
+                                      ).textSecondary,
+                                    ),
                               ),
                               Row(
                                 children: [
@@ -346,20 +357,23 @@ class _WallPricingCardState extends State<WallPricingCard> {
                                           RegExp(r'(\d)(?=(\d{3})+(?!\d))'),
                                           (Match m) => '${m[1]},',
                                         ),
-                                    style: const TextStyle(
+                                    style: TextStyle(
                                       fontFamily: 'Menlo',
                                       fontSize: 20,
                                       fontWeight: FontWeight.w700,
-                                      color: AppColors.textPrimary,
+                                      color: AppColors.of(context).textPrimary,
                                     ),
                                   ),
                                   const SizedBox(width: 8),
                                   Text(
                                     'KD',
-                                    style: AppTextStyles.bodyMedium.copyWith(
-                                      fontSize: 14,
-                                      color: const Color(0xFF6B7280),
-                                    ),
+                                    style: AppTextStyles.of(context).bodyMedium
+                                        .copyWith(
+                                          fontSize: 14,
+                                          color: AppColors.of(
+                                            context,
+                                          ).textMuted,
+                                        ),
                                   ),
                                 ],
                               ),

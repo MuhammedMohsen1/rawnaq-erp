@@ -39,9 +39,9 @@ class InstallmentsSection extends StatelessWidget {
 
     return Container(
       decoration: BoxDecoration(
-        color: AppColors.cardBackground,
+        color: AppColors.of(context).cardBackground,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.border),
+        border: Border.all(color: AppColors.of(context).border),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -54,7 +54,7 @@ class InstallmentsSection extends StatelessWidget {
             profitPercentage: profitPercentage,
             onOpenDialog: onOpenDialog,
           ),
-          const Divider(height: 1, color: AppColors.border),
+          Divider(height: 1, color: AppColors.of(context).border),
           InstallmentsSectionTable(
             paymentSchedule: paymentSchedule,
             isAdminOrManager: isAdminOrManager,
@@ -97,7 +97,7 @@ class PaymentScheduleDialog extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Dialog(
-      backgroundColor: AppColors.cardBackground,
+      backgroundColor: AppColors.of(context).cardBackground,
       insetPadding: const EdgeInsets.all(24),
       child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 1120, maxHeight: 760),
@@ -115,7 +115,7 @@ class PaymentScheduleDialog extends StatelessWidget {
                         onPressed: onEditSchedule,
                         icon: const Icon(Icons.edit_note_rounded),
                         tooltip: 'تعديل جدول الدفعات',
-                        color: AppColors.primary,
+                        color: AppColors.of(context).primary,
                       ),
                     ),
                   const Expanded(child: SizedBox.shrink()),
@@ -134,7 +134,7 @@ class PaymentScheduleDialog extends StatelessWidget {
               totalProfit: totalProfit,
               profitPercentage: profitPercentage,
             ),
-            const Divider(height: 1, color: AppColors.border),
+            Divider(height: 1, color: AppColors.of(context).border),
             Expanded(
               child: SingleChildScrollView(
                 padding: const EdgeInsets.only(bottom: 12),

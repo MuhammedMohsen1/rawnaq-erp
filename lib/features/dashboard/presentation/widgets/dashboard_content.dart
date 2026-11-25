@@ -1,3 +1,4 @@
+import 'package:rawnaq/core/constants/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:syncfusion_flutter_charts/charts.dart';
@@ -141,7 +142,9 @@ class _ProjectStats extends StatelessWidget {
                     .map(
                       (item) => Text(
                         '${item.$1}: ${item.$2}',
-                        style: const TextStyle(color: Color(0xffc9d1d9)),
+                        style: TextStyle(
+                          color: AppColors.of(context).textPrimary,
+                        ),
                       ),
                     )
                     .toList(),
@@ -173,7 +176,10 @@ class _MetricCard extends StatelessWidget {
           value,
           style: const TextStyle(fontSize: 26, fontWeight: FontWeight.bold),
         ),
-        Text(title, style: const TextStyle(color: Color(0xff8b949e))),
+        Text(
+          title,
+          style: TextStyle(color: AppColors.of(context).textSecondary),
+        ),
       ],
     ),
   );
@@ -227,7 +233,9 @@ class _FinancialSection extends StatelessWidget {
                           children: [
                             Text(
                               item.$1,
-                              style: const TextStyle(color: Color(0xff8b949e)),
+                              style: TextStyle(
+                                color: AppColors.of(context).textSecondary,
+                              ),
                             ),
                             Text(
                               _kwd.format(item.$2),
@@ -384,8 +392,8 @@ class _Panel extends StatelessWidget {
     width: double.infinity,
     padding: const EdgeInsets.all(18),
     decoration: BoxDecoration(
-      color: const Color(0xff161b22),
-      border: Border.all(color: const Color(0xff30363d)),
+      color: AppColors.of(context).scaffoldBackground,
+      border: Border.all(color: AppColors.of(context).border),
       borderRadius: BorderRadius.circular(12),
     ),
     child: child,

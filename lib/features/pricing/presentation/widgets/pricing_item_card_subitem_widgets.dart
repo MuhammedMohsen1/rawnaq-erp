@@ -43,8 +43,8 @@ class PricingSubItemHeader extends StatelessWidget {
       onTap: onToggleExpanded,
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-        decoration: const BoxDecoration(
-          color: Color(0xFF2A313D),
+        decoration: BoxDecoration(
+          color: AppColors.of(context).surfaceColor,
           borderRadius: BorderRadius.only(
             topLeft: Radius.circular(8),
             topRight: Radius.circular(8),
@@ -54,18 +54,18 @@ class PricingSubItemHeader extends StatelessWidget {
           children: [
             Icon(
               isExpanded ? Icons.expand_less : Icons.expand_more,
-              color: AppColors.textSecondary,
+              color: AppColors.of(context).textSecondary,
               size: 20,
             ),
             Checkbox(
               value: !subItem.isHidden,
               onChanged: (value) => onToggleVisibility(value ?? false),
-              activeColor: AppColors.primary,
+              activeColor: AppColors.of(context).primary,
               checkColor: AppColors.black,
               side: BorderSide(
                 color: subItem.isHidden
-                    ? AppColors.lightGrey
-                    : AppColors.primary,
+                    ? AppColors.of(context).lightGrey
+                    : AppColors.of(context).primary,
                 width: 1.5,
               ),
             ),
@@ -75,34 +75,36 @@ class PricingSubItemHeader extends StatelessWidget {
                 subItem.name,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: AppTextStyles.bodyLarge.copyWith(
-                  fontWeight: FontWeight.w600,
-                ),
+                style: AppTextStyles.of(
+                  context,
+                ).bodyLarge.copyWith(fontWeight: FontWeight.w600),
               ),
             ),
             if (hasSubItemImages) ...[
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
-                  color: AppColors.primary.withValues(alpha: 0.12),
+                  color: AppColors.of(context).primary.withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(999),
                   border: Border.all(
-                    color: AppColors.primary.withValues(alpha: 0.35),
+                    color: AppColors.of(
+                      context,
+                    ).primary.withValues(alpha: 0.35),
                   ),
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Icon(
+                    Icon(
                       Icons.image_outlined,
                       size: 14,
-                      color: AppColors.primary,
+                      color: AppColors.of(context).primary,
                     ),
                     const SizedBox(width: 4),
                     Text(
                       'صور',
-                      style: AppTextStyles.bodySmall.copyWith(
-                        color: AppColors.primary,
+                      style: AppTextStyles.of(context).bodySmall.copyWith(
+                        color: AppColors.of(context).primary,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
@@ -138,23 +140,27 @@ class PricingSubItemHeader extends StatelessWidget {
                       children: [
                         TextSpan(
                           text: intPart,
-                          style: AppTextStyles.caption.copyWith(
-                            color: AppColors.textSecondary,
+                          style: AppTextStyles.of(context).caption.copyWith(
+                            color: AppColors.of(context).textSecondary,
                           ),
                         ),
                         if (decimalPart.isNotEmpty)
                           TextSpan(
                             text: decimalPart,
-                            style: AppTextStyles.caption.copyWith(
-                              color: AppColors.textSecondary,
-                              fontSize: AppTextStyles.caption.fontSize! * 0.75,
+                            style: AppTextStyles.of(context).caption.copyWith(
+                              color: AppColors.of(context).textSecondary,
+                              fontSize:
+                                  AppTextStyles.of(context).caption.fontSize! *
+                                  0.75,
                             ),
                           ),
                         TextSpan(
                           text: ' KD',
                           style: TextStyle(
-                            color: AppColors.textSecondary,
-                            fontSize: AppTextStyles.caption.fontSize! * 0.75,
+                            color: AppColors.of(context).textSecondary,
+                            fontSize:
+                                AppTextStyles.of(context).caption.fontSize! *
+                                0.75,
                           ),
                         ),
                       ],
@@ -165,9 +171,9 @@ class PricingSubItemHeader extends StatelessWidget {
             const SizedBox(width: 8),
             IconButton(
               onPressed: onShowMenu,
-              icon: const Icon(
+              icon: Icon(
                 Icons.more_vert,
-                color: AppColors.textSecondary,
+                color: AppColors.of(context).textSecondary,
                 size: 18,
               ),
               padding: EdgeInsets.zero,
@@ -240,10 +246,12 @@ class PricingElementRowShell extends StatelessWidget {
                   child: Checkbox(
                     value: !element.isHidden,
                     onChanged: (value) => onToggleVisibility(value ?? false),
-                    activeColor: AppColors.background,
-                    checkColor: AppColors.primary,
+                    activeColor: AppColors.of(context).background,
+                    checkColor: AppColors.of(context).primary,
                     side: BorderSide(
-                      color: element.isHidden ? Colors.red : AppColors.primary,
+                      color: element.isHidden
+                          ? Colors.red
+                          : AppColors.of(context).primary,
                     ),
                   ),
                 ),
@@ -254,9 +262,9 @@ class PricingElementRowShell extends StatelessWidget {
           child: canDragElement
               ? ReorderableDragStartListener(
                   index: index,
-                  child: const Icon(
+                  child: Icon(
                     Icons.drag_indicator,
-                    color: AppColors.textMuted,
+                    color: AppColors.of(context).textMuted,
                     size: 18,
                   ),
                 )

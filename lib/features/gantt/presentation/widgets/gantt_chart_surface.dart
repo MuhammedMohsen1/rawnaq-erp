@@ -470,12 +470,14 @@ class _HorizontalEmployeeHeader extends StatelessWidget {
       height: 56,
       padding: const EdgeInsets.symmetric(horizontal: 16),
       alignment: Alignment.centerRight,
-      decoration: const BoxDecoration(
-        color: AppColors.tableHeader,
+      decoration: BoxDecoration(
+        color: AppColors.of(context).tableHeader,
         borderRadius: BorderRadius.only(topRight: Radius.circular(12)),
-        border: Border(left: BorderSide(color: AppColors.border, width: 1)),
+        border: Border(
+          left: BorderSide(color: AppColors.of(context).border, width: 1),
+        ),
       ),
-      child: Text('الموظفين', style: AppTextStyles.tableHeader),
+      child: Text('الموظفين', style: AppTextStyles.of(context).tableHeader),
     );
   }
 }
@@ -491,22 +493,24 @@ class _HorizontalEmployeeCell extends StatelessWidget {
     return Container(
       height: height,
       padding: const EdgeInsets.all(12),
-      decoration: const BoxDecoration(
-        color: AppColors.cardBackground,
+      decoration: BoxDecoration(
+        color: AppColors.of(context).cardBackground,
         border: Border(
-          left: BorderSide(color: AppColors.border, width: 1),
-          bottom: BorderSide(color: AppColors.divider),
+          left: BorderSide(color: AppColors.of(context).border, width: 1),
+          bottom: BorderSide(color: AppColors.of(context).divider),
         ),
       ),
       child: Row(
         children: [
           CircleAvatar(
             radius: 18,
-            backgroundColor: AppColors.primary.withValues(alpha: 0.2),
+            backgroundColor: AppColors.of(
+              context,
+            ).primary.withValues(alpha: 0.2),
             child: Text(
               member.name.isEmpty ? '-' : member.name.substring(0, 1),
-              style: const TextStyle(
-                color: AppColors.primary,
+              style: TextStyle(
+                color: AppColors.of(context).primary,
                 fontSize: 14,
                 fontWeight: FontWeight.bold,
               ),
@@ -520,16 +524,16 @@ class _HorizontalEmployeeCell extends StatelessWidget {
               children: [
                 Text(
                   member.name,
-                  style: AppTextStyles.tableCellBold,
+                  style: AppTextStyles.of(context).tableCellBold,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
                 const SizedBox(height: 2),
                 Text(
                   member.role,
-                  style: AppTextStyles.caption.copyWith(
-                    color: AppColors.textMuted,
-                  ),
+                  style: AppTextStyles.of(
+                    context,
+                  ).caption.copyWith(color: AppColors.of(context).textMuted),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -681,8 +685,8 @@ class _HorizontalDateHeader extends StatelessWidget {
     final dateFormat = DateFormat('d', 'ar');
     return Container(
       height: 56,
-      decoration: const BoxDecoration(
-        color: AppColors.tableHeader,
+      decoration: BoxDecoration(
+        color: AppColors.of(context).tableHeader,
         borderRadius: BorderRadius.only(
           topLeft: Radius.circular(12),
           topRight: Radius.circular(12),
@@ -697,12 +701,14 @@ class _HorizontalDateHeader extends StatelessWidget {
             child: Container(
               key: today ? todayKey : null,
               decoration: BoxDecoration(
-                color: today ? AppColors.primary.withValues(alpha: 0.1) : null,
+                color: today
+                    ? AppColors.of(context).primary.withValues(alpha: 0.1)
+                    : null,
                 border: Border(
                   left: BorderSide(
                     color: weekStart
-                        ? AppColors.primary.withValues(alpha: 0.3)
-                        : AppColors.border,
+                        ? AppColors.of(context).primary.withValues(alpha: 0.3)
+                        : AppColors.of(context).border,
                     width: weekStart ? 2 : 1,
                   ),
                 ),
@@ -713,10 +719,10 @@ class _HorizontalDateHeader extends StatelessWidget {
                 children: [
                   Text(
                     dayFormat.format(date),
-                    style: AppTextStyles.labelSmall.copyWith(
+                    style: AppTextStyles.of(context).labelSmall.copyWith(
                       color: today
-                          ? AppColors.primary
-                          : AppColors.textSecondary,
+                          ? AppColors.of(context).primary
+                          : AppColors.of(context).textSecondary,
                       fontWeight: today ? FontWeight.bold : FontWeight.normal,
                     ),
                     maxLines: 1,
@@ -728,7 +734,7 @@ class _HorizontalDateHeader extends StatelessWidget {
                     width: 28,
                     height: 28,
                     decoration: BoxDecoration(
-                      color: today ? AppColors.primary : null,
+                      color: today ? AppColors.of(context).primary : null,
                       shape: BoxShape.circle,
                     ),
                     child: Center(
@@ -736,8 +742,8 @@ class _HorizontalDateHeader extends StatelessWidget {
                         dateFormat.format(date),
                         style: TextStyle(
                           color: today
-                              ? AppColors.scaffoldBackground
-                              : AppColors.textPrimary,
+                              ? AppColors.of(context).scaffoldBackground
+                              : AppColors.of(context).textPrimary,
                           fontSize: 13,
                           fontWeight: FontWeight.w600,
                         ),
@@ -773,8 +779,8 @@ class _VerticalMembersHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       height: 58,
-      decoration: const BoxDecoration(
-        color: AppColors.tableHeader,
+      decoration: BoxDecoration(
+        color: AppColors.of(context).tableHeader,
         borderRadius: BorderRadius.only(
           topLeft: Radius.circular(12),
           topRight: Radius.circular(12),
@@ -785,28 +791,37 @@ class _VerticalMembersHeader extends StatelessWidget {
           Container(
             width: dateRailWidth,
             alignment: Alignment.center,
-            decoration: const BoxDecoration(
-              border: Border(left: BorderSide(color: AppColors.border)),
+            decoration: BoxDecoration(
+              border: Border(
+                left: BorderSide(color: AppColors.of(context).border),
+              ),
             ),
-            child: Text('التاريخ', style: AppTextStyles.tableHeader),
+            child: Text(
+              'التاريخ',
+              style: AppTextStyles.of(context).tableHeader,
+            ),
           ),
           ...teamMembers.map(
             (member) => SizedBox(
               width: employeeColumnWidth,
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 12),
-                decoration: const BoxDecoration(
-                  border: Border(left: BorderSide(color: AppColors.border)),
+                decoration: BoxDecoration(
+                  border: Border(
+                    left: BorderSide(color: AppColors.of(context).border),
+                  ),
                 ),
                 child: Row(
                   children: [
                     CircleAvatar(
                       radius: 15,
-                      backgroundColor: AppColors.primary.withValues(alpha: 0.2),
+                      backgroundColor: AppColors.of(
+                        context,
+                      ).primary.withValues(alpha: 0.2),
                       child: Text(
                         member.name.isEmpty ? '-' : member.name.substring(0, 1),
                         style: TextStyle(
-                          color: AppColors.primary,
+                          color: AppColors.of(context).primary,
                           fontSize: 12,
                           fontWeight: FontWeight.bold,
                         ),
@@ -820,14 +835,14 @@ class _VerticalMembersHeader extends StatelessWidget {
                         children: [
                           Text(
                             member.name,
-                            style: AppTextStyles.tableCellBold,
+                            style: AppTextStyles.of(context).tableCellBold,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),
                           Text(
                             member.role,
-                            style: AppTextStyles.caption.copyWith(
-                              color: AppColors.textMuted,
+                            style: AppTextStyles.of(context).caption.copyWith(
+                              color: AppColors.of(context).textMuted,
                             ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
@@ -867,13 +882,13 @@ class _VerticalDateCell extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(
         color: isToday
-            ? AppColors.primary.withValues(alpha: 0.1)
+            ? AppColors.of(context).primary.withValues(alpha: 0.1)
             : isWeekend
-            ? AppColors.surfaceColor.withValues(alpha: 0.28)
-            : AppColors.cardBackground,
-        border: const Border(
-          left: BorderSide(color: AppColors.border),
-          bottom: BorderSide(color: AppColors.divider),
+            ? AppColors.of(context).surfaceColor.withValues(alpha: 0.28)
+            : AppColors.of(context).cardBackground,
+        border: Border(
+          left: BorderSide(color: AppColors.of(context).border),
+          bottom: BorderSide(color: AppColors.of(context).divider),
         ),
       ),
       child: Column(
@@ -882,8 +897,10 @@ class _VerticalDateCell extends StatelessWidget {
         children: [
           Text(
             dayFormat.format(date),
-            style: AppTextStyles.labelSmall.copyWith(
-              color: isToday ? AppColors.primary : AppColors.textSecondary,
+            style: AppTextStyles.of(context).labelSmall.copyWith(
+              color: isToday
+                  ? AppColors.of(context).primary
+                  : AppColors.of(context).textSecondary,
               fontWeight: isToday ? FontWeight.w700 : FontWeight.w500,
             ),
             maxLines: 1,
@@ -895,18 +912,22 @@ class _VerticalDateCell extends StatelessWidget {
             height: 30,
             alignment: Alignment.center,
             decoration: BoxDecoration(
-              color: isToday ? AppColors.primary : AppColors.surfaceColor,
+              color: isToday
+                  ? AppColors.of(context).primary
+                  : AppColors.of(context).surfaceColor,
               borderRadius: BorderRadius.circular(6),
               border: Border.all(
-                color: isToday ? AppColors.primary : AppColors.border,
+                color: isToday
+                    ? AppColors.of(context).primary
+                    : AppColors.of(context).border,
               ),
             ),
             child: Text(
               dateFormat.format(date),
-              style: AppTextStyles.tableCellBold.copyWith(
+              style: AppTextStyles.of(context).tableCellBold.copyWith(
                 color: isToday
-                    ? AppColors.scaffoldBackground
-                    : AppColors.textPrimary,
+                    ? AppColors.of(context).scaffoldBackground
+                    : AppColors.of(context).textPrimary,
               ),
             ),
           ),
@@ -1006,22 +1027,32 @@ class _VerticalEmployeeTimeline extends StatelessWidget {
                         padding: const EdgeInsets.all(10),
                         decoration: BoxDecoration(
                           color: hovering
-                              ? AppColors.primary.withValues(alpha: 0.14)
+                              ? AppColors.of(
+                                  context,
+                                ).primary.withValues(alpha: 0.14)
                               : isToday(date)
-                              ? AppColors.primary.withValues(alpha: 0.035)
+                              ? AppColors.of(
+                                  context,
+                                ).primary.withValues(alpha: 0.035)
                               : date.weekday == DateTime.friday
-                              ? AppColors.surfaceColor.withValues(alpha: 0.12)
-                              : AppColors.cardBackground,
-                          border: const Border(
-                            left: BorderSide(color: AppColors.border),
-                            bottom: BorderSide(color: AppColors.divider),
+                              ? AppColors.of(
+                                  context,
+                                ).surfaceColor.withValues(alpha: 0.12)
+                              : AppColors.of(context).cardBackground,
+                          border: Border(
+                            left: BorderSide(
+                              color: AppColors.of(context).border,
+                            ),
+                            bottom: BorderSide(
+                              color: AppColors.of(context).divider,
+                            ),
                           ),
                         ),
                         child: hovering
                             ? Center(
                                 child: Icon(
                                   Icons.add_circle,
-                                  color: AppColors.primary,
+                                  color: AppColors.of(context).primary,
                                   size: 22,
                                 ),
                               )
@@ -1080,7 +1111,7 @@ class _VerticalEmployeeTimeline extends StatelessWidget {
                       height: height,
                       child: GanttVerticalResizableTaskChip(
                         task: task,
-                        color: ganttTaskColor(task),
+                        color: ganttTaskColor(context, task),
                         compactMeta:
                             '${task.formattedStartTime} - ${task.formattedEndTime}',
                         rowHeight: rowHeight,
@@ -1103,7 +1134,7 @@ class _VerticalEmployeeTimeline extends StatelessWidget {
                       message: 'اسحب لنقل • انقر مرتين للتعديل',
                       child: GanttVerticalResizableTaskChip(
                         task: task,
-                        color: ganttTaskColor(task),
+                        color: ganttTaskColor(context, task),
                         compactMeta:
                             '${task.formattedStartTime} - ${task.formattedEndTime}',
                         rowHeight: rowHeight,

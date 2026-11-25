@@ -27,7 +27,7 @@ class PricingFormattedNumber extends StatelessWidget {
           fontFamily: 'Menlo',
           fontSize: fontSize,
           fontWeight: fontWeight,
-          color: AppColors.textPrimary,
+          color: AppColors.of(context).textPrimary,
         ),
       );
     }
@@ -46,7 +46,7 @@ class PricingFormattedNumber extends StatelessWidget {
           fontFamily: 'Menlo',
           fontSize: fontSize,
           fontWeight: fontWeight,
-          color: AppColors.textPrimary,
+          color: AppColors.of(context).textPrimary,
         ),
         children: [
           TextSpan(text: formattedInteger),
@@ -91,7 +91,7 @@ class PricingStatChip extends StatelessWidget {
       ),
       child: Text(
         '$formattedValue $suffix',
-        style: AppTextStyles.bodySmall.copyWith(
+        style: AppTextStyles.of(context).bodySmall.copyWith(
           fontSize: 11,
           color: color,
           fontWeight: FontWeight.w700,
@@ -131,7 +131,7 @@ class PricingStatCard extends StatelessWidget {
           '${showFinancials ? value.toStringAsFixed(2) : '••••'} KD',
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
-          style: AppTextStyles.bodySmall.copyWith(
+          style: AppTextStyles.of(context).bodySmall.copyWith(
             fontSize: 10,
             color: color,
             fontWeight: FontWeight.w700,
@@ -166,7 +166,7 @@ class PricingSubItemStats extends StatelessWidget {
         PricingStatCard(
           label: 'تكلفة',
           value: subItem.totalCost,
-          color: AppColors.delete,
+          color: AppColors.of(context).delete,
           showFinancials: showFinancials,
         ),
         const SizedBox(width: 4),
@@ -230,13 +230,13 @@ class _PricingImagePreviewState extends State<PricingImagePreview> {
         margin: const EdgeInsets.all(4),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: const Color(0xFF363C4A)),
-          color: const Color(0xFF161A22),
+          border: Border.all(color: AppColors.of(context).border),
+          color: AppColors.of(context).scaffoldBackground,
         ),
-        child: const Center(
+        child: Center(
           child: Text(
             'لا توجد صور للمعاينة',
-            style: TextStyle(color: AppColors.textMuted),
+            style: TextStyle(color: AppColors.of(context).textMuted),
           ),
         ),
       );
@@ -259,7 +259,7 @@ class _PricingImagePreviewState extends State<PricingImagePreview> {
             margin: const EdgeInsets.all(4),
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: const Color(0xFF363C4A)),
+              border: Border.all(color: AppColors.of(context).border),
             ),
             child: ClipRRect(
               borderRadius: BorderRadius.circular(8),
@@ -273,12 +273,12 @@ class _PricingImagePreviewState extends State<PricingImagePreview> {
                       height: double.infinity,
                       errorBuilder: (context, error, stackTrace) {
                         return Container(
-                          color: const Color(0xFF2A313D),
-                          child: const Center(
+                          color: AppColors.of(context).surfaceColor,
+                          child: Center(
                             child: Icon(
                               Icons.broken_image,
                               size: 64,
-                              color: AppColors.textMuted,
+                              color: AppColors.of(context).textMuted,
                             ),
                           ),
                         );
@@ -286,10 +286,10 @@ class _PricingImagePreviewState extends State<PricingImagePreview> {
                       loadingBuilder: (context, child, loadingProgress) {
                         if (loadingProgress == null) return child;
                         return Container(
-                          color: const Color(0xFF2A313D),
-                          child: const Center(
+                          color: AppColors.of(context).surfaceColor,
+                          child: Center(
                             child: CircularProgressIndicator(
-                              color: AppColors.primary,
+                              color: AppColors.of(context).primary,
                             ),
                           ),
                         );
@@ -323,9 +323,9 @@ class _PricingImagePreviewState extends State<PricingImagePreview> {
                     Positioned.fill(
                       child: Container(
                         color: Colors.black.withOpacity(0.5),
-                        child: const Center(
+                        child: Center(
                           child: CircularProgressIndicator(
-                            color: AppColors.primary,
+                            color: AppColors.of(context).primary,
                           ),
                         ),
                       ),
@@ -433,8 +433,8 @@ class _PricingImagePreviewState extends State<PricingImagePreview> {
                       borderRadius: BorderRadius.circular(6),
                       border: Border.all(
                         color: isSelected
-                            ? AppColors.primary
-                            : const Color(0xFF363C4A),
+                            ? AppColors.of(context).primary
+                            : AppColors.of(context).border,
                         width: isSelected ? 2 : 1,
                       ),
                     ),
@@ -449,11 +449,11 @@ class _PricingImagePreviewState extends State<PricingImagePreview> {
                             fit: BoxFit.cover,
                             errorBuilder: (context, error, stackTrace) {
                               return Container(
-                                color: const Color(0xFF2A313D),
-                                child: const Icon(
+                                color: AppColors.of(context).surfaceColor,
+                                child: Icon(
                                   Icons.broken_image,
                                   size: 20,
-                                  color: AppColors.textMuted,
+                                  color: AppColors.of(context).textMuted,
                                 ),
                               );
                             },
@@ -462,13 +462,13 @@ class _PricingImagePreviewState extends State<PricingImagePreview> {
                         if (isThumbnailDeleting)
                           Container(
                             color: Colors.black.withOpacity(0.4),
-                            child: const Center(
+                            child: Center(
                               child: SizedBox(
                                 width: 14,
                                 height: 14,
                                 child: CircularProgressIndicator(
                                   strokeWidth: 2,
-                                  color: AppColors.primary,
+                                  color: AppColors.of(context).primary,
                                 ),
                               ),
                             ),
@@ -486,11 +486,11 @@ class _PricingImagePreviewState extends State<PricingImagePreview> {
           height: 40,
           decoration: BoxDecoration(
             border: Border.all(
-              color: AppColors.primary.withValues(alpha: 0.5),
+              color: AppColors.of(context).primary.withValues(alpha: 0.5),
               style: BorderStyle.solid,
             ),
             borderRadius: BorderRadius.circular(8),
-            color: AppColors.primary.withValues(alpha: 0.1),
+            color: AppColors.of(context).primary.withValues(alpha: 0.1),
           ),
           child: Material(
             color: Colors.transparent,
@@ -501,19 +501,23 @@ class _PricingImagePreviewState extends State<PricingImagePreview> {
                   : widget.onPickImagesWithFilePicker,
               borderRadius: BorderRadius.circular(8),
               child: isUploading
-                  ? const Padding(
+                  ? Padding(
                       padding: EdgeInsets.all(8.0),
                       child: Center(
                         child: CircularProgressIndicator(
                           strokeWidth: 2,
-                          color: AppColors.primary,
+                          color: AppColors.of(context).primary,
                         ),
                       ),
                     )
                   : Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(Icons.add, size: 24, color: AppColors.primary),
+                        Icon(
+                          Icons.add,
+                          size: 24,
+                          color: AppColors.of(context).primary,
+                        ),
                       ],
                     ),
             ),

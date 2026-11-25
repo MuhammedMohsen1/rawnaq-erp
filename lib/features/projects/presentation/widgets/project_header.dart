@@ -21,10 +21,10 @@ class ProjectHeader extends StatelessWidget {
             Expanded(
               child: Text(
                 project.name,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 30,
                   fontWeight: FontWeight.w900,
-                  color: AppColors.textPrimary,
+                  color: AppColors.of(context).textPrimary,
                   letterSpacing: -0.75,
                 ),
               ),
@@ -53,7 +53,7 @@ class _StatusBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = _getStatusColor();
+    final color = _getStatusColor(context);
     final text = status.arabicName;
 
     return Container(
@@ -74,7 +74,7 @@ class _StatusBadge extends StatelessWidget {
           const SizedBox(width: 8),
           Text(
             text,
-            style: AppTextStyles.caption.copyWith(
+            style: AppTextStyles.of(context).caption.copyWith(
               fontSize: 12,
               fontWeight: FontWeight.w700,
               color: color,
@@ -85,22 +85,22 @@ class _StatusBadge extends StatelessWidget {
     );
   }
 
-  Color _getStatusColor() {
+  Color _getStatusColor(BuildContext context) {
     switch (status) {
       case ProjectStatus.draft:
-        return AppColors.textMuted;
+        return AppColors.of(context).textMuted;
       case ProjectStatus.underPricing:
-        return AppColors.info;
+        return AppColors.of(context).info;
       case ProjectStatus.pendingSignature:
-        return AppColors.warning;
+        return AppColors.of(context).warning;
       case ProjectStatus.approved:
-        return AppColors.statusCompleted;
+        return AppColors.of(context).statusCompleted;
       case ProjectStatus.execution:
-        return AppColors.statusActive;
+        return AppColors.of(context).statusActive;
       case ProjectStatus.completed:
-        return AppColors.statusCompleted;
+        return AppColors.of(context).statusCompleted;
       case ProjectStatus.cancelled:
-        return AppColors.statusDelayed;
+        return AppColors.of(context).statusDelayed;
     }
   }
 }

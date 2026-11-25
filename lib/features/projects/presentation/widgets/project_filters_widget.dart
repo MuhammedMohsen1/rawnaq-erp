@@ -39,6 +39,7 @@ class ProjectFiltersWidget extends StatelessWidget {
       children: [
         // Status filter
         _buildDropdown<ProjectStatus?>(
+          context,
           value: selectedStatus,
           hint: 'الحالة: الكل',
           icon: Icons.filter_list,
@@ -56,6 +57,7 @@ class ProjectFiltersWidget extends StatelessWidget {
 
         // Manager filter
         _buildDropdown<String?>(
+          context,
           value: selectedManagerId,
           hint: 'مدير المشروع',
           icon: Icons.person_outline,
@@ -73,6 +75,7 @@ class ProjectFiltersWidget extends StatelessWidget {
 
         // Team member filter
         _buildDropdown<String?>(
+          context,
           value: selectedTeamMemberId,
           hint: 'عضو الفريق',
           icon: Icons.group_outlined,
@@ -92,7 +95,7 @@ class ProjectFiltersWidget extends StatelessWidget {
           icon: const Icon(Icons.refresh, size: 18),
           label: const Text('إعادة تعيين'),
           style: TextButton.styleFrom(
-            foregroundColor: AppColors.textSecondary,
+            foregroundColor: AppColors.of(context).textSecondary,
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
           ),
         ),
@@ -100,7 +103,8 @@ class ProjectFiltersWidget extends StatelessWidget {
     );
   }
 
-  Widget _buildDropdown<T>({
+  Widget _buildDropdown<T>(
+    BuildContext context, {
     required T value,
     required String hint,
     required IconData icon,
@@ -110,9 +114,9 @@ class ProjectFiltersWidget extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12),
       decoration: BoxDecoration(
-        color: AppColors.surfaceColor,
+        color: AppColors.of(context).surfaceColor,
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: AppColors.border),
+        border: Border.all(color: AppColors.of(context).border),
       ),
       child: DropdownButtonHideUnderline(
         child: DropdownButton<T>(
@@ -120,17 +124,17 @@ class ProjectFiltersWidget extends StatelessWidget {
           hint: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(icon, size: 18, color: AppColors.textMuted),
+              Icon(icon, size: 18, color: AppColors.of(context).textMuted),
               const SizedBox(width: 8),
-              Text(hint, style: AppTextStyles.inputHint),
+              Text(hint, style: AppTextStyles.of(context).inputHint),
             ],
           ),
-          icon: const Icon(
+          icon: Icon(
             Icons.keyboard_arrow_down,
-            color: AppColors.textMuted,
+            color: AppColors.of(context).textMuted,
           ),
-          dropdownColor: AppColors.cardBackground,
-          style: AppTextStyles.inputText,
+          dropdownColor: AppColors.of(context).cardBackground,
+          style: AppTextStyles.of(context).inputText,
           items: items,
           onChanged: onChanged,
         ),

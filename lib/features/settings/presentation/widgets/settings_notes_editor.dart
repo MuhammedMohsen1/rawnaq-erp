@@ -1,3 +1,4 @@
+import 'package:rawnaq/core/widgets/app_toast.dart';
 import 'package:rawnaq/core/utils/arabic_number_input_formatter.dart';
 import 'package:flutter/material.dart';
 
@@ -71,13 +72,9 @@ class _PricingNotesEditorState extends State<PricingNotesEditor> {
       });
 
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            'تم حفظ ملاحظات عرض السعر بنجاح',
-            style: AppTextStyles.bodyMedium.copyWith(color: Colors.white),
-          ),
-          backgroundColor: AppColors.primary,
-          behavior: SnackBarBehavior.floating,
+        AppToast.build(
+          tone: ToastTone.success,
+          content: Text('تم حفظ ملاحظات عرض السعر بنجاح'),
           margin: const EdgeInsets.all(16),
           duration: const Duration(seconds: 2),
         ),
@@ -112,7 +109,9 @@ class _PricingNotesEditorState extends State<PricingNotesEditor> {
           Text(
             'كل سطر سيظهر كملاحظة منفصلة في PDF عرض السعر. يمكن تعديل هذه الملاحظات لاحقا داخل كل عرض سعر بدون تغيير الافتراضي.',
             textAlign: TextAlign.right,
-            style: AppTextStyles.caption.copyWith(color: AppColors.textMuted),
+            style: AppTextStyles.of(
+              context,
+            ).caption.copyWith(color: AppColors.of(context).textMuted),
           ),
           const SizedBox(height: 14),
           TextField(
@@ -122,38 +121,38 @@ class _PricingNotesEditorState extends State<PricingNotesEditor> {
             maxLines: 8,
             textAlign: TextAlign.right,
             textDirection: TextDirection.rtl,
-            style: AppTextStyles.bodyMedium.copyWith(
-              color: AppColors.textPrimary,
-            ),
+            style: AppTextStyles.of(
+              context,
+            ).bodyMedium.copyWith(color: AppColors.of(context).textPrimary),
             decoration: InputDecoration(
               labelText: 'ملاحظات عرض السعر الافتراضية',
               hintText: 'اكتب كل ملاحظة في سطر منفصل',
               alignLabelWithHint: true,
-              prefixIcon: const Icon(
+              prefixIcon: Icon(
                 Icons.notes_outlined,
                 size: 20,
-                color: AppColors.textMuted,
+                color: AppColors.of(context).textMuted,
               ),
-              labelStyle: AppTextStyles.caption.copyWith(
-                color: AppColors.textMuted,
-              ),
-              hintStyle: AppTextStyles.caption.copyWith(
-                color: AppColors.textMuted,
-              ),
+              labelStyle: AppTextStyles.of(
+                context,
+              ).caption.copyWith(color: AppColors.of(context).textMuted),
+              hintStyle: AppTextStyles.of(
+                context,
+              ).caption.copyWith(color: AppColors.of(context).textMuted),
               filled: true,
-              fillColor: AppColors.surfaceColor,
+              fillColor: AppColors.of(context).surfaceColor,
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(10),
-                borderSide: const BorderSide(color: AppColors.border),
+                borderSide: BorderSide(color: AppColors.of(context).border),
               ),
               enabledBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(10),
-                borderSide: const BorderSide(color: AppColors.border),
+                borderSide: BorderSide(color: AppColors.of(context).border),
               ),
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(10),
-                borderSide: const BorderSide(
-                  color: AppColors.primary,
+                borderSide: BorderSide(
+                  color: AppColors.of(context).primary,
                   width: 1.4,
                 ),
               ),
@@ -191,16 +190,16 @@ class _PricingNotesEditorState extends State<PricingNotesEditor> {
               label: Text(
                 _isSaving ? 'جار الحفظ...' : 'حفظ الملاحظات الافتراضية',
                 textAlign: TextAlign.right,
-                style: AppTextStyles.tableCellBold.copyWith(
-                  color: AppColors.white,
-                ),
+                style: AppTextStyles.of(
+                  context,
+                ).tableCellBold.copyWith(color: AppColors.white),
               ),
               style: OutlinedButton.styleFrom(
-                foregroundColor: AppColors.primary,
+                foregroundColor: AppColors.of(context).primary,
                 side: BorderSide(
-                  color: AppColors.primary.withValues(alpha: 0.28),
+                  color: AppColors.of(context).primary.withValues(alpha: 0.28),
                 ),
-                textStyle: AppTextStyles.tableCellBold,
+                textStyle: AppTextStyles.of(context).tableCellBold,
                 padding: const EdgeInsets.symmetric(
                   horizontal: 14,
                   vertical: 10,

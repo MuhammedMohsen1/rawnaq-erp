@@ -1,3 +1,4 @@
+import 'package:rawnaq/core/widgets/app_toast.dart';
 import 'package:rawnaq/core/utils/arabic_number_input_formatter.dart';
 import 'package:flutter/material.dart';
 import '../../../../core/constants/app_colors.dart';
@@ -106,7 +107,8 @@ class _PricingCategoryCardState extends State<PricingCategoryCard> {
         widget.onItemChanged();
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
+            AppToast.build(
+              tone: ToastTone.success,
               duration: const Duration(seconds: 2),
               content: Text('تم إضافة البند الفرعية بنجاح'),
             ),
@@ -115,7 +117,8 @@ class _PricingCategoryCardState extends State<PricingCategoryCard> {
       } catch (e) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
+            AppToast.build(
+              tone: ToastTone.error,
               duration: const Duration(seconds: 2),
               content: Text('فشل إضافة البند الفرعية: ${e.toString()}'),
             ),
@@ -248,7 +251,8 @@ class _PricingCategoryCardState extends State<PricingCategoryCard> {
         widget.onItemChanged();
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
+            AppToast.build(
+              tone: ToastTone.success,
               duration: const Duration(seconds: 2),
               content: Text('تم إضافة العنصر بنجاح'),
             ),
@@ -257,7 +261,8 @@ class _PricingCategoryCardState extends State<PricingCategoryCard> {
       } catch (e) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
+            AppToast.build(
+              tone: ToastTone.error,
               duration: const Duration(seconds: 2),
               content: Text('فشل إضافة العنصر: ${e.toString()}'),
             ),
@@ -277,9 +282,9 @@ class _PricingCategoryCardState extends State<PricingCategoryCard> {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: AppColors.cardBackground,
+        color: AppColors.of(context).cardBackground,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.border, width: 1),
+        border: Border.all(color: AppColors.of(context).border, width: 1),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -288,7 +293,7 @@ class _PricingCategoryCardState extends State<PricingCategoryCard> {
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: AppColors.primary.withOpacity(0.05),
+              color: AppColors.of(context).primary.withOpacity(0.05),
               borderRadius: const BorderRadius.only(
                 topLeft: Radius.circular(12),
                 topRight: Radius.circular(12),
@@ -302,7 +307,7 @@ class _PricingCategoryCardState extends State<PricingCategoryCard> {
                     children: [
                       Text(
                         widget.item.name,
-                        style: AppTextStyles.h4.copyWith(
+                        style: AppTextStyles.of(context).h4.copyWith(
                           fontSize: 18,
                           fontWeight: FontWeight.w700,
                         ),
@@ -311,8 +316,8 @@ class _PricingCategoryCardState extends State<PricingCategoryCard> {
                         const SizedBox(height: 4),
                         Text(
                           widget.item.description!,
-                          style: AppTextStyles.bodyMedium.copyWith(
-                            color: AppColors.textSecondary,
+                          style: AppTextStyles.of(context).bodyMedium.copyWith(
+                            color: AppColors.of(context).textSecondary,
                           ),
                         ),
                       ],
@@ -324,15 +329,15 @@ class _PricingCategoryCardState extends State<PricingCategoryCard> {
                   children: [
                     Text(
                       '${widget.item.totalPrice.toStringAsFixed(2)} د.ك',
-                      style: AppTextStyles.bodyLarge.copyWith(
+                      style: AppTextStyles.of(context).bodyLarge.copyWith(
                         fontWeight: FontWeight.w700,
-                        color: AppColors.primary,
+                        color: AppColors.of(context).primary,
                       ),
                     ),
                     Text(
                       'التكلفة: ${widget.item.totalCost.toStringAsFixed(2)} د.ك',
-                      style: AppTextStyles.caption.copyWith(
-                        color: AppColors.textSecondary,
+                      style: AppTextStyles.of(context).caption.copyWith(
+                        color: AppColors.of(context).textSecondary,
                       ),
                     ),
                   ],
@@ -358,7 +363,9 @@ class _PricingCategoryCardState extends State<PricingCategoryCard> {
                       decoration: BoxDecoration(
                         border: Border(
                           bottom: BorderSide(
-                            color: AppColors.border.withOpacity(0.5),
+                            color: AppColors.of(
+                              context,
+                            ).border.withOpacity(0.5),
                             width: 1,
                           ),
                         ),
@@ -367,7 +374,7 @@ class _PricingCategoryCardState extends State<PricingCategoryCard> {
                         children: [
                           Icon(
                             isExpanded ? Icons.expand_less : Icons.expand_more,
-                            color: AppColors.textSecondary,
+                            color: AppColors.of(context).textSecondary,
                             size: 20,
                           ),
                           const SizedBox(width: 8),
@@ -376,17 +383,17 @@ class _PricingCategoryCardState extends State<PricingCategoryCard> {
                               subItem.name,
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
-                              style: AppTextStyles.bodyLarge.copyWith(
-                                fontWeight: FontWeight.w600,
-                              ),
+                              style: AppTextStyles.of(
+                                context,
+                              ).bodyLarge.copyWith(fontWeight: FontWeight.w600),
                             ),
                           ),
                           if (subItem.elements != null &&
                               subItem.elements!.isNotEmpty) ...[
                             Text(
                               '${subItem.elements!.length} عنصر',
-                              style: AppTextStyles.caption.copyWith(
-                                color: AppColors.textSecondary,
+                              style: AppTextStyles.of(context).caption.copyWith(
+                                color: AppColors.of(context).textSecondary,
                               ),
                             ),
                             const SizedBox(width: 8),
@@ -395,7 +402,7 @@ class _PricingCategoryCardState extends State<PricingCategoryCard> {
                             icon: const Icon(Icons.add, size: 20),
                             onPressed: () => _addElement(subItem.id),
                             tooltip: 'إضافة عنصر',
-                            color: AppColors.primary,
+                            color: AppColors.of(context).primary,
                           ),
                         ],
                       ),
@@ -412,10 +419,12 @@ class _PricingCategoryCardState extends State<PricingCategoryCard> {
                             vertical: 12,
                           ),
                           decoration: BoxDecoration(
-                            color: AppColors.scaffoldBackground,
+                            color: AppColors.of(context).scaffoldBackground,
                             border: Border(
                               bottom: BorderSide(
-                                color: AppColors.border.withOpacity(0.3),
+                                color: AppColors.of(
+                                  context,
+                                ).border.withOpacity(0.3),
                                 width: 1,
                               ),
                             ),
@@ -428,17 +437,22 @@ class _PricingCategoryCardState extends State<PricingCategoryCard> {
                                   children: [
                                     Text(
                                       element.name,
-                                      style: AppTextStyles.bodyMedium.copyWith(
-                                        fontWeight: FontWeight.w500,
-                                      ),
+                                      style: AppTextStyles.of(context)
+                                          .bodyMedium
+                                          .copyWith(
+                                            fontWeight: FontWeight.w500,
+                                          ),
                                     ),
                                     if (element.description != null) ...[
                                       const SizedBox(height: 4),
                                       Text(
                                         element.description!,
-                                        style: AppTextStyles.caption.copyWith(
-                                          color: AppColors.textSecondary,
-                                        ),
+                                        style: AppTextStyles.of(context).caption
+                                            .copyWith(
+                                              color: AppColors.of(
+                                                context,
+                                              ).textSecondary,
+                                            ),
                                       ),
                                     ],
                                     const SizedBox(height: 4),
@@ -448,28 +462,34 @@ class _PricingCategoryCardState extends State<PricingCategoryCard> {
                                             'UNIT_BASED') ...[
                                           Text(
                                             'الوحدة: ${element.unitCost?.toStringAsFixed(2) ?? '0.00'} د.ك',
-                                            style: AppTextStyles.caption
+                                            style: AppTextStyles.of(context)
+                                                .caption
                                                 .copyWith(
-                                                  color:
-                                                      AppColors.textSecondary,
+                                                  color: AppColors.of(
+                                                    context,
+                                                  ).textSecondary,
                                                 ),
                                           ),
                                           const SizedBox(width: 16),
                                           Text(
                                             'الكمية: ${element.quantity?.toStringAsFixed(2) ?? '0.00'}',
-                                            style: AppTextStyles.caption
+                                            style: AppTextStyles.of(context)
+                                                .caption
                                                 .copyWith(
-                                                  color:
-                                                      AppColors.textSecondary,
+                                                  color: AppColors.of(
+                                                    context,
+                                                  ).textSecondary,
                                                 ),
                                           ),
                                         ] else ...[
                                           Text(
                                             'التكلفة الإجمالية: ${element.totalCost?.toStringAsFixed(2) ?? '0.00'} د.ك',
-                                            style: AppTextStyles.caption
+                                            style: AppTextStyles.of(context)
+                                                .caption
                                                 .copyWith(
-                                                  color:
-                                                      AppColors.textSecondary,
+                                                  color: AppColors.of(
+                                                    context,
+                                                  ).textSecondary,
                                                 ),
                                           ),
                                         ],
@@ -480,10 +500,11 @@ class _PricingCategoryCardState extends State<PricingCategoryCard> {
                               ),
                               Text(
                                 '${element.calculatedCost.toStringAsFixed(2)} د.ك',
-                                style: AppTextStyles.bodyMedium.copyWith(
-                                  fontWeight: FontWeight.w600,
-                                  color: AppColors.primary,
-                                ),
+                                style: AppTextStyles.of(context).bodyMedium
+                                    .copyWith(
+                                      fontWeight: FontWeight.w600,
+                                      color: AppColors.of(context).primary,
+                                    ),
                               ),
                             ],
                           ),
@@ -495,9 +516,10 @@ class _PricingCategoryCardState extends State<PricingCategoryCard> {
                         child: Center(
                           child: Text(
                             'لا توجد عناصر بعد',
-                            style: AppTextStyles.bodyMedium.copyWith(
-                              color: AppColors.textMuted,
-                            ),
+                            style: AppTextStyles.of(context).bodyMedium
+                                .copyWith(
+                                  color: AppColors.of(context).textMuted,
+                                ),
                           ),
                         ),
                       ),
@@ -511,9 +533,9 @@ class _PricingCategoryCardState extends State<PricingCategoryCard> {
               child: Center(
                 child: Text(
                   'لا توجد فئات فرعية بعد',
-                  style: AppTextStyles.bodyMedium.copyWith(
-                    color: AppColors.textMuted,
-                  ),
+                  style: AppTextStyles.of(
+                    context,
+                  ).bodyMedium.copyWith(color: AppColors.of(context).textMuted),
                 ),
               ),
             ),
@@ -524,7 +546,7 @@ class _PricingCategoryCardState extends State<PricingCategoryCard> {
             decoration: BoxDecoration(
               border: Border(
                 top: BorderSide(
-                  color: AppColors.border.withOpacity(0.5),
+                  color: AppColors.of(context).border.withOpacity(0.5),
                   width: 1,
                 ),
               ),
@@ -534,12 +556,16 @@ class _PricingCategoryCardState extends State<PricingCategoryCard> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.add, size: 18, color: AppColors.primary),
+                  Icon(
+                    Icons.add,
+                    size: 18,
+                    color: AppColors.of(context).primary,
+                  ),
                   const SizedBox(width: 8),
                   Text(
                     'إضافة عنصر',
-                    style: AppTextStyles.bodyMedium.copyWith(
-                      color: AppColors.primary,
+                    style: AppTextStyles.of(context).bodyMedium.copyWith(
+                      color: AppColors.of(context).primary,
                       fontWeight: FontWeight.w600,
                     ),
                   ),

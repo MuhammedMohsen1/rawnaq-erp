@@ -1,3 +1,4 @@
+import 'package:rawnaq/core/widgets/app_toast.dart';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
@@ -620,7 +621,8 @@ class _ContractExportDialogState extends State<ContractExportDialog> {
         if (mounted) {
           Navigator.of(context).pop(true);
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
+            AppToast.build(
+              tone: ToastTone.success,
               content: Text('تم تصدير عقد PDF بنجاح'),
               duration: Duration(seconds: 3),
             ),

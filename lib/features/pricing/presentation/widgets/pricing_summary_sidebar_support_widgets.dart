@@ -29,9 +29,9 @@ class PricingSummaryMetricCard extends StatelessWidget {
     return Container(
       padding: EdgeInsets.all(compact ? 4 : 6),
       decoration: BoxDecoration(
-        color: const Color(0xFF15181E),
+        color: AppColors.of(context).scaffoldBackground,
         borderRadius: BorderRadius.circular(compact ? 4 : 6),
-        border: Border.all(color: const Color(0xFF363C4A)),
+        border: Border.all(color: AppColors.of(context).border),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -39,17 +39,17 @@ class PricingSummaryMetricCard extends StatelessWidget {
         children: [
           Text(
             label,
-            style: AppTextStyles.caption.copyWith(
+            style: AppTextStyles.of(context).caption.copyWith(
               fontSize: compact ? 7 : 8,
-              color: AppColors.textSecondary,
+              color: AppColors.of(context).textSecondary,
             ),
           ),
           Text(
             valueLabel,
-            style: AppTextStyles.bodyLarge.copyWith(
+            style: AppTextStyles.of(context).bodyLarge.copyWith(
               fontSize: fontSize,
               fontWeight: FontWeight.w700,
-              color: valueColor ?? AppColors.textPrimary,
+              color: valueColor ?? AppColors.of(context).textPrimary,
             ),
           ),
         ],
@@ -78,14 +78,14 @@ class PricingSummaryDeductionSummaryRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final textStyle = AppTextStyles.bodySmall.copyWith(
+    final textStyle = AppTextStyles.of(context).bodySmall.copyWith(
       fontSize: isMobile ? 9 : (isTablet ? 10 : 11),
-      color: AppColors.textSecondary,
+      color: AppColors.of(context).textSecondary,
     );
-    final valueStyle = AppTextStyles.bodyMedium.copyWith(
+    final valueStyle = AppTextStyles.of(context).bodyMedium.copyWith(
       fontSize: isMobile ? 10 : (isTablet ? 11 : 12),
       fontWeight: FontWeight.w700,
-      color: AppColors.textPrimary,
+      color: AppColors.of(context).textPrimary,
     );
 
     return Container(
@@ -95,9 +95,9 @@ class PricingSummaryDeductionSummaryRow extends StatelessWidget {
         vertical: isMobile ? 6 : 8,
       ),
       decoration: BoxDecoration(
-        color: const Color(0xFF15181E),
+        color: AppColors.of(context).scaffoldBackground,
         borderRadius: BorderRadius.circular(6),
-        border: Border.all(color: const Color(0xFF363C4A)),
+        border: Border.all(color: AppColors.of(context).border),
       ),
       child: Row(
         children: [
@@ -169,9 +169,9 @@ class PricingSummaryNotesEditor extends StatelessWidget {
       child: Container(
         padding: EdgeInsets.all(isMobile ? 4 : 6),
         decoration: BoxDecoration(
-          color: const Color(0xFF15181E),
+          color: AppColors.of(context).scaffoldBackground,
           borderRadius: BorderRadius.circular(6),
-          border: Border.all(color: const Color(0xFF363C4A)),
+          border: Border.all(color: AppColors.of(context).border),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -180,9 +180,9 @@ class PricingSummaryNotesEditor extends StatelessWidget {
               children: [
                 Text(
                   'ملاحظات التسعير',
-                  style: AppTextStyles.caption.copyWith(
+                  style: AppTextStyles.of(context).caption.copyWith(
                     fontSize: isMobile ? 10 : 11,
-                    color: AppColors.textSecondary,
+                    color: AppColors.of(context).textSecondary,
                   ),
                 ),
                 const Spacer(),
@@ -220,7 +220,7 @@ class PricingSummaryNotesEditor extends StatelessWidget {
                       child: Icon(
                         Icons.add_circle_outline,
                         size: isMobile ? 14 : 16,
-                        color: AppColors.primary,
+                        color: AppColors.of(context).primary,
                       ),
                     ),
                   ),
@@ -244,9 +244,9 @@ class PricingSummaryNotesEditor extends StatelessWidget {
                         ),
                         child: Text(
                           '•',
-                          style: AppTextStyles.bodyMedium.copyWith(
+                          style: AppTextStyles.of(context).bodyMedium.copyWith(
                             fontSize: isMobile ? 12 : 14,
-                            color: AppColors.textSecondary,
+                            color: AppColors.of(context).textSecondary,
                           ),
                         ),
                       ),
@@ -257,29 +257,30 @@ class PricingSummaryNotesEditor extends StatelessWidget {
                           focusNode: noteFocusNodes[index],
                           decoration: InputDecoration(
                             hintText: 'الملاحظة',
-                            hintStyle: AppTextStyles.bodySmall.copyWith(
-                              color: AppColors.textMuted,
-                              fontSize: isMobile ? 10 : 11,
-                            ),
+                            hintStyle: AppTextStyles.of(context).bodySmall
+                                .copyWith(
+                                  color: AppColors.of(context).textMuted,
+                                  fontSize: isMobile ? 10 : 11,
+                                ),
                             filled: true,
-                            fillColor: const Color(0xFF0F1217),
+                            fillColor: AppColors.of(context).inputBackground,
                             isDense: true,
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(4),
-                              borderSide: const BorderSide(
-                                color: Color(0xFF363C4A),
+                              borderSide: BorderSide(
+                                color: AppColors.of(context).border,
                               ),
                             ),
                             enabledBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(4),
-                              borderSide: const BorderSide(
-                                color: Color(0xFF363C4A),
+                              borderSide: BorderSide(
+                                color: AppColors.of(context).border,
                               ),
                             ),
                             focusedBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(4),
-                              borderSide: const BorderSide(
-                                color: AppColors.primary,
+                              borderSide: BorderSide(
+                                color: AppColors.of(context).primary,
                               ),
                             ),
                             contentPadding: EdgeInsets.symmetric(
@@ -303,7 +304,7 @@ class PricingSummaryNotesEditor extends StatelessWidget {
                             child: Icon(
                               Icons.remove_circle_outline,
                               size: isMobile ? 14 : 16,
-                              color: AppColors.error,
+                              color: AppColors.of(context).error,
                             ),
                           ),
                         ),
@@ -351,18 +352,18 @@ class PricingSummaryDeductionControl extends StatelessWidget {
       child: Container(
         padding: EdgeInsets.all(isMobile ? 4 : 6),
         decoration: BoxDecoration(
-          color: const Color(0xFF15181E),
+          color: AppColors.of(context).scaffoldBackground,
           borderRadius: BorderRadius.circular(6),
-          border: Border.all(color: const Color(0xFF363C4A)),
+          border: Border.all(color: AppColors.of(context).border),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
               'قيمة الخصم',
-              style: AppTextStyles.caption.copyWith(
+              style: AppTextStyles.of(context).caption.copyWith(
                 fontSize: isMobile ? 10 : 11,
-                color: AppColors.textSecondary,
+                color: AppColors.of(context).textSecondary,
               ),
             ),
             SizedBox(height: isMobile ? 4 : 6),
@@ -383,29 +384,29 @@ class PricingSummaryDeductionControl extends StatelessWidget {
                 ArabicNumberInputFormatter(),
                 FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d{0,3}')),
               ],
-              style: AppTextStyles.bodyMedium.copyWith(
-                fontSize: isMobile ? 11 : 12,
-              ),
+              style: AppTextStyles.of(
+                context,
+              ).bodyMedium.copyWith(fontSize: isMobile ? 11 : 12),
               decoration: InputDecoration(
                 hintText: 'أدخل الخصم (KD)',
-                hintStyle: AppTextStyles.bodySmall.copyWith(
-                  color: AppColors.textMuted,
+                hintStyle: AppTextStyles.of(context).bodySmall.copyWith(
+                  color: AppColors.of(context).textMuted,
                   fontSize: isMobile ? 10 : 11,
                 ),
                 filled: true,
-                fillColor: const Color(0xFF0F1217),
+                fillColor: AppColors.of(context).inputBackground,
                 isDense: true,
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(4),
-                  borderSide: const BorderSide(color: Color(0xFF363C4A)),
+                  borderSide: BorderSide(color: AppColors.of(context).border),
                 ),
                 enabledBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(4),
-                  borderSide: const BorderSide(color: Color(0xFF363C4A)),
+                  borderSide: BorderSide(color: AppColors.of(context).border),
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(4),
-                  borderSide: const BorderSide(color: AppColors.primary),
+                  borderSide: BorderSide(color: AppColors.of(context).primary),
                 ),
                 contentPadding: EdgeInsets.symmetric(
                   horizontal: isMobile ? 8 : 10,
@@ -522,7 +523,7 @@ class PricingSummaryExportActions extends StatelessWidget {
                 SizedBox(width: isMobile ? 6 : 8),
                 Text(
                   'تصدير العقد',
-                  style: AppTextStyles.buttonLarge.copyWith(
+                  style: AppTextStyles.of(context).buttonLarge.copyWith(
                     fontSize: buttonFontSize,
                     fontWeight: FontWeight.w700,
                     color: const Color(0xFF6366F1),
@@ -545,7 +546,7 @@ class PricingSummaryExportActions extends StatelessWidget {
                 SizedBox(width: isMobile ? 6 : 8),
                 Text(
                   'تأكيد العقد',
-                  style: AppTextStyles.buttonLarge.copyWith(
+                  style: AppTextStyles.of(context).buttonLarge.copyWith(
                     fontSize: buttonFontSize,
                     fontWeight: FontWeight.w700,
                   ),
@@ -571,7 +572,7 @@ class PricingSummaryExportActions extends StatelessWidget {
                 SizedBox(width: isMobile ? 6 : 8),
                 Text(
                   'تصدير PDF',
-                  style: AppTextStyles.buttonLarge.copyWith(
+                  style: AppTextStyles.of(context).buttonLarge.copyWith(
                     fontSize: buttonFontSize,
                     fontWeight: FontWeight.w600,
                     color: const Color(0xFF6366F1),
@@ -597,7 +598,7 @@ class PricingSummaryExportActions extends StatelessWidget {
                 SizedBox(width: isMobile ? 6 : 8),
                 Text(
                   'تصدير كصورة',
-                  style: AppTextStyles.buttonLarge.copyWith(
+                  style: AppTextStyles.of(context).buttonLarge.copyWith(
                     fontSize: buttonFontSize,
                     fontWeight: FontWeight.w600,
                     color: const Color(0xFF10B981),
@@ -625,7 +626,7 @@ class PricingSummaryExportActions extends StatelessWidget {
               SizedBox(width: isMobile ? 6 : 8),
               Text(
                 'إرسال التسعير للتوقيع',
-                style: AppTextStyles.buttonLarge.copyWith(
+                style: AppTextStyles.of(context).buttonLarge.copyWith(
                   fontSize: buttonFontSize,
                   fontWeight: FontWeight.w700,
                 ),
@@ -640,9 +641,9 @@ class PricingSummaryExportActions extends StatelessWidget {
       buttons.add(
         buildButton(
           onPressed: onReturnToPricing,
-          backgroundColor: AppColors.error,
+          backgroundColor: AppColors.of(context).error,
           isOutlined: true,
-          borderColor: AppColors.error,
+          borderColor: AppColors.of(context).error,
           height: buttonHeight - 6,
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -651,10 +652,10 @@ class PricingSummaryExportActions extends StatelessWidget {
               SizedBox(width: isMobile ? 6 : 8),
               Text(
                 'إرجاع للتسعير',
-                style: AppTextStyles.buttonLarge.copyWith(
+                style: AppTextStyles.of(context).buttonLarge.copyWith(
                   fontSize: buttonFontSize,
                   fontWeight: FontWeight.w600,
-                  color: AppColors.error,
+                  color: AppColors.of(context).error,
                 ),
               ),
             ],
@@ -667,9 +668,9 @@ class PricingSummaryExportActions extends StatelessWidget {
       buttons.add(
         buildButton(
           onPressed: onArchiveProject,
-          backgroundColor: AppColors.error,
+          backgroundColor: AppColors.of(context).error,
           isOutlined: true,
-          borderColor: AppColors.error,
+          borderColor: AppColors.of(context).error,
           height: buttonHeight - 6,
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -678,10 +679,10 @@ class PricingSummaryExportActions extends StatelessWidget {
               SizedBox(width: isMobile ? 6 : 8),
               Text(
                 'أرشفة المشروع',
-                style: AppTextStyles.buttonLarge.copyWith(
+                style: AppTextStyles.of(context).buttonLarge.copyWith(
                   fontSize: buttonFontSize,
                   fontWeight: FontWeight.w600,
-                  color: AppColors.error,
+                  color: AppColors.of(context).error,
                 ),
               ),
             ],
@@ -751,7 +752,7 @@ class _PdfOptionCheckbox extends StatelessWidget {
             child: Checkbox(
               value: value,
               onChanged: (nextValue) => onChanged(nextValue ?? false),
-              activeColor: AppColors.background,
+              activeColor: AppColors.of(context).background,
               materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
               visualDensity: VisualDensity.compact,
             ),
@@ -761,9 +762,9 @@ class _PdfOptionCheckbox extends StatelessWidget {
             child: Text(
               label,
               overflow: TextOverflow.ellipsis,
-              style: AppTextStyles.caption.copyWith(
+              style: AppTextStyles.of(context).caption.copyWith(
                 fontSize: isMobile ? 10 : 11,
-                color: AppColors.textSecondary,
+                color: AppColors.of(context).textSecondary,
               ),
             ),
           ),

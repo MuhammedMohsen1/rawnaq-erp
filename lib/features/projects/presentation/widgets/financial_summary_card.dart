@@ -27,9 +27,9 @@ class FinancialSummaryCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: AppColors.cardBackground,
+        color: AppColors.of(context).cardBackground,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.border),
+        border: Border.all(color: AppColors.of(context).border),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -41,15 +41,15 @@ class FinancialSummaryCard extends StatelessWidget {
                 width: 8,
                 height: 8,
                 decoration: BoxDecoration(
-                  color: _getDotColor(),
+                  color: _getDotColor(context),
                   shape: BoxShape.circle,
                 ),
               ),
               const SizedBox(width: 8),
               Text(
                 _getTitle(),
-                style: AppTextStyles.bodyMedium.copyWith(
-                  color: AppColors.textSecondary,
+                style: AppTextStyles.of(context).bodyMedium.copyWith(
+                  color: AppColors.of(context).textSecondary,
                 ),
               ),
             ],
@@ -64,7 +64,7 @@ class FinancialSummaryCard extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _buildAmountWithSmallDecimal(amount, currency),
+                    _buildAmountWithSmallDecimal(context, amount, currency),
                     if (subtitle != null) ...[
                       const SizedBox(height: 8),
                       Row(
@@ -74,7 +74,7 @@ class FinancialSummaryCard extends StatelessWidget {
                             Icon(
                               Icons.warning_amber_rounded,
                               size: 16,
-                              color: AppColors.warning,
+                              color: AppColors.of(context).warning,
                             ),
                           if (type == FinancialSummaryCardType.totalExpenses &&
                               subtitle != null)
@@ -82,8 +82,8 @@ class FinancialSummaryCard extends StatelessWidget {
                           if (subtitle != null)
                             Text(
                               subtitle!,
-                              style: AppTextStyles.caption.copyWith(
-                                color: AppColors.textMuted,
+                              style: AppTextStyles.of(context).caption.copyWith(
+                                color: AppColors.of(context).textMuted,
                               ),
                             ),
                         ],
@@ -100,9 +100,11 @@ class FinancialSummaryCard extends StatelessWidget {
                               child: LinearProgressIndicator(
                                 value: budgetPercentage! / 100,
                                 minHeight: 6,
-                                backgroundColor: AppColors.progressBackground,
+                                backgroundColor: AppColors.of(
+                                  context,
+                                ).progressBackground,
                                 valueColor: AlwaysStoppedAnimation<Color>(
-                                  AppColors.statusActive,
+                                  AppColors.of(context).statusActive,
                                 ),
                               ),
                             ),
@@ -110,8 +112,8 @@ class FinancialSummaryCard extends StatelessWidget {
                           const SizedBox(width: 8),
                           Text(
                             '${budgetPercentage!.toStringAsFixed(0)}% الميزانية المتبقية',
-                            style: AppTextStyles.caption.copyWith(
-                              color: AppColors.textMuted,
+                            style: AppTextStyles.of(context).caption.copyWith(
+                              color: AppColors.of(context).textMuted,
                             ),
                           ),
                         ],
@@ -121,7 +123,7 @@ class FinancialSummaryCard extends StatelessWidget {
                 ),
               ),
               // Icon
-              Icon(_getIcon(), size: 48, color: _getIconColor()),
+              Icon(_getIcon(), size: 48, color: _getIconColor(context)),
             ],
           ),
         ],
@@ -140,14 +142,14 @@ class FinancialSummaryCard extends StatelessWidget {
     }
   }
 
-  Color _getDotColor() {
+  Color _getDotColor(BuildContext context) {
     switch (type) {
       case FinancialSummaryCardType.totalReceived:
-        return AppColors.success;
+        return AppColors.of(context).success;
       case FinancialSummaryCardType.totalExpenses:
-        return AppColors.error;
+        return AppColors.of(context).error;
       case FinancialSummaryCardType.netCashFlow:
-        return AppColors.statusActive;
+        return AppColors.of(context).statusActive;
     }
   }
 
@@ -162,18 +164,22 @@ class FinancialSummaryCard extends StatelessWidget {
     }
   }
 
-  Color _getIconColor() {
+  Color _getIconColor(BuildContext context) {
     switch (type) {
       case FinancialSummaryCardType.totalReceived:
-        return AppColors.success;
+        return AppColors.of(context).success;
       case FinancialSummaryCardType.totalExpenses:
-        return AppColors.error;
+        return AppColors.of(context).error;
       case FinancialSummaryCardType.netCashFlow:
-        return AppColors.statusActive;
+        return AppColors.of(context).statusActive;
     }
   }
 
-  Widget _buildAmountWithSmallDecimal(double amount, String currency) {
+  Widget _buildAmountWithSmallDecimal(
+    BuildContext context,
+    double amount,
+    String currency,
+  ) {
     // Format with commas for thousands
     final parts = amount.toStringAsFixed(3).split('.');
     final integerPart = parts[0].replaceAllMapped(
@@ -184,27 +190,27 @@ class FinancialSummaryCard extends StatelessWidget {
 
     return RichText(
       text: TextSpan(
-        style: AppTextStyles.h3.copyWith(
+        style: AppTextStyles.of(context).h3.copyWith(
           fontSize: 24,
           fontWeight: FontWeight.bold,
-          color: AppColors.textPrimary,
+          color: AppColors.of(context).textPrimary,
         ),
         children: [
           TextSpan(text: '$integerPart.'),
           TextSpan(
             text: decimalPart,
-            style: AppTextStyles.h3.copyWith(
+            style: AppTextStyles.of(context).h3.copyWith(
               fontSize: 14,
               fontWeight: FontWeight.bold,
-              color: AppColors.textPrimary,
+              color: AppColors.of(context).textPrimary,
             ),
           ),
           TextSpan(
             text: ' $currency',
-            style: AppTextStyles.h3.copyWith(
+            style: AppTextStyles.of(context).h3.copyWith(
               fontSize: 24,
               fontWeight: FontWeight.bold,
-              color: AppColors.textPrimary,
+              color: AppColors.of(context).textPrimary,
             ),
           ),
         ],

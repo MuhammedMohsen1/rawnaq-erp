@@ -34,9 +34,13 @@ class MyTasksBody extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.error_outline, size: 56, color: AppColors.statusDelayed),
+            Icon(
+              Icons.error_outline,
+              size: 56,
+              color: AppColors.of(context).statusDelayed,
+            ),
             const SizedBox(height: 12),
-            Text(errorMessage!, style: AppTextStyles.h5),
+            Text(errorMessage!, style: AppTextStyles.of(context).h5),
             const SizedBox(height: 12),
             TextButton.icon(
               onPressed: onRetry,
@@ -53,11 +57,17 @@ class MyTasksBody extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.task_alt, size: 64, color: AppColors.textMuted),
+            Icon(
+              Icons.task_alt,
+              size: 64,
+              color: AppColors.of(context).textMuted,
+            ),
             const SizedBox(height: 16),
             Text(
               'لا توجد مهام مسندة لك اليوم',
-              style: AppTextStyles.h5.copyWith(color: AppColors.textMuted),
+              style: AppTextStyles.of(
+                context,
+              ).h5.copyWith(color: AppColors.of(context).textMuted),
             ),
           ],
         ),

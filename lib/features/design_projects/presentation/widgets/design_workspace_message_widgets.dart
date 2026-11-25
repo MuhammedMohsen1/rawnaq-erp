@@ -1,3 +1,4 @@
+import 'package:rawnaq/core/widgets/app_toast.dart';
 import 'package:rawnaq/core/utils/arabic_number_input_formatter.dart';
 import 'package:dio/dio.dart';
 import 'package:file_picker/file_picker.dart';
@@ -26,8 +27,8 @@ class DesignChatBubble extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final bubbleColor = isMine
-        ? AppColors.secondary.withValues(alpha: 0.18)
-        : AppColors.surfaceColor.withValues(alpha: 0.90);
+        ? AppColors.of(context).secondary.withValues(alpha: 0.18)
+        : AppColors.of(context).surfaceColor.withValues(alpha: 0.90);
     final borderRadius = isMine
         ? const BorderRadius.only(
             topLeft: Radius.circular(18),
@@ -63,7 +64,7 @@ class DesignChatBubble extends StatelessWidget {
               decoration: BoxDecoration(
                 color: bubbleColor,
                 borderRadius: borderRadius,
-                border: Border.all(color: AppColors.border),
+                border: Border.all(color: AppColors.of(context).border),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -88,10 +89,10 @@ class DesignChatBubble extends StatelessWidget {
                       ),
                       if (isMine) ...[
                         const SizedBox(width: 6),
-                        const Icon(
+                        Icon(
                           Icons.done_all,
                           size: 16,
-                          color: AppColors.secondaryLight,
+                          color: AppColors.of(context).secondaryLight,
                         ),
                       ],
                     ],
@@ -144,8 +145,8 @@ class _LinkifiedMessageTextState extends State<_LinkifiedMessageText> {
   Widget build(BuildContext context) {
     final baseStyle = Theme.of(context).textTheme.bodyMedium;
     final linkColor = widget.isMine
-        ? AppColors.secondary
-        : AppColors.primaryLight;
+        ? AppColors.of(context).secondary
+        : AppColors.of(context).primaryLight;
 
     return RichText(
       text: TextSpan(
@@ -200,7 +201,8 @@ class _LinkifiedMessageTextState extends State<_LinkifiedMessageText> {
 
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
+      AppToast.build(
+        tone: ToastTone.error,
         duration: const Duration(seconds: 2),
         content: Text('تعذر فتح الرابط'),
       ),
@@ -306,7 +308,7 @@ class DesignAttachmentBubble extends StatelessWidget {
             minWidth: 120,
             minHeight: 90,
           ),
-          color: AppColors.inputBackground.withValues(alpha: 0.65),
+          color: AppColors.of(context).inputBackground.withValues(alpha: 0.65),
           child: Stack(
             children: [
               Positioned.fill(
@@ -349,7 +351,7 @@ class DesignAttachmentBubble extends StatelessWidget {
       context: context,
       barrierDismissible: true,
       barrierLabel: 'Image preview',
-      barrierColor: Colors.black.withValues(alpha: 0.92),
+      barrierColor: AppColors.of(context).shadow,
       pageBuilder: (dialogContext, _, __) {
         return SafeArea(
           child: Stack(
@@ -378,7 +380,7 @@ class DesignAttachmentBubble extends StatelessWidget {
                           media.previewUrl!,
                           fit: BoxFit.contain,
                           errorBuilder: (_, _, _) => Container(
-                            color: AppColors.cardBackground,
+                            color: AppColors.of(context).cardBackground,
                             padding: const EdgeInsets.all(24),
                             child: Text(
                               'تعذر فتح الصورة',
@@ -429,9 +431,9 @@ class DesignAttachmentBubble extends StatelessWidget {
         width: double.infinity,
         padding: const EdgeInsets.all(10),
         decoration: BoxDecoration(
-          color: AppColors.inputBackground.withValues(alpha: 0.72),
+          color: AppColors.of(context).inputBackground.withValues(alpha: 0.72),
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: AppColors.border),
+          border: Border.all(color: AppColors.of(context).border),
         ),
         child: Row(
           children: [
@@ -439,12 +441,12 @@ class DesignAttachmentBubble extends StatelessWidget {
               width: 38,
               height: 38,
               decoration: BoxDecoration(
-                color: AppColors.primary.withValues(alpha: 0.16),
+                color: AppColors.of(context).primary.withValues(alpha: 0.16),
                 borderRadius: BorderRadius.circular(10),
               ),
               child: Icon(
                 iconFor(media.type),
-                color: AppColors.primaryLight,
+                color: AppColors.of(context).primaryLight,
                 size: 20,
               ),
             ),
@@ -468,9 +470,9 @@ class DesignAttachmentBubble extends StatelessWidget {
             ),
             const SizedBox(width: 8),
             IconButton(
-              icon: const Icon(
+              icon: Icon(
                 Icons.download_outlined,
-                color: AppColors.primaryLight,
+                color: AppColors.of(context).primaryLight,
               ),
               tooltip: 'تحميل',
               onPressed: media.downloadUrl == null
@@ -536,7 +538,7 @@ class _DesignVideoPreviewState extends State<DesignVideoPreview> {
       borderRadius: BorderRadius.circular(14),
       child: Container(
         constraints: const BoxConstraints(maxWidth: 280),
-        color: Colors.black,
+        color: AppColors.of(context).surfaceColor,
         child: AspectRatio(
           aspectRatio: aspectRatio,
           child: Stack(
@@ -617,7 +619,7 @@ class _DesignVideoPreviewState extends State<DesignVideoPreview> {
       context: context,
       barrierDismissible: true,
       barrierLabel: 'Video preview',
-      barrierColor: Colors.black.withValues(alpha: 0.92),
+      barrierColor: AppColors.of(context).shadow,
       pageBuilder: (dialogContext, _, __) => _FullscreenVideoDialog(
         media: widget.media,
         onClose: () => Navigator.of(dialogContext).pop(),
@@ -681,7 +683,7 @@ class _FullscreenVideoDialogState extends State<_FullscreenVideoDialog> {
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(18),
                     child: Container(
-                      color: Colors.black,
+                      color: AppColors.of(context).surfaceColor,
                       child: _isReady
                           ? Stack(
                               alignment: Alignment.center,
@@ -752,15 +754,15 @@ class _VideoFallbackTile extends StatelessWidget {
         width: double.infinity,
         padding: const EdgeInsets.all(10),
         decoration: BoxDecoration(
-          color: AppColors.inputBackground.withValues(alpha: 0.72),
+          color: AppColors.of(context).inputBackground.withValues(alpha: 0.72),
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: AppColors.border),
+          border: Border.all(color: AppColors.of(context).border),
         ),
         child: Row(
           children: [
-            const Icon(
+            Icon(
               Icons.play_circle_outline,
-              color: AppColors.primaryLight,
+              color: AppColors.of(context).primaryLight,
             ),
             const SizedBox(width: 10),
             Expanded(
@@ -771,9 +773,9 @@ class _VideoFallbackTile extends StatelessWidget {
               ),
             ),
             IconButton(
-              icon: const Icon(
+              icon: Icon(
                 Icons.download_outlined,
-                color: AppColors.primaryLight,
+                color: AppColors.of(context).primaryLight,
               ),
               tooltip: 'تحميل',
               onPressed: () => downloadDesignMedia(context, media),
@@ -813,9 +815,9 @@ class DesignWorkspaceComposer extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(10),
         decoration: BoxDecoration(
-          color: AppColors.surfaceColor.withValues(alpha: 0.60),
+          color: AppColors.of(context).surfaceColor.withValues(alpha: 0.60),
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: AppColors.border),
+          border: Border.all(color: AppColors.of(context).border),
         ),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.end,
@@ -824,12 +826,14 @@ class DesignWorkspaceComposer extends StatelessWidget {
               icon: Icons.attach_file,
               tooltip: 'إرفاق ملف',
               onPressed: onAttach,
-              enabledColor: AppColors.primary,
-              disabledColor: AppColors.textDisabled,
-              backgroundColor: AppColors.primary.withValues(alpha: 0.14),
-              disabledBackgroundColor: AppColors.surfaceColor.withValues(
-                alpha: 0.65,
-              ),
+              enabledColor: AppColors.of(context).primary,
+              disabledColor: AppColors.of(context).textDisabled,
+              backgroundColor: AppColors.of(
+                context,
+              ).primary.withValues(alpha: 0.14),
+              disabledBackgroundColor: AppColors.of(
+                context,
+              ).surfaceColor.withValues(alpha: 0.65),
             ),
             const SizedBox(width: 8),
             Expanded(
@@ -855,11 +859,11 @@ class DesignWorkspaceComposer extends StatelessWidget {
                   tooltip: 'إرسال',
                   onPressed: canSend ? onSend : null,
                   enabledColor: AppColors.white,
-                  disabledColor: AppColors.textDisabled,
-                  backgroundColor: AppColors.secondary,
-                  disabledBackgroundColor: AppColors.surfaceColor.withValues(
-                    alpha: 0.65,
-                  ),
+                  disabledColor: AppColors.of(context).textDisabled,
+                  backgroundColor: AppColors.of(context).secondary,
+                  disabledBackgroundColor: AppColors.of(
+                    context,
+                  ).surfaceColor.withValues(alpha: 0.65),
                 );
               },
             ),
@@ -954,7 +958,7 @@ class _FullscreenActionButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: AppColors.cardBackground.withValues(alpha: 0.9),
+      color: AppColors.of(context).cardBackground.withValues(alpha: 0.9),
       shape: const CircleBorder(),
       child: IconButton(
         onPressed: onPressed,
@@ -996,21 +1000,10 @@ Future<void> downloadDesignMedia(
 
     if (!context.mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
+      AppToast.build(
+        tone: ToastTone.success,
         duration: const Duration(seconds: 2),
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-        content: Row(
-          children: [
-            const Icon(
-              Icons.check_circle_outline,
-              color: Colors.white,
-              size: 18,
-            ),
-            const SizedBox(width: 8),
-            Expanded(child: Text('تم تحميل: $fileName')),
-          ],
-        ),
+        content: Text('تم تحميل: $fileName'),
         action: SnackBarAction(
           label: 'فتح',
           onPressed: () => OpenFile.open(targetPath),
@@ -1025,10 +1018,9 @@ Future<void> downloadDesignMedia(
 
 void _showDesignMediaSnackBar(BuildContext context, String message) {
   ScaffoldMessenger.of(context).showSnackBar(
-    SnackBar(
+    AppToast.build(
+      tone: ToastTone.error,
       duration: const Duration(seconds: 2),
-      behavior: SnackBarBehavior.floating,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
       content: Text(message),
     ),
   );

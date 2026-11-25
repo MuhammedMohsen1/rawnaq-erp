@@ -40,17 +40,21 @@ class CashFlowSummaryCards extends StatelessWidget {
             title: 'إجمالي المستلم',
             value: totalReceived,
             icon: Icons.arrow_downward,
-            iconBackgroundColor: AppColors.success.withValues(alpha: 0.1),
-            iconColor: AppColors.success,
-            valueColor: AppColors.success,
+            iconBackgroundColor: AppColors.of(
+              context,
+            ).success.withValues(alpha: 0.1),
+            iconColor: AppColors.of(context).success,
+            valueColor: AppColors.of(context).success,
           ),
           _SummaryCard(
             title: 'إجمالي المصروفات',
             value: totalExpenses,
             icon: Icons.arrow_upward,
-            iconBackgroundColor: AppColors.error.withValues(alpha: 0.1),
-            iconColor: AppColors.error,
-            valueColor: AppColors.error,
+            iconBackgroundColor: AppColors.of(
+              context,
+            ).error.withValues(alpha: 0.1),
+            iconColor: AppColors.of(context).error,
+            valueColor: AppColors.of(context).error,
             showNegative: true,
           ),
           _NetCashFlowCard(
@@ -128,9 +132,9 @@ class _SummaryCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: AppColors.cardBackground,
+        color: AppColors.of(context).cardBackground,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.border),
+        border: Border.all(color: AppColors.of(context).border),
       ),
       child: Row(
         children: [
@@ -143,8 +147,8 @@ class _SummaryCard extends StatelessWidget {
                   children: [
                     Text(
                       title,
-                      style: AppTextStyles.overline.copyWith(
-                        color: AppColors.textSecondary,
+                      style: AppTextStyles.of(context).overline.copyWith(
+                        color: AppColors.of(context).textSecondary,
                       ),
                     ),
                   ],
@@ -152,7 +156,9 @@ class _SummaryCard extends StatelessWidget {
                 const SizedBox(height: 12),
                 Text(
                   '${displayValue.toStringAsFixed(3)} د.ك',
-                  style: AppTextStyles.sectionTitle.copyWith(color: valueColor),
+                  style: AppTextStyles.of(
+                    context,
+                  ).sectionTitle.copyWith(color: valueColor),
                 ),
               ],
             ),
@@ -185,16 +191,16 @@ class _NetCashFlowCard extends StatelessWidget {
     required this.budgetWarningLevel,
   });
 
-  Color get _progressColor {
+  Color _progressColor(BuildContext context) {
     switch (budgetWarningLevel) {
       case BudgetWarningLevel.normal:
-        return AppColors.success;
+        return AppColors.of(context).success;
       case BudgetWarningLevel.warning:
-        return AppColors.warning;
+        return AppColors.of(context).warning;
       case BudgetWarningLevel.danger:
         return Colors.orange;
       case BudgetWarningLevel.exceeded:
-        return AppColors.error;
+        return AppColors.of(context).error;
     }
   }
 
@@ -205,9 +211,9 @@ class _NetCashFlowCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: AppColors.cardBackground,
+        color: AppColors.of(context).cardBackground,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.border),
+        border: Border.all(color: AppColors.of(context).border),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -218,7 +224,7 @@ class _NetCashFlowCard extends StatelessWidget {
                 width: 8,
                 height: 8,
                 decoration: BoxDecoration(
-                  color: AppColors.primary,
+                  color: AppColors.of(context).primary,
                   shape: BoxShape.circle,
                 ),
               ),
@@ -226,8 +232,8 @@ class _NetCashFlowCard extends StatelessWidget {
               Text(
                 'سيولة',
                 overflow: TextOverflow.ellipsis,
-                style: AppTextStyles.bodySmall.copyWith(
-                  color: AppColors.textSecondary,
+                style: AppTextStyles.of(context).bodySmall.copyWith(
+                  color: AppColors.of(context).textSecondary,
                 ),
               ),
             ],
@@ -235,9 +241,9 @@ class _NetCashFlowCard extends StatelessWidget {
           const SizedBox(height: 12),
           Text(
             '${netCashFlow.toStringAsFixed(3)} د.ك',
-            style: AppTextStyles.sectionTitle.copyWith(
-              color: AppColors.textPrimary,
-            ),
+            style: AppTextStyles.of(
+              context,
+            ).sectionTitle.copyWith(color: AppColors.of(context).textPrimary),
           ),
           const SizedBox(height: 16),
           // Budget progress bar
@@ -249,8 +255,8 @@ class _NetCashFlowCard extends StatelessWidget {
                   '${budgetPercentage.toStringAsFixed(0)}% المتبقى من ${totalBudget.toStringAsFixed(0)} د.ك ',
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
-                  style: AppTextStyles.overline.copyWith(
-                    color: _progressColor,
+                  style: AppTextStyles.of(context).overline.copyWith(
+                    color: _progressColor(context),
                     fontWeight: FontWeight.w500,
                   ),
                 ),
@@ -262,8 +268,10 @@ class _NetCashFlowCard extends StatelessWidget {
             borderRadius: BorderRadius.circular(4),
             child: LinearProgressIndicator(
               value: clampedPercentage / 100,
-              backgroundColor: AppColors.border,
-              valueColor: AlwaysStoppedAnimation<Color>(_progressColor),
+              backgroundColor: AppColors.of(context).border,
+              valueColor: AlwaysStoppedAnimation<Color>(
+                _progressColor(context),
+              ),
               minHeight: 8,
             ),
           ),
@@ -311,27 +319,27 @@ class _DateProgressCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: AppColors.cardBackground,
+        color: AppColors.of(context).cardBackground,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.border),
+        border: Border.all(color: AppColors.of(context).border),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             'تاريخ التسليم',
-            style: AppTextStyles.overline.copyWith(
-              color: AppColors.textSecondary,
-            ),
+            style: AppTextStyles.of(
+              context,
+            ).overline.copyWith(color: AppColors.of(context).textSecondary),
           ),
           const SizedBox(height: 12),
           Text(
             isValidRange && endDate != null
                 ? dateFormat.format(endDate!)
                 : 'غير متاح',
-            style: AppTextStyles.sectionTitle.copyWith(
-              color: AppColors.textPrimary,
-            ),
+            style: AppTextStyles.of(
+              context,
+            ).sectionTitle.copyWith(color: AppColors.of(context).textPrimary),
           ),
           const SizedBox(height: 8),
           if (isValidRange) ...[
@@ -339,18 +347,18 @@ class _DateProgressCard extends StatelessWidget {
               'التقدم: ${percentValue.toStringAsFixed(0)}% · المتبقي: $daysLeft يوم',
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: AppTextStyles.bodySmall.copyWith(
-                color: AppColors.textSecondary,
-              ),
+              style: AppTextStyles.of(
+                context,
+              ).bodySmall.copyWith(color: AppColors.of(context).textSecondary),
             ),
             const SizedBox(height: 12),
             ClipRRect(
               borderRadius: BorderRadius.circular(4),
               child: LinearProgressIndicator(
                 value: (percentValue / 100).clamp(0, 1),
-                backgroundColor: AppColors.border,
-                valueColor: const AlwaysStoppedAnimation<Color>(
-                  AppColors.primary,
+                backgroundColor: AppColors.of(context).border,
+                valueColor: AlwaysStoppedAnimation<Color>(
+                  AppColors.of(context).primary,
                 ),
                 minHeight: 8,
               ),
@@ -358,9 +366,9 @@ class _DateProgressCard extends StatelessWidget {
           ] else ...[
             Text(
               'لا توجد بيانات تاريخ البدء أو الانتهاء',
-              style: AppTextStyles.bodySmall.copyWith(
-                color: AppColors.textSecondary,
-              ),
+              style: AppTextStyles.of(
+                context,
+              ).bodySmall.copyWith(color: AppColors.of(context).textSecondary),
             ),
           ],
         ],

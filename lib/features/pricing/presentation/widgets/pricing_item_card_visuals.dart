@@ -40,8 +40,8 @@ class PricingItemCardHeader extends StatelessWidget {
       height: 71,
       clipBehavior: Clip.antiAlias,
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 21),
-      decoration: const BoxDecoration(
-        color: Color(0xFF232936),
+      decoration: BoxDecoration(
+        color: AppColors.of(context).surfaceColor,
         borderRadius: BorderRadius.only(
           topLeft: Radius.circular(12),
           topRight: Radius.circular(12),
@@ -53,10 +53,12 @@ class PricingItemCardHeader extends StatelessWidget {
           Checkbox(
             value: !itemIsHidden,
             onChanged: (value) => onVisibilityChanged(value ?? false),
-            activeColor: AppColors.primary,
+            activeColor: AppColors.of(context).primary,
             checkColor: AppColors.black,
             side: BorderSide(
-              color: itemIsHidden ? AppColors.lightGrey : AppColors.primary,
+              color: itemIsHidden
+                  ? AppColors.of(context).lightGrey
+                  : AppColors.of(context).primary,
               width: 1.5,
             ),
           ),
@@ -66,10 +68,9 @@ class PricingItemCardHeader extends StatelessWidget {
               itemName,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: AppTextStyles.h4.copyWith(
-                fontSize: 18,
-                fontWeight: FontWeight.w700,
-              ),
+              style: AppTextStyles.of(
+                context,
+              ).h4.copyWith(fontSize: 18, fontWeight: FontWeight.w700),
             ),
           ),
           const SizedBox(width: 16),
@@ -110,10 +111,10 @@ class PricingItemCardHeader extends StatelessWidget {
                       padding: const EdgeInsets.only(bottom: 2.0),
                       child: Text(
                         'KD',
-                        style: AppTextStyles.caption.copyWith(
+                        style: AppTextStyles.of(context).caption.copyWith(
                           fontSize: 14,
                           fontWeight: FontWeight.w500,
-                          color: AppColors.textSecondary,
+                          color: AppColors.of(context).textSecondary,
                         ),
                       ),
                     ),
@@ -134,9 +135,9 @@ class PricingItemCardHeader extends StatelessWidget {
           ],
           IconButton(
             onPressed: onMenuPressed,
-            icon: const Icon(
+            icon: Icon(
               Icons.more_vert,
-              color: AppColors.textSecondary,
+              color: AppColors.of(context).textSecondary,
               size: 20,
             ),
             padding: EdgeInsets.zero,
@@ -148,7 +149,7 @@ class PricingItemCardHeader extends StatelessWidget {
             onPressed: onToggleExpanded,
             icon: Icon(
               isExpanded ? Icons.expand_less : Icons.expand_more,
-              color: AppColors.textSecondary,
+              color: AppColors.of(context).textSecondary,
               size: 24,
             ),
             padding: EdgeInsets.zero,
@@ -176,7 +177,9 @@ class PricingItemCardAddButton extends StatelessWidget {
     return Container(
       height: 46,
       decoration: BoxDecoration(
-        border: outlined ? Border.all(color: const Color(0xFF4B5563)) : null,
+        border: outlined
+            ? Border.all(color: AppColors.of(context).textDisabled)
+            : null,
         borderRadius: BorderRadius.circular(8),
       ),
       child: InkWell(
@@ -187,16 +190,20 @@ class PricingItemCardAddButton extends StatelessWidget {
           children: [
             Icon(
               Icons.add,
-              color: outlined ? AppColors.textSecondary : AppColors.primary,
+              color: outlined
+                  ? AppColors.of(context).textSecondary
+                  : AppColors.of(context).primary,
               size: 20,
             ),
             const SizedBox(width: 8),
             Text(
               label,
-              style: AppTextStyles.bodyMedium.copyWith(
+              style: AppTextStyles.of(context).bodyMedium.copyWith(
                 fontSize: 14,
                 fontWeight: FontWeight.w500,
-                color: outlined ? AppColors.textSecondary : AppColors.primary,
+                color: outlined
+                    ? AppColors.of(context).textSecondary
+                    : AppColors.of(context).primary,
               ),
             ),
           ],

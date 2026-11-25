@@ -104,19 +104,19 @@ class _SiteEngineerDashboardPageState extends State<SiteEngineerDashboardPage> {
   }
 
   Color _getPricingStatusColor(String? status) {
-    if (status == null) return AppColors.textMuted;
+    if (status == null) return AppColors.of(context).textMuted;
 
     switch (status.toUpperCase()) {
       case 'DRAFT':
-        return AppColors.textMuted;
+        return AppColors.of(context).textMuted;
       case 'PENDING_SIGNATURE':
-        return AppColors.warning;
+        return AppColors.of(context).warning;
       case 'APPROVED':
-        return AppColors.statusCompleted;
+        return AppColors.of(context).statusCompleted;
       case 'REJECTED':
-        return AppColors.statusDelayed;
+        return AppColors.of(context).statusDelayed;
       default:
-        return AppColors.info;
+        return AppColors.of(context).info;
     }
   }
 
@@ -149,8 +149,8 @@ class _SiteEngineerDashboardPageState extends State<SiteEngineerDashboardPage> {
               children: [
                 Text(
                   'حدث خطأ: ${state.message}',
-                  style: AppTextStyles.bodyLarge.copyWith(
-                    color: AppColors.textSecondary,
+                  style: AppTextStyles.of(context).bodyLarge.copyWith(
+                    color: AppColors.of(context).textSecondary,
                   ),
                 ),
                 const SizedBox(height: 16),
@@ -264,8 +264,8 @@ class _SiteEngineerDashboardPageState extends State<SiteEngineerDashboardPage> {
   Widget _buildSectionTitle(String title) {
     return Text(
       title,
-      style: AppTextStyles.h4.copyWith(
-        color: AppColors.textPrimary,
+      style: AppTextStyles.of(context).h4.copyWith(
+        color: AppColors.of(context).textPrimary,
         fontWeight: FontWeight.bold,
       ),
     );
@@ -341,9 +341,9 @@ class _SiteEngineerDashboardPageState extends State<SiteEngineerDashboardPage> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.cardBackground,
+        color: AppColors.of(context).cardBackground,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.border),
+        border: Border.all(color: AppColors.of(context).border),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -354,8 +354,8 @@ class _SiteEngineerDashboardPageState extends State<SiteEngineerDashboardPage> {
               Expanded(
                 child: Text(
                   project.name,
-                  style: AppTextStyles.h6.copyWith(
-                    color: AppColors.textPrimary,
+                  style: AppTextStyles.of(context).h6.copyWith(
+                    color: AppColors.of(context).textPrimary,
                     fontWeight: FontWeight.bold,
                   ),
                   maxLines: 1,
@@ -363,7 +363,7 @@ class _SiteEngineerDashboardPageState extends State<SiteEngineerDashboardPage> {
                 ),
               ),
               const SizedBox(width: 8),
-              _buildStatusButton('نشط', AppColors.statusActive),
+              _buildStatusButton('نشط', AppColors.of(context).statusActive),
             ],
           ),
           const SizedBox(height: 16),
@@ -371,15 +371,15 @@ class _SiteEngineerDashboardPageState extends State<SiteEngineerDashboardPage> {
             children: [
               Text(
                 'التقدم',
-                style: AppTextStyles.bodyMedium.copyWith(
-                  color: AppColors.textSecondary,
+                style: AppTextStyles.of(context).bodyMedium.copyWith(
+                  color: AppColors.of(context).textSecondary,
                 ),
               ),
               const Spacer(),
               Text(
                 '${project.progress}%',
-                style: AppTextStyles.bodyMedium.copyWith(
-                  color: AppColors.textPrimary,
+                style: AppTextStyles.of(context).bodyMedium.copyWith(
+                  color: AppColors.of(context).textPrimary,
                   fontWeight: FontWeight.w600,
                 ),
               ),
@@ -390,22 +390,24 @@ class _SiteEngineerDashboardPageState extends State<SiteEngineerDashboardPage> {
             borderRadius: BorderRadius.circular(4),
             child: LinearProgressIndicator(
               value: project.progress / 100,
-              backgroundColor: AppColors.progressBackground,
-              valueColor: AlwaysStoppedAnimation<Color>(AppColors.statusActive),
+              backgroundColor: AppColors.of(context).progressBackground,
+              valueColor: AlwaysStoppedAnimation<Color>(
+                AppColors.of(context).statusActive,
+              ),
               minHeight: 6,
             ),
           ),
           const SizedBox(height: 16),
           Text(
             'آخر تحديث: $lastUpdate',
-            style: AppTextStyles.caption.copyWith(
-              color: AppColors.textMuted,
+            style: AppTextStyles.of(context).caption.copyWith(
+              color: AppColors.of(context).textMuted,
               fontSize: 12,
             ),
           ),
           const SizedBox(height: 16),
           // Divider
-          const Divider(color: AppColors.border, height: 1, thickness: 1),
+          Divider(color: AppColors.of(context).border, height: 1, thickness: 1),
           const SizedBox(height: 16),
           // Action buttons row
           Row(
@@ -426,7 +428,7 @@ class _SiteEngineerDashboardPageState extends State<SiteEngineerDashboardPage> {
                       }
                     },
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.cardBackground,
+                      backgroundColor: AppColors.of(context).cardBackground,
                       foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(
                         horizontal: 16,
@@ -434,13 +436,16 @@ class _SiteEngineerDashboardPageState extends State<SiteEngineerDashboardPage> {
                       ),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(8),
-                        side: BorderSide(color: AppColors.border, width: 1),
+                        side: BorderSide(
+                          color: AppColors.of(context).border,
+                          width: 1,
+                        ),
                       ),
                       elevation: 0,
                     ),
-                    child: const Text(
+                    child: Text(
                       'فتح المشروع',
-                      style: AppTextStyles.buttonSmall,
+                      style: AppTextStyles.of(context).buttonSmall,
                     ),
                   ),
                 ),
@@ -454,9 +459,12 @@ class _SiteEngineerDashboardPageState extends State<SiteEngineerDashboardPage> {
                   height: 44,
                   child: Container(
                     decoration: BoxDecoration(
-                      color: AppColors.cardBackground,
+                      color: AppColors.of(context).cardBackground,
                       borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: AppColors.border, width: 1),
+                      border: Border.all(
+                        color: AppColors.of(context).border,
+                        width: 1,
+                      ),
                     ),
                     child: IconButton(
                       onPressed: () {},
@@ -486,10 +494,9 @@ class _SiteEngineerDashboardPageState extends State<SiteEngineerDashboardPage> {
       ),
       child: Text(
         label,
-        style: AppTextStyles.caption.copyWith(
-          color: Colors.white,
-          fontWeight: FontWeight.w600,
-        ),
+        style: AppTextStyles.of(
+          context,
+        ).caption.copyWith(color: Colors.white, fontWeight: FontWeight.w600),
       ),
     );
   }
@@ -581,9 +588,9 @@ class _SiteEngineerDashboardPageState extends State<SiteEngineerDashboardPage> {
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: AppColors.cardBackground,
+          color: AppColors.of(context).cardBackground,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: AppColors.border),
+          border: Border.all(color: AppColors.of(context).border),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -594,8 +601,8 @@ class _SiteEngineerDashboardPageState extends State<SiteEngineerDashboardPage> {
                 Expanded(
                   child: Text(
                     project.name,
-                    style: AppTextStyles.h6.copyWith(
-                      color: AppColors.textPrimary,
+                    style: AppTextStyles.of(context).h6.copyWith(
+                      color: AppColors.of(context).textPrimary,
                       fontWeight: FontWeight.bold,
                     ),
                     maxLines: 1,
@@ -645,7 +652,7 @@ class _SiteEngineerDashboardPageState extends State<SiteEngineerDashboardPage> {
                     const SizedBox(width: 6),
                     Text(
                       statusText,
-                      style: AppTextStyles.caption.copyWith(
+                      style: AppTextStyles.of(context).caption.copyWith(
                         fontSize: 11,
                         fontWeight: FontWeight.w600,
                         color: statusColor,
@@ -664,7 +671,7 @@ class _SiteEngineerDashboardPageState extends State<SiteEngineerDashboardPage> {
                   child: Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: AppColors.inputBackground,
+                      color: AppColors.of(context).inputBackground,
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Column(
@@ -672,8 +679,8 @@ class _SiteEngineerDashboardPageState extends State<SiteEngineerDashboardPage> {
                       children: [
                         Text(
                           'السعر المقدر',
-                          style: AppTextStyles.bodyMedium.copyWith(
-                            color: AppColors.textSecondary,
+                          style: AppTextStyles.of(context).bodyMedium.copyWith(
+                            color: AppColors.of(context).textSecondary,
                             fontSize: 12,
                           ),
                         ),
@@ -682,8 +689,8 @@ class _SiteEngineerDashboardPageState extends State<SiteEngineerDashboardPage> {
                           pricingVersion?.totalPrice != null
                               ? '${pricingVersion!.totalPrice.toStringAsFixed(3)} KD'
                               : '- KD',
-                          style: AppTextStyles.h5.copyWith(
-                            color: AppColors.textPrimary,
+                          style: AppTextStyles.of(context).h5.copyWith(
+                            color: AppColors.of(context).textPrimary,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
@@ -697,7 +704,7 @@ class _SiteEngineerDashboardPageState extends State<SiteEngineerDashboardPage> {
                   child: Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: AppColors.inputBackground,
+                      color: AppColors.of(context).inputBackground,
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Column(
@@ -705,8 +712,8 @@ class _SiteEngineerDashboardPageState extends State<SiteEngineerDashboardPage> {
                       children: [
                         Text(
                           'عدد الفئات',
-                          style: AppTextStyles.bodyMedium.copyWith(
-                            color: AppColors.textSecondary,
+                          style: AppTextStyles.of(context).bodyMedium.copyWith(
+                            color: AppColors.of(context).textSecondary,
                             fontSize: 12,
                           ),
                         ),
@@ -715,7 +722,7 @@ class _SiteEngineerDashboardPageState extends State<SiteEngineerDashboardPage> {
                           children: [
                             Icon(
                               Icons.category_outlined,
-                              color: AppColors.textPrimary,
+                              color: AppColors.of(context).textPrimary,
                               size: 18,
                             ),
                             const SizedBox(width: 6),
@@ -723,8 +730,8 @@ class _SiteEngineerDashboardPageState extends State<SiteEngineerDashboardPage> {
                               project.itemsCount != null
                                   ? '${project.itemsCount}'
                                   : '-',
-                              style: AppTextStyles.h5.copyWith(
-                                color: AppColors.textPrimary,
+                              style: AppTextStyles.of(context).h5.copyWith(
+                                color: AppColors.of(context).textPrimary,
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
@@ -738,7 +745,11 @@ class _SiteEngineerDashboardPageState extends State<SiteEngineerDashboardPage> {
             ),
             const SizedBox(height: 16),
             // Divider
-            const Divider(color: AppColors.border, height: 1, thickness: 1),
+            Divider(
+              color: AppColors.of(context).border,
+              height: 1,
+              thickness: 1,
+            ),
             const SizedBox(height: 16),
             // Action button (same style as Ongoing Projects)
             SizedBox(
@@ -749,7 +760,7 @@ class _SiteEngineerDashboardPageState extends State<SiteEngineerDashboardPage> {
                   _openPricing(context, project);
                 },
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.cardBackground,
+                  backgroundColor: AppColors.of(context).cardBackground,
                   foregroundColor: Colors.white,
                   padding: const EdgeInsets.symmetric(
                     horizontal: 16,
@@ -757,7 +768,10 @@ class _SiteEngineerDashboardPageState extends State<SiteEngineerDashboardPage> {
                   ),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(8),
-                    side: BorderSide(color: AppColors.border, width: 1),
+                    side: BorderSide(
+                      color: AppColors.of(context).border,
+                      width: 1,
+                    ),
                   ),
                   elevation: 0,
                 ),
@@ -788,16 +802,16 @@ class _SiteEngineerDashboardPageState extends State<SiteEngineerDashboardPage> {
     return Container(
       padding: const EdgeInsets.all(32),
       decoration: BoxDecoration(
-        color: AppColors.cardBackground,
+        color: AppColors.of(context).cardBackground,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.border),
+        border: Border.all(color: AppColors.of(context).border),
       ),
       child: Center(
         child: Text(
           message,
-          style: AppTextStyles.bodyLarge.copyWith(
-            color: AppColors.textSecondary,
-          ),
+          style: AppTextStyles.of(
+            context,
+          ).bodyLarge.copyWith(color: AppColors.of(context).textSecondary),
         ),
       ),
     );

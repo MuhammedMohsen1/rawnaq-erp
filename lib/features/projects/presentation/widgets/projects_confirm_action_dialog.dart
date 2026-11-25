@@ -50,7 +50,7 @@ class ProjectsConfirmActionDialog extends StatelessWidget {
                       onConfirm();
                     },
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.error,
+                      backgroundColor: AppColors.of(context).error,
                       foregroundColor: AppColors.white,
                     ),
                     child: Text(confirmLabel),

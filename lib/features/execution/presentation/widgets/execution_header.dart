@@ -25,7 +25,9 @@ class ExecutionHeader extends StatelessWidget {
             children: [
               Text(
                 projectName,
-                style: AppTextStyles.h2.copyWith(fontWeight: FontWeight.bold),
+                style: AppTextStyles.of(
+                  context,
+                ).h2.copyWith(fontWeight: FontWeight.bold),
               ),
               // const SizedBox(height: 4),
 
@@ -47,7 +49,7 @@ class ExecutionHeader extends StatelessWidget {
                 icon: const Icon(Icons.verified_outlined, size: 18),
                 label: const Text('إكمال المشروع'),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.statusCompleted,
+                  backgroundColor: AppColors.of(context).statusCompleted,
                   foregroundColor: AppColors.white,
                   padding: const EdgeInsets.symmetric(
                     horizontal: 16,
@@ -64,8 +66,8 @@ class ExecutionHeader extends StatelessWidget {
                 icon: const Icon(Icons.history, size: 18),
                 label: const Text('التسعير'),
                 style: OutlinedButton.styleFrom(
-                  foregroundColor: AppColors.textPrimary,
-                  side: const BorderSide(color: AppColors.border),
+                  foregroundColor: AppColors.of(context).textPrimary,
+                  side: BorderSide(color: AppColors.of(context).border),
                   padding: const EdgeInsets.symmetric(
                     horizontal: 16,
                     vertical: 12,

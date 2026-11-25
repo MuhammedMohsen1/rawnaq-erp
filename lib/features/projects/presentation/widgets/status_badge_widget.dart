@@ -21,13 +21,13 @@ class StatusBadgeWidget extends StatelessWidget {
         vertical: isCompact ? 4 : 6,
       ),
       decoration: BoxDecoration(
-        color: _getBackgroundColor(),
+        color: _getBackgroundColor(context),
         borderRadius: BorderRadius.circular(6),
       ),
       child: Text(
         status.arabicName,
         style: TextStyle(
-          color: _getTextColor(),
+          color: _getTextColor(context),
           fontSize: isCompact ? 11 : 12,
           fontWeight: FontWeight.w600,
         ),
@@ -35,43 +35,43 @@ class StatusBadgeWidget extends StatelessWidget {
     );
   }
 
-  Color _getBackgroundColor() {
+  Color _getBackgroundColor(BuildContext context) {
     switch (status) {
       case ProjectStatus.draft:
-        return AppColors.textMuted.withValues(alpha: 0.15);
+        return AppColors.of(context).textMuted.withValues(alpha: 0.15);
       case ProjectStatus.underPricing:
-        return AppColors.info.withValues(alpha: 0.15);
+        return AppColors.of(context).info.withValues(alpha: 0.15);
       case ProjectStatus.pendingSignature:
-        return AppColors.warning.withValues(alpha: 0.15);
+        return AppColors.of(context).warning.withValues(alpha: 0.15);
       case ProjectStatus.approved:
-        return AppColors.statusCompleted.withValues(alpha: 0.15);
+        return AppColors.of(context).statusCompleted.withValues(alpha: 0.15);
 
       case ProjectStatus.execution:
-        return AppColors.statusActive.withValues(alpha: 0.15);
+        return AppColors.of(context).statusActive.withValues(alpha: 0.15);
       case ProjectStatus.completed:
-        return AppColors.statusCompleted.withValues(alpha: 0.15);
+        return AppColors.of(context).statusCompleted.withValues(alpha: 0.15);
       case ProjectStatus.cancelled:
-        return AppColors.statusDelayed.withValues(alpha: 0.15);
+        return AppColors.of(context).statusDelayed.withValues(alpha: 0.15);
     }
   }
 
-  Color _getTextColor() {
+  Color _getTextColor(BuildContext context) {
     switch (status) {
       case ProjectStatus.draft:
-        return AppColors.textMuted;
+        return AppColors.of(context).textMuted;
       case ProjectStatus.underPricing:
-        return AppColors.info;
+        return AppColors.of(context).info;
       case ProjectStatus.pendingSignature:
-        return AppColors.warning;
+        return AppColors.of(context).warning;
       case ProjectStatus.approved:
-        return AppColors.statusCompleted;
+        return AppColors.of(context).statusCompleted;
 
       case ProjectStatus.execution:
-        return AppColors.statusActive;
+        return AppColors.of(context).statusActive;
       case ProjectStatus.completed:
-        return AppColors.statusCompleted;
+        return AppColors.of(context).statusCompleted;
       case ProjectStatus.cancelled:
-        return AppColors.statusDelayed;
+        return AppColors.of(context).statusDelayed;
     }
   }
 }

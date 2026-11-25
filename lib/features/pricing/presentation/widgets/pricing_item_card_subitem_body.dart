@@ -117,41 +117,46 @@ class PricingSubItemBody extends StatelessWidget {
 
                         final descriptionField = Center(
                           child: TextField(
-                            inputFormatters: const [ArabicNumberInputFormatter()],
+                            inputFormatters: const [
+                              ArabicNumberInputFormatter(),
+                            ],
                             controller: descriptionController,
                             focusNode: descriptionFocusNode,
                             onChanged: onDescriptionChanged,
                             minLines: 2,
                             maxLines: 4,
                             textInputAction: TextInputAction.newline,
-                            style: AppTextStyles.bodyMedium.copyWith(
-                              color: AppColors.textPrimary,
-                              height: 1.35,
-                            ),
+                            style: AppTextStyles.of(context).bodyMedium
+                                .copyWith(
+                                  color: AppColors.of(context).textPrimary,
+                                  height: 1.35,
+                                ),
                             decoration: InputDecoration(
                               labelText: 'وصف البند الفرعي',
                               hintText: 'اكتب وصف البند الفرعي',
-                              labelStyle: AppTextStyles.caption.copyWith(
-                                color: AppColors.textSecondary,
-                              ),
-                              hintStyle: AppTextStyles.bodySmall.copyWith(
-                                color: AppColors.textMuted,
-                              ),
+                              labelStyle: AppTextStyles.of(context).caption
+                                  .copyWith(
+                                    color: AppColors.of(context).textSecondary,
+                                  ),
+                              hintStyle: AppTextStyles.of(context).bodySmall
+                                  .copyWith(
+                                    color: AppColors.of(context).textMuted,
+                                  ),
                               filled: true,
-                              fillColor: const Color(0xFF202632),
+                              fillColor: AppColors.of(context).inputBackground,
                               contentPadding: const EdgeInsets.symmetric(
                                 horizontal: 12,
                                 vertical: 10,
                               ),
                               enabledBorder: OutlineInputBorder(
-                                borderSide: const BorderSide(
-                                  color: Color(0xFF363C4A),
+                                borderSide: BorderSide(
+                                  color: AppColors.of(context).border,
                                 ),
                                 borderRadius: BorderRadius.circular(8),
                               ),
                               focusedBorder: OutlineInputBorder(
-                                borderSide: const BorderSide(
-                                  color: AppColors.primary,
+                                borderSide: BorderSide(
+                                  color: AppColors.of(context).primary,
                                 ),
                                 borderRadius: BorderRadius.circular(8),
                               ),
@@ -212,10 +217,10 @@ class PricingSubItemBody extends StatelessWidget {
                             flex: 2,
                             child: Text(
                               'وصف العنصر',
-                              style: AppTextStyles.caption.copyWith(
+                              style: AppTextStyles.of(context).caption.copyWith(
                                 fontSize: 12,
                                 fontWeight: FontWeight.w500,
-                                color: const Color(0xFF6B7280),
+                                color: AppColors.of(context).textMuted,
                               ),
                             ),
                           ),
@@ -225,11 +230,12 @@ class PricingSubItemBody extends StatelessWidget {
                               flex: 2,
                               child: Text(
                                 'التكلفة (دينار)',
-                                style: AppTextStyles.caption.copyWith(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w500,
-                                  color: const Color(0xFF6B7280),
-                                ),
+                                style: AppTextStyles.of(context).caption
+                                    .copyWith(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w500,
+                                      color: AppColors.of(context).textMuted,
+                                    ),
                                 textAlign: TextAlign.center,
                               ),
                             ),
@@ -262,8 +268,8 @@ class PricingSubItemBody extends StatelessWidget {
                       child: Center(
                         child: Text(
                           'لا توجد فئات فرعية بعد',
-                          style: AppTextStyles.bodyMedium.copyWith(
-                            color: AppColors.textMuted,
+                          style: AppTextStyles.of(context).bodyMedium.copyWith(
+                            color: AppColors.of(context).textMuted,
                           ),
                         ),
                       ),
@@ -273,7 +279,9 @@ class PricingSubItemBody extends StatelessWidget {
                   Container(
                     height: 46,
                     decoration: BoxDecoration(
-                      border: Border.all(color: const Color(0xFF4B5563)),
+                      border: Border.all(
+                        color: AppColors.of(context).textDisabled,
+                      ),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: InkWell(
@@ -281,19 +289,20 @@ class PricingSubItemBody extends StatelessWidget {
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          const Icon(
+                          Icon(
                             Icons.add,
-                            color: AppColors.textSecondary,
+                            color: AppColors.of(context).textSecondary,
                             size: 20,
                           ),
                           const SizedBox(width: 8),
                           Text(
                             'إضافة عنصر',
-                            style: AppTextStyles.bodyMedium.copyWith(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w500,
-                              color: AppColors.textSecondary,
-                            ),
+                            style: AppTextStyles.of(context).bodyMedium
+                                .copyWith(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w500,
+                                  color: AppColors.of(context).textSecondary,
+                                ),
                           ),
                         ],
                       ),
@@ -306,9 +315,9 @@ class PricingSubItemBody extends StatelessWidget {
                         vertical: 17.22,
                         horizontal: 20,
                       ),
-                      decoration: const BoxDecoration(
+                      decoration: BoxDecoration(
                         border: Border(
-                          top: BorderSide(color: Color(0xFF363C4A)),
+                          top: BorderSide(color: AppColors.of(context).border),
                         ),
                       ),
                       child: Row(
@@ -316,20 +325,22 @@ class PricingSubItemBody extends StatelessWidget {
                         children: [
                           Text(
                             'المجموع الفرعي',
-                            style: AppTextStyles.bodyMedium.copyWith(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w500,
-                              color: AppColors.textSecondary,
-                            ),
+                            style: AppTextStyles.of(context).bodyMedium
+                                .copyWith(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w500,
+                                  color: AppColors.of(context).textSecondary,
+                                ),
                           ),
                           Row(
                             children: [
                               Text(
                                 'KD',
-                                style: AppTextStyles.bodyMedium.copyWith(
-                                  fontSize: 14,
-                                  color: const Color(0xFF6B7280),
-                                ),
+                                style: AppTextStyles.of(context).bodyMedium
+                                    .copyWith(
+                                      fontSize: 14,
+                                      color: AppColors.of(context).textMuted,
+                                    ),
                               ),
                               const SizedBox(width: 8),
                               PricingFormattedNumber(
@@ -386,9 +397,9 @@ class PricingSubItemImagesPanel extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        border: Border.all(color: AppColors.border),
+        border: Border.all(color: AppColors.of(context).border),
         borderRadius: BorderRadius.circular(8),
-        color: AppColors.cardBackground,
+        color: AppColors.of(context).cardBackground,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -396,8 +407,10 @@ class PricingSubItemImagesPanel extends StatelessWidget {
         children: [
           Container(
             padding: const EdgeInsets.all(12),
-            decoration: const BoxDecoration(
-              border: Border(bottom: BorderSide(color: AppColors.border)),
+            decoration: BoxDecoration(
+              border: Border(
+                bottom: BorderSide(color: AppColors.of(context).border),
+              ),
             ),
             child: Row(
               children: [
@@ -405,18 +418,18 @@ class PricingSubItemImagesPanel extends StatelessWidget {
                   subItem.images.isEmpty
                       ? '0/0 Photos'
                       : '${selectedImageIndex[subItem.id] != null ? (selectedImageIndex[subItem.id]!.clamp(0, subItem.images.length - 1) + 1) : 1}/${subItem.images.length} Photos',
-                  style: AppTextStyles.bodyMedium.copyWith(
-                    fontWeight: FontWeight.w600,
-                  ),
+                  style: AppTextStyles.of(
+                    context,
+                  ).bodyMedium.copyWith(fontWeight: FontWeight.w600),
                 ),
                 const Spacer(),
                 if (isUploadingImage)
-                  const SizedBox(
+                  SizedBox(
                     width: 16,
                     height: 16,
                     child: CircularProgressIndicator(
                       strokeWidth: 2,
-                      color: AppColors.primary,
+                      color: AppColors.of(context).primary,
                     ),
                   )
                 else
@@ -426,12 +439,12 @@ class PricingSubItemImagesPanel extends StatelessWidget {
                       onTap: onPickImages,
                       onLongPress: onPickImagesWithFilePicker,
                       borderRadius: BorderRadius.circular(4),
-                      child: const Padding(
+                      child: Padding(
                         padding: EdgeInsets.all(4),
                         child: Icon(
                           Icons.add_photo_alternate,
                           size: 18,
-                          color: AppColors.primary,
+                          color: AppColors.of(context).primary,
                         ),
                       ),
                     ),
@@ -441,10 +454,10 @@ class PricingSubItemImagesPanel extends StatelessWidget {
           ),
           Expanded(
             child: subItem.images.isEmpty
-                ? const Center(
+                ? Center(
                     child: CircularProgressIndicator(
                       strokeWidth: 2,
-                      color: AppColors.primary,
+                      color: AppColors.of(context).primary,
                     ),
                   )
                 : PricingImagePreview(
@@ -488,22 +501,22 @@ class PricingSubItemAddImagesButton extends StatelessWidget {
         child: Container(
           height: 46,
           decoration: BoxDecoration(
-            border: Border.all(color: AppColors.border),
+            border: Border.all(color: AppColors.of(context).border),
             borderRadius: BorderRadius.circular(8),
           ),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(
+              Icon(
                 Icons.add_photo_alternate_outlined,
-                color: AppColors.textSecondary,
+                color: AppColors.of(context).textSecondary,
                 size: 20,
               ),
               const SizedBox(width: 8),
               Text(
                 'إضافة صورة',
-                style: AppTextStyles.bodyMedium.copyWith(
-                  color: AppColors.textSecondary,
+                style: AppTextStyles.of(context).bodyMedium.copyWith(
+                  color: AppColors.of(context).textSecondary,
                   fontWeight: FontWeight.w500,
                 ),
               ),

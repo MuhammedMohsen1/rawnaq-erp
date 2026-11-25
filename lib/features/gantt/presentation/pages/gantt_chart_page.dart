@@ -1,3 +1,4 @@
+import 'package:rawnaq/core/widgets/app_toast.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/foundation.dart';
@@ -315,20 +316,20 @@ class _GanttChartPageState extends State<GanttChartPage>
             if (!mounted) return;
             if (wasAdjusted) {
               ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
+                AppToast.build(
+                  tone: ToastTone.success,
                   content: Text(
                     'تم إضافة المهمة: ${task.name}\nتم تعديل الوقت تلقائياً لتجنب التعارض',
                   ),
-                  backgroundColor: AppColors.warning,
                   duration: const Duration(seconds: 2),
                 ),
               );
             } else {
               ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
+                AppToast.build(
+                  tone: ToastTone.success,
                   duration: const Duration(seconds: 2),
                   content: Text('تم إضافة المهمة: ${task.name}'),
-                  backgroundColor: AppColors.statusOnHold,
                 ),
               );
             }
@@ -373,21 +374,21 @@ class _GanttChartPageState extends State<GanttChartPage>
     if (updatedTask.wasAdjusted) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
+        AppToast.build(
+          tone: ToastTone.success,
           content: Text(
             '$action: ${task.name}\nتم تعديل الوقت تلقائياً لتجنب التعارض',
           ),
-          backgroundColor: AppColors.warning,
           duration: const Duration(seconds: 2),
         ),
       );
     } else {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
+        AppToast.build(
+          tone: ToastTone.success,
           duration: const Duration(seconds: 2),
           content: Text('$action: ${task.name}'),
-          backgroundColor: AppColors.statusCompleted,
         ),
       );
     }
@@ -410,10 +411,10 @@ class _GanttChartPageState extends State<GanttChartPage>
 
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
+        AppToast.build(
+          tone: ToastTone.success,
           duration: const Duration(seconds: 2),
           content: Text('تم تعديل مدة المهمة: ${task.name}'),
-          backgroundColor: AppColors.statusCompleted,
         ),
       );
       return;
@@ -431,21 +432,21 @@ class _GanttChartPageState extends State<GanttChartPage>
     if (wasAdjusted) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
+        AppToast.build(
+          tone: ToastTone.success,
           content: Text(
             'تم تعديل مدة المهمة: ${task.name}\nتم تعديل الوقت تلقائياً لتجنب التعارض',
           ),
-          backgroundColor: AppColors.warning,
           duration: const Duration(seconds: 2),
         ),
       );
     } else {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
+        AppToast.build(
+          tone: ToastTone.success,
           duration: const Duration(seconds: 2),
           content: Text('تم تعديل مدة المهمة: ${task.name}'),
-          backgroundColor: AppColors.statusCompleted,
         ),
       );
     }
@@ -473,15 +474,15 @@ class _GanttChartPageState extends State<GanttChartPage>
           await _refreshTasksPreservingTimeline();
           if (!mounted) return;
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
+            AppToast.build(
+              tone: savedTask.wasAdjusted
+                  ? ToastTone.warning
+                  : ToastTone.success,
               content: Text(
                 savedTask.wasAdjusted
                     ? 'تم تحديث المهمة: ${updatedTask.name}\nتم تعديل الوقت تلقائياً لتجنب التعارض'
                     : 'تم تحديث المهمة: ${updatedTask.name}',
               ),
-              backgroundColor: savedTask.wasAdjusted
-                  ? AppColors.warning
-                  : AppColors.statusCompleted,
               duration: savedTask.wasAdjusted
                   ? const Duration(seconds: 4)
                   : const Duration(seconds: 3),
@@ -493,10 +494,10 @@ class _GanttChartPageState extends State<GanttChartPage>
               .deleteTask(task.id)
               .then((_) => _refreshTasksPreservingTimeline());
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
+            AppToast.build(
+              tone: ToastTone.success,
               duration: const Duration(seconds: 2),
               content: Text('تم حذف المهمة: ${task.name}'),
-              backgroundColor: AppColors.statusDelayed,
             ),
           );
         },
@@ -509,7 +510,7 @@ class _GanttChartPageState extends State<GanttChartPage>
     final startDate = _getStartDate();
 
     return Scaffold(
-      backgroundColor: AppColors.sidebarBackground,
+      backgroundColor: AppColors.of(context).sidebarBackground,
       body: Shortcuts(
         shortcuts: _zoomShortcuts,
         child: Actions(

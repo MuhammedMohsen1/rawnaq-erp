@@ -12,16 +12,19 @@ Future<void> showLogoutConfirmationDialog(BuildContext context) {
       return Directionality(
         textDirection: TextDirection.rtl,
         child: AlertDialog(
-          backgroundColor: AppColors.cardBackground,
+          backgroundColor: AppColors.of(context).cardBackground,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
           ),
-          title: Text('تسجيل الخروج', style: AppTextStyles.sectionTitle),
+          title: Text(
+            'تسجيل الخروج',
+            style: AppTextStyles.of(context).sectionTitle,
+          ),
           content: Text(
             'هل أنت متأكد أنك تريد تسجيل الخروج من حسابك؟',
-            style: AppTextStyles.bodyMedium.copyWith(
-              color: AppColors.textMuted,
-            ),
+            style: AppTextStyles.of(
+              context,
+            ).bodyMedium.copyWith(color: AppColors.of(context).textMuted),
           ),
           actionsPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
           actions: [
@@ -29,8 +32,8 @@ Future<void> showLogoutConfirmationDialog(BuildContext context) {
               onPressed: () => Navigator.of(dialogContext).pop(),
               child: Text(
                 'إلغاء',
-                style: AppTextStyles.tableCellBold.copyWith(
-                  color: AppColors.textMuted,
+                style: AppTextStyles.of(context).tableCellBold.copyWith(
+                  color: AppColors.of(context).textMuted,
                 ),
               ),
             ),
@@ -49,9 +52,9 @@ Future<void> showLogoutConfirmationDialog(BuildContext context) {
               ),
               child: Text(
                 'تسجيل الخروج',
-                style: AppTextStyles.tableCellBold.copyWith(
-                  color: Colors.white,
-                ),
+                style: AppTextStyles.of(
+                  context,
+                ).tableCellBold.copyWith(color: Colors.white),
               ),
             ),
           ],

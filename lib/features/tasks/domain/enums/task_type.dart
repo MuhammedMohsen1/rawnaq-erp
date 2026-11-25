@@ -52,14 +52,14 @@ extension TaskTypeExtension on TaskType {
   }
 
   /// Get the color associated with this type
-  Color get color {
+  Color color(BuildContext context) {
     switch (this) {
       case TaskType.workTask:
-        return AppColors.statusActive;
+        return AppColors.of(context).statusActive;
       case TaskType.appointment:
         return const Color(0xFF9C27B0); // Purple for appointments
       case TaskType.generalTask:
-        return AppColors.statusOnHold;
+        return AppColors.of(context).statusOnHold;
     }
   }
 

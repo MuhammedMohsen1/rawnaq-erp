@@ -47,7 +47,7 @@ class AddIncomeRowContent extends StatelessWidget {
       child: Container(
         padding: padding,
         decoration: BoxDecoration(
-          border: Border.all(color: AppColors.border),
+          border: Border.all(color: AppColors.of(context).border),
           borderRadius: BorderRadius.circular(4),
         ),
         child: Row(
@@ -56,7 +56,7 @@ class AddIncomeRowContent extends StatelessWidget {
             const SizedBox(width: 4),
             Text(
               '${selectedDate.day}/${selectedDate.month}/${selectedDate.year}',
-              style: AppTextStyles.bodySmall,
+              style: AppTextStyles.of(context).bodySmall,
             ),
           ],
         ),
@@ -64,7 +64,7 @@ class AddIncomeRowContent extends StatelessWidget {
     );
   }
 
-  Widget _attachmentsPicker() {
+  Widget _attachmentsPicker(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
@@ -88,16 +88,16 @@ class AddIncomeRowContent extends StatelessWidget {
                 constraints: BoxConstraints(maxWidth: isCompact ? 180 : 140),
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
-                  color: AppColors.primary.withValues(alpha: 0.08),
+                  color: AppColors.of(context).primary.withValues(alpha: 0.08),
                   borderRadius: BorderRadius.circular(999),
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Icon(
+                    Icon(
                       Icons.image_outlined,
                       size: 13,
-                      color: AppColors.primary,
+                      color: AppColors.of(context).primary,
                     ),
                     const SizedBox(width: 4),
                     Flexible(
@@ -105,8 +105,8 @@ class AddIncomeRowContent extends StatelessWidget {
                         file.name,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: AppTextStyles.caption.copyWith(
-                          color: AppColors.primary,
+                        style: AppTextStyles.of(context).caption.copyWith(
+                          color: AppColors.of(context).primary,
                         ),
                       ),
                     ),
@@ -115,10 +115,10 @@ class AddIncomeRowContent extends StatelessWidget {
                       onTap: isSubmitting
                           ? null
                           : () => onRemoveAttachment(entry.key),
-                      child: const Icon(
+                      child: Icon(
                         Icons.close,
                         size: 13,
-                        color: AppColors.textMuted,
+                        color: AppColors.of(context).textMuted,
                       ),
                     ),
                   ],
@@ -131,7 +131,7 @@ class AddIncomeRowContent extends StatelessWidget {
     );
   }
 
-  Widget _compact() {
+  Widget _compact(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       mainAxisSize: MainAxisSize.min,
@@ -142,17 +142,17 @@ class AddIncomeRowContent extends StatelessWidget {
               width: 36,
               height: 36,
               decoration: BoxDecoration(
-                color: AppColors.success.withValues(alpha: 0.1),
+                color: AppColors.of(context).success.withValues(alpha: 0.1),
                 shape: BoxShape.circle,
               ),
-              child: const Icon(
+              child: Icon(
                 Icons.arrow_downward,
-                color: AppColors.success,
+                color: AppColors.of(context).success,
                 size: 18,
               ),
             ),
             const SizedBox(width: 12),
-            Text('إضافة إيراد', style: AppTextStyles.tableCellBold),
+            Text('إضافة إيراد', style: AppTextStyles.of(context).tableCellBold),
           ],
         ),
         const SizedBox(height: 12),
@@ -187,14 +187,14 @@ class AddIncomeRowContent extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 8),
-        _attachmentsPicker(),
+        _attachmentsPicker(context),
         const SizedBox(height: 12),
         Row(
           mainAxisAlignment: MainAxisAlignment.end,
           children: [
             IconButton(
               onPressed: onCancel,
-              icon: const Icon(Icons.close, color: AppColors.error),
+              icon: Icon(Icons.close, color: AppColors.of(context).error),
               tooltip: 'إلغاء',
             ),
             IconButton(
@@ -205,7 +205,7 @@ class AddIncomeRowContent extends StatelessWidget {
                       height: 18,
                       child: CircularProgressIndicator(strokeWidth: 2),
                     )
-                  : const Icon(Icons.check, color: AppColors.success),
+                  : Icon(Icons.check, color: AppColors.of(context).success),
               tooltip: 'حفظ',
             ),
           ],
@@ -214,7 +214,7 @@ class AddIncomeRowContent extends StatelessWidget {
     );
   }
 
-  Widget _wide() {
+  Widget _wide(BuildContext context) {
     return Row(
       children: [
         SizedBox(
@@ -223,12 +223,12 @@ class AddIncomeRowContent extends StatelessWidget {
             width: 36,
             height: 36,
             decoration: BoxDecoration(
-              color: AppColors.success.withValues(alpha: 0.1),
+              color: AppColors.of(context).success.withValues(alpha: 0.1),
               shape: BoxShape.circle,
             ),
-            child: const Icon(
+            child: Icon(
               Icons.arrow_downward,
-              color: AppColors.success,
+              color: AppColors.of(context).success,
               size: 18,
             ),
           ),
@@ -273,14 +273,14 @@ class AddIncomeRowContent extends StatelessWidget {
           ),
         ),
         const SizedBox(width: 8),
-        SizedBox(width: 150, child: _attachmentsPicker()),
+        SizedBox(width: 150, child: _attachmentsPicker(context)),
         const SizedBox(width: 8),
         Row(
           mainAxisSize: MainAxisSize.min,
           children: [
             IconButton(
               onPressed: onCancel,
-              icon: const Icon(Icons.close, color: AppColors.error),
+              icon: Icon(Icons.close, color: AppColors.of(context).error),
               tooltip: 'إلغاء',
             ),
             IconButton(
@@ -291,7 +291,7 @@ class AddIncomeRowContent extends StatelessWidget {
                       height: 18,
                       child: CircularProgressIndicator(strokeWidth: 2),
                     )
-                  : const Icon(Icons.check, color: AppColors.success),
+                  : Icon(Icons.check, color: AppColors.of(context).success),
               tooltip: 'حفظ',
             ),
           ],
@@ -302,6 +302,6 @@ class AddIncomeRowContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return isCompact ? _compact() : _wide();
+    return isCompact ? _compact(context) : _wide(context);
   }
 }

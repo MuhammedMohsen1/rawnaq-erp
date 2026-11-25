@@ -67,9 +67,9 @@ class TransactionsTable extends StatelessWidget {
         final isCompact = constraints.maxWidth < 720;
         return Container(
           decoration: BoxDecoration(
-            color: AppColors.cardBackground,
+            color: AppColors.of(context).cardBackground,
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: AppColors.border),
+            border: Border.all(color: AppColors.of(context).border),
           ),
           child: Column(
             children: [
@@ -82,7 +82,7 @@ class TransactionsTable extends StatelessWidget {
                 endDate: endDate,
                 isCompact: isCompact,
               ),
-              const Divider(height: 1, color: AppColors.border),
+              Divider(height: 1, color: AppColors.of(context).border),
               TransactionsTableHeader(
                 onAddExpense: onAddExpense == null
                     ? null
@@ -94,10 +94,10 @@ class TransactionsTable extends StatelessWidget {
                 isAdminOrManager: isAdminOrManager,
                 isCompact: isCompact,
               ),
-              const Divider(height: 1, color: AppColors.border),
+              Divider(height: 1, color: AppColors.of(context).border),
               if (!isCompact) ...[
                 const TransactionsColumnHeaders(),
-                const Divider(height: 1, color: AppColors.border),
+                Divider(height: 1, color: AppColors.of(context).border),
               ],
               ...transactions.map((transaction) {
                 final isEditing = editingTransactions[transaction.id] ?? false;
@@ -148,7 +148,7 @@ class TransactionsTable extends StatelessWidget {
       context: context,
       builder: (dialogContext) => Dialog(
         insetPadding: const EdgeInsets.all(16),
-        backgroundColor: AppColors.cardBackground,
+        backgroundColor: AppColors.of(context).cardBackground,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 640),
@@ -170,7 +170,7 @@ class TransactionsTable extends StatelessWidget {
       context: context,
       builder: (dialogContext) => Dialog(
         insetPadding: const EdgeInsets.all(16),
-        backgroundColor: AppColors.cardBackground,
+        backgroundColor: AppColors.of(context).cardBackground,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 640),

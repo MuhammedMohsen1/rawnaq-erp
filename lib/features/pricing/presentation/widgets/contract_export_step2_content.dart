@@ -56,12 +56,12 @@ class ContractExportStep2Content extends StatelessWidget {
                   decoration: BoxDecoration(
                     color: termsApproved[index]
                         ? Colors.green[900]?.withValues(alpha: 0.2)
-                        : AppColors.surfaceColor,
+                        : AppColors.of(context).surfaceColor,
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(
                       color: termsApproved[index]
                           ? Colors.green[300]!
-                          : AppColors.border,
+                          : AppColors.of(context).border,
                       width: termsApproved[index] ? 2 : 1,
                     ),
                     boxShadow: [
@@ -101,38 +101,38 @@ class ContractExportStep2Content extends StatelessWidget {
                         decoration: InputDecoration(
                           labelText: 'العنوان',
                           hintText: 'مثال: أولا: التمهيد',
-                          prefixIcon: const Icon(
+                          prefixIcon: Icon(
                             Icons.title,
                             size: 20,
-                            color: AppColors.textSecondary,
+                            color: AppColors.of(context).textSecondary,
                           ),
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(10),
                           ),
                           enabledBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(10),
-                            borderSide: const BorderSide(
-                              color: AppColors.inputBorder,
+                            borderSide: BorderSide(
+                              color: AppColors.of(context).inputBorder,
                             ),
                           ),
                           focusedBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(10),
                             borderSide: BorderSide(
-                              color: AppColors.primary,
+                              color: AppColors.of(context).primary,
                               width: 2,
                             ),
                           ),
                           filled: true,
-                          fillColor: AppColors.inputBackground,
+                          fillColor: AppColors.of(context).inputBackground,
                           contentPadding: const EdgeInsets.symmetric(
                             horizontal: 16,
                             vertical: 16,
                           ),
                         ),
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 15,
                           fontWeight: FontWeight.bold,
-                          color: AppColors.textPrimary,
+                          color: AppColors.of(context).textPrimary,
                         ),
                         textDirection: TextDirection.rtl,
                         textAlign: TextAlign.right,
@@ -146,34 +146,34 @@ class ContractExportStep2Content extends StatelessWidget {
                         decoration: InputDecoration(
                           labelText: 'الوصف',
                           hintText: 'أدخل نص البند هنا...',
-                          prefixIcon: const Icon(
+                          prefixIcon: Icon(
                             Icons.description,
                             size: 20,
-                            color: AppColors.textSecondary,
+                            color: AppColors.of(context).textSecondary,
                           ),
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(10),
                           ),
                           enabledBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(10),
-                            borderSide: const BorderSide(
-                              color: AppColors.inputBorder,
+                            borderSide: BorderSide(
+                              color: AppColors.of(context).inputBorder,
                             ),
                           ),
                           focusedBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(10),
-                            borderSide: const BorderSide(
-                              color: AppColors.inputFocusBorder,
+                            borderSide: BorderSide(
+                              color: AppColors.of(context).inputFocusBorder,
                               width: 2,
                             ),
                           ),
                           filled: true,
-                          fillColor: AppColors.inputBackground,
+                          fillColor: AppColors.of(context).inputBackground,
                           contentPadding: const EdgeInsets.all(16),
                         ),
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 14,
-                          color: AppColors.textPrimary,
+                          color: AppColors.of(context).textPrimary,
                         ),
                         textDirection: TextDirection.rtl,
                         textAlign: TextAlign.right,

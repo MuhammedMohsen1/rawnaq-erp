@@ -17,7 +17,7 @@ class AddPricingItemButton extends StatelessWidget {
       decoration: BoxDecoration(borderRadius: BorderRadius.circular(12)),
       child: CustomPaint(
         painter: DashedBorderPainter(
-          color: const Color(0xFF4B5563),
+          color: AppColors.of(context).textDisabled,
           strokeWidth: 2,
         ),
         child: InkWell(
@@ -29,23 +29,23 @@ class AddPricingItemButton extends StatelessWidget {
               Container(
                 width: 48,
                 height: 48,
-                decoration: const BoxDecoration(
-                  color: Color(0xFF2A313D),
+                decoration: BoxDecoration(
+                  color: AppColors.of(context).surfaceColor,
                   shape: BoxShape.circle,
                 ),
-                child: const Icon(
+                child: Icon(
                   Icons.add,
-                  color: AppColors.textSecondary,
+                  color: AppColors.of(context).textSecondary,
                   size: 24,
                 ),
               ),
               const SizedBox(height: 18),
               Text(
                 'إضافة بند جديد',
-                style: AppTextStyles.bodyLarge.copyWith(
+                style: AppTextStyles.of(context).bodyLarge.copyWith(
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
-                  color: AppColors.textMuted,
+                  color: AppColors.of(context).textMuted,
                 ),
               ),
             ],

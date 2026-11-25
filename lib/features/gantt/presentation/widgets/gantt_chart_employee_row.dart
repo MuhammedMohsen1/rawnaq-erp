@@ -73,28 +73,32 @@ class GanttEmployeeRow extends StatelessWidget {
 
     return Container(
       height: rowHeight,
-      decoration: const BoxDecoration(
-        border: Border(bottom: BorderSide(color: AppColors.divider)),
+      decoration: BoxDecoration(
+        border: Border(
+          bottom: BorderSide(color: AppColors.of(context).divider),
+        ),
       ),
       child: Row(
         children: [
           Container(
             width: 200,
             padding: const EdgeInsets.all(12),
-            decoration: const BoxDecoration(
+            decoration: BoxDecoration(
               border: Border(
-                left: BorderSide(color: AppColors.border, width: 1),
+                left: BorderSide(color: AppColors.of(context).border, width: 1),
               ),
             ),
             child: Row(
               children: [
                 CircleAvatar(
                   radius: 18,
-                  backgroundColor: AppColors.primary.withValues(alpha: 0.2),
+                  backgroundColor: AppColors.of(
+                    context,
+                  ).primary.withValues(alpha: 0.2),
                   child: Text(
                     member.name.isEmpty ? '-' : member.name.substring(0, 1),
-                    style: const TextStyle(
-                      color: AppColors.primary,
+                    style: TextStyle(
+                      color: AppColors.of(context).primary,
                       fontSize: 14,
                       fontWeight: FontWeight.bold,
                     ),
@@ -108,15 +112,15 @@ class GanttEmployeeRow extends StatelessWidget {
                     children: [
                       Text(
                         member.name,
-                        style: AppTextStyles.tableCellBold,
+                        style: AppTextStyles.of(context).tableCellBold,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
                       const SizedBox(height: 2),
                       Text(
                         member.role,
-                        style: AppTextStyles.caption.copyWith(
-                          color: AppColors.textMuted,
+                        style: AppTextStyles.of(context).caption.copyWith(
+                          color: AppColors.of(context).textMuted,
                         ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,

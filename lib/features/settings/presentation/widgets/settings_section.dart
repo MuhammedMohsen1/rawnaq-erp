@@ -31,10 +31,14 @@ class SettingsSection extends StatelessWidget {
                 width: 34,
                 height: 34,
                 decoration: BoxDecoration(
-                  color: AppColors.primary.withValues(alpha: 0.08),
+                  color: AppColors.of(context).primary.withValues(alpha: 0.08),
                   borderRadius: BorderRadius.circular(10),
                 ),
-                child: Icon(icon, color: AppColors.primary, size: 19),
+                child: Icon(
+                  icon,
+                  color: AppColors.of(context).primary,
+                  size: 19,
+                ),
               ),
               const SizedBox(width: 10),
               Expanded(
@@ -43,15 +47,15 @@ class SettingsSection extends StatelessWidget {
                   children: [
                     Text(
                       title,
-                      style: AppTextStyles.sectionTitle,
+                      style: AppTextStyles.of(context).sectionTitle,
                       textAlign: TextAlign.right,
                     ),
                     const SizedBox(height: 2),
                     Text(
                       subtitle,
                       textAlign: TextAlign.right,
-                      style: AppTextStyles.caption.copyWith(
-                        color: AppColors.textMuted,
+                      style: AppTextStyles.of(context).caption.copyWith(
+                        color: AppColors.of(context).textMuted,
                       ),
                     ),
                   ],
@@ -64,9 +68,9 @@ class SettingsSection extends StatelessWidget {
             borderRadius: BorderRadius.circular(14),
             child: Container(
               decoration: BoxDecoration(
-                color: AppColors.cardBackground,
+                color: AppColors.of(context).cardBackground,
                 borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: AppColors.border),
+                border: Border.all(color: AppColors.of(context).border),
               ),
               child: child,
             ),

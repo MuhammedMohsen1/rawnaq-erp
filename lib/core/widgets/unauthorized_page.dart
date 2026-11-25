@@ -10,7 +10,7 @@ class UnauthorizedPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.scaffoldBackground,
+      backgroundColor: AppColors.of(context).scaffoldBackground,
       body: Center(
         child: Padding(
           padding: const EdgeInsets.all(32.0),
@@ -22,13 +22,13 @@ class UnauthorizedPage extends StatelessWidget {
                 width: 120,
                 height: 120,
                 decoration: BoxDecoration(
-                  color: AppColors.error.withValues(alpha: 0.1),
+                  color: AppColors.of(context).error.withValues(alpha: 0.1),
                   shape: BoxShape.circle,
                 ),
-                child: const Icon(
+                child: Icon(
                   Icons.lock_outline,
                   size: 60,
-                  color: AppColors.error,
+                  color: AppColors.of(context).error,
                 ),
               ),
 
@@ -37,7 +37,9 @@ class UnauthorizedPage extends StatelessWidget {
               // Title
               Text(
                 'غير مصرح',
-                style: AppTextStyles.h2.copyWith(color: AppColors.error),
+                style: AppTextStyles.of(
+                  context,
+                ).h2.copyWith(color: AppColors.of(context).error),
                 textAlign: TextAlign.center,
               ),
 
@@ -46,8 +48,8 @@ class UnauthorizedPage extends StatelessWidget {
               // Description
               Text(
                 'ليس لديك صلاحية للوصول إلى هذه الصفحة',
-                style: AppTextStyles.bodyLarge.copyWith(
-                  color: AppColors.textSecondary,
+                style: AppTextStyles.of(context).bodyLarge.copyWith(
+                  color: AppColors.of(context).textSecondary,
                 ),
                 textAlign: TextAlign.center,
               ),
@@ -62,8 +64,8 @@ class UnauthorizedPage extends StatelessWidget {
                 icon: const Icon(Icons.dashboard),
                 label: const Text('لوحة القيادة'),
                 style: OutlinedButton.styleFrom(
-                  foregroundColor: AppColors.primary,
-                  side: const BorderSide(color: AppColors.primary),
+                  foregroundColor: AppColors.of(context).primary,
+                  side: BorderSide(color: AppColors.of(context).primary),
                   padding: const EdgeInsets.symmetric(
                     horizontal: 24,
                     vertical: 12,

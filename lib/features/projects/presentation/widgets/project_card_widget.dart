@@ -29,10 +29,10 @@ class ProjectCardWidget extends StatelessWidget {
     final hasClientName = clientName != null && clientName.isNotEmpty;
 
     return Card(
-      color: AppColors.cardBackground,
+      color: AppColors.of(context).cardBackground,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
-        side: const BorderSide(color: AppColors.border),
+        side: BorderSide(color: AppColors.of(context).border),
       ),
       child: InkWell(
         onTap: onTap,
@@ -52,7 +52,7 @@ class ProjectCardWidget extends StatelessWidget {
                       children: [
                         Text(
                           hasClientName ? clientName : project.name,
-                          style: AppTextStyles.h6,
+                          style: AppTextStyles.of(context).h6,
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
                         ),
@@ -60,9 +60,10 @@ class ProjectCardWidget extends StatelessWidget {
                           const SizedBox(height: 4),
                           Text(
                             project.name,
-                            style: AppTextStyles.bodyMedium.copyWith(
-                              color: AppColors.textSecondary,
-                            ),
+                            style: AppTextStyles.of(context).bodyMedium
+                                .copyWith(
+                                  color: AppColors.of(context).textSecondary,
+                                ),
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,
                           ),
@@ -71,16 +72,16 @@ class ProjectCardWidget extends StatelessWidget {
                     ),
                   ),
                   PopupMenuButton<String>(
-                    icon: const Icon(
+                    icon: Icon(
                       Icons.more_vert,
-                      color: AppColors.textMuted,
+                      color: AppColors.of(context).textMuted,
                       size: 20,
                     ),
                     padding: EdgeInsets.zero,
-                    color: AppColors.cardBackground,
+                    color: AppColors.of(context).cardBackground,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(8),
-                      side: const BorderSide(color: AppColors.border),
+                      side: BorderSide(color: AppColors.of(context).border),
                     ),
                     itemBuilder: (context) => [
                       const PopupMenuItem(
@@ -93,19 +94,21 @@ class ProjectCardWidget extends StatelessWidget {
                           ],
                         ),
                       ),
-                      const PopupMenuItem(
+                      PopupMenuItem(
                         value: 'delete',
                         child: Row(
                           children: [
                             Icon(
                               Icons.delete_outline,
                               size: 18,
-                              color: AppColors.error,
+                              color: AppColors.of(context).error,
                             ),
                             SizedBox(width: 8),
                             Text(
                               'حذف',
-                              style: TextStyle(color: AppColors.error),
+                              style: TextStyle(
+                                color: AppColors.of(context).error,
+                              ),
                             ),
                           ],
                         ),
@@ -149,12 +152,15 @@ class ProjectCardWidget extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text('تاريخ البدء', style: AppTextStyles.caption),
+                        Text(
+                          'تاريخ البدء',
+                          style: AppTextStyles.of(context).caption,
+                        ),
                         const SizedBox(height: 4),
                         Text(
                           dateFormat.format(project.startDate),
-                          style: AppTextStyles.bodyMedium.copyWith(
-                            color: AppColors.textPrimary,
+                          style: AppTextStyles.of(context).bodyMedium.copyWith(
+                            color: AppColors.of(context).textPrimary,
                           ),
                         ),
                       ],
@@ -164,12 +170,15 @@ class ProjectCardWidget extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text('تاريخ الانتهاء', style: AppTextStyles.caption),
+                        Text(
+                          'تاريخ الانتهاء',
+                          style: AppTextStyles.of(context).caption,
+                        ),
                         const SizedBox(height: 4),
                         Text(
                           dateFormat.format(project.endDate),
-                          style: AppTextStyles.bodyMedium.copyWith(
-                            color: AppColors.textPrimary,
+                          style: AppTextStyles.of(context).bodyMedium.copyWith(
+                            color: AppColors.of(context).textPrimary,
                           ),
                         ),
                       ],
@@ -181,17 +190,17 @@ class ProjectCardWidget extends StatelessWidget {
               // Manager info
               if (project.manager != null) ...[
                 const SizedBox(height: 16),
-                const Divider(color: AppColors.divider),
+                Divider(color: AppColors.of(context).divider),
                 const SizedBox(height: 12),
                 Row(
                   children: [
                     CircleAvatar(
                       radius: 16,
-                      backgroundColor: AppColors.surfaceColor,
+                      backgroundColor: AppColors.of(context).surfaceColor,
                       child: Text(
                         project.manager!.name.substring(0, 1),
-                        style: AppTextStyles.bodyMedium.copyWith(
-                          color: AppColors.primary,
+                        style: AppTextStyles.of(context).bodyMedium.copyWith(
+                          color: AppColors.of(context).primary,
                           fontWeight: FontWeight.w600,
                         ),
                       ),
@@ -203,13 +212,14 @@ class ProjectCardWidget extends StatelessWidget {
                         children: [
                           Text(
                             project.manager!.name,
-                            style: AppTextStyles.bodyMedium.copyWith(
-                              color: AppColors.textPrimary,
-                            ),
+                            style: AppTextStyles.of(context).bodyMedium
+                                .copyWith(
+                                  color: AppColors.of(context).textPrimary,
+                                ),
                           ),
                           Text(
                             project.manager!.role,
-                            style: AppTextStyles.caption,
+                            style: AppTextStyles.of(context).caption,
                           ),
                         ],
                       ),

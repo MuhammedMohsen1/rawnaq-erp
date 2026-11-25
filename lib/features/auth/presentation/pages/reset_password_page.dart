@@ -1,3 +1,4 @@
+import 'package:rawnaq/core/widgets/app_toast.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -41,12 +42,15 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: AppColors.of(context).background,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: AppColors.textPrimary),
+          icon: Icon(
+            Icons.arrow_back,
+            color: AppColors.of(context).textPrimary,
+          ),
           onPressed: _onBackToLoginPressed,
         ),
       ),
@@ -54,10 +58,10 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
         listener: (context, state) {
           if (state is ResetPasswordSuccess) {
             ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
+              AppToast.build(
+                tone: ToastTone.success,
                 duration: const Duration(seconds: 2),
                 content: Text(state.message),
-                backgroundColor: AppColors.success,
               ),
             );
             // Show success dialog and navigate back to login
@@ -80,10 +84,10 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
             );
           } else if (state is ResetPasswordError) {
             ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
+              AppToast.build(
+                tone: ToastTone.error,
                 duration: const Duration(seconds: 2),
                 content: Text(state.message),
-                backgroundColor: AppColors.error,
               ),
             );
           }
@@ -106,22 +110,24 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
                         width: 80,
                         margin: const EdgeInsets.only(bottom: 32),
                         decoration: BoxDecoration(
-                          color: AppColors.primary.withValues(alpha: 0.1),
+                          color: AppColors.of(
+                            context,
+                          ).primary.withValues(alpha: 0.1),
                           shape: BoxShape.circle,
                         ),
-                        child: const Icon(
+                        child: Icon(
                           Icons.lock_reset,
                           size: 40,
-                          color: AppColors.primary,
+                          color: AppColors.of(context).primary,
                         ),
                       ),
 
                       // Title
                       Text(
                         'Reset Password',
-                        style: AppTextStyles.h2.copyWith(
-                          color: AppColors.primary,
-                        ),
+                        style: AppTextStyles.of(
+                          context,
+                        ).h2.copyWith(color: AppColors.of(context).primary),
                         textAlign: TextAlign.center,
                       ),
 
@@ -130,8 +136,8 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
                       // Subtitle
                       Text(
                         'Enter your email address and we\'ll send you a link to reset your password.',
-                        style: AppTextStyles.bodyMedium.copyWith(
-                          color: AppColors.textSecondary,
+                        style: AppTextStyles.of(context).bodyMedium.copyWith(
+                          color: AppColors.of(context).textSecondary,
                         ),
                         textAlign: TextAlign.center,
                       ),
@@ -145,9 +151,9 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
                         controller: _emailController,
                         keyboardType: TextInputType.emailAddress,
                         textInputAction: TextInputAction.done,
-                        prefixIcon: const Icon(
+                        prefixIcon: Icon(
                           Icons.email_outlined,
-                          color: AppColors.textSecondary,
+                          color: AppColors.of(context).textSecondary,
                         ),
                         validator: Validators.validateEmail,
                       ),
@@ -174,8 +180,8 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
                         onPressed: _onBackToLoginPressed,
                         child: Text(
                           'Back to Sign In',
-                          style: AppTextStyles.bodyMedium.copyWith(
-                            color: AppColors.primary,
+                          style: AppTextStyles.of(context).bodyMedium.copyWith(
+                            color: AppColors.of(context).primary,
                             fontWeight: FontWeight.w600,
                           ),
                         ),

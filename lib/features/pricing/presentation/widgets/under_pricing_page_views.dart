@@ -20,9 +20,11 @@ class PricingLoadingView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Scaffold(
-      backgroundColor: AppColors.scaffoldBackground,
-      body: Center(child: CircularProgressIndicator(color: AppColors.primary)),
+    return Scaffold(
+      backgroundColor: AppColors.of(context).scaffoldBackground,
+      body: Center(
+        child: CircularProgressIndicator(color: AppColors.of(context).primary),
+      ),
     );
   }
 }
@@ -40,16 +42,22 @@ class PricingErrorView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.scaffoldBackground,
+      backgroundColor: AppColors.of(context).scaffoldBackground,
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.error_outline, size: 64, color: AppColors.error),
+            Icon(
+              Icons.error_outline,
+              size: 64,
+              color: AppColors.of(context).error,
+            ),
             const SizedBox(height: 16),
             Text(
               message,
-              style: AppTextStyles.bodyLarge.copyWith(color: AppColors.error),
+              style: AppTextStyles.of(
+                context,
+              ).bodyLarge.copyWith(color: AppColors.of(context).error),
             ),
             const SizedBox(height: 16),
             ElevatedButton(
@@ -69,30 +77,30 @@ class PricingEmptyReadOnlyView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.scaffoldBackground,
+      backgroundColor: AppColors.of(context).scaffoldBackground,
       body: Center(
         child: Padding(
           padding: const EdgeInsets.all(32),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(
+              Icon(
                 Icons.lock_outline_rounded,
                 size: 54,
-                color: AppColors.textMuted,
+                color: AppColors.of(context).textMuted,
               ),
               const SizedBox(height: 16),
               Text(
                 'لا توجد بيانات تسعير لهذا المشروع المؤرشف',
-                style: AppTextStyles.bodyLarge.copyWith(
-                  color: AppColors.textPrimary,
-                ),
+                style: AppTextStyles.of(
+                  context,
+                ).bodyLarge.copyWith(color: AppColors.of(context).textPrimary),
               ),
               const SizedBox(height: 8),
               Text(
                 'استعد المشروع أولاً لإضافة إصدار تسعير جديد.',
-                style: AppTextStyles.bodyMedium.copyWith(
-                  color: AppColors.textSecondary,
+                style: AppTextStyles.of(context).bodyMedium.copyWith(
+                  color: AppColors.of(context).textSecondary,
                 ),
               ),
             ],
@@ -265,6 +273,7 @@ class _PricingLayout extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final statusColor = PricingStatusUtils.getStatusColor(
+      context,
       state.pricingVersion.status,
     );
     final showMobileFinancialToggle =
@@ -366,16 +375,16 @@ class PricingMobileFinancialVisibilityButton extends StatelessWidget {
         height: 40,
         alignment: Alignment.center,
         decoration: BoxDecoration(
-          color: AppColors.inputBackground,
+          color: AppColors.of(context).inputBackground,
           borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: AppColors.inputBorder),
+          border: Border.all(color: AppColors.of(context).inputBorder),
         ),
         child: IconButton(
           padding: EdgeInsets.zero,
           constraints: const BoxConstraints.tightFor(width: 40, height: 40),
           icon: Icon(
             showFinancials ? Ionicons.eye_outline : Ionicons.eye_off_outline,
-            color: AppColors.textSecondary,
+            color: AppColors.of(context).textSecondary,
             size: 20,
           ),
           onPressed: onPressed,

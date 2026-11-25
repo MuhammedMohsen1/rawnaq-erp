@@ -39,22 +39,22 @@ class ProfitMarginInput extends StatelessWidget {
           const ArabicNumberInputFormatter(),
           FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d{0,2}')),
         ],
-        style: AppTextStyles.bodyMedium.copyWith(
-          color: AppColors.textPrimary,
+        style: AppTextStyles.of(context).bodyMedium.copyWith(
+          color: AppColors.of(context).textPrimary,
           fontWeight: FontWeight.w700,
         ),
         decoration: InputDecoration(
           labelText: 'نسبة الربح',
-          labelStyle: AppTextStyles.bodyMedium.copyWith(
-            color: AppColors.textSecondary,
+          labelStyle: AppTextStyles.of(context).bodyMedium.copyWith(
+            color: AppColors.of(context).textSecondary,
             fontWeight: FontWeight.w600,
           ),
           hintText: '0.00',
           hintStyle: TextStyle(
-            color: AppColors.textMuted.withValues(alpha: 0.5),
+            color: AppColors.of(context).textMuted.withValues(alpha: 0.5),
           ),
           filled: true,
-          fillColor: const Color(0xFF202632),
+          fillColor: AppColors.of(context).inputBackground,
           isDense: !fillHeight,
           contentPadding: const EdgeInsets.symmetric(
             horizontal: 12,
@@ -62,19 +62,22 @@ class ProfitMarginInput extends StatelessWidget {
           ),
           enabledBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(8),
-            borderSide: const BorderSide(color: Color(0xFF363C4A)),
+            borderSide: BorderSide(color: AppColors.of(context).border),
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(8),
-            borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
+            borderSide: BorderSide(
+              color: AppColors.of(context).primary,
+              width: 1.5,
+            ),
           ),
           disabledBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(8),
-            borderSide: const BorderSide(color: Color(0xFF363C4A)),
+            borderSide: BorderSide(color: AppColors.of(context).border),
           ),
           suffixText: '%',
-          suffixStyle: AppTextStyles.bodySmall.copyWith(
-            color: AppColors.textMuted,
+          suffixStyle: AppTextStyles.of(context).bodySmall.copyWith(
+            color: AppColors.of(context).textMuted,
             fontWeight: FontWeight.w700,
           ),
         ),
@@ -86,9 +89,9 @@ class ProfitMarginInput extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: const Color(0xFF1F2937),
+        color: AppColors.of(context).tableRowHover,
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: const Color(0xFF374151)),
+        border: Border.all(color: AppColors.of(context).border),
       ),
       child: Column(
         mainAxisSize: fillHeight ? MainAxisSize.max : MainAxisSize.min,
@@ -110,51 +113,51 @@ class ProfitMarginInput extends StatelessWidget {
                 const ArabicNumberInputFormatter(),
                 FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d{0,2}')),
               ],
-              style: AppTextStyles.bodyLarge.copyWith(
-                color: AppColors.textPrimary,
+              style: AppTextStyles.of(context).bodyLarge.copyWith(
+                color: AppColors.of(context).textPrimary,
                 fontWeight: FontWeight.bold,
               ),
               decoration: InputDecoration(
                 labelText: 'نسبة الربح',
-                labelStyle: AppTextStyles.bodyMedium.copyWith(
-                  color: AppColors.textSecondary,
+                labelStyle: AppTextStyles.of(context).bodyMedium.copyWith(
+                  color: AppColors.of(context).textSecondary,
                   fontWeight: FontWeight.w600,
                 ),
                 hintText: '0.00',
                 hintStyle: TextStyle(
-                  color: AppColors.textMuted.withValues(alpha: 0.5),
+                  color: AppColors.of(context).textMuted.withValues(alpha: 0.5),
                 ),
                 filled: true,
-                fillColor: const Color(0xFF111827),
+                fillColor: AppColors.of(context).inputBackground,
                 isDense: !fillHeight,
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8),
-                  borderSide: const BorderSide(color: Color(0xFF374151)),
+                  borderSide: BorderSide(color: AppColors.of(context).border),
                 ),
                 enabledBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8),
-                  borderSide: const BorderSide(color: Color(0xFF374151)),
+                  borderSide: BorderSide(color: AppColors.of(context).border),
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8),
-                  borderSide: const BorderSide(
-                    color: AppColors.primary,
+                  borderSide: BorderSide(
+                    color: AppColors.of(context).primary,
                     width: 2,
                   ),
                 ),
                 disabledBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8),
-                  borderSide: const BorderSide(color: Color(0xFF374151)),
+                  borderSide: BorderSide(color: AppColors.of(context).border),
                 ),
                 contentPadding: const EdgeInsets.symmetric(
                   horizontal: 16,
                   vertical: 12,
                 ),
-                suffixIcon: const Padding(
+                suffixIcon: Padding(
                   padding: EdgeInsets.only(right: 16),
                   child: Icon(
                     Icons.percent,
-                    color: AppColors.textMuted,
+                    color: AppColors.of(context).textMuted,
                     size: 20,
                   ),
                 ),
@@ -167,8 +170,8 @@ class ProfitMarginInput extends StatelessWidget {
             const SizedBox(height: 8),
             Text(
               'سيتم حساب السعر النهائي تلقائياً بناءً على التكلفة ونسبة الربح',
-              style: AppTextStyles.caption.copyWith(
-                color: AppColors.textMuted,
+              style: AppTextStyles.of(context).caption.copyWith(
+                color: AppColors.of(context).textMuted,
                 fontSize: 12,
               ),
             ),

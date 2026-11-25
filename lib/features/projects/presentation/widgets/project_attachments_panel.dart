@@ -1,3 +1,4 @@
+import 'package:rawnaq/core/widgets/app_toast.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -52,7 +53,8 @@ class _ProjectAttachmentsPanelContent extends StatelessWidget {
       listener: (context, state) {
         if (state is ProjectAttachmentsError) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
+            AppToast.build(
+              tone: ToastTone.error,
               duration: const Duration(seconds: 2),
               content: Text(state.message),
             ),
@@ -138,7 +140,8 @@ class _ProjectAttachmentsPanelContent extends StatelessWidget {
 
     if (filePaths.isEmpty && fileBytes.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
+        AppToast.build(
+          tone: ToastTone.error,
           duration: const Duration(seconds: 2),
           content: Text('تعذر قراءة الملفات المحددة'),
         ),
@@ -156,7 +159,8 @@ class _ProjectAttachmentsPanelContent extends StatelessWidget {
     if (context.read<ProjectAttachmentsCubit>().state
         is ProjectAttachmentsLoaded) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
+        AppToast.build(
+          tone: ToastTone.success,
           duration: const Duration(seconds: 2),
           content: Text('تم رفع المرفقات بنجاح'),
         ),
@@ -197,7 +201,8 @@ class _ProjectAttachmentsPanelContent extends StatelessWidget {
     if (context.read<ProjectAttachmentsCubit>().state
         is ProjectAttachmentsLoaded) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
+        AppToast.build(
+          tone: ToastTone.success,
           duration: const Duration(seconds: 2),
           content: Text('تم حذف المرفق'),
         ),

@@ -10,15 +10,15 @@ class ProjectListItemCardBaseGradient extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const DecoratedBox(
+    return DecoratedBox(
       decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topRight,
           end: Alignment.bottomLeft,
           colors: [
-            AppColors.surfaceColor,
-            AppColors.cardBackground,
-            AppColors.scaffoldBackground,
+            AppColors.of(context).surfaceColor,
+            AppColors.of(context).cardBackground,
+            AppColors.of(context).scaffoldBackground,
           ],
           stops: [0, 0.52, 1],
         ),
@@ -115,11 +115,13 @@ class ProjectListItemPipelineLabel extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppColors.black.withValues(alpha: 0.14),
         borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: AppColors.border.withValues(alpha: 0.80)),
+        border: Border.all(
+          color: AppColors.of(context).border.withValues(alpha: 0.80),
+        ),
       ),
       child: Text(
         groupLabel,
-        style: AppTextStyles.overline.copyWith(
+        style: AppTextStyles.of(context).overline.copyWith(
           color: accent,
           fontSize: compact ? 8.4 : 9.2,
           letterSpacing: 0,
@@ -160,9 +162,9 @@ class ProjectListItemCardMenu extends StatelessWidget {
         icon: Icon(
           Icons.more_horiz_rounded,
           size: compact ? 17 : 19,
-          color: AppColors.textMuted,
+          color: AppColors.of(context).textMuted,
         ),
-        color: AppColors.cardBackground,
+        color: AppColors.of(context).cardBackground,
         itemBuilder: (_) => [
           const PopupMenuItem(
             value: 'edit',
@@ -208,17 +210,20 @@ class ProjectListItemCardMenu extends StatelessWidget {
               ),
             ),
           if (onDelete != null)
-            const PopupMenuItem(
+            PopupMenuItem(
               value: 'delete',
               child: Row(
                 children: [
                   Icon(
                     Icons.delete_outline_rounded,
                     size: 18,
-                    color: AppColors.error,
+                    color: AppColors.of(context).error,
                   ),
                   SizedBox(width: 8),
-                  Text('حذف المشروع', style: TextStyle(color: AppColors.error)),
+                  Text(
+                    'حذف المشروع',
+                    style: TextStyle(color: AppColors.of(context).error),
+                  ),
                 ],
               ),
             ),
@@ -274,14 +279,18 @@ class ProjectListItemContactRow extends StatelessWidget {
 
     return Row(
       children: [
-        const Icon(Icons.person_outline, size: 14, color: AppColors.textMuted),
+        Icon(
+          Icons.person_outline,
+          size: 14,
+          color: AppColors.of(context).textMuted,
+        ),
         const SizedBox(width: 6),
         Expanded(
           child: Text(
             clientName,
-            style: AppTextStyles.bodyMedium.copyWith(
-              color: AppColors.textSecondary,
-            ),
+            style: AppTextStyles.of(
+              context,
+            ).bodyMedium.copyWith(color: AppColors.of(context).textSecondary),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
           ),
@@ -340,9 +349,9 @@ class ProjectListItemProgressSection extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   if (safeDateProgress != null)
-                    const _ProgressLegend(
+                    _ProgressLegend(
                       label: 'الأيام',
-                      color: AppColors.secondary,
+                      color: AppColors.of(context).secondary,
                     ),
                   if (safeDateProgress != null && safeReceivedProgress != null)
                     const SizedBox(width: 10),
@@ -359,8 +368,8 @@ class ProjectListItemProgressSection extends StatelessWidget {
                   if (safeReceivedProgress != null)
                     'باقي ${restInCash!.toStringAsFixed(2)}\$',
                 ].join('  |  '),
-                style: AppTextStyles.bodySmall.copyWith(
-                  color: AppColors.textMuted,
+                style: AppTextStyles.of(context).bodySmall.copyWith(
+                  color: AppColors.of(context).textMuted,
                   fontWeight: FontWeight.bold,
                   fontSize: 10,
                 ),
@@ -375,8 +384,8 @@ class ProjectListItemProgressSection extends StatelessWidget {
                   compactStats.join('  |  '),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: AppTextStyles.bodySmall.copyWith(
-                    color: AppColors.textMuted,
+                  style: AppTextStyles.of(context).bodySmall.copyWith(
+                    color: AppColors.of(context).textMuted,
                     fontWeight: FontWeight.w800,
                     fontSize: 9,
                     height: 1.1,
@@ -416,8 +425,8 @@ class _ProgressLegend extends StatelessWidget {
         const SizedBox(width: 4),
         Text(
           label,
-          style: AppTextStyles.bodySmall.copyWith(
-            color: AppColors.textMuted,
+          style: AppTextStyles.of(context).bodySmall.copyWith(
+            color: AppColors.of(context).textMuted,
             fontSize: 10,
           ),
         ),
@@ -444,7 +453,7 @@ class _DualProgressTrack extends StatelessWidget {
             if (dateProgress != null)
               _ProgressSegment(
                 progress: dateProgress!,
-                color: AppColors.secondary,
+                color: AppColors.of(context).secondary,
               ),
             if (receivedProgress != null)
               const _ProgressSegment(
@@ -467,7 +476,7 @@ class _DualProgressTrack extends StatelessWidget {
       height: compact ? 5 : 8,
       clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
-        color: AppColors.border.withValues(alpha: 0.4),
+        color: AppColors.of(context).border.withValues(alpha: 0.4),
         borderRadius: BorderRadius.circular(10),
       ),
       child: Stack(

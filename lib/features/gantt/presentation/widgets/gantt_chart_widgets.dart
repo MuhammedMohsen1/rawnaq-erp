@@ -128,7 +128,7 @@ class GanttChartPageBody extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('توزيع المهام', style: AppTextStyles.pageTitle),
+        Text('توزيع المهام', style: AppTextStyles.of(context).pageTitle),
         const SizedBox(height: 24),
         GanttFiltersWidget(
           selectedPeriod: selectedPeriod,
@@ -161,9 +161,9 @@ class GanttChartPageBody extends StatelessWidget {
         Expanded(
           child: Container(
             decoration: BoxDecoration(
-              color: AppColors.cardBackground,
+              color: AppColors.of(context).cardBackground,
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: AppColors.border),
+              border: Border.all(color: AppColors.of(context).border),
             ),
             child: teamMembers.isEmpty
                 ? (isLoading
@@ -213,18 +213,24 @@ class GanttEmptyState extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.event_note, size: 64, color: AppColors.textMuted),
+          Icon(
+            Icons.event_note,
+            size: 64,
+            color: AppColors.of(context).textMuted,
+          ),
           const SizedBox(height: 16),
           Text(
             'لا توجد مهام',
-            style: AppTextStyles.h5.copyWith(color: AppColors.textMuted),
+            style: AppTextStyles.of(
+              context,
+            ).h5.copyWith(color: AppColors.of(context).textMuted),
           ),
           const SizedBox(height: 8),
           Text(
             'لم يتم العثور على مهام في الفترة المحددة',
-            style: AppTextStyles.bodyMedium.copyWith(
-              color: AppColors.textMuted,
-            ),
+            style: AppTextStyles.of(
+              context,
+            ).bodyMedium.copyWith(color: AppColors.of(context).textMuted),
           ),
         ],
       ),
@@ -248,11 +254,17 @@ class GanttErrorState extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.error_outline, size: 56, color: AppColors.statusDelayed),
+          Icon(
+            Icons.error_outline,
+            size: 56,
+            color: AppColors.of(context).statusDelayed,
+          ),
           const SizedBox(height: 12),
           Text(
             errorMessage ?? 'حدث خطأ',
-            style: AppTextStyles.h5.copyWith(color: AppColors.textPrimary),
+            style: AppTextStyles.of(
+              context,
+            ).h5.copyWith(color: AppColors.of(context).textPrimary),
           ),
           const SizedBox(height: 12),
           TextButton.icon(
@@ -290,9 +302,9 @@ class GanttCompactInfoBar extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: AppColors.cardBackground,
+        color: AppColors.of(context).cardBackground,
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: AppColors.border),
+        border: Border.all(color: AppColors.of(context).border),
       ),
       child: Column(
         children: [
@@ -310,8 +322,10 @@ class GanttCompactInfoBar extends StatelessWidget {
                     ),
                     decoration: BoxDecoration(
                       color: draftTasks.isEmpty
-                          ? AppColors.surfaceColor
-                          : AppColors.statusOnHold.withValues(alpha: 0.15),
+                          ? AppColors.of(context).surfaceColor
+                          : AppColors.of(
+                              context,
+                            ).statusOnHold.withValues(alpha: 0.15),
                       borderRadius: BorderRadius.circular(6),
                     ),
                     child: Row(
@@ -321,16 +335,16 @@ class GanttCompactInfoBar extends StatelessWidget {
                           Icons.pending_actions,
                           size: 16,
                           color: draftTasks.isEmpty
-                              ? AppColors.textMuted
-                              : AppColors.statusOnHold,
+                              ? AppColors.of(context).textMuted
+                              : AppColors.of(context).statusOnHold,
                         ),
                         const SizedBox(width: 6),
                         Text(
                           'معلقة: ${draftTasks.length}',
                           style: TextStyle(
                             color: draftTasks.isEmpty
-                                ? AppColors.textMuted
-                                : AppColors.statusOnHold,
+                                ? AppColors.of(context).textMuted
+                                : AppColors.of(context).statusOnHold,
                             fontSize: 12,
                             fontWeight: FontWeight.w600,
                           ),
@@ -339,7 +353,7 @@ class GanttCompactInfoBar extends StatelessWidget {
                         Icon(
                           isExpanded ? Icons.expand_less : Icons.expand_more,
                           size: 16,
-                          color: AppColors.textMuted,
+                          color: AppColors.of(context).textMuted,
                         ),
                       ],
                     ),
@@ -349,13 +363,13 @@ class GanttCompactInfoBar extends StatelessWidget {
                     _CompactWarning(
                       icon: Icons.warning_amber,
                       text: 'مثقل: ${overloadedMembers.length}',
-                      color: AppColors.statusDelayed,
+                      color: AppColors.of(context).statusDelayed,
                     ),
                   if (delayedProjects.isNotEmpty)
                     _CompactWarning(
                       icon: Icons.schedule,
                       text: 'متأخر: ${delayedProjects.length}',
-                      color: AppColors.statusOnHold,
+                      color: AppColors.of(context).statusOnHold,
                     ),
                   const Spacer(),
                   TextButton.icon(
@@ -363,7 +377,7 @@ class GanttCompactInfoBar extends StatelessWidget {
                     icon: const Icon(Icons.add, size: 16),
                     label: const Text('إضافة مهمة'),
                     style: TextButton.styleFrom(
-                      foregroundColor: AppColors.primary,
+                      foregroundColor: AppColors.of(context).primary,
                       padding: const EdgeInsets.symmetric(
                         horizontal: 12,
                         vertical: 6,
@@ -375,15 +389,19 @@ class GanttCompactInfoBar extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(width: 8),
-                  Container(width: 1, height: 24, color: AppColors.divider),
+                  Container(
+                    width: 1,
+                    height: 24,
+                    color: AppColors.of(context).divider,
+                  ),
                   const SizedBox(width: 8),
-                  ..._legendItems(),
+                  ..._legendItems(context),
                 ],
               ),
             ),
           ),
           if (isExpanded && draftTasks.isNotEmpty) ...[
-            const Divider(height: 1, color: AppColors.divider),
+            Divider(height: 1, color: AppColors.of(context).divider),
             Padding(
               padding: const EdgeInsets.all(12),
               child: Column(
@@ -394,14 +412,14 @@ class GanttCompactInfoBar extends StatelessWidget {
                       Icon(
                         Icons.touch_app,
                         size: 14,
-                        color: AppColors.textMuted,
+                        color: AppColors.of(context).textMuted,
                       ),
                       const SizedBox(width: 6),
                       Text(
                         'اسحب المهمة إلى الموظف لتعيينها',
                         style: TextStyle(
                           fontSize: 11,
-                          color: AppColors.textMuted,
+                          color: AppColors.of(context).textMuted,
                         ),
                       ),
                     ],
@@ -432,7 +450,7 @@ class GanttCompactInfoBar extends StatelessWidget {
     );
   }
 
-  List<Widget> _legendItems() {
+  List<Widget> _legendItems(BuildContext context) {
     final items = [
       (TaskStatus.inProgress, 'جاري'),
       (TaskStatus.completed, 'مكتمل'),
@@ -450,7 +468,7 @@ class GanttCompactInfoBar extends StatelessWidget {
                   width: 10,
                   height: 10,
                   decoration: BoxDecoration(
-                    color: item.$1.color,
+                    color: item.$1.color(context),
                     borderRadius: BorderRadius.circular(3),
                   ),
                 ),
@@ -459,7 +477,7 @@ class GanttCompactInfoBar extends StatelessWidget {
                   item.$2,
                   style: TextStyle(
                     fontSize: 11,
-                    color: AppColors.textSecondary,
+                    color: AppColors.of(context).textSecondary,
                   ),
                 ),
               ],
@@ -473,7 +491,7 @@ class GanttCompactInfoBar extends StatelessWidget {
     showDialog(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        backgroundColor: AppColors.cardBackground,
+        backgroundColor: AppColors.of(context).cardBackground,
         title: const Text('حذف المهمة'),
         content: const Text('هل أنت متأكد من حذف هذه المهمة؟'),
         actions: [
@@ -487,7 +505,7 @@ class GanttCompactInfoBar extends StatelessWidget {
               await onTaskDeleted(task.id);
             },
             style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.statusDelayed,
+              backgroundColor: AppColors.of(context).statusDelayed,
             ),
             child: const Text('حذف'),
           ),

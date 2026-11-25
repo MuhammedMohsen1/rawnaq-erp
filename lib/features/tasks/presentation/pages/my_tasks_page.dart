@@ -1,3 +1,4 @@
+import 'package:rawnaq/core/widgets/app_toast.dart';
 import 'package:flutter/material.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_text_styles.dart';
@@ -60,19 +61,19 @@ class _MyTasksPageState extends State<MyTasksPage> {
       await _loadTasks();
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
+        AppToast.build(
+          tone: ToastTone.success,
           duration: const Duration(seconds: 2),
           content: Text('تم تحديث حالة المهمة: ${task.name}'),
-          backgroundColor: AppColors.statusCompleted,
         ),
       );
     } catch (_) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
+        AppToast.build(
+          tone: ToastTone.error,
           duration: const Duration(seconds: 2),
           content: Text('تعذر تحديث حالة المهمة'),
-          backgroundColor: AppColors.statusDelayed,
         ),
       );
     }
@@ -81,13 +82,13 @@ class _MyTasksPageState extends State<MyTasksPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.sidebarBackground,
+      backgroundColor: AppColors.of(context).sidebarBackground,
       body: Padding(
         padding: const EdgeInsets.all(24),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('مهامي اليوم', style: AppTextStyles.pageTitle),
+            Text('مهامي اليوم', style: AppTextStyles.of(context).pageTitle),
             const SizedBox(height: 20),
             Expanded(
               child: MyTasksBody(

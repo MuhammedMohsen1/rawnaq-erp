@@ -61,7 +61,7 @@ class _StatusBadge extends StatelessWidget {
           const SizedBox(width: 8),
           Text(
             statusText,
-            style: AppTextStyles.caption.copyWith(
+            style: AppTextStyles.of(context).caption.copyWith(
               fontSize: 12,
               fontWeight: FontWeight.w700,
               color: statusColor,

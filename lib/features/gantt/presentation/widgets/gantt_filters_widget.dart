@@ -88,23 +88,23 @@ class GanttFiltersWidget extends StatelessWidget {
     return Row(
       children: [
         // Team/My toggle (compact)
-        _buildTeamToggle(),
+        _buildTeamToggle(context),
 
         const SizedBox(width: 12),
 
-        _buildOrientationToggle(),
+        _buildOrientationToggle(context),
 
         const SizedBox(width: 12),
 
         // Member dropdown (compact)
         if (showTeamTasks) ...[
-          _buildMemberDropdown(),
+          _buildMemberDropdown(context),
           const SizedBox(width: 12),
         ],
 
         const Spacer(),
 
-        _buildZoomControls(),
+        _buildZoomControls(context),
 
         const SizedBox(width: 8),
 
@@ -114,18 +114,20 @@ class GanttFiltersWidget extends StatelessWidget {
             onPressed: onClearFilters,
             icon: const Icon(Icons.filter_alt_off, size: 20),
             tooltip: 'مسح الفلاتر',
-            style: IconButton.styleFrom(foregroundColor: AppColors.textMuted),
+            style: IconButton.styleFrom(
+              foregroundColor: AppColors.of(context).textMuted,
+            ),
           ),
       ],
     );
   }
 
-  Widget _buildZoomControls() {
+  Widget _buildZoomControls(BuildContext context) {
     final zoomPercent = (zoomLevel * 100).round();
     return Container(
       height: 36,
       decoration: BoxDecoration(
-        color: AppColors.surfaceColor,
+        color: AppColors.of(context).surfaceColor,
         borderRadius: BorderRadius.circular(8),
       ),
       child: Row(
@@ -136,7 +138,7 @@ class GanttFiltersWidget extends StatelessWidget {
             icon: const Icon(Icons.remove, size: 16),
             tooltip: 'تصغير',
             style: IconButton.styleFrom(
-              foregroundColor: AppColors.textSecondary,
+              foregroundColor: AppColors.of(context).textSecondary,
               minimumSize: const Size(34, 34),
               padding: EdgeInsets.zero,
             ),
@@ -149,8 +151,8 @@ class GanttFiltersWidget extends StatelessWidget {
               child: Text(
                 '$zoomPercent%',
                 textAlign: TextAlign.center,
-                style: const TextStyle(
-                  color: AppColors.textPrimary,
+                style: TextStyle(
+                  color: AppColors.of(context).textPrimary,
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
                 ),
@@ -162,7 +164,7 @@ class GanttFiltersWidget extends StatelessWidget {
             icon: const Icon(Icons.add, size: 16),
             tooltip: 'تكبير',
             style: IconButton.styleFrom(
-              foregroundColor: AppColors.textSecondary,
+              foregroundColor: AppColors.of(context).textSecondary,
               minimumSize: const Size(34, 34),
               padding: EdgeInsets.zero,
             ),
@@ -172,17 +174,18 @@ class GanttFiltersWidget extends StatelessWidget {
     );
   }
 
-  Widget _buildTeamToggle() {
+  Widget _buildTeamToggle(BuildContext context) {
     return Container(
       height: 36,
       decoration: BoxDecoration(
-        color: AppColors.surfaceColor,
+        color: AppColors.of(context).surfaceColor,
         borderRadius: BorderRadius.circular(8),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           _buildMiniToggle(
+            context,
             icon: Icons.person,
             label: 'مهامي',
             isSelected: !showTeamTasks,
@@ -192,6 +195,7 @@ class GanttFiltersWidget extends StatelessWidget {
             },
           ),
           _buildMiniToggle(
+            context,
             icon: Icons.group,
             label: 'الفريق',
             isSelected: showTeamTasks,
@@ -205,11 +209,11 @@ class GanttFiltersWidget extends StatelessWidget {
     );
   }
 
-  Widget _buildOrientationToggle() {
+  Widget _buildOrientationToggle(BuildContext context) {
     return Container(
       height: 36,
       decoration: BoxDecoration(
-        color: AppColors.surfaceColor,
+        color: AppColors.of(context).surfaceColor,
         borderRadius: BorderRadius.circular(8),
       ),
       child: Row(
@@ -217,6 +221,7 @@ class GanttFiltersWidget extends StatelessWidget {
         children: GanttLayoutOrientation.values.map((orientation) {
           final isSelected = selectedOrientation == orientation;
           return _buildMiniToggle(
+            context,
             icon: orientation == GanttLayoutOrientation.horizontal
                 ? Icons.swap_horiz
                 : Icons.swap_vert,
@@ -229,7 +234,8 @@ class GanttFiltersWidget extends StatelessWidget {
     );
   }
 
-  Widget _buildMiniToggle({
+  Widget _buildMiniToggle(
+    BuildContext context, {
     required IconData icon,
     required String label,
     required bool isSelected,
@@ -243,11 +249,13 @@ class GanttFiltersWidget extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 10),
         decoration: BoxDecoration(
           color: isSelected
-              ? AppColors.primary.withValues(alpha: 0.15)
+              ? AppColors.of(context).primary.withValues(alpha: 0.15)
               : Colors.transparent,
           borderRadius: BorderRadius.circular(8),
           border: isSelected
-              ? Border.all(color: AppColors.primary.withValues(alpha: 0.3))
+              ? Border.all(
+                  color: AppColors.of(context).primary.withValues(alpha: 0.3),
+                )
               : null,
         ),
         alignment: Alignment.center,
@@ -257,13 +265,17 @@ class GanttFiltersWidget extends StatelessWidget {
             Icon(
               icon,
               size: 16,
-              color: isSelected ? AppColors.primary : AppColors.textMuted,
+              color: isSelected
+                  ? AppColors.of(context).primary
+                  : AppColors.of(context).textMuted,
             ),
             const SizedBox(width: 6),
             Text(
               label,
               style: TextStyle(
-                color: isSelected ? AppColors.primary : AppColors.textSecondary,
+                color: isSelected
+                    ? AppColors.of(context).primary
+                    : AppColors.of(context).textSecondary,
                 fontSize: 12,
                 fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
               ),
@@ -274,15 +286,17 @@ class GanttFiltersWidget extends StatelessWidget {
     );
   }
 
-  Widget _buildMemberDropdown() {
+  Widget _buildMemberDropdown(BuildContext context) {
     return Container(
       height: 36,
       padding: const EdgeInsets.symmetric(horizontal: 10),
       decoration: BoxDecoration(
-        color: AppColors.surfaceColor,
+        color: AppColors.of(context).surfaceColor,
         borderRadius: BorderRadius.circular(8),
         border: selectedMemberId != null
-            ? Border.all(color: AppColors.primary.withValues(alpha: 0.3))
+            ? Border.all(
+                color: AppColors.of(context).primary.withValues(alpha: 0.3),
+              )
             : null,
       ),
       child: DropdownButtonHideUnderline(
@@ -291,31 +305,45 @@ class GanttFiltersWidget extends StatelessWidget {
           hint: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(Icons.person_search, size: 16, color: AppColors.textMuted),
+              Icon(
+                Icons.person_search,
+                size: 16,
+                color: AppColors.of(context).textMuted,
+              ),
               const SizedBox(width: 6),
               Text(
                 'كل الموظفين',
-                style: TextStyle(color: AppColors.textSecondary, fontSize: 12),
+                style: TextStyle(
+                  color: AppColors.of(context).textSecondary,
+                  fontSize: 12,
+                ),
               ),
             ],
           ),
           icon: Icon(
             Icons.arrow_drop_down,
             color: selectedMemberId != null
-                ? AppColors.primary
-                : AppColors.textMuted,
+                ? AppColors.of(context).primary
+                : AppColors.of(context).textMuted,
             size: 20,
           ),
           isDense: true,
-          dropdownColor: AppColors.cardBackground,
-          style: TextStyle(color: AppColors.textPrimary, fontSize: 12),
+          dropdownColor: AppColors.of(context).cardBackground,
+          style: TextStyle(
+            color: AppColors.of(context).textPrimary,
+            fontSize: 12,
+          ),
           items: [
             DropdownMenuItem(
               value: null,
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(Icons.groups, size: 16, color: AppColors.textMuted),
+                  Icon(
+                    Icons.groups,
+                    size: 16,
+                    color: AppColors.of(context).textMuted,
+                  ),
                   const SizedBox(width: 6),
                   const Text('كل الموظفين'),
                 ],
@@ -329,11 +357,13 @@ class GanttFiltersWidget extends StatelessWidget {
                   children: [
                     CircleAvatar(
                       radius: 10,
-                      backgroundColor: AppColors.primary.withValues(alpha: 0.2),
+                      backgroundColor: AppColors.of(
+                        context,
+                      ).primary.withValues(alpha: 0.2),
                       child: Text(
                         member.name.substring(0, 1),
                         style: TextStyle(
-                          color: AppColors.primary,
+                          color: AppColors.of(context).primary,
                           fontSize: 10,
                           fontWeight: FontWeight.bold,
                         ),

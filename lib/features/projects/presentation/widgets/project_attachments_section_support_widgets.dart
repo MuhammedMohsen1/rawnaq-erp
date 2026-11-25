@@ -74,18 +74,18 @@ class ProjectAttachmentsMarkupToolbar extends StatelessWidget {
       ),
     ];
     final colors = [
-      AppColors.error,
-      AppColors.warning,
-      AppColors.primary,
-      AppColors.success,
+      AppColors.of(context).error,
+      AppColors.of(context).warning,
+      AppColors.of(context).primary,
+      AppColors.of(context).success,
       Colors.black,
     ];
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
-        color: AppColors.surfaceColor,
-        border: Border(bottom: BorderSide(color: AppColors.border)),
+        color: AppColors.of(context).surfaceColor,
+        border: Border(bottom: BorderSide(color: AppColors.of(context).border)),
       ),
       child: Wrap(
         spacing: 8,
@@ -98,15 +98,15 @@ class ProjectAttachmentsMarkupToolbar extends StatelessWidget {
               child: IconButton(
                 style: IconButton.styleFrom(
                   backgroundColor: tool == item.tool
-                      ? AppColors.primary.withValues(alpha: 0.12)
-                      : AppColors.cardBackground,
+                      ? AppColors.of(context).primary.withValues(alpha: 0.12)
+                      : AppColors.of(context).cardBackground,
                   foregroundColor: tool == item.tool
-                      ? AppColors.primary
-                      : AppColors.textSecondary,
+                      ? AppColors.of(context).primary
+                      : AppColors.of(context).textSecondary,
                   side: BorderSide(
                     color: tool == item.tool
-                        ? AppColors.primary
-                        : AppColors.border,
+                        ? AppColors.of(context).primary
+                        : AppColors.of(context).border,
                   ),
                 ),
                 onPressed: () => onToolChanged(item.tool),
@@ -125,7 +125,9 @@ class ProjectAttachmentsMarkupToolbar extends StatelessWidget {
                   color: item,
                   shape: BoxShape.circle,
                   border: Border.all(
-                    color: color == item ? AppColors.textPrimary : Colors.white,
+                    color: color == item
+                        ? AppColors.of(context).textPrimary
+                        : Colors.white,
                     width: color == item ? 3 : 1,
                   ),
                 ),
@@ -171,9 +173,9 @@ class ProjectAttachmentsZoomControls extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: AppColors.surfaceColor,
+        color: AppColors.of(context).surfaceColor,
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: AppColors.border),
+        border: Border.all(color: AppColors.of(context).border),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -198,14 +200,14 @@ class ProjectAttachmentsZoomControls extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
               decoration: BoxDecoration(
                 border: Border.symmetric(
-                  vertical: BorderSide(color: AppColors.border),
+                  vertical: BorderSide(color: AppColors.of(context).border),
                 ),
               ),
               child: Text(
                 '${(zoomLevel * 100).round()}%',
-                style: AppTextStyles.caption.copyWith(
+                style: AppTextStyles.of(context).caption.copyWith(
                   fontWeight: FontWeight.w700,
-                  color: AppColors.textPrimary,
+                  color: AppColors.of(context).textPrimary,
                 ),
               ),
             ),
@@ -249,20 +251,20 @@ class ProjectAttachmentsPreviewHeader extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
-        color: AppColors.cardBackground,
-        border: Border(bottom: BorderSide(color: AppColors.border)),
+        color: AppColors.of(context).cardBackground,
+        border: Border(bottom: BorderSide(color: AppColors.of(context).border)),
       ),
       child: Row(
         children: [
-          Icon(icon, color: AppColors.primary, size: 20),
+          Icon(icon, color: AppColors.of(context).primary, size: 20),
           const SizedBox(width: 10),
           Expanded(
             child: Text(
               title,
               overflow: TextOverflow.ellipsis,
-              style: AppTextStyles.bodyLarge.copyWith(
-                fontWeight: FontWeight.w700,
-              ),
+              style: AppTextStyles.of(
+                context,
+              ).bodyLarge.copyWith(fontWeight: FontWeight.w700),
             ),
           ),
           if (trailing != null) trailing!,
@@ -296,9 +298,9 @@ class ProjectAttachmentsPdfPageIndicator extends StatelessWidget {
     final bool loaded = total > 0;
     return Container(
       decoration: BoxDecoration(
-        color: AppColors.cardBackground,
+        color: AppColors.of(context).cardBackground,
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: AppColors.border),
+        border: Border.all(color: AppColors.of(context).border),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -318,15 +320,15 @@ class ProjectAttachmentsPdfPageIndicator extends StatelessWidget {
                     children: [
                       Text(
                         '$current',
-                        style: AppTextStyles.caption.copyWith(
+                        style: AppTextStyles.of(context).caption.copyWith(
                           fontWeight: FontWeight.w800,
-                          color: AppColors.primary,
+                          color: AppColors.of(context).primary,
                         ),
                       ),
                       Text(
                         ' / $total',
-                        style: AppTextStyles.caption.copyWith(
-                          color: AppColors.textSecondary,
+                        style: AppTextStyles.of(context).caption.copyWith(
+                          color: AppColors.of(context).textSecondary,
                         ),
                       ),
                     ],
@@ -371,7 +373,9 @@ class _ProjectAttachmentsPageNavButton extends StatelessWidget {
           child: Icon(
             icon,
             size: 18,
-            color: onTap != null ? AppColors.textPrimary : AppColors.textMuted,
+            color: onTap != null
+                ? AppColors.of(context).textPrimary
+                : AppColors.of(context).textMuted,
           ),
         ),
       ),
@@ -389,8 +393,8 @@ class ProjectAttachmentsPdfFooterHint extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       decoration: BoxDecoration(
-        color: AppColors.surfaceColor,
-        border: Border(top: BorderSide(color: AppColors.border)),
+        color: AppColors.of(context).surfaceColor,
+        border: Border(top: BorderSide(color: AppColors.of(context).border)),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -398,12 +402,14 @@ class ProjectAttachmentsPdfFooterHint extends StatelessWidget {
           Icon(
             Icons.info_outline_rounded,
             size: 13,
-            color: AppColors.textMuted,
+            color: AppColors.of(context).textMuted,
           ),
           const SizedBox(width: 6),
           Text(
             text,
-            style: AppTextStyles.caption.copyWith(color: AppColors.textMuted),
+            style: AppTextStyles.of(
+              context,
+            ).caption.copyWith(color: AppColors.of(context).textMuted),
           ),
         ],
       ),
@@ -431,7 +437,7 @@ class ProjectAttachmentsImagePreviewDialog extends StatelessWidget {
         child: ClipRRect(
           borderRadius: BorderRadius.circular(16),
           child: Scaffold(
-            backgroundColor: AppColors.cardBackground,
+            backgroundColor: AppColors.of(context).cardBackground,
             body: Column(
               children: [
                 ProjectAttachmentsPreviewHeader(
@@ -454,11 +460,11 @@ class ProjectAttachmentsImagePreviewDialog extends StatelessWidget {
                         fit: BoxFit.contain,
                         placeholder: (context, url) =>
                             const Center(child: CircularProgressIndicator()),
-                        errorWidget: (context, url, error) => const Center(
+                        errorWidget: (context, url, error) => Center(
                           child: Icon(
                             Icons.broken_image_outlined,
                             size: 64,
-                            color: AppColors.textMuted,
+                            color: AppColors.of(context).textMuted,
                           ),
                         ),
                       ),
@@ -509,13 +515,13 @@ class _ProjectAttachmentTileState extends State<ProjectAttachmentTile> {
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
         decoration: BoxDecoration(
           color: _isHovered
-              ? AppColors.primary.withValues(alpha: 0.04)
-              : AppColors.surfaceColor,
+              ? AppColors.of(context).primary.withValues(alpha: 0.04)
+              : AppColors.of(context).surfaceColor,
           borderRadius: BorderRadius.circular(10),
           border: Border.all(
             color: _isHovered
-                ? AppColors.primary.withValues(alpha: 0.3)
-                : AppColors.border,
+                ? AppColors.of(context).primary.withValues(alpha: 0.3)
+                : AppColors.of(context).border,
           ),
         ),
         child: Row(
@@ -543,8 +549,8 @@ class _ProjectAttachmentTileState extends State<ProjectAttachmentTile> {
                   Text(
                     widget.attachment.originalName,
                     overflow: TextOverflow.ellipsis,
-                    style: AppTextStyles.bodyMedium.copyWith(
-                      color: AppColors.textPrimary,
+                    style: AppTextStyles.of(context).bodyMedium.copyWith(
+                      color: AppColors.of(context).textPrimary,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
@@ -614,7 +620,7 @@ class _ProjectAttachmentTileState extends State<ProjectAttachmentTile> {
       return const Color(0xFFF97316);
     }
     if (mimeType.contains('zip')) return const Color(0xFFA78BFA);
-    return AppColors.textSecondary;
+    return AppColors.of(context).textSecondary;
   }
 
   String _formatSize(int size) {
@@ -641,12 +647,12 @@ class ProjectAttachmentsMetaChip extends StatelessWidget {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(icon, size: 11, color: AppColors.textMuted),
+        Icon(icon, size: 11, color: AppColors.of(context).textMuted),
         const SizedBox(width: 3),
         Text(
           label,
-          style: AppTextStyles.caption.copyWith(
-            color: AppColors.textSecondary,
+          style: AppTextStyles.of(context).caption.copyWith(
+            color: AppColors.of(context).textSecondary,
             fontSize: 11,
           ),
         ),
@@ -694,7 +700,7 @@ class ProjectAttachmentsTileActions extends StatelessWidget {
           ProjectAttachmentsActionIconButton(
             icon: Icons.delete_outline_rounded,
             tooltip: 'حذف',
-            color: AppColors.error,
+            color: AppColors.of(context).error,
             onPressed: isDeleting ? null : onDelete,
           ),
       ],
@@ -729,8 +735,8 @@ class ProjectAttachmentsActionIconButton extends StatelessWidget {
             icon,
             size: 18,
             color: onPressed == null
-                ? AppColors.textMuted
-                : (color ?? AppColors.textSecondary),
+                ? AppColors.of(context).textMuted
+                : (color ?? AppColors.of(context).textSecondary),
           ),
         ),
       ),
@@ -747,9 +753,12 @@ class ProjectAttachmentsCompactEmptyState extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.symmetric(vertical: 24),
       decoration: BoxDecoration(
-        color: AppColors.surfaceColor,
+        color: AppColors.of(context).surfaceColor,
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: AppColors.border, style: BorderStyle.solid),
+        border: Border.all(
+          color: AppColors.of(context).border,
+          style: BorderStyle.solid,
+        ),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -757,27 +766,29 @@ class ProjectAttachmentsCompactEmptyState extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(
-              color: AppColors.border.withValues(alpha: 0.5),
+              color: AppColors.of(context).border.withValues(alpha: 0.5),
               shape: BoxShape.circle,
             ),
-            child: const Icon(
+            child: Icon(
               Icons.attach_file_outlined,
-              color: AppColors.textMuted,
+              color: AppColors.of(context).textMuted,
               size: 28,
             ),
           ),
           const SizedBox(height: 10),
           Text(
             'لا توجد مرفقات بعد',
-            style: AppTextStyles.bodyMedium.copyWith(
-              color: AppColors.textSecondary,
+            style: AppTextStyles.of(context).bodyMedium.copyWith(
+              color: AppColors.of(context).textSecondary,
               fontWeight: FontWeight.w600,
             ),
           ),
           const SizedBox(height: 4),
           Text(
             'اضغط على "إضافة" لرفع الملفات',
-            style: AppTextStyles.caption.copyWith(color: AppColors.textMuted),
+            style: AppTextStyles.of(
+              context,
+            ).caption.copyWith(color: AppColors.of(context).textMuted),
           ),
         ],
       ),

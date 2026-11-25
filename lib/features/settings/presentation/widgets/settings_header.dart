@@ -14,9 +14,9 @@ class SettingsHeader extends StatelessWidget {
         width: double.infinity,
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
-          color: AppColors.cardBackground,
+          color: AppColors.of(context).cardBackground,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: AppColors.border),
+          border: Border.all(color: AppColors.of(context).border),
         ),
         child: Row(
           textDirection: TextDirection.rtl,
@@ -25,12 +25,12 @@ class SettingsHeader extends StatelessWidget {
               width: 48,
               height: 48,
               decoration: BoxDecoration(
-                color: AppColors.primary.withValues(alpha: 0.1),
+                color: AppColors.of(context).primary.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(14),
               ),
-              child: const Icon(
+              child: Icon(
                 Icons.settings_outlined,
-                color: AppColors.primary,
+                color: AppColors.of(context).primary,
                 size: 26,
               ),
             ),
@@ -42,14 +42,14 @@ class SettingsHeader extends StatelessWidget {
                   Text(
                     'الإعدادات',
                     textAlign: TextAlign.right,
-                    style: AppTextStyles.pageTitle,
+                    style: AppTextStyles.of(context).pageTitle,
                   ),
                   const SizedBox(height: 6),
                   Text(
                     'تخصيص إعدادات التطبيق والحساب وإعدادات العقود الافتراضية',
                     textAlign: TextAlign.right,
-                    style: AppTextStyles.bodyMedium.copyWith(
-                      color: AppColors.textMuted,
+                    style: AppTextStyles.of(context).bodyMedium.copyWith(
+                      color: AppColors.of(context).textMuted,
                     ),
                   ),
                 ],

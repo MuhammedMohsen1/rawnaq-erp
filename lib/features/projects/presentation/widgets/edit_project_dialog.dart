@@ -103,9 +103,9 @@ class _EditProjectDialogState extends State<EditProjectDialog> {
         child: Container(
           constraints: const BoxConstraints(maxWidth: 600),
           decoration: BoxDecoration(
-            color: AppColors.cardBackground,
+            color: AppColors.of(context).cardBackground,
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: AppColors.border, width: 1),
+            border: Border.all(color: AppColors.of(context).border, width: 1),
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -134,23 +134,29 @@ class _EditProjectDialogState extends State<EditProjectDialog> {
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        border: Border(bottom: BorderSide(color: AppColors.border, width: 1)),
+        border: Border(
+          bottom: BorderSide(color: AppColors.of(context).border, width: 1),
+        ),
       ),
       child: Row(
         children: [
-          const Icon(Icons.edit_outlined, color: AppColors.primary, size: 28),
+          Icon(
+            Icons.edit_outlined,
+            color: AppColors.of(context).primary,
+            size: 28,
+          ),
           const SizedBox(width: 12),
           Expanded(
             child: Text(
               'تعديل المشروع',
-              style: AppTextStyles.h5.copyWith(
-                color: AppColors.textPrimary,
+              style: AppTextStyles.of(context).h5.copyWith(
+                color: AppColors.of(context).textPrimary,
                 fontWeight: FontWeight.bold,
               ),
             ),
           ),
           IconButton(
-            icon: const Icon(Icons.close, color: AppColors.textSecondary),
+            icon: Icon(Icons.close, color: AppColors.of(context).textSecondary),
             onPressed: () => Navigator.of(context).pop(),
           ),
         ],
@@ -166,8 +172,8 @@ class _EditProjectDialogState extends State<EditProjectDialog> {
         children: [
           Text(
             'معلومات المشروع',
-            style: AppTextStyles.h6.copyWith(
-              color: AppColors.textPrimary,
+            style: AppTextStyles.of(context).h6.copyWith(
+              color: AppColors.of(context).textPrimary,
               fontWeight: FontWeight.bold,
             ),
           ),
@@ -224,8 +230,8 @@ class _EditProjectDialogState extends State<EditProjectDialog> {
           // Client Information Section
           Text(
             'معلومات العميل',
-            style: AppTextStyles.bodyLarge.copyWith(
-              color: AppColors.textPrimary,
+            style: AppTextStyles.of(context).bodyLarge.copyWith(
+              color: AppColors.of(context).textPrimary,
               fontWeight: FontWeight.w600,
             ),
           ),
@@ -254,8 +260,8 @@ class _EditProjectDialogState extends State<EditProjectDialog> {
           // Dates Section
           Text(
             'تواريخ المشروع',
-            style: AppTextStyles.bodyLarge.copyWith(
-              color: AppColors.textPrimary,
+            style: AppTextStyles.of(context).bodyLarge.copyWith(
+              color: AppColors.of(context).textPrimary,
               fontWeight: FontWeight.w600,
             ),
           ),
@@ -298,8 +304,8 @@ class _EditProjectDialogState extends State<EditProjectDialog> {
             Expanded(
               child: Text(
                 'أرقام الهاتف',
-                style: AppTextStyles.bodyMedium.copyWith(
-                  color: AppColors.textSecondary,
+                style: AppTextStyles.of(context).bodyMedium.copyWith(
+                  color: AppColors.of(context).textSecondary,
                   fontWeight: FontWeight.w500,
                 ),
               ),
@@ -349,7 +355,7 @@ class _EditProjectDialogState extends State<EditProjectDialog> {
                     });
                   },
                   icon: const Icon(Icons.delete_outline),
-                  color: AppColors.error,
+                  color: AppColors.of(context).error,
                 ),
               ],
             ],
@@ -375,8 +381,8 @@ class _EditProjectDialogState extends State<EditProjectDialog> {
       children: [
         Text(
           label,
-          style: AppTextStyles.bodyMedium.copyWith(
-            color: AppColors.textSecondary,
+          style: AppTextStyles.of(context).bodyMedium.copyWith(
+            color: AppColors.of(context).textSecondary,
             fontWeight: FontWeight.w500,
           ),
         ),
@@ -387,39 +393,49 @@ class _EditProjectDialogState extends State<EditProjectDialog> {
           maxLines: maxLines,
           keyboardType: keyboardType,
           validator: validator,
-          style: AppTextStyles.bodyMedium.copyWith(
-            color: AppColors.textPrimary,
-          ),
+          style: AppTextStyles.of(
+            context,
+          ).bodyMedium.copyWith(color: AppColors.of(context).textPrimary),
           decoration: InputDecoration(
             hintText: hint,
-            hintStyle: AppTextStyles.bodyMedium.copyWith(
-              color: AppColors.textMuted,
+            hintStyle: AppTextStyles.of(
+              context,
+            ).bodyMedium.copyWith(color: AppColors.of(context).textMuted),
+            prefixIcon: Icon(
+              icon,
+              color: AppColors.of(context).textSecondary,
+              size: 20,
             ),
-            prefixIcon: Icon(icon, color: AppColors.textSecondary, size: 20),
             filled: true,
-            fillColor: AppColors.inputBackground,
+            fillColor: AppColors.of(context).inputBackground,
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
-              borderSide: BorderSide(color: AppColors.inputBorder),
+              borderSide: BorderSide(color: AppColors.of(context).inputBorder),
             ),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
-              borderSide: BorderSide(color: AppColors.inputBorder),
+              borderSide: BorderSide(color: AppColors.of(context).inputBorder),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
               borderSide: BorderSide(
-                color: AppColors.inputFocusBorder,
+                color: AppColors.of(context).inputFocusBorder,
                 width: 2,
               ),
             ),
             errorBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
-              borderSide: const BorderSide(color: AppColors.error, width: 1),
+              borderSide: BorderSide(
+                color: AppColors.of(context).error,
+                width: 1,
+              ),
             ),
             focusedErrorBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
-              borderSide: const BorderSide(color: AppColors.error, width: 2),
+              borderSide: BorderSide(
+                color: AppColors.of(context).error,
+                width: 2,
+              ),
             ),
           ),
         ),
@@ -437,8 +453,8 @@ class _EditProjectDialogState extends State<EditProjectDialog> {
       children: [
         Text(
           label,
-          style: AppTextStyles.bodyMedium.copyWith(
-            color: AppColors.textSecondary,
+          style: AppTextStyles.of(context).bodyMedium.copyWith(
+            color: AppColors.of(context).textSecondary,
             fontWeight: FontWeight.w500,
           ),
         ),
@@ -453,11 +469,11 @@ class _EditProjectDialogState extends State<EditProjectDialog> {
               builder: (context, child) {
                 return Theme(
                   data: Theme.of(context).copyWith(
-                    colorScheme: const ColorScheme.dark(
-                      primary: AppColors.primary,
-                      onPrimary: AppColors.scaffoldBackground,
-                      surface: AppColors.cardBackground,
-                      onSurface: AppColors.textPrimary,
+                    colorScheme: ColorScheme.dark(
+                      primary: AppColors.of(context).primary,
+                      onPrimary: AppColors.of(context).scaffoldBackground,
+                      surface: AppColors.of(context).cardBackground,
+                      onSurface: AppColors.of(context).textPrimary,
                     ),
                   ),
                   child: child!,
@@ -471,15 +487,15 @@ class _EditProjectDialogState extends State<EditProjectDialog> {
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
             decoration: BoxDecoration(
-              color: AppColors.inputBackground,
+              color: AppColors.of(context).inputBackground,
               borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: AppColors.inputBorder),
+              border: Border.all(color: AppColors.of(context).inputBorder),
             ),
             child: Row(
               children: [
-                const Icon(
+                Icon(
                   Icons.calendar_today_outlined,
-                  color: AppColors.textSecondary,
+                  color: AppColors.of(context).textSecondary,
                   size: 20,
                 ),
                 const SizedBox(width: 12),
@@ -488,16 +504,16 @@ class _EditProjectDialogState extends State<EditProjectDialog> {
                     date != null
                         ? '${date.year}/${date.month}/${date.day}'
                         : 'اختر التاريخ',
-                    style: AppTextStyles.bodyMedium.copyWith(
+                    style: AppTextStyles.of(context).bodyMedium.copyWith(
                       color: date != null
-                          ? AppColors.textPrimary
-                          : AppColors.textMuted,
+                          ? AppColors.of(context).textPrimary
+                          : AppColors.of(context).textMuted,
                     ),
                   ),
                 ),
-                const Icon(
+                Icon(
                   Icons.arrow_drop_down,
-                  color: AppColors.textSecondary,
+                  color: AppColors.of(context).textSecondary,
                 ),
               ],
             ),
@@ -511,7 +527,9 @@ class _EditProjectDialogState extends State<EditProjectDialog> {
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        border: Border(top: BorderSide(color: AppColors.border, width: 1)),
+        border: Border(
+          top: BorderSide(color: AppColors.of(context).border, width: 1),
+        ),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.end,
@@ -524,8 +542,8 @@ class _EditProjectDialogState extends State<EditProjectDialog> {
           ElevatedButton(
             onPressed: _handleSave,
             style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.primary,
-              foregroundColor: AppColors.scaffoldBackground,
+              backgroundColor: AppColors.of(context).primary,
+              foregroundColor: AppColors.of(context).scaffoldBackground,
               padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(8),
@@ -552,8 +570,7 @@ class _EditProjectDialogState extends State<EditProjectDialog> {
         authState is AuthAuthenticated &&
         authState.user.isAdmin &&
         widget.project.type.name.toUpperCase() == 'DESIGN';
-    final updatedProjectValue =
-        canEditProjectValue
+    final updatedProjectValue = canEditProjectValue
         ? double.tryParse(_projectValueController.text.trim()) ??
               widget.project.totalPrice
         : widget.project.totalPrice;

@@ -63,12 +63,12 @@ class _LoginPageContentState extends State<LoginPageContent> {
                   controller: _emailController,
                   keyboardType: TextInputType.emailAddress,
                   textInputAction: TextInputAction.next,
-                  prefixIcon: const Icon(
+                  prefixIcon: Icon(
                     Icons.email_outlined,
-                    color: AppColors.textMuted,
+                    color: AppColors.of(context).textMuted,
                   ),
                   validator: Validators.validateEmail,
-                  fillColor: AppColors.inputBackground,
+                  fillColor: AppColors.of(context).inputBackground,
                 ),
                 const SizedBox(height: 20),
                 CustomTextField(
@@ -77,12 +77,12 @@ class _LoginPageContentState extends State<LoginPageContent> {
                   controller: _passwordController,
                   obscureText: true,
                   textInputAction: TextInputAction.done,
-                  prefixIcon: const Icon(
+                  prefixIcon: Icon(
                     Icons.lock_outlined,
-                    color: AppColors.textMuted,
+                    color: AppColors.of(context).textMuted,
                   ),
                   validator: Validators.validatePasswordLogin,
-                  fillColor: AppColors.inputBackground,
+                  fillColor: AppColors.of(context).inputBackground,
                   onTap: () {
                     if (_formKey.currentState!.validate()) {
                       _onLoginPressed();
@@ -98,7 +98,7 @@ class _LoginPageContentState extends State<LoginPageContent> {
                       isLoading: state is AuthLoading,
                       width: double.infinity,
                       height: 56,
-                      backgroundColor: AppColors.statusActive,
+                      backgroundColor: AppColors.of(context).statusActive,
                     );
                   },
                 ),
@@ -125,11 +125,13 @@ class _LoginBrand extends StatelessWidget {
           height: 100,
           width: 100,
           decoration: BoxDecoration(
-            color: AppColors.statusActive,
+            color: AppColors.of(context).statusActive,
             shape: BoxShape.circle,
             boxShadow: [
               BoxShadow(
-                color: AppColors.statusActive.withValues(alpha: 0.3),
+                color: AppColors.of(
+                  context,
+                ).statusActive.withValues(alpha: 0.3),
                 blurRadius: 20,
                 spreadRadius: 5,
               ),
@@ -144,8 +146,8 @@ class _LoginBrand extends StatelessWidget {
         const SizedBox(height: 24),
         Text(
           'Rawnaq',
-          style: AppTextStyles.h1.copyWith(
-            color: AppColors.textPrimary,
+          style: AppTextStyles.of(context).h1.copyWith(
+            color: AppColors.of(context).textPrimary,
             fontWeight: FontWeight.bold,
             letterSpacing: 1.2,
           ),
@@ -153,8 +155,8 @@ class _LoginBrand extends StatelessWidget {
         const SizedBox(height: 8),
         Text(
           'نظام إدارة المشاريع',
-          style: AppTextStyles.bodyMedium.copyWith(
-            color: AppColors.textSecondary,
+          style: AppTextStyles.of(context).bodyMedium.copyWith(
+            color: AppColors.of(context).textSecondary,
             fontSize: 16,
           ),
         ),
@@ -172,8 +174,8 @@ class _LoginWelcome extends StatelessWidget {
       children: [
         Text(
           'أهلاً بعودتك!',
-          style: AppTextStyles.h2.copyWith(
-            color: AppColors.textPrimary,
+          style: AppTextStyles.of(context).h2.copyWith(
+            color: AppColors.of(context).textPrimary,
             fontWeight: FontWeight.bold,
           ),
           textAlign: TextAlign.center,
@@ -181,9 +183,9 @@ class _LoginWelcome extends StatelessWidget {
         const SizedBox(height: 12),
         Text(
           'سجل دخولك للوصول إلى لوحة التحكم',
-          style: AppTextStyles.bodyMedium.copyWith(
-            color: AppColors.textSecondary,
-          ),
+          style: AppTextStyles.of(
+            context,
+          ).bodyMedium.copyWith(color: AppColors.of(context).textSecondary),
           textAlign: TextAlign.center,
         ),
       ],
@@ -199,18 +201,24 @@ class _LoginHelpText extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.cardBackground,
+        color: AppColors.of(context).cardBackground,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.border),
+        border: Border.all(color: AppColors.of(context).border),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(Icons.help_outline, size: 18, color: AppColors.textMuted),
+          Icon(
+            Icons.help_outline,
+            size: 18,
+            color: AppColors.of(context).textMuted,
+          ),
           const SizedBox(width: 8),
           Text(
             'تحتاج مساعدة؟ تواصل مع مدير النظام',
-            style: AppTextStyles.bodySmall.copyWith(color: AppColors.textMuted),
+            style: AppTextStyles.of(
+              context,
+            ).bodySmall.copyWith(color: AppColors.of(context).textMuted),
             textAlign: TextAlign.center,
           ),
         ],

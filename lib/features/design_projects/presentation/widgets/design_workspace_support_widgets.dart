@@ -1,3 +1,4 @@
+import 'package:rawnaq/core/widgets/app_toast.dart';
 import 'package:rawnaq/core/utils/arabic_number_input_formatter.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -30,19 +31,19 @@ class DesignWorkspaceProjectHeader extends StatelessWidget {
 
     return Container(
       padding: const EdgeInsets.all(12),
-      decoration: _workspaceShellDecoration(),
+      decoration: _workspaceShellDecoration(context),
       child: Row(
         children: [
           Container(
             width: 42,
             height: 42,
             decoration: BoxDecoration(
-              color: AppColors.secondary.withValues(alpha: 0.10),
+              color: AppColors.of(context).secondary.withValues(alpha: 0.10),
               borderRadius: BorderRadius.circular(12),
             ),
-            child: const Icon(
+            child: Icon(
               Icons.palette_outlined,
-              color: AppColors.secondaryLight,
+              color: AppColors.of(context).secondaryLight,
               size: 22,
             ),
           ),
@@ -114,7 +115,8 @@ class DesignWorkspaceProjectHeader extends StatelessWidget {
       final refresh = DateTime.now().millisecondsSinceEpoch;
       context.go('${AppRoutes.projects}?refresh=$refresh');
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
+        AppToast.build(
+          tone: ToastTone.success,
           duration: const Duration(seconds: 2),
           content: Text('تم تعليم مشروع التصميم كمكتمل'),
         ),
@@ -122,7 +124,8 @@ class DesignWorkspaceProjectHeader extends StatelessWidget {
     } catch (error) {
       if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
+        AppToast.build(
+          tone: ToastTone.error,
           duration: const Duration(seconds: 2),
           content: Text('فشل إكمال المشروع: $error'),
         ),
@@ -144,7 +147,7 @@ class DesignWorkspaceFinanceDialog extends StatelessWidget {
       child: Container(
         constraints: const BoxConstraints(maxWidth: 960),
         padding: const EdgeInsets.all(24),
-        decoration: _workspaceShellDecoration(),
+        decoration: _workspaceShellDecoration(context),
         child: SingleChildScrollView(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -222,7 +225,7 @@ class _FinanceCard extends StatelessWidget {
     return Container(
       width: 190,
       padding: const EdgeInsets.all(14),
-      decoration: _cardDecoration(),
+      decoration: _cardDecoration(context),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -308,9 +311,11 @@ class DesignInstallmentsPanel extends StatelessWidget {
                 width: double.infinity,
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: AppColors.surfaceColor.withValues(alpha: 0.55),
+                  color: AppColors.of(
+                    context,
+                  ).surfaceColor.withValues(alpha: 0.55),
                   borderRadius: BorderRadius.circular(14),
-                  border: Border.all(color: AppColors.border),
+                  border: Border.all(color: AppColors.of(context).border),
                 ),
                 child: Row(
                   children: [
@@ -327,11 +332,11 @@ class DesignInstallmentsPanel extends StatelessWidget {
                           : () =>
                                 _openInstallmentsEditor(context, installments),
                       style: FilledButton.styleFrom(
-                        backgroundColor: AppColors.secondary,
+                        backgroundColor: AppColors.of(context).secondary,
                         foregroundColor: AppColors.white,
-                        disabledBackgroundColor: AppColors.secondary.withValues(
-                          alpha: 0.45,
-                        ),
+                        disabledBackgroundColor: AppColors.of(
+                          context,
+                        ).secondary.withValues(alpha: 0.45),
                         disabledForegroundColor: AppColors.white.withValues(
                           alpha: 0.7,
                         ),
@@ -355,9 +360,11 @@ class DesignInstallmentsPanel extends StatelessWidget {
                   child: Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: AppColors.surfaceColor.withValues(alpha: 0.62),
+                      color: AppColors.of(
+                        context,
+                      ).surfaceColor.withValues(alpha: 0.62),
                       borderRadius: BorderRadius.circular(14),
-                      border: Border.all(color: AppColors.border),
+                      border: Border.all(color: AppColors.of(context).border),
                     ),
                     child: Row(
                       children: [
@@ -531,11 +538,11 @@ class _InstallmentsEditorDialogState extends State<_InstallmentsEditorDialog> {
       builder: (context, child) {
         return Theme(
           data: Theme.of(context).copyWith(
-            colorScheme: const ColorScheme.dark(
-              primary: AppColors.primary,
-              onPrimary: AppColors.scaffoldBackground,
-              surface: AppColors.cardBackground,
-              onSurface: AppColors.textPrimary,
+            colorScheme: ColorScheme.dark(
+              primary: AppColors.of(context).primary,
+              onPrimary: AppColors.of(context).scaffoldBackground,
+              surface: AppColors.of(context).cardBackground,
+              onSurface: AppColors.of(context).textPrimary,
             ),
           ),
           child: child!,
@@ -581,16 +588,18 @@ class _InstallmentsEditorDialogState extends State<_InstallmentsEditorDialog> {
   @override
   Widget build(BuildContext context) {
     final buttonStyle = FilledButton.styleFrom(
-      backgroundColor: AppColors.secondary,
+      backgroundColor: AppColors.of(context).secondary,
       foregroundColor: AppColors.white,
-      disabledBackgroundColor: AppColors.secondary.withValues(alpha: 0.45),
+      disabledBackgroundColor: AppColors.of(
+        context,
+      ).secondary.withValues(alpha: 0.45),
       disabledForegroundColor: AppColors.white.withValues(alpha: 0.7),
       padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
     );
 
     return Dialog(
-      backgroundColor: AppColors.cardBackground,
+      backgroundColor: AppColors.of(context).cardBackground,
       insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
       child: SizedBox(
         width: 760,
@@ -643,11 +652,13 @@ class _InstallmentsEditorDialogState extends State<_InstallmentsEditorDialog> {
                           return Container(
                             padding: const EdgeInsets.all(14),
                             decoration: BoxDecoration(
-                              color: AppColors.surfaceColor.withValues(
-                                alpha: 0.58,
-                              ),
+                              color: AppColors.of(
+                                context,
+                              ).surfaceColor.withValues(alpha: 0.58),
                               borderRadius: BorderRadius.circular(14),
-                              border: Border.all(color: AppColors.border),
+                              border: Border.all(
+                                color: AppColors.of(context).border,
+                              ),
                             ),
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
@@ -667,7 +678,7 @@ class _InstallmentsEditorDialogState extends State<_InstallmentsEditorDialog> {
                                           ? () => _removeDraft(index)
                                           : null,
                                       icon: const Icon(Icons.delete_outline),
-                                      color: AppColors.error,
+                                      color: AppColors.of(context).error,
                                       tooltip: 'حذف الدفعة',
                                     ),
                                   ],
@@ -678,7 +689,9 @@ class _InstallmentsEditorDialogState extends State<_InstallmentsEditorDialog> {
                                     Expanded(
                                       flex: 2,
                                       child: TextField(
-                                        inputFormatters: const [ArabicNumberInputFormatter()],
+                                        inputFormatters: const [
+                                          ArabicNumberInputFormatter(),
+                                        ],
                                         controller: draft.amountController,
                                         keyboardType:
                                             const TextInputType.numberWithOptions(
@@ -702,12 +715,16 @@ class _InstallmentsEditorDialogState extends State<_InstallmentsEditorDialog> {
                                             vertical: 14,
                                           ),
                                           decoration: BoxDecoration(
-                                            color: AppColors.inputBackground,
+                                            color: AppColors.of(
+                                              context,
+                                            ).inputBackground,
                                             borderRadius: BorderRadius.circular(
                                               12,
                                             ),
                                             border: Border.all(
-                                              color: AppColors.border,
+                                              color: AppColors.of(
+                                                context,
+                                              ).border,
                                             ),
                                           ),
                                           child: Text(
@@ -755,9 +772,9 @@ class _InstallmentsEditorDialogState extends State<_InstallmentsEditorDialog> {
                 const SizedBox(height: 12),
                 Text(
                   _errorMessage!,
-                  style: Theme.of(
-                    context,
-                  ).textTheme.bodySmall?.copyWith(color: AppColors.error),
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: AppColors.of(context).error,
+                  ),
                 ),
               ],
               const SizedBox(height: 12),
@@ -772,7 +789,7 @@ class _InstallmentsEditorDialogState extends State<_InstallmentsEditorDialog> {
                   TextButton(
                     onPressed: () => Navigator.of(context).pop(),
                     style: TextButton.styleFrom(
-                      foregroundColor: AppColors.textSecondary,
+                      foregroundColor: AppColors.of(context).textSecondary,
                     ),
                     child: const Text('إلغاء'),
                   ),
@@ -792,19 +809,19 @@ class _InstallmentsEditorDialogState extends State<_InstallmentsEditorDialog> {
   }
 }
 
-BoxDecoration _workspaceShellDecoration() => BoxDecoration(
-  color: AppColors.cardBackground,
+BoxDecoration _workspaceShellDecoration(BuildContext context) => BoxDecoration(
+  color: AppColors.of(context).cardBackground,
   borderRadius: BorderRadius.circular(18),
-  border: Border.all(color: AppColors.border),
+  border: Border.all(color: AppColors.of(context).border),
   boxShadow: const [
     BoxShadow(color: Color(0x18000000), blurRadius: 18, offset: Offset(0, 8)),
   ],
 );
 
-BoxDecoration _cardDecoration() => BoxDecoration(
-  color: AppColors.cardBackground,
+BoxDecoration _cardDecoration(BuildContext context) => BoxDecoration(
+  color: AppColors.of(context).cardBackground,
   borderRadius: BorderRadius.circular(12),
-  border: Border.all(color: AppColors.border),
+  border: Border.all(color: AppColors.of(context).border),
 );
 
 String relativeTime(DateTime date) {

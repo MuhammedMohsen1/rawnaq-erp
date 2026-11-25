@@ -30,17 +30,17 @@ class ProjectTableWidget extends StatelessWidget {
 
     return Container(
       decoration: BoxDecoration(
-        color: AppColors.cardBackground,
+        color: AppColors.of(context).cardBackground,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.border),
+        border: Border.all(color: AppColors.of(context).border),
       ),
       child: Column(
         children: [
           // Table header
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            decoration: const BoxDecoration(
-              color: AppColors.tableHeader,
+            decoration: BoxDecoration(
+              color: AppColors.of(context).tableHeader,
               borderRadius: BorderRadius.only(
                 topLeft: Radius.circular(12),
                 topRight: Radius.circular(12),
@@ -50,25 +50,37 @@ class ProjectTableWidget extends StatelessWidget {
               children: [
                 Expanded(
                   flex: 3,
-                  child: Text('اسم المشروع', style: AppTextStyles.tableHeader),
+                  child: Text(
+                    'اسم المشروع',
+                    style: AppTextStyles.of(context).tableHeader,
+                  ),
                 ),
                 Expanded(
                   flex: 1,
-                  child: Text('الحالة', style: AppTextStyles.tableHeader),
+                  child: Text(
+                    'الحالة',
+                    style: AppTextStyles.of(context).tableHeader,
+                  ),
                 ),
                 Expanded(
                   flex: 2,
-                  child: Text('التقدم', style: AppTextStyles.tableHeader),
+                  child: Text(
+                    'التقدم',
+                    style: AppTextStyles.of(context).tableHeader,
+                  ),
                 ),
                 Expanded(
                   flex: 2,
-                  child: Text('تاريخ البدء', style: AppTextStyles.tableHeader),
+                  child: Text(
+                    'تاريخ البدء',
+                    style: AppTextStyles.of(context).tableHeader,
+                  ),
                 ),
                 Expanded(
                   flex: 2,
                   child: Text(
                     'تاريخ الانتهاء',
-                    style: AppTextStyles.tableHeader,
+                    style: AppTextStyles.of(context).tableHeader,
                   ),
                 ),
                 const SizedBox(width: 80), // Actions column
@@ -86,13 +98,13 @@ class ProjectTableWidget extends StatelessWidget {
                         Icon(
                           Icons.folder_open,
                           size: 64,
-                          color: AppColors.textMuted,
+                          color: AppColors.of(context).textMuted,
                         ),
                         const SizedBox(height: 16),
                         Text(
                           'لا توجد مشاريع',
-                          style: AppTextStyles.bodyLarge.copyWith(
-                            color: AppColors.textMuted,
+                          style: AppTextStyles.of(context).bodyLarge.copyWith(
+                            color: AppColors.of(context).textMuted,
                           ),
                         ),
                       ],
@@ -100,8 +112,10 @@ class ProjectTableWidget extends StatelessWidget {
                   )
                 : ListView.separated(
                     itemCount: projects.length,
-                    separatorBuilder: (context, index) =>
-                        const Divider(height: 1, color: AppColors.divider),
+                    separatorBuilder: (context, index) => Divider(
+                      height: 1,
+                      color: AppColors.of(context).divider,
+                    ),
                     itemBuilder: (context, index) {
                       final project = projects[index];
                       final isEven = index % 2 == 0;
@@ -116,8 +130,8 @@ class ProjectTableWidget extends StatelessWidget {
                             vertical: 14,
                           ),
                           color: isEven
-                              ? AppColors.tableRowEven
-                              : AppColors.tableRowOdd,
+                              ? AppColors.of(context).tableRowEven
+                              : AppColors.of(context).tableRowOdd,
                           child: Row(
                             children: [
                               // Project name
@@ -128,7 +142,9 @@ class ProjectTableWidget extends StatelessWidget {
                                     Expanded(
                                       child: Text(
                                         project.name,
-                                        style: AppTextStyles.tableCellBold,
+                                        style: AppTextStyles.of(
+                                          context,
+                                        ).tableCellBold,
                                         overflow: TextOverflow.ellipsis,
                                       ),
                                     ),
@@ -168,7 +184,7 @@ class ProjectTableWidget extends StatelessWidget {
                                 flex: 2,
                                 child: Text(
                                   dateFormat.format(project.startDate),
-                                  style: AppTextStyles.tableCell,
+                                  style: AppTextStyles.of(context).tableCell,
                                 ),
                               ),
 
@@ -177,7 +193,7 @@ class ProjectTableWidget extends StatelessWidget {
                                 flex: 2,
                                 child: Text(
                                   dateFormat.format(project.endDate),
-                                  style: AppTextStyles.tableCell,
+                                  style: AppTextStyles.of(context).tableCell,
                                 ),
                               ),
 
@@ -188,15 +204,17 @@ class ProjectTableWidget extends StatelessWidget {
                                   mainAxisAlignment: MainAxisAlignment.end,
                                   children: [
                                     PopupMenuButton<String>(
-                                      icon: const Icon(
+                                      icon: Icon(
                                         Icons.more_horiz,
-                                        color: AppColors.textMuted,
+                                        color: AppColors.of(context).textMuted,
                                       ),
-                                      color: AppColors.cardBackground,
+                                      color: AppColors.of(
+                                        context,
+                                      ).cardBackground,
                                       shape: RoundedRectangleBorder(
                                         borderRadius: BorderRadius.circular(8),
-                                        side: const BorderSide(
-                                          color: AppColors.border,
+                                        side: BorderSide(
+                                          color: AppColors.of(context).border,
                                         ),
                                       ),
                                       itemBuilder: (context) => [
@@ -226,20 +244,24 @@ class ProjectTableWidget extends StatelessWidget {
                                             ],
                                           ),
                                         ),
-                                        const PopupMenuItem(
+                                        PopupMenuItem(
                                           value: 'delete',
                                           child: Row(
                                             children: [
                                               Icon(
                                                 Icons.delete_outline,
                                                 size: 18,
-                                                color: AppColors.error,
+                                                color: AppColors.of(
+                                                  context,
+                                                ).error,
                                               ),
                                               SizedBox(width: 8),
                                               Text(
                                                 'حذف',
                                                 style: TextStyle(
-                                                  color: AppColors.error,
+                                                  color: AppColors.of(
+                                                    context,
+                                                  ).error,
                                                 ),
                                               ),
                                             ],

@@ -185,24 +185,24 @@ class _EmptyState extends StatelessWidget {
         padding: const EdgeInsets.all(32),
         child: Column(
           children: [
-            const Icon(
+            Icon(
               Icons.folder_outlined,
               size: 64,
-              color: AppColors.textMuted,
+              color: AppColors.of(context).textMuted,
             ),
             const SizedBox(height: 16),
             Text(
               'لا توجد فئات بعد',
-              style: AppTextStyles.bodyLarge.copyWith(
-                color: AppColors.textMuted,
-              ),
+              style: AppTextStyles.of(
+                context,
+              ).bodyLarge.copyWith(color: AppColors.of(context).textMuted),
             ),
             const SizedBox(height: 8),
             Text(
               'ابدأ بإضافة بند جديد',
-              style: AppTextStyles.bodyMedium.copyWith(
-                color: AppColors.textSecondary,
-              ),
+              style: AppTextStyles.of(
+                context,
+              ).bodyMedium.copyWith(color: AppColors.of(context).textSecondary),
             ),
           ],
         ),

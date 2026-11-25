@@ -18,23 +18,23 @@ class ProjectBreadcrumb extends StatelessWidget {
           onTap: () => context.go(AppRoutes.projects),
           child: Text(
             'المشاريع',
-            style: AppTextStyles.bodyMedium.copyWith(
-              color: AppColors.textSecondary,
+            style: AppTextStyles.of(context).bodyMedium.copyWith(
+              color: AppColors.of(context).textSecondary,
               fontSize: 14,
             ),
           ),
         ),
         const SizedBox(width: 8),
-        const Icon(
+        Icon(
           Icons.chevron_left,
-          color: AppColors.textSecondary,
+          color: AppColors.of(context).textSecondary,
           size: 16,
         ),
         const SizedBox(width: 8),
         Text(
           projectName ?? 'مشروع',
-          style: AppTextStyles.bodyMedium.copyWith(
-            color: AppColors.textPrimary,
+          style: AppTextStyles.of(context).bodyMedium.copyWith(
+            color: AppColors.of(context).textPrimary,
             fontSize: 14,
             fontWeight: FontWeight.w500,
           ),

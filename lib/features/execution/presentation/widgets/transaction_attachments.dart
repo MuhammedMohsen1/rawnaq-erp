@@ -35,10 +35,10 @@ class TransactionAttachments extends StatelessWidget {
               vertical: compact ? 3 : 5,
             ),
             decoration: BoxDecoration(
-              color: AppColors.primary.withValues(alpha: 0.08),
+              color: AppColors.of(context).primary.withValues(alpha: 0.08),
               borderRadius: BorderRadius.circular(999),
               border: Border.all(
-                color: AppColors.primary.withValues(alpha: 0.25),
+                color: AppColors.of(context).primary.withValues(alpha: 0.25),
               ),
             ),
             child: Row(
@@ -47,7 +47,7 @@ class TransactionAttachments extends StatelessWidget {
                 Icon(
                   Icons.attachment_outlined,
                   size: compact ? 12 : 14,
-                  color: AppColors.primary,
+                  color: AppColors.of(context).primary,
                 ),
                 const SizedBox(width: 4),
                 Flexible(
@@ -55,8 +55,8 @@ class TransactionAttachments extends StatelessWidget {
                     label,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: AppTextStyles.caption.copyWith(
-                      color: AppColors.primary,
+                    style: AppTextStyles.of(context).caption.copyWith(
+                      color: AppColors.of(context).primary,
                       fontSize: compact ? 10 : null,
                       fontWeight: FontWeight.w600,
                     ),
@@ -75,11 +75,11 @@ class TransactionAttachments extends StatelessWidget {
       context: context,
       builder: (dialogContext) {
         return Dialog(
-          backgroundColor: AppColors.cardBackground,
+          backgroundColor: AppColors.of(context).cardBackground,
           insetPadding: const EdgeInsets.all(24),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
-            side: const BorderSide(color: AppColors.border),
+            side: BorderSide(color: AppColors.of(context).border),
           ),
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 900, maxHeight: 720),
@@ -93,17 +93,17 @@ class TransactionAttachments extends StatelessWidget {
                   ),
                   child: Row(
                     children: [
-                      const Icon(
+                      Icon(
                         Icons.image_outlined,
-                        color: AppColors.primary,
+                        color: AppColors.of(context).primary,
                         size: 20,
                       ),
                       const SizedBox(width: 8),
                       Expanded(
                         child: Text(
                           'معاينة المرفق',
-                          style: AppTextStyles.bodyMedium.copyWith(
-                            color: AppColors.textPrimary,
+                          style: AppTextStyles.of(context).bodyMedium.copyWith(
+                            color: AppColors.of(context).textPrimary,
                             fontWeight: FontWeight.w700,
                           ),
                         ),
@@ -111,7 +111,7 @@ class TransactionAttachments extends StatelessWidget {
                       IconButton(
                         onPressed: () => Navigator.of(dialogContext).pop(),
                         icon: const Icon(Icons.close),
-                        color: AppColors.textSecondary,
+                        color: AppColors.of(context).textSecondary,
                         tooltip: 'إغلاق',
                       ),
                     ],
@@ -143,9 +143,10 @@ class TransactionAttachments extends StatelessWidget {
                               child: Center(
                                 child: Text(
                                   'تعذر عرض الصورة',
-                                  style: AppTextStyles.bodyMedium.copyWith(
-                                    color: AppColors.error,
-                                  ),
+                                  style: AppTextStyles.of(context).bodyMedium
+                                      .copyWith(
+                                        color: AppColors.of(context).error,
+                                      ),
                                 ),
                               ),
                             );

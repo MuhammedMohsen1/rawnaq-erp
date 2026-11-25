@@ -1,3 +1,4 @@
+import 'package:rawnaq/core/widgets/app_toast.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show ClipboardData, Clipboard;
 import 'package:url_launcher/url_launcher.dart';
@@ -42,8 +43,8 @@ class ProjectContactActions extends StatelessWidget {
               onLongPress: () =>
                   onCopy(firstContact.phone, "تم نسخ أرقام الهاتف"),
               icon: const Icon(Icons.phone_android_rounded),
-              color: AppColors.statusCompleted,
-              style: _buttonStyle(AppColors.statusCompleted),
+              color: AppColors.of(context).statusCompleted,
+              style: _buttonStyle(AppColors.of(context).statusCompleted),
             ),
           ),
         if (hasMap) ...[
@@ -53,8 +54,8 @@ class ProjectContactActions extends StatelessWidget {
             child: IconButton(
               onPressed: () => _launchMap(context, googleMapLink!.trim()),
               icon: const Icon(Icons.map_outlined),
-              color: AppColors.primary,
-              style: _buttonStyle(AppColors.primary),
+              color: AppColors.of(context).primary,
+              style: _buttonStyle(AppColors.of(context).primary),
             ),
           ),
         ],
@@ -89,7 +90,8 @@ class ProjectContactActions extends StatelessWidget {
 
     if (!context.mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
+      AppToast.build(
+        tone: ToastTone.error,
         duration: const Duration(seconds: 2),
         content: Text('تعذر فتح تطبيق الهاتف'),
       ),
@@ -105,7 +107,8 @@ class ProjectContactActions extends StatelessWidget {
 
     if (!context.mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
+      AppToast.build(
+        tone: ToastTone.error,
         duration: const Duration(seconds: 2),
         content: Text('تعذر فتح رابط خرائط جوجل'),
       ),
@@ -141,7 +144,8 @@ class ProjectContactActionsLoader extends StatelessWidget {
       onCopy: (String phone, String message) {
         Clipboard.setData(ClipboardData(text: phone));
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
+          AppToast.build(
+            tone: ToastTone.success,
             content: Text(message),
             duration: const Duration(seconds: 1),
           ),

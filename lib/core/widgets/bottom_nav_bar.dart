@@ -143,9 +143,11 @@ class AppBottomNavBar extends StatelessWidget {
             isSiteEngineer && isDesigner && !isAdminOrManager;
 
         return Container(
-          decoration: const BoxDecoration(
-            color: AppColors.sidebarBackground,
-            border: Border(top: BorderSide(color: AppColors.border, width: 1)),
+          decoration: BoxDecoration(
+            color: AppColors.of(context).sidebarBackground,
+            border: Border(
+              top: BorderSide(color: AppColors.of(context).border, width: 1),
+            ),
           ),
           child: SafeArea(
             child: SizedBox(
@@ -475,14 +477,18 @@ class AppBottomNavBar extends StatelessWidget {
           children: [
             Icon(
               isSelected ? activeIcon : icon,
-              color: isSelected ? AppColors.primary : AppColors.textMuted,
+              color: isSelected
+                  ? AppColors.of(context).primary
+                  : AppColors.of(context).textMuted,
               size: 24,
             ),
             const SizedBox(height: 4),
             Text(
               label,
               style: TextStyle(
-                color: isSelected ? AppColors.primary : AppColors.textMuted,
+                color: isSelected
+                    ? AppColors.of(context).primary
+                    : AppColors.of(context).textMuted,
                 fontSize: 10,
                 fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
               ),

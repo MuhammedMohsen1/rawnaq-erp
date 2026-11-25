@@ -42,17 +42,17 @@ class AddExpenseCompactForm extends StatelessWidget {
               width: 36,
               height: 36,
               decoration: BoxDecoration(
-                color: AppColors.error.withValues(alpha: 0.1),
+                color: AppColors.of(context).error.withValues(alpha: 0.1),
                 shape: BoxShape.circle,
               ),
-              child: const Icon(
+              child: Icon(
                 Icons.arrow_upward,
-                color: AppColors.error,
+                color: AppColors.of(context).error,
                 size: 18,
               ),
             ),
             const SizedBox(width: 12),
-            Text('إضافة مصروف', style: AppTextStyles.tableCellBold),
+            Text('إضافة مصروف', style: AppTextStyles.of(context).tableCellBold),
           ],
         ),
         const SizedBox(height: 12),
@@ -134,13 +134,13 @@ class AddExpenseCompactForm extends StatelessWidget {
           contentPadding: EdgeInsets.zero,
           title: Text(
             'مرتجع مصروف',
-            style: AppTextStyles.tableCellBold.copyWith(
-              color: AppColors.success,
-            ),
+            style: AppTextStyles.of(
+              context,
+            ).tableCellBold.copyWith(color: AppColors.of(context).success),
           ),
           subtitle: Text(
             'استخدمها عند إرجاع بقايا خامات مثل الخشب',
-            style: AppTextStyles.caption,
+            style: AppTextStyles.of(context).caption,
           ),
         ),
         const SizedBox(height: 12),
@@ -149,7 +149,7 @@ class AddExpenseCompactForm extends StatelessWidget {
           children: [
             IconButton(
               onPressed: onCancel,
-              icon: const Icon(Icons.close, color: AppColors.error),
+              icon: Icon(Icons.close, color: AppColors.of(context).error),
               tooltip: 'إلغاء',
             ),
             IconButton(
@@ -160,7 +160,7 @@ class AddExpenseCompactForm extends StatelessWidget {
                       height: 18,
                       child: CircularProgressIndicator(strokeWidth: 2),
                     )
-                  : const Icon(Icons.check, color: AppColors.success),
+                  : Icon(Icons.check, color: AppColors.of(context).success),
               tooltip: 'حفظ',
             ),
           ],

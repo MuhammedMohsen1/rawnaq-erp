@@ -1,3 +1,4 @@
+import 'package:rawnaq/core/widgets/app_toast.dart';
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
@@ -63,10 +64,10 @@ class _ImageCropDialogState extends State<ImageCropDialog> {
       });
 
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
+        AppToast.build(
+          tone: ToastTone.error,
           duration: const Duration(seconds: 2),
           content: Text('فشل في قص الصورة'),
-          backgroundColor: AppColors.error,
         ),
       );
     }
@@ -82,7 +83,7 @@ class _ImageCropDialogState extends State<ImageCropDialog> {
     final screenSize = MediaQuery.of(context).size;
 
     return Dialog(
-      backgroundColor: const Color(0xFF1A1D24),
+      backgroundColor: AppColors.of(context).cardBackground,
       insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
       child: Container(
@@ -111,15 +112,15 @@ class _ImageCropDialogState extends State<ImageCropDialog> {
           width: 38,
           height: 38,
           decoration: BoxDecoration(
-            color: AppColors.primary.withValues(alpha: 0.14),
+            color: AppColors.of(context).primary.withValues(alpha: 0.14),
             borderRadius: BorderRadius.circular(10),
             border: Border.all(
-              color: AppColors.primary.withValues(alpha: 0.35),
+              color: AppColors.of(context).primary.withValues(alpha: 0.35),
             ),
           ),
-          child: const Icon(
+          child: Icon(
             Icons.crop_free,
-            color: AppColors.primary,
+            color: AppColors.of(context).primary,
             size: 22,
           ),
         ),
@@ -130,8 +131,8 @@ class _ImageCropDialogState extends State<ImageCropDialog> {
             children: [
               Text(
                 'قص ورفع الصورة',
-                style: AppTextStyles.h3.copyWith(
-                  color: AppColors.textPrimary,
+                style: AppTextStyles.of(context).h3.copyWith(
+                  color: AppColors.of(context).textPrimary,
                   fontSize: 18,
                   fontWeight: FontWeight.w700,
                 ),
@@ -143,8 +144,8 @@ class _ImageCropDialogState extends State<ImageCropDialog> {
                     : 'Freeform - الحجم الكامل للصورة',
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: AppTextStyles.bodySmall.copyWith(
-                  color: AppColors.textSecondary,
+                style: AppTextStyles.of(context).bodySmall.copyWith(
+                  color: AppColors.of(context).textSecondary,
                   fontSize: 12,
                 ),
               ),
@@ -154,7 +155,7 @@ class _ImageCropDialogState extends State<ImageCropDialog> {
         IconButton(
           onPressed: _isCropping ? null : _close,
           tooltip: 'إغلاق',
-          icon: const Icon(Icons.close, color: AppColors.textSecondary),
+          icon: Icon(Icons.close, color: AppColors.of(context).textSecondary),
         ),
       ],
     );
@@ -165,19 +166,23 @@ class _ImageCropDialogState extends State<ImageCropDialog> {
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(
-        color: const Color(0xFF0F1217),
+        color: AppColors.of(context).inputBackground,
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: const Color(0xFF363C4A)),
+        border: Border.all(color: AppColors.of(context).border),
       ),
       child: Row(
         children: [
-          const Icon(Icons.info_outline, size: 18, color: AppColors.primary),
+          Icon(
+            Icons.info_outline,
+            size: 18,
+            color: AppColors.of(context).primary,
+          ),
           const SizedBox(width: 8),
           Expanded(
             child: Text(
               'الصورة تبدأ بالحجم الكامل. حرّك الزوايا فقط إذا كنت تريد قص جزء معين.',
-              style: AppTextStyles.bodySmall.copyWith(
-                color: AppColors.textSecondary,
+              style: AppTextStyles.of(context).bodySmall.copyWith(
+                color: AppColors.of(context).textSecondary,
                 fontSize: 12,
                 height: 1.4,
               ),
@@ -192,9 +197,9 @@ class _ImageCropDialogState extends State<ImageCropDialog> {
     return Container(
       width: double.infinity,
       decoration: BoxDecoration(
-        color: Colors.black,
+        color: AppColors.of(context).surfaceColor,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFF363C4A)),
+        border: Border.all(color: AppColors.of(context).border),
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(11),
@@ -220,14 +225,14 @@ class _ImageCropDialogState extends State<ImageCropDialog> {
 
           withCircleUi: false,
           interactive: false,
-          baseColor: Colors.black,
+          baseColor: AppColors.of(context).surfaceColor,
           maskColor: Colors.black.withValues(alpha: 0.62),
           radius: 0,
 
-          progressIndicator: const Center(
+          progressIndicator: Center(
             child: CircularProgressIndicator(
               strokeWidth: 2,
-              color: AppColors.primary,
+              color: AppColors.of(context).primary,
             ),
           ),
 
@@ -236,7 +241,7 @@ class _ImageCropDialogState extends State<ImageCropDialog> {
               width: size,
               height: size,
               decoration: BoxDecoration(
-                color: AppColors.primary,
+                color: AppColors.of(context).primary,
                 shape: BoxShape.circle,
                 border: Border.all(color: Colors.white, width: 2),
                 boxShadow: [
@@ -260,8 +265,8 @@ class _ImageCropDialogState extends State<ImageCropDialog> {
         Expanded(
           child: Text(
             'عند التأكيد سيتم استخدام الصورة الحالية ورفعها مباشرة.',
-            style: AppTextStyles.bodySmall.copyWith(
-              color: AppColors.textSecondary,
+            style: AppTextStyles.of(context).bodySmall.copyWith(
+              color: AppColors.of(context).textSecondary,
               fontSize: 12,
             ),
           ),
@@ -270,8 +275,8 @@ class _ImageCropDialogState extends State<ImageCropDialog> {
         OutlinedButton.icon(
           onPressed: _isCropping ? null : _close,
           style: OutlinedButton.styleFrom(
-            foregroundColor: AppColors.textSecondary,
-            side: const BorderSide(color: Color(0xFF363C4A)),
+            foregroundColor: AppColors.of(context).textSecondary,
+            side: BorderSide(color: AppColors.of(context).border),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(10),
             ),
@@ -280,16 +285,18 @@ class _ImageCropDialogState extends State<ImageCropDialog> {
           icon: const Icon(Icons.close, size: 18),
           label: Text(
             'إلغاء',
-            style: AppTextStyles.buttonLarge.copyWith(fontSize: 14),
+            style: AppTextStyles.of(context).buttonLarge.copyWith(fontSize: 14),
           ),
         ),
         const SizedBox(width: 10),
         OutlinedButton.icon(
           onPressed: _isCropping ? null : _onCrop,
           style: OutlinedButton.styleFrom(
-            backgroundColor: AppColors.background,
+            backgroundColor: AppColors.of(context).background,
             foregroundColor: Colors.white,
-            disabledBackgroundColor: AppColors.primary.withValues(alpha: 0.45),
+            disabledBackgroundColor: AppColors.of(
+              context,
+            ).primary.withValues(alpha: 0.45),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(10),
             ),
@@ -307,7 +314,7 @@ class _ImageCropDialogState extends State<ImageCropDialog> {
               : const Icon(Icons.cloud_upload_outlined, size: 18),
           label: Text(
             _isCropping ? 'جاري التجهيز...' : 'قص ورفع',
-            style: AppTextStyles.buttonLarge.copyWith(fontSize: 14),
+            style: AppTextStyles.of(context).buttonLarge.copyWith(fontSize: 14),
           ),
         ),
       ],

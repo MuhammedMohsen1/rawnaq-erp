@@ -51,7 +51,7 @@ class _FinancialLayout extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.scaffoldBackground,
+      backgroundColor: AppColors.of(context).scaffoldBackground,
       body: BlocBuilder<FinancialCubit, FinancialState>(
         builder: (context, state) {
           return switch (state) {
@@ -115,9 +115,9 @@ class _LoadedFinancialView extends StatelessWidget {
           ),
           if (state.period != null || state.customRange != null) ...[
             const SizedBox(height: 10),
-            const Text(
+            Text(
               'تم تطبيق الفترة على المشاريع والقيم المالية المعروضة.',
-              style: AppTextStyles.caption,
+              style: AppTextStyles.of(context).caption,
             ),
           ],
           if (isAdmin) ...[
@@ -143,14 +143,14 @@ class _FinancialHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Column(
+    return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('المالية', style: AppTextStyles.pageTitle),
+        Text('المالية', style: AppTextStyles.of(context).pageTitle),
         SizedBox(height: 6),
         Text(
           'نظرة مالية على مشاريع التنفيذ والتصميم والمشاريع المكتملة',
-          style: AppTextStyles.bodyMedium,
+          style: AppTextStyles.of(context).bodyMedium,
         ),
       ],
     );
@@ -180,9 +180,9 @@ class _PortfolioHealthStrip extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.cardBackground,
+        color: AppColors.of(context).cardBackground,
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: AppColors.border),
+        border: Border.all(color: AppColors.of(context).border),
       ),
       child: LayoutBuilder(
         builder: (context, constraints) {
@@ -190,19 +190,19 @@ class _PortfolioHealthStrip extends StatelessWidget {
             _HealthItem(
               label: 'ضمن الميزانية',
               value: healthyCount.toString(),
-              color: AppColors.success,
+              color: AppColors.of(context).success,
               icon: Icons.check_circle_outline,
             ),
             _HealthItem(
               label: 'قريب من الميزانية',
               value: warningCount.toString(),
-              color: AppColors.warning,
+              color: AppColors.of(context).warning,
               icon: Icons.error_outline,
             ),
             _HealthItem(
               label: 'تجاوز الميزانية',
               value: overBudgetCount.toString(),
-              color: AppColors.error,
+              color: AppColors.of(context).error,
               icon: Icons.warning_amber_outlined,
             ),
           ];
@@ -213,7 +213,7 @@ class _PortfolioHealthStrip extends StatelessWidget {
                 for (int index = 0; index < items.length; index++) ...[
                   items[index],
                   if (index != items.length - 1)
-                    const Divider(height: 24, color: AppColors.border),
+                    Divider(height: 24, color: AppColors.of(context).border),
                 ],
               ],
             );
@@ -252,8 +252,8 @@ class _HealthItem extends StatelessWidget {
       children: [
         Icon(icon, color: color, size: 22),
         const SizedBox(width: 10),
-        Expanded(child: Text(label, style: AppTextStyles.label)),
-        Text(value, style: AppTextStyles.h5.copyWith(color: color)),
+        Expanded(child: Text(label, style: AppTextStyles.of(context).label)),
+        Text(value, style: AppTextStyles.of(context).h5.copyWith(color: color)),
       ],
     );
   }
@@ -264,8 +264,8 @@ class _LoadingView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Center(
-      child: CircularProgressIndicator(color: AppColors.primary),
+    return Center(
+      child: CircularProgressIndicator(color: AppColors.of(context).primary),
     );
   }
 }
@@ -282,21 +282,28 @@ class _FailureView extends StatelessWidget {
         width: 420,
         padding: const EdgeInsets.all(24),
         decoration: BoxDecoration(
-          color: AppColors.cardBackground,
+          color: AppColors.of(context).cardBackground,
           borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: AppColors.border),
+          border: Border.all(color: AppColors.of(context).border),
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.error_outline, color: AppColors.error, size: 42),
+            Icon(
+              Icons.error_outline,
+              color: AppColors.of(context).error,
+              size: 42,
+            ),
             const SizedBox(height: 12),
-            const Text('تعذر تحميل البيانات المالية', style: AppTextStyles.h6),
+            Text(
+              'تعذر تحميل البيانات المالية',
+              style: AppTextStyles.of(context).h6,
+            ),
             const SizedBox(height: 8),
             Text(
               message,
               textAlign: TextAlign.center,
-              style: AppTextStyles.bodySmall,
+              style: AppTextStyles.of(context).bodySmall,
             ),
             const SizedBox(height: 16),
             ElevatedButton.icon(

@@ -47,16 +47,16 @@ extension TaskStatusExtension on TaskStatus {
   }
 
   /// Get the color associated with this status
-  Color get color {
+  Color color(BuildContext context) {
     switch (this) {
       case TaskStatus.inProgress:
-        return AppColors.statusActive; // Blue
+        return AppColors.of(context).statusActive; // Blue
       case TaskStatus.completed:
-        return AppColors.statusCompleted; // Green
+        return AppColors.of(context).statusCompleted; // Green
       case TaskStatus.waiting:
-        return AppColors.statusOnHold; // Amber/Yellow
+        return AppColors.of(context).statusOnHold; // Amber/Yellow
       case TaskStatus.delayed:
-        return AppColors.statusDelayed; // Red
+        return AppColors.of(context).statusDelayed; // Red
     }
   }
 

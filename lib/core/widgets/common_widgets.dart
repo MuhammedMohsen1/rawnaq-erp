@@ -21,7 +21,7 @@ class LoadingWidget extends StatelessWidget {
             child: CircularProgressIndicator(
               strokeWidth: 3,
               valueColor: AlwaysStoppedAnimation<Color>(
-                color ?? AppColors.primary,
+                color ?? AppColors.of(context).primary,
               ),
             ),
           ),
@@ -29,9 +29,9 @@ class LoadingWidget extends StatelessWidget {
             const SizedBox(height: 16),
             Text(
               message!,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 16,
-                color: AppColors.textSecondary,
+                color: AppColors.of(context).textSecondary,
               ),
               textAlign: TextAlign.center,
             ),
@@ -62,12 +62,16 @@ class ErrorWidget extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(icon ?? Icons.error_outline, size: 64, color: AppColors.error),
+            Icon(
+              icon ?? Icons.error_outline,
+              size: 64,
+              color: AppColors.of(context).error,
+            ),
             const SizedBox(height: 16),
             Text(
               'Oops! Something went wrong',
               style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                color: AppColors.textPrimary,
+                color: AppColors.of(context).textPrimary,
                 fontWeight: FontWeight.w600,
               ),
               textAlign: TextAlign.center,
@@ -75,9 +79,9 @@ class ErrorWidget extends StatelessWidget {
             const SizedBox(height: 8),
             Text(
               message,
-              style: Theme.of(
-                context,
-              ).textTheme.bodyMedium?.copyWith(color: AppColors.textSecondary),
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                color: AppColors.of(context).textSecondary,
+              ),
               textAlign: TextAlign.center,
             ),
             if (onRetry != null) ...[
@@ -87,7 +91,7 @@ class ErrorWidget extends StatelessWidget {
                 icon: const Icon(Icons.refresh),
                 label: Text(context.l10n.retry),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.primary,
+                  backgroundColor: AppColors.of(context).primary,
                   foregroundColor: AppColors.white,
                   padding: const EdgeInsets.symmetric(
                     horizontal: 24,
@@ -127,12 +131,16 @@ class EmptyWidget extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(icon ?? Icons.inbox_outlined, size: 64, color: AppColors.grey),
+            Icon(
+              icon ?? Icons.inbox_outlined,
+              size: 64,
+              color: AppColors.of(context).grey,
+            ),
             const SizedBox(height: 16),
             Text(
               title,
               style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                color: AppColors.textPrimary,
+                color: AppColors.of(context).textPrimary,
                 fontWeight: FontWeight.w600,
               ),
               textAlign: TextAlign.center,
@@ -142,7 +150,7 @@ class EmptyWidget extends StatelessWidget {
               Text(
                 subtitle!,
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: AppColors.textSecondary,
+                  color: AppColors.of(context).textSecondary,
                 ),
                 textAlign: TextAlign.center,
               ),
@@ -154,7 +162,7 @@ class EmptyWidget extends StatelessWidget {
                 icon: const Icon(Icons.add),
                 label: Text(actionText!),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.primary,
+                  backgroundColor: AppColors.of(context).primary,
                   foregroundColor: AppColors.white,
                   padding: const EdgeInsets.symmetric(
                     horizontal: 24,

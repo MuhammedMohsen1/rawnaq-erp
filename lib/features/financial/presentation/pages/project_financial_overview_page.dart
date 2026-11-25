@@ -15,15 +15,17 @@ class ProjectFinancialOverviewPage extends StatelessWidget {
   Widget build(BuildContext context) => BlocProvider(
     create: (_) => ProjectFinancialOverviewCubit()..load(projectId),
     child: Scaffold(
-      backgroundColor: AppColors.scaffoldBackground,
+      backgroundColor: AppColors.of(context).scaffoldBackground,
       body:
           BlocBuilder<
             ProjectFinancialOverviewCubit,
             ProjectFinancialOverviewState
           >(
             builder: (context, state) => switch (state) {
-              ProjectFinancialOverviewLoading() => const Center(
-                child: CircularProgressIndicator(color: AppColors.primary),
+              ProjectFinancialOverviewLoading() => Center(
+                child: CircularProgressIndicator(
+                  color: AppColors.of(context).primary,
+                ),
               ),
               ProjectFinancialOverviewFailure(:final message) => Center(
                 child: Text(message),
@@ -45,12 +47,12 @@ class _OverviewContent extends StatelessWidget {
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(overview.projectName, style: AppTextStyles.pageTitle),
+        Text(overview.projectName, style: AppTextStyles.of(context).pageTitle),
         const SizedBox(height: 6),
         Text(
           '${overview.projectType == 'DESIGN' ? 'تصميم' : 'تنفيذ'} • '
           '${overview.clientName ?? 'عميل غير محدد'} • ${overview.status}',
-          style: AppTextStyles.bodyMedium,
+          style: AppTextStyles.of(context).bodyMedium,
         ),
         const SizedBox(height: 20),
         _AnalyticsGrid(overview: overview),
@@ -89,17 +91,17 @@ class _AnalyticsGrid extends StatelessWidget {
               Container(
                 width: width,
                 padding: const EdgeInsets.all(16),
-                decoration: _panelDecoration(),
+                decoration: _panelDecoration(context),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(item.$1, style: AppTextStyles.caption),
+                    Text(item.$1, style: AppTextStyles.of(context).caption),
                     const SizedBox(height: 6),
                     Text(
                       item.$1 == 'استخدام الميزانية'
                           ? '${item.$2.toStringAsFixed(1)}%'
                           : formatKwd(item.$2),
-                      style: AppTextStyles.h6,
+                      style: AppTextStyles.of(context).h6,
                     ),
                   ],
                 ),
@@ -121,7 +123,7 @@ class _CashFlowChart extends StatelessWidget {
     return Container(
       height: 340,
       padding: const EdgeInsets.all(16),
-      decoration: _panelDecoration(),
+      decoration: _panelDecoration(context),
       child: dated.isEmpty
           ? const Center(child: Text('لا توجد معاملات مؤرخة لعرضها'))
           : SfCartesianChart(
@@ -168,11 +170,11 @@ class _TransactionsPanel extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Container(
     padding: const EdgeInsets.all(16),
-    decoration: _panelDecoration(),
+    decoration: _panelDecoration(context),
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text('المعاملات المالية', style: AppTextStyles.h6),
+        Text('المعاملات المالية', style: AppTextStyles.of(context).h6),
         const SizedBox(height: 12),
         if (transactions.isEmpty)
           const Text('لا توجد معاملات مالية')
@@ -183,8 +185,8 @@ class _TransactionsPanel extends StatelessWidget {
               leading: Icon(
                 item.type == 'income' ? Icons.trending_up : Icons.trending_down,
                 color: item.type == 'income'
-                    ? AppColors.success
-                    : AppColors.error,
+                    ? AppColors.of(context).success
+                    : AppColors.of(context).error,
               ),
               title: Text(item.description),
               subtitle: Text(
@@ -199,8 +201,8 @@ class _TransactionsPanel extends StatelessWidget {
   );
 }
 
-BoxDecoration _panelDecoration() => BoxDecoration(
-  color: AppColors.cardBackground,
+BoxDecoration _panelDecoration(BuildContext context) => BoxDecoration(
+  color: AppColors.of(context).cardBackground,
   borderRadius: BorderRadius.circular(8),
-  border: Border.all(color: AppColors.border),
+  border: Border.all(color: AppColors.of(context).border),
 );

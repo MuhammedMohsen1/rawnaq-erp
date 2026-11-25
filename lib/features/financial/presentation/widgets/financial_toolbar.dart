@@ -38,20 +38,27 @@ class FinancialToolbar extends StatelessWidget {
           child: TextField(
             inputFormatters: const [ArabicNumberInputFormatter()],
             onChanged: onSearchChanged,
-            style: AppTextStyles.inputText,
+            style: AppTextStyles.of(context).inputText,
             decoration: InputDecoration(
               hintText: 'بحث بالمشروع أو العميل',
-              hintStyle: AppTextStyles.inputHint,
-              prefixIcon: const Icon(Icons.search, color: AppColors.textMuted),
+              hintStyle: AppTextStyles.of(context).inputHint,
+              prefixIcon: Icon(
+                Icons.search,
+                color: AppColors.of(context).textMuted,
+              ),
               filled: true,
-              fillColor: AppColors.inputBackground,
+              fillColor: AppColors.of(context).inputBackground,
               enabledBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(8),
-                borderSide: const BorderSide(color: AppColors.inputBorder),
+                borderSide: BorderSide(
+                  color: AppColors.of(context).inputBorder,
+                ),
               ),
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(8),
-                borderSide: const BorderSide(color: AppColors.inputFocusBorder),
+                borderSide: BorderSide(
+                  color: AppColors.of(context).inputFocusBorder,
+                ),
               ),
             ),
           ),
@@ -60,14 +67,14 @@ class FinancialToolbar extends StatelessWidget {
         final actions = Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text('$projectCount مشروع', style: AppTextStyles.label),
+            Text('$projectCount مشروع', style: AppTextStyles.of(context).label),
             const SizedBox(width: 12),
             Tooltip(
               message: 'تحديث',
               child: IconButton(
                 onPressed: onRefresh,
                 icon: const Icon(Icons.refresh),
-                color: AppColors.primary,
+                color: AppColors.of(context).primary,
               ),
             ),
           ],
@@ -245,9 +252,9 @@ class _FilterSection extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: AppColors.cardBackground,
+        color: AppColors.of(context).cardBackground,
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: AppColors.border),
+        border: Border.all(color: AppColors.of(context).border),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -255,9 +262,9 @@ class _FilterSection extends StatelessWidget {
           Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(icon, size: 16, color: AppColors.textMuted),
+              Icon(icon, size: 16, color: AppColors.of(context).textMuted),
               const SizedBox(width: 8),
-              Text(title, style: AppTextStyles.label),
+              Text(title, style: AppTextStyles.of(context).label),
             ],
           ),
           const SizedBox(height: 10),

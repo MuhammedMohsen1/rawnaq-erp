@@ -3,10 +3,12 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_web_plugins/url_strategy.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'core/di/injection_container.dart';
 import 'core/theme/app_theme.dart';
 import 'core/routing/app_router.dart';
 import 'core/providers/locale_provider.dart';
+import 'core/providers/appearance_provider.dart';
 import 'features/auth/presentation/bloc/auth_bloc.dart';
 import 'l10n/app_localizations.dart';
 
@@ -19,11 +21,13 @@ void main() async {
 
   // Setup dependency injection
   await setupDI();
+  final preferences = await SharedPreferences.getInstance();
 
   runApp(
     MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => LocaleProvider()..loadLocale()),
+        ChangeNotifierProvider(create: (_) => AppearanceProvider(preferences)),
       ],
       child: const MainApp(),
     ),
@@ -91,9 +95,9 @@ class MainApp extends StatelessWidget {
                 GlobalCupertinoLocalizations.delegate,
               ],
               supportedLocales: const [Locale('en'), Locale('ar')],
-              theme: AppTheme.darkTheme,
+              theme: AppTheme.lightTheme,
               darkTheme: AppTheme.darkTheme,
-              themeMode: ThemeMode.dark,
+              themeMode: context.watch<AppearanceProvider>().mode,
               routerConfig: AppRouter.router,
               debugShowCheckedModeBanner: false,
               builder: (context, child) {

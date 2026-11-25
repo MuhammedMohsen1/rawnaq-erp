@@ -27,8 +27,8 @@ class _GlobalExpensesCardState extends State<GlobalExpensesCard> {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: const Color(0xFF1C212B),
-        border: Border.all(color: const Color(0xFF363C4A)),
+        color: AppColors.of(context).cardBackground,
+        border: Border.all(color: AppColors.of(context).border),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Column(
@@ -38,8 +38,8 @@ class _GlobalExpensesCardState extends State<GlobalExpensesCard> {
           Container(
             height: 61,
             padding: const EdgeInsets.symmetric(horizontal: 16),
-            decoration: const BoxDecoration(
-              color: Color(0xFF232936),
+            decoration: BoxDecoration(
+              color: AppColors.of(context).surfaceColor,
               borderRadius: BorderRadius.only(
                 topLeft: Radius.circular(12),
                 topRight: Radius.circular(12),
@@ -47,18 +47,17 @@ class _GlobalExpensesCardState extends State<GlobalExpensesCard> {
             ),
             child: Row(
               children: [
-                const Icon(
+                Icon(
                   Icons.receipt_long,
-                  color: AppColors.textSecondary,
+                  color: AppColors.of(context).textSecondary,
                   size: 24,
                 ),
                 const SizedBox(width: 8),
                 Text(
                   'المصروفات العامة',
-                  style: AppTextStyles.h4.copyWith(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w700,
-                  ),
+                  style: AppTextStyles.of(
+                    context,
+                  ).h4.copyWith(fontSize: 18, fontWeight: FontWeight.w700),
                 ),
                 const Spacer(),
                 // Status Badge
@@ -68,8 +67,8 @@ class _GlobalExpensesCardState extends State<GlobalExpensesCard> {
                     vertical: 5,
                   ),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF2A313D),
-                    border: Border.all(color: const Color(0xFF363C4A)),
+                    color: AppColors.of(context).surfaceColor,
+                    border: Border.all(color: AppColors.of(context).border),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Row(
@@ -79,7 +78,9 @@ class _GlobalExpensesCardState extends State<GlobalExpensesCard> {
                         width: 24,
                         height: 24,
                         decoration: BoxDecoration(
-                          color: AppColors.statusCompleted.withOpacity(0.2),
+                          color: AppColors.of(
+                            context,
+                          ).statusCompleted.withOpacity(0.2),
                           borderRadius: BorderRadius.circular(4),
                         ),
                         child: Center(
@@ -96,7 +97,7 @@ class _GlobalExpensesCardState extends State<GlobalExpensesCard> {
                       const SizedBox(width: 8),
                       Text(
                         'قيد التنفيذ',
-                        style: AppTextStyles.caption.copyWith(
+                        style: AppTextStyles.of(context).caption.copyWith(
                           fontSize: 12,
                           fontWeight: FontWeight.w700,
                           color: const Color(0xFF4ADE80),
@@ -106,9 +107,9 @@ class _GlobalExpensesCardState extends State<GlobalExpensesCard> {
                       const SizedBox(width: 8),
                       Text(
                         'Status',
-                        style: AppTextStyles.caption.copyWith(
+                        style: AppTextStyles.of(context).caption.copyWith(
                           fontSize: 12,
-                          color: AppColors.textSecondary,
+                          color: AppColors.of(context).textSecondary,
                         ),
                       ),
                     ],
@@ -123,7 +124,7 @@ class _GlobalExpensesCardState extends State<GlobalExpensesCard> {
                   },
                   icon: Icon(
                     _isExpanded ? Icons.expand_less : Icons.expand_more,
-                    color: AppColors.textSecondary,
+                    color: AppColors.of(context).textSecondary,
                     size: 24,
                   ),
                   padding: EdgeInsets.zero,
@@ -148,10 +149,10 @@ class _GlobalExpensesCardState extends State<GlobalExpensesCard> {
                           flex: 2,
                           child: Text(
                             'وصف العنصر',
-                            style: AppTextStyles.caption.copyWith(
+                            style: AppTextStyles.of(context).caption.copyWith(
                               fontSize: 12,
                               fontWeight: FontWeight.w500,
-                              color: const Color(0xFF6B7280),
+                              color: AppColors.of(context).textMuted,
                             ),
                           ),
                         ),
@@ -160,10 +161,10 @@ class _GlobalExpensesCardState extends State<GlobalExpensesCard> {
                           flex: 2,
                           child: Text(
                             'التكلفة (دينار)',
-                            style: AppTextStyles.caption.copyWith(
+                            style: AppTextStyles.of(context).caption.copyWith(
                               fontSize: 12,
                               fontWeight: FontWeight.w500,
-                              color: const Color(0xFF6B7280),
+                              color: AppColors.of(context).textMuted,
                             ),
                             textAlign: TextAlign.center,
                           ),
@@ -198,7 +199,9 @@ class _GlobalExpensesCardState extends State<GlobalExpensesCard> {
                   Container(
                     height: 46,
                     decoration: BoxDecoration(
-                      border: Border.all(color: const Color(0xFF4B5563)),
+                      border: Border.all(
+                        color: AppColors.of(context).textDisabled,
+                      ),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: InkWell(
@@ -206,19 +209,20 @@ class _GlobalExpensesCardState extends State<GlobalExpensesCard> {
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          const Icon(
+                          Icon(
                             Icons.add,
-                            color: AppColors.textSecondary,
+                            color: AppColors.of(context).textSecondary,
                             size: 20,
                           ),
                           const SizedBox(width: 8),
                           Text(
                             'إضافة صف',
-                            style: AppTextStyles.bodyMedium.copyWith(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w500,
-                              color: AppColors.textSecondary,
-                            ),
+                            style: AppTextStyles.of(context).bodyMedium
+                                .copyWith(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w500,
+                                  color: AppColors.of(context).textSecondary,
+                                ),
                           ),
                         ],
                       ),

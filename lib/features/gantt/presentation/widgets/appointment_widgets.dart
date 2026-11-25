@@ -18,9 +18,9 @@ class AppointmentTooltip extends StatelessWidget {
       padding: const EdgeInsets.all(12),
       constraints: const BoxConstraints(maxWidth: 250),
       decoration: BoxDecoration(
-        color: AppColors.cardBackground,
+        color: AppColors.of(context).cardBackground,
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: AppColors.border),
+        border: Border.all(color: AppColors.of(context).border),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.3),
@@ -38,15 +38,15 @@ class AppointmentTooltip extends StatelessWidget {
             children: [
               Icon(
                 Icons.calendar_today,
-                color: TaskType.appointment.color,
+                color: TaskType.appointment.color(context),
                 size: 16,
               ),
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
                   task.name,
-                  style: AppTextStyles.tableCellBold.copyWith(
-                    color: AppColors.textPrimary,
+                  style: AppTextStyles.of(context).tableCellBold.copyWith(
+                    color: AppColors.of(context).textPrimary,
                   ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
@@ -55,24 +55,29 @@ class AppointmentTooltip extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 8),
-          const Divider(color: AppColors.divider, height: 1),
+          Divider(color: AppColors.of(context).divider, height: 1),
           const SizedBox(height: 8),
 
           // Customer info
           if (task.customerName != null) ...[
-            _buildInfoRow(Icons.person_outline, task.customerName!),
+            _buildInfoRow(context, Icons.person_outline, task.customerName!),
             const SizedBox(height: 6),
           ],
           if (task.customerPhone != null) ...[
-            _buildInfoRow(Icons.phone_outlined, task.customerPhone!),
+            _buildInfoRow(context, Icons.phone_outlined, task.customerPhone!),
             const SizedBox(height: 6),
           ],
           if (task.formattedAppointmentTime != null) ...[
-            _buildInfoRow(Icons.access_time, task.formattedAppointmentTime!),
+            _buildInfoRow(
+              context,
+              Icons.access_time,
+              task.formattedAppointmentTime!,
+            ),
             const SizedBox(height: 6),
           ],
           if (task.locationLink != null) ...[
             _buildInfoRow(
+              context,
               Icons.location_on_outlined,
               'عرض الموقع',
               isLink: true,
@@ -82,8 +87,8 @@ class AppointmentTooltip extends StatelessWidget {
           const SizedBox(height: 8),
           Text(
             'اضغط لعرض التفاصيل',
-            style: AppTextStyles.caption.copyWith(
-              color: AppColors.textMuted,
+            style: AppTextStyles.of(context).caption.copyWith(
+              color: AppColors.of(context).textMuted,
               fontStyle: FontStyle.italic,
             ),
           ),
@@ -92,16 +97,23 @@ class AppointmentTooltip extends StatelessWidget {
     );
   }
 
-  Widget _buildInfoRow(IconData icon, String text, {bool isLink = false}) {
+  Widget _buildInfoRow(
+    BuildContext context,
+    IconData icon,
+    String text, {
+    bool isLink = false,
+  }) {
     return Row(
       children: [
-        Icon(icon, size: 14, color: AppColors.textMuted),
+        Icon(icon, size: 14, color: AppColors.of(context).textMuted),
         const SizedBox(width: 8),
         Expanded(
           child: Text(
             text,
-            style: AppTextStyles.caption.copyWith(
-              color: isLink ? AppColors.primary : AppColors.textSecondary,
+            style: AppTextStyles.of(context).caption.copyWith(
+              color: isLink
+                  ? AppColors.of(context).primary
+                  : AppColors.of(context).textSecondary,
             ),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
@@ -121,7 +133,7 @@ class AppointmentDetailsDialog extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Dialog(
-      backgroundColor: AppColors.cardBackground,
+      backgroundColor: AppColors.of(context).cardBackground,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: Container(
         width: 400,
@@ -136,12 +148,14 @@ class AppointmentDetailsDialog extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: TaskType.appointment.color.withValues(alpha: 0.15),
+                    color: TaskType.appointment
+                        .color(context)
+                        .withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Icon(
                     Icons.calendar_today,
-                    color: TaskType.appointment.color,
+                    color: TaskType.appointment.color(context),
                     size: 24,
                   ),
                 ),
@@ -150,7 +164,7 @@ class AppointmentDetailsDialog extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(task.name, style: AppTextStyles.h5),
+                      Text(task.name, style: AppTextStyles.of(context).h5),
                       const SizedBox(height: 4),
                       Container(
                         padding: const EdgeInsets.symmetric(
@@ -158,13 +172,15 @@ class AppointmentDetailsDialog extends StatelessWidget {
                           vertical: 2,
                         ),
                         decoration: BoxDecoration(
-                          color: task.status.color.withValues(alpha: 0.15),
+                          color: task.status
+                              .color(context)
+                              .withValues(alpha: 0.15),
                           borderRadius: BorderRadius.circular(4),
                         ),
                         child: Text(
                           task.status.arabicName,
                           style: TextStyle(
-                            color: task.status.color,
+                            color: task.status.color(context),
                             fontSize: 12,
                             fontWeight: FontWeight.w500,
                           ),
@@ -174,27 +190,31 @@ class AppointmentDetailsDialog extends StatelessWidget {
                   ),
                 ),
                 IconButton(
-                  icon: const Icon(Icons.close, color: AppColors.textMuted),
+                  icon: Icon(
+                    Icons.close,
+                    color: AppColors.of(context).textMuted,
+                  ),
                   onPressed: () => Navigator.pop(context),
                 ),
               ],
             ),
 
             const SizedBox(height: 24),
-            const Divider(color: AppColors.divider),
+            Divider(color: AppColors.of(context).divider),
             const SizedBox(height: 16),
 
             // Customer Details Section
             Text(
               'بيانات العميل',
-              style: AppTextStyles.inputLabel.copyWith(
-                color: AppColors.textMuted,
-              ),
+              style: AppTextStyles.of(
+                context,
+              ).inputLabel.copyWith(color: AppColors.of(context).textMuted),
             ),
             const SizedBox(height: 12),
 
             if (task.customerName != null)
               _buildDetailRow(
+                context,
                 icon: Icons.person,
                 label: 'الاسم',
                 value: task.customerName!,
@@ -202,6 +222,7 @@ class AppointmentDetailsDialog extends StatelessWidget {
 
             if (task.customerPhone != null)
               _buildDetailRow(
+                context,
                 icon: Icons.phone,
                 label: 'الهاتف',
                 value: task.customerPhone!,
@@ -213,13 +234,14 @@ class AppointmentDetailsDialog extends StatelessWidget {
             // Appointment Details Section
             Text(
               'تفاصيل الموعد',
-              style: AppTextStyles.inputLabel.copyWith(
-                color: AppColors.textMuted,
-              ),
+              style: AppTextStyles.of(
+                context,
+              ).inputLabel.copyWith(color: AppColors.of(context).textMuted),
             ),
             const SizedBox(height: 12),
 
             _buildDetailRow(
+              context,
               icon: Icons.calendar_today,
               label: 'التاريخ',
               value: _formatDate(task.startDate),
@@ -227,6 +249,7 @@ class AppointmentDetailsDialog extends StatelessWidget {
 
             if (task.formattedAppointmentTime != null)
               _buildDetailRow(
+                context,
                 icon: Icons.access_time,
                 label: 'الوقت',
                 value: task.formattedAppointmentTime!,
@@ -234,6 +257,7 @@ class AppointmentDetailsDialog extends StatelessWidget {
 
             if (task.assignee != null)
               _buildDetailRow(
+                context,
                 icon: Icons.person_pin,
                 label: 'المسؤول',
                 value: task.assignee!.name,
@@ -248,19 +272,22 @@ class AppointmentDetailsDialog extends StatelessWidget {
               const SizedBox(height: 16),
               Text(
                 'ملاحظات',
-                style: AppTextStyles.inputLabel.copyWith(
-                  color: AppColors.textMuted,
-                ),
+                style: AppTextStyles.of(
+                  context,
+                ).inputLabel.copyWith(color: AppColors.of(context).textMuted),
               ),
               const SizedBox(height: 8),
               Container(
                 width: double.infinity,
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: AppColors.surfaceColor,
+                  color: AppColors.of(context).surfaceColor,
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: Text(task.notes!, style: AppTextStyles.bodyMedium),
+                child: Text(
+                  task.notes!,
+                  style: AppTextStyles.of(context).bodyMedium,
+                ),
               ),
             ],
 
@@ -276,16 +303,18 @@ class AppointmentDetailsDialog extends StatelessWidget {
                     icon: const Icon(Icons.phone, size: 18),
                     label: const Text('اتصال'),
                     style: OutlinedButton.styleFrom(
-                      foregroundColor: AppColors.statusActive,
-                      side: const BorderSide(color: AppColors.statusActive),
+                      foregroundColor: AppColors.of(context).statusActive,
+                      side: BorderSide(
+                        color: AppColors.of(context).statusActive,
+                      ),
                     ),
                   ),
                 const SizedBox(width: 12),
                 ElevatedButton(
                   onPressed: () => Navigator.pop(context),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.primary,
-                    foregroundColor: AppColors.scaffoldBackground,
+                    backgroundColor: AppColors.of(context).primary,
+                    foregroundColor: AppColors.of(context).scaffoldBackground,
                   ),
                   child: const Text('إغلاق'),
                 ),
@@ -297,7 +326,8 @@ class AppointmentDetailsDialog extends StatelessWidget {
     );
   }
 
-  Widget _buildDetailRow({
+  Widget _buildDetailRow(
+    BuildContext context, {
     required IconData icon,
     required String label,
     required String value,
@@ -310,10 +340,10 @@ class AppointmentDetailsDialog extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: AppColors.surfaceColor,
+              color: AppColors.of(context).surfaceColor,
               borderRadius: BorderRadius.circular(8),
             ),
-            child: Icon(icon, size: 18, color: AppColors.textMuted),
+            child: Icon(icon, size: 18, color: AppColors.of(context).textMuted),
           ),
           const SizedBox(width: 12),
           Column(
@@ -321,9 +351,9 @@ class AppointmentDetailsDialog extends StatelessWidget {
             children: [
               Text(
                 label,
-                style: AppTextStyles.caption.copyWith(
-                  color: AppColors.textMuted,
-                ),
+                style: AppTextStyles.of(
+                  context,
+                ).caption.copyWith(color: AppColors.of(context).textMuted),
               ),
               const SizedBox(height: 2),
               isPhone
@@ -331,13 +361,13 @@ class AppointmentDetailsDialog extends StatelessWidget {
                       onTap: () => _makePhoneCall(value),
                       child: Text(
                         value,
-                        style: AppTextStyles.bodyMedium.copyWith(
-                          color: AppColors.statusActive,
+                        style: AppTextStyles.of(context).bodyMedium.copyWith(
+                          color: AppColors.of(context).statusActive,
                           decoration: TextDecoration.underline,
                         ),
                       ),
                     )
-                  : Text(value, style: AppTextStyles.bodyMedium),
+                  : Text(value, style: AppTextStyles.of(context).bodyMedium),
             ],
           ),
         ],
@@ -352,10 +382,10 @@ class AppointmentDetailsDialog extends StatelessWidget {
         width: double.infinity,
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: AppColors.statusActive.withValues(alpha: 0.1),
+          color: AppColors.of(context).statusActive.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: AppColors.statusActive.withValues(alpha: 0.3),
+            color: AppColors.of(context).statusActive.withValues(alpha: 0.3),
           ),
         ),
         child: Row(
@@ -363,12 +393,14 @@ class AppointmentDetailsDialog extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
-                color: AppColors.statusActive.withValues(alpha: 0.15),
+                color: AppColors.of(
+                  context,
+                ).statusActive.withValues(alpha: 0.15),
                 shape: BoxShape.circle,
               ),
-              child: const Icon(
+              child: Icon(
                 Icons.location_on,
-                color: AppColors.statusActive,
+                color: AppColors.of(context).statusActive,
                 size: 24,
               ),
             ),
@@ -379,8 +411,8 @@ class AppointmentDetailsDialog extends StatelessWidget {
                 children: [
                   Text(
                     'موقع الموعد',
-                    style: AppTextStyles.inputLabel.copyWith(
-                      color: AppColors.statusActive,
+                    style: AppTextStyles.of(context).inputLabel.copyWith(
+                      color: AppColors.of(context).statusActive,
                     ),
                   ),
                   const SizedBox(height: 4),
@@ -388,16 +420,16 @@ class AppointmentDetailsDialog extends StatelessWidget {
                     task.locationLink!.length > 40
                         ? '${task.locationLink!.substring(0, 40)}...'
                         : task.locationLink!,
-                    style: AppTextStyles.caption.copyWith(
-                      color: AppColors.textMuted,
-                    ),
+                    style: AppTextStyles.of(
+                      context,
+                    ).caption.copyWith(color: AppColors.of(context).textMuted),
                   ),
                 ],
               ),
             ),
-            const Icon(
+            Icon(
               Icons.open_in_new,
-              color: AppColors.statusActive,
+              color: AppColors.of(context).statusActive,
               size: 20,
             ),
           ],
@@ -545,11 +577,13 @@ class _AppointmentCircleState extends State<AppointmentCircle> {
               width: 38,
               height: 38,
               decoration: BoxDecoration(
-                color: widget.task.status.color,
+                color: widget.task.status.color(context),
                 shape: BoxShape.circle,
                 boxShadow: [
                   BoxShadow(
-                    color: widget.task.status.color.withValues(alpha: 0.5),
+                    color: widget.task.status
+                        .color(context)
+                        .withValues(alpha: 0.5),
                     blurRadius: 12,
                     offset: const Offset(0, 4),
                   ),
@@ -577,13 +611,13 @@ class _AppointmentCircleState extends State<AppointmentCircle> {
       width: _isHovered ? 38 : 32,
       height: _isHovered ? 38 : 32,
       decoration: BoxDecoration(
-        color: widget.task.status.color,
+        color: widget.task.status.color(context),
         shape: BoxShape.circle,
         boxShadow: [
           BoxShadow(
-            color: widget.task.status.color.withValues(
-              alpha: _isHovered ? 0.5 : 0.3,
-            ),
+            color: widget.task.status
+                .color(context)
+                .withValues(alpha: _isHovered ? 0.5 : 0.3),
             blurRadius: _isHovered ? 8 : 4,
             offset: const Offset(0, 2),
           ),

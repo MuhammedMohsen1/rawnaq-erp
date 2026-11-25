@@ -1,3 +1,4 @@
+import 'package:rawnaq/core/widgets/app_toast.dart';
 import 'dart:io';
 
 import 'package:dio/dio.dart';
@@ -47,9 +48,9 @@ class ProjectAttachmentsSection extends StatelessWidget {
 
     return Container(
       decoration: BoxDecoration(
-        color: AppColors.cardBackground,
+        color: AppColors.of(context).cardBackground,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.border),
+        border: Border.all(color: AppColors.of(context).border),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.04),
@@ -76,12 +77,12 @@ class ProjectAttachmentsSection extends StatelessWidget {
             width: 36,
             height: 36,
             decoration: BoxDecoration(
-              color: AppColors.primary.withValues(alpha: 0.1),
+              color: AppColors.of(context).primary.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(8),
             ),
-            child: const Icon(
+            child: Icon(
               Icons.attach_file_rounded,
-              color: AppColors.primary,
+              color: AppColors.of(context).primary,
               size: 20,
             ),
           ),
@@ -89,8 +90,8 @@ class ProjectAttachmentsSection extends StatelessWidget {
             children: [
               Text(
                 'المرفقات',
-                style: AppTextStyles.bodyLarge.copyWith(
-                  color: AppColors.textPrimary,
+                style: AppTextStyles.of(context).bodyLarge.copyWith(
+                  color: AppColors.of(context).textPrimary,
                   fontWeight: FontWeight.w800,
                 ),
               ),
@@ -103,16 +104,16 @@ class ProjectAttachmentsSection extends StatelessWidget {
             child: attachments.isEmpty
                 ? Text(
                     'أضف ملفات المشروع عند الحاجة',
-                    style: AppTextStyles.caption.copyWith(
-                      color: AppColors.textSecondary,
+                    style: AppTextStyles.of(context).caption.copyWith(
+                      color: AppColors.of(context).textSecondary,
                     ),
                   )
                 : Text(
                     visibleAttachments.map((a) => a.originalName).join('، '),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: AppTextStyles.caption.copyWith(
-                      color: AppColors.textSecondary,
+                    style: AppTextStyles.of(context).caption.copyWith(
+                      color: AppColors.of(context).textSecondary,
                     ),
                   ),
           ),
@@ -122,9 +123,9 @@ class ProjectAttachmentsSection extends StatelessWidget {
               if (canUpload)
                 _UploadButton(isUploading: isUploading, onUpload: onUpload),
               const SizedBox(width: 4),
-              const Icon(
+              Icon(
                 Icons.keyboard_arrow_down_rounded,
-                color: AppColors.textSecondary,
+                color: AppColors.of(context).textSecondary,
               ),
             ],
           ),
@@ -183,31 +184,31 @@ class _UploadButton extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
           decoration: BoxDecoration(
-            color: AppColors.primary.withValues(alpha: 0.08),
+            color: AppColors.of(context).primary.withValues(alpha: 0.08),
             borderRadius: BorderRadius.circular(8),
           ),
           child: isUploading
-              ? const SizedBox(
+              ? SizedBox(
                   width: 16,
                   height: 16,
                   child: CircularProgressIndicator(
                     strokeWidth: 2,
-                    color: AppColors.primary,
+                    color: AppColors.of(context).primary,
                   ),
                 )
               : Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Icon(
+                    Icon(
                       Icons.add_rounded,
                       size: 16,
-                      color: AppColors.primary,
+                      color: AppColors.of(context).primary,
                     ),
                     const SizedBox(width: 4),
                     Text(
                       'إضافة',
-                      style: AppTextStyles.caption.copyWith(
-                        color: AppColors.primary,
+                      style: AppTextStyles.of(context).caption.copyWith(
+                        color: AppColors.of(context).primary,
                         fontWeight: FontWeight.w700,
                       ),
                     ),
@@ -233,14 +234,16 @@ class _AttachmentCountBadge extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
       decoration: BoxDecoration(
         color: count > 0
-            ? AppColors.primary.withValues(alpha: 0.12)
-            : AppColors.border,
+            ? AppColors.of(context).primary.withValues(alpha: 0.12)
+            : AppColors.of(context).border,
         borderRadius: BorderRadius.circular(999),
       ),
       child: Text(
         '$count',
-        style: AppTextStyles.caption.copyWith(
-          color: count > 0 ? AppColors.primary : AppColors.textSecondary,
+        style: AppTextStyles.of(context).caption.copyWith(
+          color: count > 0
+              ? AppColors.of(context).primary
+              : AppColors.of(context).textSecondary,
           fontWeight: FontWeight.w800,
         ),
       ),
@@ -294,21 +297,10 @@ Future<void> _downloadProjectAttachment(
 
     if (!context.mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
+      AppToast.build(
+        tone: ToastTone.success,
         duration: const Duration(seconds: 2),
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-        content: Row(
-          children: [
-            const Icon(
-              Icons.check_circle_outline,
-              color: Colors.white,
-              size: 18,
-            ),
-            const SizedBox(width: 8),
-            Expanded(child: Text('تم تحميل: $fileName')),
-          ],
-        ),
+        content: Text('تم تحميل: $fileName'),
         action: SnackBarAction(
           label: 'فتح',
           onPressed: () => OpenFile.open(targetPath),
@@ -323,10 +315,9 @@ Future<void> _downloadProjectAttachment(
 
 void _showSnackBar(BuildContext context, String message) {
   ScaffoldMessenger.of(context).showSnackBar(
-    SnackBar(
+    AppToast.build(
+      tone: ToastTone.error,
       duration: const Duration(seconds: 2),
-      behavior: SnackBarBehavior.floating,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
       content: Text(message),
     ),
   );

@@ -1,3 +1,4 @@
+import 'package:rawnaq/core/widgets/app_toast.dart';
 import 'package:rawnaq/core/utils/arabic_number_input_formatter.dart';
 import 'dart:io';
 import 'dart:math' as math;
@@ -175,20 +176,22 @@ class _PdfAttachmentPreviewState extends State<_PdfAttachmentPreview> {
         child: ClipRRect(
           borderRadius: BorderRadius.circular(16),
           child: Scaffold(
-            backgroundColor: AppColors.cardBackground,
+            backgroundColor: AppColors.of(context).cardBackground,
             body: Column(
               children: [
                 Container(
                   padding: const EdgeInsets.fromLTRB(16, 12, 8, 12),
                   decoration: BoxDecoration(
-                    color: AppColors.cardBackground,
-                    border: Border(bottom: BorderSide(color: AppColors.border)),
+                    color: AppColors.of(context).cardBackground,
+                    border: Border(
+                      bottom: BorderSide(color: AppColors.of(context).border),
+                    ),
                   ),
                   child: Row(
                     children: [
                       Icon(
                         Icons.picture_as_pdf_outlined,
-                        color: AppColors.primary,
+                        color: AppColors.of(context).primary,
                         size: 20,
                       ),
                       const SizedBox(width: 10),
@@ -196,9 +199,9 @@ class _PdfAttachmentPreviewState extends State<_PdfAttachmentPreview> {
                         child: Text(
                           widget.attachment.originalName,
                           overflow: TextOverflow.ellipsis,
-                          style: AppTextStyles.bodyLarge.copyWith(
-                            fontWeight: FontWeight.w700,
-                          ),
+                          style: AppTextStyles.of(
+                            context,
+                          ).bodyLarge.copyWith(fontWeight: FontWeight.w700),
                         ),
                       ),
                       IconButton(
@@ -215,8 +218,10 @@ class _PdfAttachmentPreviewState extends State<_PdfAttachmentPreview> {
                     vertical: 8,
                   ),
                   decoration: BoxDecoration(
-                    color: AppColors.surfaceColor,
-                    border: Border(bottom: BorderSide(color: AppColors.border)),
+                    color: AppColors.of(context).surfaceColor,
+                    border: Border(
+                      bottom: BorderSide(color: AppColors.of(context).border),
+                    ),
                   ),
                   child: Row(
                     children: [
@@ -243,12 +248,12 @@ class _PdfAttachmentPreviewState extends State<_PdfAttachmentPreview> {
                         child: InkWell(
                           onTap: _openEditor,
                           borderRadius: BorderRadius.circular(8),
-                          child: const Padding(
+                          child: Padding(
                             padding: EdgeInsets.all(6),
                             child: Icon(
                               Icons.edit_outlined,
                               size: 20,
-                              color: AppColors.primary,
+                              color: AppColors.of(context).primary,
                             ),
                           ),
                         ),
@@ -259,12 +264,12 @@ class _PdfAttachmentPreviewState extends State<_PdfAttachmentPreview> {
                         child: InkWell(
                           onTap: () => widget.onDownload(widget.attachment),
                           borderRadius: BorderRadius.circular(8),
-                          child: const Padding(
+                          child: Padding(
                             padding: EdgeInsets.all(6),
                             child: Icon(
                               Icons.download_outlined,
                               size: 20,
-                              color: AppColors.textSecondary,
+                              color: AppColors.of(context).textSecondary,
                             ),
                           ),
                         ),
@@ -308,8 +313,10 @@ class _PdfAttachmentPreviewState extends State<_PdfAttachmentPreview> {
                     vertical: 8,
                   ),
                   decoration: BoxDecoration(
-                    color: AppColors.surfaceColor,
-                    border: Border(top: BorderSide(color: AppColors.border)),
+                    color: AppColors.of(context).surfaceColor,
+                    border: Border(
+                      top: BorderSide(color: AppColors.of(context).border),
+                    ),
                   ),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
@@ -317,15 +324,15 @@ class _PdfAttachmentPreviewState extends State<_PdfAttachmentPreview> {
                       Icon(
                         Icons.info_outline_rounded,
                         size: 13,
-                        color: AppColors.textMuted,
+                        color: AppColors.of(context).textMuted,
                       ),
                       const SizedBox(width: 6),
                       Text(
                         isDesktop
                             ? 'Ctrl/⌘ + تمرير أو قرصة للتكبير  ·  ← → للتنقل بين الصفحات'
                             : 'قرصة بإصبعين للتكبير  ·  اسحب للتنقل',
-                        style: AppTextStyles.caption.copyWith(
-                          color: AppColors.textMuted,
+                        style: AppTextStyles.of(context).caption.copyWith(
+                          color: AppColors.of(context).textMuted,
                         ),
                       ),
                     ],
@@ -359,7 +366,7 @@ class _PdfMarkupEditorDialogState extends State<_PdfMarkupEditorDialog> {
   final List<_PdfMarkup> _redoStack = [];
   List<int>? _pdfBytes;
   ProjectAttachmentsMarkupTool _tool = ProjectAttachmentsMarkupTool.pen;
-  Color _color = AppColors.error;
+  Color _color = AppColors.dark.error;
   double _strokeWidth = 3;
   double _zoomLevel = 1;
   int _currentPage = 1;
@@ -568,7 +575,11 @@ class _PdfMarkupEditorDialogState extends State<_PdfMarkupEditorDialog> {
       await widget.onSave(savedBytes);
       if (!mounted) return;
       Navigator.of(context).pop();
-      _showSnackBar(context, 'تم حفظ التعديلات على PDF');
+      _showSnackBar(
+        context,
+        'تم حفظ التعديلات على PDF',
+        tone: ToastTone.success,
+      );
     } catch (_) {
       if (!mounted) return;
       _showSnackBar(context, 'فشل حفظ تعديلات PDF');
@@ -589,7 +600,7 @@ class _PdfMarkupEditorDialogState extends State<_PdfMarkupEditorDialog> {
       },
       child: Dialog.fullscreen(
         child: Scaffold(
-          backgroundColor: AppColors.cardBackground,
+          backgroundColor: AppColors.of(context).cardBackground,
           appBar: AppBar(
             title: Text(
               widget.attachment.originalName,
@@ -715,8 +726,10 @@ class _PdfMarkupEditorDialogState extends State<_PdfMarkupEditorDialog> {
                   vertical: 8,
                 ),
                 decoration: BoxDecoration(
-                  color: AppColors.surfaceColor,
-                  border: Border(top: BorderSide(color: AppColors.border)),
+                  color: AppColors.of(context).surfaceColor,
+                  border: Border(
+                    top: BorderSide(color: AppColors.of(context).border),
+                  ),
                 ),
                 child: Row(
                   children: [
@@ -735,10 +748,10 @@ class _PdfMarkupEditorDialogState extends State<_PdfMarkupEditorDialog> {
                       _hasUnsavedChanges
                           ? 'هناك تعديلات غير محفوظة'
                           : 'لا توجد تعديلات',
-                      style: AppTextStyles.caption.copyWith(
+                      style: AppTextStyles.of(context).caption.copyWith(
                         color: _hasUnsavedChanges
-                            ? AppColors.warning
-                            : AppColors.textMuted,
+                            ? AppColors.of(context).warning
+                            : AppColors.of(context).textMuted,
                       ),
                     ),
                   ],
@@ -1046,12 +1059,15 @@ void _drawPdfArrow(
     ..drawLine(pen, end, p2);
 }
 
-void _showSnackBar(BuildContext context, String message) {
+void _showSnackBar(
+  BuildContext context,
+  String message, {
+  ToastTone tone = ToastTone.error,
+}) {
   ScaffoldMessenger.of(context).showSnackBar(
-    SnackBar(
+    AppToast.build(
+      tone: tone,
       duration: const Duration(seconds: 2),
-      behavior: SnackBarBehavior.floating,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
       content: Text(message),
     ),
   );

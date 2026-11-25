@@ -96,8 +96,8 @@ class ProjectsListView extends StatelessWidget {
         if (title.isNotEmpty) ...[
           Text(
             title,
-            style: AppTextStyles.h4.copyWith(
-              color: AppColors.textPrimary,
+            style: AppTextStyles.of(context).h4.copyWith(
+              color: AppColors.of(context).textPrimary,
               fontWeight: FontWeight.w700,
             ),
           ),
@@ -235,8 +235,8 @@ class _PagedProjectsGrid extends StatelessWidget {
           controller: pagingController,
           builder: (context, pagingState, fetchNextPage) {
             return RefreshIndicator(
-              color: AppColors.secondary,
-              backgroundColor: AppColors.cardBackground,
+              color: AppColors.of(context).secondary,
+              backgroundColor: AppColors.of(context).cardBackground,
               onRefresh: () async {
                 onRetry();
                 pagingController.refresh();

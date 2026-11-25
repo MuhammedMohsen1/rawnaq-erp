@@ -48,7 +48,7 @@ class _ExpenseGroupCardState extends State<ExpenseGroupCard> {
       case ExpenseGroupStatus.completed:
         return const Color(0xFF60A5FA);
       case ExpenseGroupStatus.underPricing:
-        return AppColors.statusOnHold;
+        return AppColors.of(context).statusOnHold;
     }
   }
 
@@ -57,8 +57,8 @@ class _ExpenseGroupCardState extends State<ExpenseGroupCard> {
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
-        color: const Color(0xFF1C212B),
-        border: Border.all(color: const Color(0xFF363C4A)),
+        color: AppColors.of(context).cardBackground,
+        border: Border.all(color: AppColors.of(context).border),
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
@@ -75,8 +75,8 @@ class _ExpenseGroupCardState extends State<ExpenseGroupCard> {
           Container(
             height: 61,
             padding: const EdgeInsets.symmetric(horizontal: 16),
-            decoration: const BoxDecoration(
-              color: Color(0xFF232936),
+            decoration: BoxDecoration(
+              color: AppColors.of(context).surfaceColor,
               borderRadius: BorderRadius.only(
                 topLeft: Radius.circular(12),
                 topRight: Radius.circular(12),
@@ -84,19 +84,18 @@ class _ExpenseGroupCardState extends State<ExpenseGroupCard> {
             ),
             child: Row(
               children: [
-                const Icon(
+                Icon(
                   Icons.receipt_long,
-                  color: AppColors.textSecondary,
+                  color: AppColors.of(context).textSecondary,
                   size: 24,
                 ),
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
                     widget.group.name,
-                    style: AppTextStyles.h4.copyWith(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w700,
-                    ),
+                    style: AppTextStyles.of(
+                      context,
+                    ).h4.copyWith(fontSize: 18, fontWeight: FontWeight.w700),
                   ),
                 ),
                 const Spacer(),
@@ -107,8 +106,8 @@ class _ExpenseGroupCardState extends State<ExpenseGroupCard> {
                     vertical: 5,
                   ),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF2A313D),
-                    border: Border.all(color: const Color(0xFF363C4A)),
+                    color: AppColors.of(context).surfaceColor,
+                    border: Border.all(color: AppColors.of(context).border),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Row(
@@ -137,7 +136,7 @@ class _ExpenseGroupCardState extends State<ExpenseGroupCard> {
                       const SizedBox(width: 8),
                       Text(
                         _getStatusText(widget.group.status),
-                        style: AppTextStyles.caption.copyWith(
+                        style: AppTextStyles.of(context).caption.copyWith(
                           fontSize: 12,
                           fontWeight: FontWeight.w700,
                           color: _getStatusColor(widget.group.status),
@@ -147,9 +146,9 @@ class _ExpenseGroupCardState extends State<ExpenseGroupCard> {
                       const SizedBox(width: 8),
                       Text(
                         'Status',
-                        style: AppTextStyles.caption.copyWith(
+                        style: AppTextStyles.of(context).caption.copyWith(
                           fontSize: 12,
-                          color: AppColors.textSecondary,
+                          color: AppColors.of(context).textSecondary,
                         ),
                       ),
                     ],
@@ -169,7 +168,7 @@ class _ExpenseGroupCardState extends State<ExpenseGroupCard> {
                   },
                   icon: Icon(
                     _isExpanded ? Icons.expand_less : Icons.expand_more,
-                    color: AppColors.textSecondary,
+                    color: AppColors.of(context).textSecondary,
                     size: 24,
                   ),
                   padding: EdgeInsets.zero,
@@ -194,10 +193,10 @@ class _ExpenseGroupCardState extends State<ExpenseGroupCard> {
                           flex: 2,
                           child: Text(
                             'وصف العنصر',
-                            style: AppTextStyles.caption.copyWith(
+                            style: AppTextStyles.of(context).caption.copyWith(
                               fontSize: 12,
                               fontWeight: FontWeight.w500,
-                              color: const Color(0xFF6B7280),
+                              color: AppColors.of(context).textMuted,
                             ),
                           ),
                         ),
@@ -206,10 +205,10 @@ class _ExpenseGroupCardState extends State<ExpenseGroupCard> {
                           flex: 2,
                           child: Text(
                             'التكلفة (دينار)',
-                            style: AppTextStyles.caption.copyWith(
+                            style: AppTextStyles.of(context).caption.copyWith(
                               fontSize: 12,
                               fontWeight: FontWeight.w500,
-                              color: const Color(0xFF6B7280),
+                              color: AppColors.of(context).textMuted,
                             ),
                             textAlign: TextAlign.center,
                           ),
@@ -260,7 +259,9 @@ class _ExpenseGroupCardState extends State<ExpenseGroupCard> {
                   Container(
                     height: 46,
                     decoration: BoxDecoration(
-                      border: Border.all(color: const Color(0xFF4B5563)),
+                      border: Border.all(
+                        color: AppColors.of(context).textDisabled,
+                      ),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: InkWell(
@@ -268,19 +269,20 @@ class _ExpenseGroupCardState extends State<ExpenseGroupCard> {
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          const Icon(
+                          Icon(
                             Icons.add,
-                            color: AppColors.textSecondary,
+                            color: AppColors.of(context).textSecondary,
                             size: 20,
                           ),
                           const SizedBox(width: 8),
                           Text(
                             'إضافة صف',
-                            style: AppTextStyles.bodyMedium.copyWith(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w500,
-                              color: AppColors.textSecondary,
-                            ),
+                            style: AppTextStyles.of(context).bodyMedium
+                                .copyWith(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w500,
+                                  color: AppColors.of(context).textSecondary,
+                                ),
                           ),
                         ],
                       ),
@@ -293,18 +295,20 @@ class _ExpenseGroupCardState extends State<ExpenseGroupCard> {
                       vertical: 17.22,
                       horizontal: 20,
                     ),
-                    decoration: const BoxDecoration(
-                      border: Border(top: BorderSide(color: Color(0xFF363C4A))),
+                    decoration: BoxDecoration(
+                      border: Border(
+                        top: BorderSide(color: AppColors.of(context).border),
+                      ),
                     ),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text(
                           'المجموع الفرعي',
-                          style: AppTextStyles.bodyMedium.copyWith(
+                          style: AppTextStyles.of(context).bodyMedium.copyWith(
                             fontSize: 14,
                             fontWeight: FontWeight.w500,
-                            color: AppColors.textSecondary,
+                            color: AppColors.of(context).textSecondary,
                           ),
                         ),
                         Row(
@@ -316,20 +320,21 @@ class _ExpenseGroupCardState extends State<ExpenseGroupCard> {
                                     RegExp(r'(\d)(?=(\d{3})+(?!\d))'),
                                     (Match m) => '${m[1]},',
                                   ),
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontFamily: 'Menlo',
                                 fontSize: 20,
                                 fontWeight: FontWeight.w700,
-                                color: AppColors.textPrimary,
+                                color: AppColors.of(context).textPrimary,
                               ),
                             ),
                             const SizedBox(width: 8),
                             Text(
                               'KD',
-                              style: AppTextStyles.bodyMedium.copyWith(
-                                fontSize: 14,
-                                color: const Color(0xFF6B7280),
-                              ),
+                              style: AppTextStyles.of(context).bodyMedium
+                                  .copyWith(
+                                    fontSize: 14,
+                                    color: AppColors.of(context).textMuted,
+                                  ),
                             ),
                           ],
                         ),

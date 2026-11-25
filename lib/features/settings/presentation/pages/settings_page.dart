@@ -1,3 +1,4 @@
+import 'package:rawnaq/core/widgets/app_toast.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -5,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/routing/app_router.dart';
 import '../../../auth/presentation/bloc/auth_bloc.dart';
+import '../widgets/appearance_selector.dart';
 import '../widgets/contract_terms_widgets.dart';
 import '../widgets/language_selector.dart';
 import '../widgets/settings_header.dart';
@@ -27,10 +29,9 @@ class SettingsPage extends StatelessWidget {
             context.go(AppRoutes.login);
           } else if (state is AuthError) {
             ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
+              AppToast.build(
+                tone: ToastTone.error,
                 content: Text(state.message),
-                backgroundColor: Colors.red,
-                behavior: SnackBarBehavior.floating,
                 margin: const EdgeInsets.all(16),
                 duration: const Duration(seconds: 2),
               ),
@@ -38,7 +39,7 @@ class SettingsPage extends StatelessWidget {
           }
         },
         child: Scaffold(
-          backgroundColor: AppColors.sidebarBackground,
+          backgroundColor: AppColors.of(context).sidebarBackground,
           body: SafeArea(
             child: LayoutBuilder(
               builder: (context, constraints) {
@@ -67,16 +68,11 @@ class SettingsPage extends StatelessWidget {
 
                           const SizedBox(height: 16),
 
-                          SettingsSection(
+                          const SettingsSection(
                             title: 'المظهر',
                             subtitle: 'إعدادات شكل التطبيق',
                             icon: Icons.palette_outlined,
-                            child: SettingsTile(
-                              title: 'الوضع الداكن',
-                              subtitle: 'مفعّل حاليا',
-                              leadingIcon: Icons.dark_mode_outlined,
-                              trailing: Switch(value: true, onChanged: null),
-                            ),
+                            child: AppearanceSelector(),
                           ),
 
                           const SizedBox(height: 16),
@@ -96,8 +92,8 @@ class SettingsPage extends StatelessWidget {
                                     onChanged: (value) {},
                                   ),
                                 ),
-                                const Divider(
-                                  color: AppColors.divider,
+                                Divider(
+                                  color: AppColors.of(context).divider,
                                   height: 1,
                                 ),
                                 SettingsTile(
@@ -152,7 +148,7 @@ class SettingsPage extends StatelessWidget {
                             },
                           ),
 
-                          const SettingsSection(
+                          SettingsSection(
                             title: 'حول التطبيق',
                             subtitle: 'معلومات الإصدار والنظام',
                             icon: Icons.info_outline,
@@ -163,7 +159,10 @@ class SettingsPage extends StatelessWidget {
                                   subtitle: '1.0.0',
                                   leadingIcon: Icons.verified_outlined,
                                 ),
-                                Divider(color: AppColors.divider, height: 1),
+                                Divider(
+                                  color: AppColors.of(context).divider,
+                                  height: 1,
+                                ),
                                 SettingsTile(
                                   title: 'رونق',
                                   subtitle:

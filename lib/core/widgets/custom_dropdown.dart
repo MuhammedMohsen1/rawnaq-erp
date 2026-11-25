@@ -50,17 +50,17 @@ class CustomDropdown<T> extends StatelessWidget {
               text: label!,
               style:
                   labelStyle ??
-                  const TextStyle(
+                  TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w500,
-                    color: AppColors.textPrimary,
+                    color: AppColors.of(context).textPrimary,
                   ),
               children: [
                 if (required)
-                  const TextSpan(
+                  TextSpan(
                     text: ' *',
                     style: TextStyle(
-                      color: AppColors.error,
+                      color: AppColors.of(context).error,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
@@ -79,44 +79,56 @@ class CustomDropdown<T> extends StatelessWidget {
             hintText: hint,
             hintStyle:
                 hintStyle ??
-                const TextStyle(fontSize: 16, color: AppColors.textSecondary),
+                TextStyle(
+                  fontSize: 16,
+                  color: AppColors.of(context).textSecondary,
+                ),
             helperText: helperText,
             filled: true,
-            fillColor: fillColor ?? AppColors.white,
+            fillColor: fillColor ?? AppColors.of(context).inputBackground,
             prefixIcon: prefixIcon,
             contentPadding:
                 contentPadding ??
                 const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
             border: OutlineInputBorder(
               borderRadius: borderRadius ?? BorderRadius.circular(12),
-              borderSide: const BorderSide(color: AppColors.border),
+              borderSide: BorderSide(color: AppColors.of(context).border),
             ),
             enabledBorder: OutlineInputBorder(
               borderRadius: borderRadius ?? BorderRadius.circular(12),
-              borderSide: const BorderSide(color: AppColors.border),
+              borderSide: BorderSide(color: AppColors.of(context).border),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: borderRadius ?? BorderRadius.circular(12),
-              borderSide: const BorderSide(color: AppColors.primary, width: 2),
+              borderSide: BorderSide(
+                color: AppColors.of(context).primary,
+                width: 2,
+              ),
             ),
             errorBorder: OutlineInputBorder(
               borderRadius: borderRadius ?? BorderRadius.circular(12),
-              borderSide: const BorderSide(color: AppColors.error),
+              borderSide: BorderSide(color: AppColors.of(context).error),
             ),
             focusedErrorBorder: OutlineInputBorder(
               borderRadius: borderRadius ?? BorderRadius.circular(12),
-              borderSide: const BorderSide(color: AppColors.error, width: 2),
+              borderSide: BorderSide(
+                color: AppColors.of(context).error,
+                width: 2,
+              ),
             ),
             disabledBorder: OutlineInputBorder(
               borderRadius: borderRadius ?? BorderRadius.circular(12),
-              borderSide: const BorderSide(color: AppColors.lightGrey),
+              borderSide: BorderSide(color: AppColors.of(context).lightGrey),
             ),
           ),
-          dropdownColor: AppColors.white,
-          style: const TextStyle(fontSize: 16, color: AppColors.textPrimary),
-          icon: const Icon(
+          dropdownColor: AppColors.of(context).cardBackground,
+          style: TextStyle(
+            fontSize: 16,
+            color: AppColors.of(context).textPrimary,
+          ),
+          icon: Icon(
             Icons.keyboard_arrow_down,
-            color: AppColors.textSecondary,
+            color: AppColors.of(context).textSecondary,
           ),
         ),
       ],

@@ -27,7 +27,7 @@ class ProgressIndicatorWidget extends StatelessWidget {
             child: Text(
               '$progress%',
               style: TextStyle(
-                color: AppColors.textPrimary,
+                color: AppColors.of(context).textPrimary,
                 fontSize: 14,
                 fontWeight: FontWeight.w600,
               ),
@@ -38,7 +38,7 @@ class ProgressIndicatorWidget extends StatelessWidget {
           child: Container(
             height: height,
             decoration: BoxDecoration(
-              color: AppColors.progressBackground,
+              color: AppColors.of(context).progressBackground,
               borderRadius: BorderRadius.circular(height / 2),
             ),
             child: FractionallySizedBox(
@@ -46,7 +46,7 @@ class ProgressIndicatorWidget extends StatelessWidget {
               widthFactor: progress / 100,
               child: Container(
                 decoration: BoxDecoration(
-                  color: _getProgressColor(),
+                  color: _getProgressColor(context),
                   borderRadius: BorderRadius.circular(height / 2),
                 ),
               ),
@@ -57,35 +57,35 @@ class ProgressIndicatorWidget extends StatelessWidget {
     );
   }
 
-  Color _getProgressColor() {
+  Color _getProgressColor(BuildContext context) {
     if (status != null) {
       switch (status!) {
         case ProjectStatus.draft:
-          return AppColors.textMuted;
+          return AppColors.of(context).textMuted;
         case ProjectStatus.underPricing:
-          return AppColors.info;
+          return AppColors.of(context).info;
         case ProjectStatus.pendingSignature:
-          return AppColors.warning;
+          return AppColors.of(context).warning;
         case ProjectStatus.approved:
-          return AppColors.statusCompleted;
+          return AppColors.of(context).statusCompleted;
         case ProjectStatus.execution:
-          return AppColors.statusActive;
+          return AppColors.of(context).statusActive;
         case ProjectStatus.completed:
-          return AppColors.statusCompleted;
+          return AppColors.of(context).statusCompleted;
         case ProjectStatus.cancelled:
-          return AppColors.statusDelayed;
+          return AppColors.of(context).statusDelayed;
       }
     }
 
     // Default color based on progress
     if (progress >= 100) {
-      return AppColors.statusCompleted;
+      return AppColors.of(context).statusCompleted;
     } else if (progress >= 75) {
-      return AppColors.statusActive;
+      return AppColors.of(context).statusActive;
     } else if (progress >= 50) {
-      return AppColors.warning;
+      return AppColors.of(context).warning;
     } else {
-      return AppColors.textMuted;
+      return AppColors.of(context).textMuted;
     }
   }
 }

@@ -1,3 +1,4 @@
+import 'package:rawnaq/core/widgets/app_toast.dart';
 import 'package:rawnaq/core/utils/arabic_number_input_formatter.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -116,7 +117,7 @@ class _AddTaskDialogState extends State<AddTaskDialog>
       onSubmit: _submitForm,
       onClose: () => Navigator.pop(context),
       child: Dialog(
-        backgroundColor: AppColors.cardBackground,
+        backgroundColor: AppColors.of(context).cardBackground,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         child: Container(
           width: 500,
@@ -181,35 +182,41 @@ class _AddTaskDialogState extends State<AddTaskDialog>
   Widget _buildHeader() {
     return Container(
       padding: const EdgeInsets.all(20),
-      decoration: const BoxDecoration(
-        border: Border(bottom: BorderSide(color: AppColors.divider)),
+      decoration: BoxDecoration(
+        border: Border(
+          bottom: BorderSide(color: AppColors.of(context).divider),
+        ),
       ),
       child: Row(
         children: [
           Container(
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
-              color: AppColors.primary.withValues(alpha: 0.15),
+              color: AppColors.of(context).primary.withValues(alpha: 0.15),
               borderRadius: BorderRadius.circular(10),
             ),
-            child: Icon(Icons.add_task, color: AppColors.primary, size: 24),
+            child: Icon(
+              Icons.add_task,
+              color: AppColors.of(context).primary,
+              size: 24,
+            ),
           ),
           const SizedBox(width: 16),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('إضافة مهمة جديدة', style: AppTextStyles.h5),
+                Text('إضافة مهمة جديدة', style: AppTextStyles.of(context).h5),
                 const SizedBox(height: 4),
                 Text(
                   'اختر نوع المهمة وأدخل البيانات المطلوبة',
-                  style: AppTextStyles.caption,
+                  style: AppTextStyles.of(context).caption,
                 ),
               ],
             ),
           ),
           IconButton(
-            icon: const Icon(Icons.close, color: AppColors.textMuted),
+            icon: Icon(Icons.close, color: AppColors.of(context).textMuted),
             onPressed: () => Navigator.pop(context),
           ),
         ],
@@ -219,13 +226,13 @@ class _AddTaskDialogState extends State<AddTaskDialog>
 
   Widget _buildTaskTypeTabs() {
     return Container(
-      decoration: const BoxDecoration(color: AppColors.surfaceColor),
+      decoration: BoxDecoration(color: AppColors.of(context).surfaceColor),
       child: TabBar(
         controller: _tabController,
-        indicatorColor: AppColors.primary,
+        indicatorColor: AppColors.of(context).primary,
         indicatorWeight: 3,
-        labelColor: AppColors.primary,
-        unselectedLabelColor: AppColors.textMuted,
+        labelColor: AppColors.of(context).primary,
+        unselectedLabelColor: AppColors.of(context).textMuted,
         tabs: [
           Tab(
             child: Row(
@@ -295,7 +302,7 @@ class _AddTaskDialogState extends State<AddTaskDialog>
       children: [
         Text(
           'الموظف المسؤول${isRequired ? ' *' : ''}',
-          style: AppTextStyles.inputLabel,
+          style: AppTextStyles.of(context).inputLabel,
         ),
         const SizedBox(height: 8),
         _buildDropdownContainer(
@@ -305,9 +312,12 @@ class _AddTaskDialogState extends State<AddTaskDialog>
               contentPadding: EdgeInsets.symmetric(horizontal: 12),
               border: InputBorder.none,
             ),
-            dropdownColor: AppColors.cardBackground,
-            style: AppTextStyles.inputText,
-            hint: const Text('اختر الموظف', style: AppTextStyles.inputHint),
+            dropdownColor: AppColors.of(context).cardBackground,
+            style: AppTextStyles.of(context).inputText,
+            hint: Text(
+              'اختر الموظف',
+              style: AppTextStyles.of(context).inputHint,
+            ),
             items: widget.teamMembers.map(_buildMemberDropdownItem).toList(),
             onChanged: (value) => setState(() => _selectedMemberId = value),
             validator: (value) {
@@ -323,9 +333,9 @@ class _AddTaskDialogState extends State<AddTaskDialog>
   Widget _buildDropdownContainer({required Widget child}) {
     return Container(
       decoration: BoxDecoration(
-        color: AppColors.inputBackground,
+        color: AppColors.of(context).inputBackground,
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: AppColors.inputBorder),
+        border: Border.all(color: AppColors.of(context).inputBorder),
       ),
       child: child,
     );
@@ -338,11 +348,13 @@ class _AddTaskDialogState extends State<AddTaskDialog>
         children: [
           CircleAvatar(
             radius: 14,
-            backgroundColor: AppColors.primary.withValues(alpha: 0.2),
+            backgroundColor: AppColors.of(
+              context,
+            ).primary.withValues(alpha: 0.2),
             child: Text(
               member.name.substring(0, 1),
               style: TextStyle(
-                color: AppColors.primary,
+                color: AppColors.of(context).primary,
                 fontSize: 12,
                 fontWeight: FontWeight.bold,
               ),
@@ -359,7 +371,7 @@ class _AddTaskDialogState extends State<AddTaskDialog>
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('المشروع *', style: AppTextStyles.inputLabel),
+        Text('المشروع *', style: AppTextStyles.of(context).inputLabel),
         const SizedBox(height: 8),
         _buildDropdownContainer(
           child: DropdownButtonFormField<String>(
@@ -368,9 +380,12 @@ class _AddTaskDialogState extends State<AddTaskDialog>
               contentPadding: EdgeInsets.symmetric(horizontal: 12),
               border: InputBorder.none,
             ),
-            dropdownColor: AppColors.cardBackground,
-            style: AppTextStyles.inputText,
-            hint: const Text('اختر المشروع', style: AppTextStyles.inputHint),
+            dropdownColor: AppColors.of(context).cardBackground,
+            style: AppTextStyles.of(context).inputText,
+            hint: Text(
+              'اختر المشروع',
+              style: AppTextStyles.of(context).inputHint,
+            ),
             items: AddTaskDialog.mockProjects
                 .map(_buildProjectDropdownItem)
                 .toList(),
@@ -439,21 +454,28 @@ class _AddTaskDialogState extends State<AddTaskDialog>
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('$label${required ? ' *' : ''}', style: AppTextStyles.inputLabel),
+        Text(
+          '$label${required ? ' *' : ''}',
+          style: AppTextStyles.of(context).inputLabel,
+        ),
         const SizedBox(height: 8),
         InkWell(
           onTap: _handleTimePicker,
           child: _buildInputContainer(
             child: Row(
               children: [
-                Icon(Icons.access_time, color: AppColors.textMuted, size: 20),
+                Icon(
+                  Icons.access_time,
+                  color: AppColors.of(context).textMuted,
+                  size: 20,
+                ),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Text(
                     _taskTime != null ? _formatTime(_taskTime!) : 'اختر الوقت',
                     style: _taskTime != null
-                        ? AppTextStyles.inputText
-                        : AppTextStyles.inputHint,
+                        ? AppTextStyles.of(context).inputText
+                        : AppTextStyles.of(context).inputHint,
                   ),
                 ),
               ],
@@ -518,7 +540,7 @@ class _AddTaskDialogState extends State<AddTaskDialog>
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: AppTextStyles.inputLabel),
+        Text(label, style: AppTextStyles.of(context).inputLabel),
         const SizedBox(height: 8),
         InkWell(
           onTap: onTap,
@@ -527,7 +549,7 @@ class _AddTaskDialogState extends State<AddTaskDialog>
               children: [
                 Icon(
                   Icons.calendar_today,
-                  color: AppColors.textMuted,
+                  color: AppColors.of(context).textMuted,
                   size: 20,
                 ),
                 const SizedBox(width: 12),
@@ -535,8 +557,8 @@ class _AddTaskDialogState extends State<AddTaskDialog>
                   child: Text(
                     value != null ? dateFormat.format(value) : 'اختر التاريخ',
                     style: value != null
-                        ? AppTextStyles.inputText
-                        : AppTextStyles.inputHint,
+                        ? AppTextStyles.of(context).inputText
+                        : AppTextStyles.of(context).inputHint,
                   ),
                 ),
               ],
@@ -576,9 +598,9 @@ class _AddTaskDialogState extends State<AddTaskDialog>
   Widget _buildPickerTheme(BuildContext context, Widget? child) {
     return Theme(
       data: Theme.of(context).copyWith(
-        colorScheme: const ColorScheme.dark(
-          primary: AppColors.primary,
-          surface: AppColors.cardBackground,
+        colorScheme: ColorScheme.dark(
+          primary: AppColors.of(context).primary,
+          surface: AppColors.of(context).cardBackground,
         ),
       ),
       child: child!,
@@ -589,9 +611,9 @@ class _AddTaskDialogState extends State<AddTaskDialog>
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
       decoration: BoxDecoration(
-        color: AppColors.inputBackground,
+        color: AppColors.of(context).inputBackground,
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: AppColors.inputBorder),
+        border: Border.all(color: AppColors.of(context).inputBorder),
       ),
       child: child,
     );
@@ -601,7 +623,7 @@ class _AddTaskDialogState extends State<AddTaskDialog>
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('الحالة', style: AppTextStyles.inputLabel),
+        Text('الحالة', style: AppTextStyles.of(context).inputLabel),
         const SizedBox(height: 8),
         _buildDropdownContainer(
           child: DropdownButtonFormField<TaskStatus>(
@@ -610,8 +632,8 @@ class _AddTaskDialogState extends State<AddTaskDialog>
               contentPadding: EdgeInsets.symmetric(horizontal: 12),
               border: InputBorder.none,
             ),
-            dropdownColor: AppColors.cardBackground,
-            style: AppTextStyles.inputText,
+            dropdownColor: AppColors.of(context).cardBackground,
+            style: AppTextStyles.of(context).inputText,
             items: TaskStatus.values.map(_buildStatusDropdownItem).toList(),
             onChanged: (value) {
               if (value != null) setState(() => _status = value);
@@ -631,7 +653,7 @@ class _AddTaskDialogState extends State<AddTaskDialog>
             width: 12,
             height: 12,
             decoration: BoxDecoration(
-              color: status.color,
+              color: status.color(context),
               shape: BoxShape.circle,
             ),
           ),
@@ -662,30 +684,33 @@ class _AddTaskDialogState extends State<AddTaskDialog>
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('$label${required ? ' *' : ''}', style: AppTextStyles.inputLabel),
+        Text(
+          '$label${required ? ' *' : ''}',
+          style: AppTextStyles.of(context).inputLabel,
+        ),
         const SizedBox(height: 8),
         TextFormField(
           inputFormatters: const [ArabicNumberInputFormatter()],
           controller: controller,
           maxLines: maxLines,
           keyboardType: keyboardType,
-          style: AppTextStyles.inputText,
+          style: AppTextStyles.of(context).inputText,
           decoration: InputDecoration(
             hintText: hint,
-            hintStyle: AppTextStyles.inputHint,
+            hintStyle: AppTextStyles.of(context).inputHint,
             filled: true,
-            fillColor: AppColors.inputBackground,
+            fillColor: AppColors.of(context).inputBackground,
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
-              borderSide: const BorderSide(color: AppColors.inputBorder),
+              borderSide: BorderSide(color: AppColors.of(context).inputBorder),
             ),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
-              borderSide: const BorderSide(color: AppColors.inputBorder),
+              borderSide: BorderSide(color: AppColors.of(context).inputBorder),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
-              borderSide: const BorderSide(color: AppColors.primary),
+              borderSide: BorderSide(color: AppColors.of(context).primary),
             ),
             contentPadding: const EdgeInsets.symmetric(
               horizontal: 12,
@@ -703,8 +728,8 @@ class _AddTaskDialogState extends State<AddTaskDialog>
   Widget _buildActions() {
     return Container(
       padding: const EdgeInsets.all(20),
-      decoration: const BoxDecoration(
-        border: Border(top: BorderSide(color: AppColors.divider)),
+      decoration: BoxDecoration(
+        border: Border(top: BorderSide(color: AppColors.of(context).divider)),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -720,24 +745,24 @@ class _AddTaskDialogState extends State<AddTaskDialog>
                     onChanged: (value) {
                       setState(() => _saveAsDraft = value ?? false);
                     },
-                    activeColor: AppColors.primary,
+                    activeColor: AppColors.of(context).primary,
                   ),
                   const SizedBox(width: 8),
                   Icon(
                     Icons.drafts_outlined,
                     size: 18,
                     color: _saveAsDraft
-                        ? AppColors.primary
-                        : AppColors.textMuted,
+                        ? AppColors.of(context).primary
+                        : AppColors.of(context).textMuted,
                   ),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
                       'حفظ كمسودة (بدون تعيين موظف)',
-                      style: AppTextStyles.bodyMedium.copyWith(
+                      style: AppTextStyles.of(context).bodyMedium.copyWith(
                         color: _saveAsDraft
-                            ? AppColors.primary
-                            : AppColors.textSecondary,
+                            ? AppColors.of(context).primary
+                            : AppColors.of(context).textSecondary,
                       ),
                     ),
                   ),
@@ -750,8 +775,8 @@ class _AddTaskDialogState extends State<AddTaskDialog>
               OutlinedButton(
                 onPressed: () => Navigator.pop(context),
                 style: OutlinedButton.styleFrom(
-                  foregroundColor: AppColors.textSecondary,
-                  side: const BorderSide(color: AppColors.border),
+                  foregroundColor: AppColors.of(context).textSecondary,
+                  side: BorderSide(color: AppColors.of(context).border),
                   padding: const EdgeInsets.symmetric(
                     horizontal: 24,
                     vertical: 12,
@@ -764,9 +789,9 @@ class _AddTaskDialogState extends State<AddTaskDialog>
                 onPressed: _submitForm,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: _saveAsDraft
-                      ? AppColors.statusOnHold
-                      : AppColors.primary,
-                  foregroundColor: AppColors.scaffoldBackground,
+                      ? AppColors.of(context).statusOnHold
+                      : AppColors.of(context).primary,
+                  foregroundColor: AppColors.of(context).scaffoldBackground,
                   padding: const EdgeInsets.symmetric(
                     horizontal: 24,
                     vertical: 12,
@@ -868,10 +893,10 @@ class _AddTaskDialogState extends State<AddTaskDialog>
 
   void _showError(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
+      AppToast.build(
+        tone: ToastTone.error,
         duration: const Duration(seconds: 2),
         content: Text(message),
-        backgroundColor: AppColors.statusDelayed,
       ),
     );
   }

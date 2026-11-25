@@ -24,7 +24,7 @@ class LanguageSelector extends StatelessWidget {
             isSelected: isArabic,
             onTap: () => localeProvider.setLocale(const Locale('ar')),
           ),
-          const Divider(color: AppColors.divider, height: 1),
+          Divider(color: AppColors.of(context).divider, height: 1),
           LanguageOption(
             title: 'English',
             subtitle: 'الإنجليزية',
@@ -60,7 +60,7 @@ class LanguageOption extends StatelessWidget {
       textDirection: TextDirection.rtl,
       child: Material(
         color: isSelected
-            ? AppColors.primary.withValues(alpha: 0.06)
+            ? AppColors.of(context).primary.withValues(alpha: 0.06)
             : Colors.transparent,
         child: InkWell(
           onTap: onTap,
@@ -74,22 +74,24 @@ class LanguageOption extends StatelessWidget {
                   height: 42,
                   decoration: BoxDecoration(
                     color: isSelected
-                        ? AppColors.primary.withValues(alpha: 0.14)
-                        : AppColors.surfaceColor,
+                        ? AppColors.of(context).primary.withValues(alpha: 0.14)
+                        : AppColors.of(context).surfaceColor,
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(
                       color: isSelected
-                          ? AppColors.primary.withValues(alpha: 0.24)
-                          : AppColors.border,
+                          ? AppColors.of(
+                              context,
+                            ).primary.withValues(alpha: 0.24)
+                          : AppColors.of(context).border,
                     ),
                   ),
                   child: Center(
                     child: Text(
                       badge,
-                      style: AppTextStyles.tableCellBold.copyWith(
+                      style: AppTextStyles.of(context).tableCellBold.copyWith(
                         color: isSelected
-                            ? AppColors.primary
-                            : AppColors.textMuted,
+                            ? AppColors.of(context).primary
+                            : AppColors.of(context).textMuted,
                       ),
                     ),
                   ),
@@ -102,18 +104,18 @@ class LanguageOption extends StatelessWidget {
                       Text(
                         title,
                         textAlign: TextAlign.right,
-                        style: AppTextStyles.tableCellBold.copyWith(
+                        style: AppTextStyles.of(context).tableCellBold.copyWith(
                           color: isSelected
-                              ? AppColors.primary
-                              : AppColors.textPrimary,
+                              ? AppColors.of(context).primary
+                              : AppColors.of(context).textPrimary,
                         ),
                       ),
                       const SizedBox(height: 3),
                       Text(
                         subtitle,
                         textAlign: TextAlign.right,
-                        style: AppTextStyles.caption.copyWith(
-                          color: AppColors.textMuted,
+                        style: AppTextStyles.of(context).caption.copyWith(
+                          color: AppColors.of(context).textMuted,
                         ),
                       ),
                     ],
@@ -125,8 +127,8 @@ class LanguageOption extends StatelessWidget {
                       ? Container(
                           key: const ValueKey('selected'),
                           padding: const EdgeInsets.all(5),
-                          decoration: const BoxDecoration(
-                            color: AppColors.primary,
+                          decoration: BoxDecoration(
+                            color: AppColors.of(context).primary,
                             shape: BoxShape.circle,
                           ),
                           child: const Icon(

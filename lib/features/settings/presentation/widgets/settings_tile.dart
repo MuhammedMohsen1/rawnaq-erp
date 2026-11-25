@@ -35,13 +35,13 @@ class SettingsTile extends StatelessWidget {
                     width: 38,
                     height: 38,
                     decoration: BoxDecoration(
-                      color: AppColors.surfaceColor,
+                      color: AppColors.of(context).surfaceColor,
                       borderRadius: BorderRadius.circular(10),
-                      border: Border.all(color: AppColors.border),
+                      border: Border.all(color: AppColors.of(context).border),
                     ),
                     child: Icon(
                       leadingIcon,
-                      color: AppColors.textMuted,
+                      color: AppColors.of(context).textMuted,
                       size: 20,
                     ),
                   ),
@@ -54,14 +54,14 @@ class SettingsTile extends StatelessWidget {
                       Text(
                         title,
                         textAlign: TextAlign.right,
-                        style: AppTextStyles.tableCellBold,
+                        style: AppTextStyles.of(context).tableCellBold,
                       ),
                       const SizedBox(height: 4),
                       Text(
                         subtitle,
                         textAlign: TextAlign.right,
-                        style: AppTextStyles.caption.copyWith(
-                          color: AppColors.textMuted,
+                        style: AppTextStyles.of(context).caption.copyWith(
+                          color: AppColors.of(context).textMuted,
                         ),
                       ),
                     ],

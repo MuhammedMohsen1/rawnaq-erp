@@ -16,37 +16,39 @@ class FinancialKpiGrid extends StatelessWidget {
         title: 'قيمة العقود',
         value: formatKwd(totals.totalContractValue),
         icon: Icons.receipt_long_outlined,
-        color: AppColors.info,
+        color: AppColors.of(context).info,
       ),
       _KpiCardData(
         title: 'التكلفة المتوقعة',
         value: formatKwd(totals.totalCost),
         icon: Icons.account_balance_wallet_outlined,
-        color: AppColors.warning,
+        color: AppColors.of(context).warning,
       ),
       _KpiCardData(
         title: 'المحصل',
         value: formatKwd(totals.totalReceived),
         icon: Icons.trending_up,
-        color: AppColors.success,
+        color: AppColors.of(context).success,
       ),
       _KpiCardData(
         title: 'المصروفات',
         value: formatKwd(totals.totalExpenses),
         icon: Icons.trending_down,
-        color: AppColors.error,
+        color: AppColors.of(context).error,
       ),
       _KpiCardData(
         title: 'صافي التدفق النقدي',
         value: formatKwd(totals.netCashFlow),
         icon: Icons.payments_outlined,
-        color: totals.netCashFlow >= 0 ? AppColors.success : AppColors.error,
+        color: totals.netCashFlow >= 0
+            ? AppColors.of(context).success
+            : AppColors.of(context).error,
       ),
       _KpiCardData(
         title: 'الربح المتوقع',
         value: formatKwd(totals.expectedProfit),
         icon: Icons.show_chart,
-        color: AppColors.secondary,
+        color: AppColors.of(context).secondary,
       ),
     ];
 
@@ -87,9 +89,9 @@ class _FinancialKpiCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: AppColors.cardBackground,
+        color: AppColors.of(context).cardBackground,
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: AppColors.border),
+        border: Border.all(color: AppColors.of(context).border),
       ),
       child: Row(
         children: [
@@ -107,13 +109,13 @@ class _FinancialKpiCard extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(data.title, style: AppTextStyles.statLabel),
+                Text(data.title, style: AppTextStyles.of(context).statLabel),
                 const SizedBox(height: 6),
                 Text(
                   data.value,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: AppTextStyles.h5,
+                  style: AppTextStyles.of(context).h5,
                 ),
               ],
             ),

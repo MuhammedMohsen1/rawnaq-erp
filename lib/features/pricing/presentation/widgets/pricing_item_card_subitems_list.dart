@@ -114,9 +114,9 @@ class PricingItemCardSubItemsList extends StatelessWidget {
         child: Center(
           child: Text(
             'لا توجد فئات فرعية بعد',
-            style: AppTextStyles.bodyMedium.copyWith(
-              color: AppColors.textMuted,
-            ),
+            style: AppTextStyles.of(
+              context,
+            ).bodyMedium.copyWith(color: AppColors.of(context).textMuted),
           ),
         ),
       );

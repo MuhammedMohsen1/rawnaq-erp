@@ -1,3 +1,4 @@
+import 'package:rawnaq/core/widgets/app_toast.dart';
 import 'package:rawnaq/core/utils/arabic_number_input_formatter.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -63,8 +64,8 @@ class _RecentlyDeletedPageState extends State<RecentlyDeletedPage> {
         width: 420,
         child: DecoratedBox(
           decoration: BoxDecoration(
-            color: AppColors.cardBackground,
-            border: Border.all(color: AppColors.border),
+            color: AppColors.of(context).cardBackground,
+            border: Border.all(color: AppColors.of(context).border),
             borderRadius: BorderRadius.circular(8),
           ),
           child: Padding(
@@ -73,18 +74,18 @@ class _RecentlyDeletedPageState extends State<RecentlyDeletedPage> {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                const Icon(
+                Icon(
                   Icons.lock_outline,
-                  color: AppColors.primary,
+                  color: AppColors.of(context).primary,
                   size: 36,
                 ),
                 const SizedBox(height: 16),
                 Text(
                   'العناصر المحذوفة مؤخراً',
                   textAlign: TextAlign.center,
-                  style: AppTextStyles.h4.copyWith(
-                    color: AppColors.textPrimary,
-                  ),
+                  style: AppTextStyles.of(
+                    context,
+                  ).h4.copyWith(color: AppColors.of(context).textPrimary),
                 ),
                 const SizedBox(height: 20),
                 TextField(
@@ -93,17 +94,19 @@ class _RecentlyDeletedPageState extends State<RecentlyDeletedPage> {
                   obscureText: true,
                   keyboardType: TextInputType.number,
                   textAlign: TextAlign.center,
-                  style: AppTextStyles.h5.copyWith(
-                    color: AppColors.textPrimary,
-                  ),
+                  style: AppTextStyles.of(
+                    context,
+                  ).h5.copyWith(color: AppColors.of(context).textPrimary),
                   decoration: InputDecoration(
                     hintText: 'أدخل رمز المدير',
-                    hintStyle: AppTextStyles.bodyMedium,
+                    hintStyle: AppTextStyles.of(context).bodyMedium,
                     filled: true,
-                    fillColor: AppColors.inputBackground,
-                    border: _inputBorder(AppColors.inputBorder),
-                    enabledBorder: _inputBorder(AppColors.inputBorder),
-                    focusedBorder: _inputBorder(AppColors.primary),
+                    fillColor: AppColors.of(context).inputBackground,
+                    border: _inputBorder(AppColors.of(context).inputBorder),
+                    enabledBorder: _inputBorder(
+                      AppColors.of(context).inputBorder,
+                    ),
+                    focusedBorder: _inputBorder(AppColors.of(context).primary),
                   ),
                   onSubmitted: (_) => _unlock(),
                 ),
@@ -112,9 +115,9 @@ class _RecentlyDeletedPageState extends State<RecentlyDeletedPage> {
                   Text(
                     _errorMessage!,
                     textAlign: TextAlign.center,
-                    style: AppTextStyles.bodySmall.copyWith(
-                      color: AppColors.error,
-                    ),
+                    style: AppTextStyles.of(
+                      context,
+                    ).bodySmall.copyWith(color: AppColors.of(context).error),
                   ),
                 ],
                 const SizedBox(height: 20),
@@ -148,13 +151,18 @@ class _RecentlyDeletedPageState extends State<RecentlyDeletedPage> {
           children: [
             Text(
               'العناصر المحذوفة مؤخراً',
-              style: AppTextStyles.h4.copyWith(color: AppColors.textPrimary),
+              style: AppTextStyles.of(
+                context,
+              ).h4.copyWith(color: AppColors.of(context).textPrimary),
             ),
             const Spacer(),
             IconButton(
               tooltip: 'تحديث',
               onPressed: _isLoading ? null : _loadItems,
-              icon: const Icon(Icons.refresh, color: AppColors.textSecondary),
+              icon: Icon(
+                Icons.refresh,
+                color: AppColors.of(context).textSecondary,
+              ),
             ),
           ],
         ),
@@ -164,30 +172,32 @@ class _RecentlyDeletedPageState extends State<RecentlyDeletedPage> {
             padding: const EdgeInsets.only(bottom: 12),
             child: Text(
               _errorMessage!,
-              style: AppTextStyles.bodySmall.copyWith(color: AppColors.error),
+              style: AppTextStyles.of(
+                context,
+              ).bodySmall.copyWith(color: AppColors.of(context).error),
             ),
           ),
         Expanded(
           child: DecoratedBox(
             decoration: BoxDecoration(
-              color: AppColors.cardBackground,
-              border: Border.all(color: AppColors.border),
+              color: AppColors.of(context).cardBackground,
+              border: Border.all(color: AppColors.of(context).border),
               borderRadius: BorderRadius.circular(8),
             ),
             child: _isLoading
                 ? const Center(child: CircularProgressIndicator())
                 : _items.isEmpty
-                ? const Center(
+                ? Center(
                     child: Text(
                       'لا توجد عناصر محذوفة',
-                      style: AppTextStyles.bodyMedium,
+                      style: AppTextStyles.of(context).bodyMedium,
                     ),
                   )
                 : ListView.separated(
                     padding: const EdgeInsets.all(12),
                     itemCount: _items.length,
                     separatorBuilder: (_, __) =>
-                        const Divider(color: AppColors.divider),
+                        Divider(color: AppColors.of(context).divider),
                     itemBuilder: (context, index) => _DeletedItemRow(
                       item: _items[index],
                       dateText: _dateFormat.format(_items[index].deletedAt),
@@ -260,13 +270,13 @@ class _RecentlyDeletedPageState extends State<RecentlyDeletedPage> {
       setState(() => _items = items);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
+          AppToast.build(
+            tone: ToastTone.success,
             duration: const Duration(seconds: 2),
             content: Text(
               'تمت الاستعادة بنجاح',
               textDirection: TextDirection.rtl,
             ),
-            backgroundColor: AppColors.success,
           ),
         );
       }
@@ -302,12 +312,15 @@ class _DeletedItemRow extends StatelessWidget {
   Widget build(BuildContext context) {
     return ListTile(
       leading: CircleAvatar(
-        backgroundColor: AppColors.surfaceColor,
-        child: Icon(_iconForType(item.type), color: AppColors.textSecondary),
+        backgroundColor: AppColors.of(context).surfaceColor,
+        child: Icon(
+          _iconForType(item.type),
+          color: AppColors.of(context).textSecondary,
+        ),
       ),
       title: Text(
         item.title,
-        style: AppTextStyles.tableCellBold,
+        style: AppTextStyles.of(context).tableCellBold,
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
       ),
@@ -317,7 +330,7 @@ class _DeletedItemRow extends StatelessWidget {
           item.subtitle,
           dateText,
         ].where((value) => value != null && value.isNotEmpty).join(' • '),
-        style: AppTextStyles.bodySmall,
+        style: AppTextStyles.of(context).bodySmall,
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
       ),
@@ -378,8 +391,11 @@ class _AccessDeniedView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Center(
-      child: Text('لا تملك صلاحية الوصول', style: AppTextStyles.bodyMedium),
+    return Center(
+      child: Text(
+        'لا تملك صلاحية الوصول',
+        style: AppTextStyles.of(context).bodyMedium,
+      ),
     );
   }
 }

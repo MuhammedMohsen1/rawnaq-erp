@@ -1,3 +1,4 @@
+import 'package:rawnaq/core/widgets/app_toast.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -55,7 +56,14 @@ class PricingSaveButton extends StatelessWidget {
           (cubit.state is PricingError
               ? 'تم حفظ التعديلات، وتعذّر تحديث عرض التسعير.'
               : 'تم حفظ التعديلات');
-      messenger.showSnackBar(SnackBar(content: Text(message)));
+      messenger.showSnackBar(
+        AppToast.build(
+          tone: error != null || cubit.state is PricingError
+              ? ToastTone.error
+              : ToastTone.success,
+          content: Text(message),
+        ),
+      );
     }
   }
 }

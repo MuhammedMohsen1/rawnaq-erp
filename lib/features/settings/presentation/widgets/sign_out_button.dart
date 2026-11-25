@@ -26,19 +26,22 @@ class SignOutButton extends StatelessWidget {
                         return Directionality(
                           textDirection: TextDirection.rtl,
                           child: AlertDialog(
-                            backgroundColor: AppColors.cardBackground,
+                            backgroundColor: AppColors.of(
+                              context,
+                            ).cardBackground,
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(16),
                             ),
                             title: Text(
                               'تسجيل الخروج',
-                              style: AppTextStyles.sectionTitle,
+                              style: AppTextStyles.of(context).sectionTitle,
                             ),
                             content: Text(
                               'هل أنت متأكد أنك تريد تسجيل الخروج من حسابك؟',
-                              style: AppTextStyles.bodyMedium.copyWith(
-                                color: AppColors.textMuted,
-                              ),
+                              style: AppTextStyles.of(context).bodyMedium
+                                  .copyWith(
+                                    color: AppColors.of(context).textMuted,
+                                  ),
                             ),
                             actionsPadding: const EdgeInsets.fromLTRB(
                               16,
@@ -52,9 +55,10 @@ class SignOutButton extends StatelessWidget {
                                     Navigator.of(dialogContext).pop(),
                                 child: Text(
                                   'إلغاء',
-                                  style: AppTextStyles.tableCellBold.copyWith(
-                                    color: AppColors.textMuted,
-                                  ),
+                                  style: AppTextStyles.of(context).tableCellBold
+                                      .copyWith(
+                                        color: AppColors.of(context).textMuted,
+                                      ),
                                 ),
                               ),
                               ElevatedButton(
@@ -74,9 +78,9 @@ class SignOutButton extends StatelessWidget {
                                 ),
                                 child: Text(
                                   'تسجيل الخروج',
-                                  style: AppTextStyles.tableCellBold.copyWith(
-                                    color: Colors.white,
-                                  ),
+                                  style: AppTextStyles.of(
+                                    context,
+                                  ).tableCellBold.copyWith(color: Colors.white),
                                 ),
                               ),
                             ],
@@ -111,16 +115,16 @@ class SignOutButton extends StatelessWidget {
                         Text(
                           'تسجيل الخروج',
                           textAlign: TextAlign.right,
-                          style: AppTextStyles.tableCellBold.copyWith(
-                            color: Colors.red,
-                          ),
+                          style: AppTextStyles.of(
+                            context,
+                          ).tableCellBold.copyWith(color: Colors.red),
                         ),
                         const SizedBox(height: 4),
                         Text(
                           'إنهاء الجلسة الحالية والعودة إلى صفحة الدخول',
                           textAlign: TextAlign.right,
-                          style: AppTextStyles.caption.copyWith(
-                            color: AppColors.textMuted,
+                          style: AppTextStyles.of(context).caption.copyWith(
+                            color: AppColors.of(context).textMuted,
                           ),
                         ),
                       ],

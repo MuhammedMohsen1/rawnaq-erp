@@ -35,7 +35,9 @@ class InstallmentsSectionHeader extends StatelessWidget {
             children: [
               Text(
                 'جدول الدفعات',
-                style: AppTextStyles.h3.copyWith(fontWeight: FontWeight.bold),
+                style: AppTextStyles.of(
+                  context,
+                ).h3.copyWith(fontWeight: FontWeight.bold),
               ),
               Row(
                 mainAxisSize: MainAxisSize.min,
@@ -53,13 +55,15 @@ class InstallmentsSectionHeader extends StatelessWidget {
                         vertical: 6,
                       ),
                       decoration: BoxDecoration(
-                        color: AppColors.success.withValues(alpha: 0.1),
+                        color: AppColors.of(
+                          context,
+                        ).success.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(20),
                       ),
                       child: Text(
                         'الربح: ${profitPercentage.toStringAsFixed(1)}%',
-                        style: AppTextStyles.bodySmall.copyWith(
-                          color: AppColors.success,
+                        style: AppTextStyles.of(context).bodySmall.copyWith(
+                          color: AppColors.of(context).success,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
@@ -75,21 +79,21 @@ class InstallmentsSectionHeader extends StatelessWidget {
                 InstallmentsSummaryItem(
                   label: 'إجمالي السعر',
                   value: totalPrice,
-                  color: AppColors.primary,
+                  color: AppColors.of(context).primary,
                 ),
                 const SizedBox(width: 32),
               ],
               InstallmentsSummaryItem(
                 label: 'إجمالي التكلفة',
                 value: totalCost,
-                color: AppColors.textPrimary,
+                color: AppColors.of(context).textPrimary,
               ),
               if (isAdminOrManager) ...[
                 const SizedBox(width: 32),
                 InstallmentsSummaryItem(
                   label: 'الربح',
                   value: totalProfit,
-                  color: AppColors.success,
+                  color: AppColors.of(context).success,
                 ),
               ],
             ],
@@ -119,17 +123,16 @@ class InstallmentsSummaryItem extends StatelessWidget {
       children: [
         Text(
           label,
-          style: AppTextStyles.bodySmall.copyWith(
-            color: AppColors.textSecondary,
-          ),
+          style: AppTextStyles.of(
+            context,
+          ).bodySmall.copyWith(color: AppColors.of(context).textSecondary),
         ),
         const SizedBox(height: 4),
         Text(
           '${value.toStringAsFixed(3)} د.ك',
-          style: AppTextStyles.h4.copyWith(
-            color: color,
-            fontWeight: FontWeight.bold,
-          ),
+          style: AppTextStyles.of(
+            context,
+          ).h4.copyWith(color: color, fontWeight: FontWeight.bold),
         ),
       ],
     );
@@ -157,7 +160,7 @@ class InstallmentsSectionTable extends StatelessWidget {
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.all(16),
-        child: Table(
+      child: Table(
         columnWidths: isAdminOrManager
             ? {
                 0: FlexColumnWidth(2),
@@ -180,7 +183,7 @@ class InstallmentsSectionTable extends StatelessWidget {
           InstallmentsTableHeader(
             isAdminOrManager: isAdminOrManager,
             isReadOnly: isReadOnly,
-          ).toTableRow(),
+          ).toTableRow(context),
           ...paymentSchedule.map(
             (phase) => InstallmentsTableRow(
               phase: phase,
@@ -188,7 +191,7 @@ class InstallmentsSectionTable extends StatelessWidget {
               isReadOnly: isReadOnly,
               onToggleCollected: onToggleCollected,
               onRequestPaymentPhase: onRequestPaymentPhase,
-            ).toTableRow(),
+            ).toTableRow(context),
           ),
         ],
       ),
@@ -205,7 +208,7 @@ class InstallmentsTableHeader {
     this.isReadOnly = false,
   });
 
-  TableRow toTableRow() {
+  TableRow toTableRow(BuildContext context) {
     final headers = isAdminOrManager
         ? [
             'بند',
@@ -227,7 +230,7 @@ class InstallmentsTableHeader {
 
     return TableRow(
       decoration: BoxDecoration(
-        color: AppColors.background,
+        color: AppColors.of(context).background,
         borderRadius: BorderRadius.circular(8),
       ),
       children: headers
@@ -236,8 +239,8 @@ class InstallmentsTableHeader {
               padding: const EdgeInsets.all(12),
               child: Text(
                 header,
-                style: AppTextStyles.bodySmall.copyWith(
-                  color: AppColors.textSecondary,
+                style: AppTextStyles.of(context).bodySmall.copyWith(
+                  color: AppColors.of(context).textSecondary,
                   fontWeight: FontWeight.bold,
                 ),
                 textAlign: TextAlign.center,
@@ -265,13 +268,16 @@ class InstallmentsTableRow {
     this.onRequestPaymentPhase,
   });
 
-  TableRow toTableRow() {
+  TableRow toTableRow(BuildContext context) {
     final displayNotes = (phase.notes?.trim().isNotEmpty ?? false)
         ? phase.notes!.trim()
         : '-';
     final statusWidget = InstallmentStatusBadge(phase: phase);
     final attachmentsWidget = phase.attachments.isEmpty
-        ? const Text('-', style: TextStyle(color: AppColors.textSecondary))
+        ? Text(
+            '-',
+            style: TextStyle(color: AppColors.of(context).textSecondary),
+          )
         : TransactionAttachments(attachments: phase.attachments, compact: true);
 
     final cells = isAdminOrManager
@@ -279,24 +285,24 @@ class InstallmentsTableRow {
             InstallmentsTableCell(
               child: Text(
                 displayNotes,
-                style: AppTextStyles.bodyMedium.copyWith(
-                  fontWeight: FontWeight.w500,
-                ),
+                style: AppTextStyles.of(
+                  context,
+                ).bodyMedium.copyWith(fontWeight: FontWeight.w500),
                 textAlign: TextAlign.center,
               ),
             ),
             InstallmentsTableCell(
               child: Text(
                 '${phase.percentage.toStringAsFixed(0)}%',
-                style: AppTextStyles.bodyMedium,
+                style: AppTextStyles.of(context).bodyMedium,
                 textAlign: TextAlign.center,
               ),
             ),
             InstallmentsTableCell(
               child: Text(
                 '${phase.originalAmount.toStringAsFixed(3)} د.ك',
-                style: AppTextStyles.bodyMedium.copyWith(
-                  color: AppColors.primary,
+                style: AppTextStyles.of(context).bodyMedium.copyWith(
+                  color: AppColors.of(context).primary,
                   fontWeight: FontWeight.w500,
                 ),
                 textAlign: TextAlign.center,
@@ -305,7 +311,7 @@ class InstallmentsTableRow {
             InstallmentsTableCell(
               child: Text(
                 '${phase.costAmount.toStringAsFixed(3)} د.ك',
-                style: AppTextStyles.bodyMedium,
+                style: AppTextStyles.of(context).bodyMedium,
                 textAlign: TextAlign.center,
               ),
             ),
@@ -315,23 +321,23 @@ class InstallmentsTableRow {
             InstallmentsTableCell(
               child: Text(
                 displayNotes,
-                style: AppTextStyles.bodyMedium.copyWith(
-                  fontWeight: FontWeight.w500,
-                ),
+                style: AppTextStyles.of(
+                  context,
+                ).bodyMedium.copyWith(fontWeight: FontWeight.w500),
                 textAlign: TextAlign.center,
               ),
             ),
             InstallmentsTableCell(
               child: Text(
                 '${phase.percentage.toStringAsFixed(0)}%',
-                style: AppTextStyles.bodyMedium,
+                style: AppTextStyles.of(context).bodyMedium,
                 textAlign: TextAlign.center,
               ),
             ),
             InstallmentsTableCell(
               child: Text(
                 '${phase.costAmount.toStringAsFixed(3)} د.ك',
-                style: AppTextStyles.bodyMedium,
+                style: AppTextStyles.of(context).bodyMedium,
                 textAlign: TextAlign.center,
               ),
             ),
@@ -377,7 +383,9 @@ class InstallmentsTableRow {
     return TableRow(
       decoration: BoxDecoration(
         border: Border(
-          bottom: BorderSide(color: AppColors.border.withValues(alpha: 0.5)),
+          bottom: BorderSide(
+            color: AppColors.of(context).border.withValues(alpha: 0.5),
+          ),
         ),
       ),
       children: rowCells,
@@ -413,23 +421,25 @@ class InstallmentStatusBadge extends StatelessWidget {
 
     if (phase.isCollected) {
       statusText = 'تم التحصيل';
-      backgroundColor = AppColors.success.withValues(alpha: 0.1);
-      textColor = AppColors.success;
+      backgroundColor = AppColors.of(context).success.withValues(alpha: 0.1);
+      textColor = AppColors.of(context).success;
       icon = Icons.check_circle;
     } else if (phase.isApproved) {
       statusText = 'معتمد';
-      backgroundColor = AppColors.info.withValues(alpha: 0.1);
-      textColor = AppColors.info;
+      backgroundColor = AppColors.of(context).info.withValues(alpha: 0.1);
+      textColor = AppColors.of(context).info;
       icon = Icons.verified;
     } else if (phase.isRequested) {
       statusText = 'قيد الانتظار';
-      backgroundColor = AppColors.warning.withValues(alpha: 0.1);
-      textColor = AppColors.warning;
+      backgroundColor = AppColors.of(context).warning.withValues(alpha: 0.1);
+      textColor = AppColors.of(context).warning;
       icon = Icons.hourglass_empty;
     } else {
       statusText = 'متاح';
-      backgroundColor = AppColors.textSecondary.withValues(alpha: 0.1);
-      textColor = AppColors.textSecondary;
+      backgroundColor = AppColors.of(
+        context,
+      ).textSecondary.withValues(alpha: 0.1);
+      textColor = AppColors.of(context).textSecondary;
       icon = Icons.radio_button_unchecked;
     }
 
@@ -446,10 +456,9 @@ class InstallmentStatusBadge extends StatelessWidget {
           const SizedBox(width: 4),
           Text(
             statusText,
-            style: AppTextStyles.bodySmall.copyWith(
-              color: textColor,
-              fontWeight: FontWeight.w500,
-            ),
+            style: AppTextStyles.of(
+              context,
+            ).bodySmall.copyWith(color: textColor, fontWeight: FontWeight.w500),
           ),
         ],
       ),
@@ -476,10 +485,13 @@ class InstallmentActionButton extends StatelessWidget {
   Widget build(BuildContext context) {
     if (!isAdminOrManager) {
       if (phase.isRequested || phase.isApproved) {
-        return const SizedBox(
+        return SizedBox(
           height: 36,
           child: Center(
-            child: Text('-', style: TextStyle(color: AppColors.textSecondary)),
+            child: Text(
+              '-',
+              style: TextStyle(color: AppColors.of(context).textSecondary),
+            ),
           ),
         );
       }
@@ -493,7 +505,9 @@ class InstallmentActionButton extends StatelessWidget {
           label: const Text('طلب'),
           style: TextButton.styleFrom(
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-            backgroundColor: AppColors.primary.withValues(alpha: 0.08),
+            backgroundColor: AppColors.of(
+              context,
+            ).primary.withValues(alpha: 0.08),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(8),
             ),
@@ -512,7 +526,9 @@ class InstallmentActionButton extends StatelessWidget {
           label: const Text('دفع'),
           style: TextButton.styleFrom(
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-            backgroundColor: AppColors.success.withValues(alpha: 0.1),
+            backgroundColor: AppColors.of(
+              context,
+            ).success.withValues(alpha: 0.1),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(8),
             ),
@@ -534,14 +550,16 @@ class InstallmentActionButton extends StatelessWidget {
         style: TextButton.styleFrom(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
           backgroundColor: isCollected
-              ? AppColors.warning.withValues(alpha: 0.1)
-              : AppColors.success.withValues(alpha: 0.1),
+              ? AppColors.of(context).warning.withValues(alpha: 0.1)
+              : AppColors.of(context).success.withValues(alpha: 0.1),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
         ),
         child: Text(
           isCollected ? 'إلغاء' : 'تحصيل',
-          style: AppTextStyles.bodySmall.copyWith(
-            color: isCollected ? AppColors.warning : AppColors.success,
+          style: AppTextStyles.of(context).bodySmall.copyWith(
+            color: isCollected
+                ? AppColors.of(context).warning
+                : AppColors.of(context).success,
             fontWeight: FontWeight.bold,
           ),
         ),

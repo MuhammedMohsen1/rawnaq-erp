@@ -19,7 +19,7 @@ class ImageGalleryWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (imageUrls.isEmpty) {
-      return _buildEmptyGallery();
+      return _buildEmptyGallery(context);
     }
 
     return Column(
@@ -29,9 +29,9 @@ class ImageGalleryWidget extends StatelessWidget {
         Container(
           height: 339.78,
           decoration: BoxDecoration(
-            color: Colors.black,
+            color: AppColors.of(context).surfaceColor,
             borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: const Color(0xFF363C4A)),
+            border: Border.all(color: AppColors.of(context).border),
           ),
           child: Stack(
             children: [
@@ -44,11 +44,11 @@ class ImageGalleryWidget extends StatelessWidget {
                   fit: BoxFit.cover,
                   errorBuilder: (context, error, stackTrace) {
                     return Container(
-                      color: AppColors.inputBackground,
-                      child: const Center(
+                      color: AppColors.of(context).inputBackground,
+                      child: Center(
                         child: Icon(
                           Icons.image_outlined,
-                          color: AppColors.textMuted,
+                          color: AppColors.of(context).textMuted,
                           size: 48,
                         ),
                       ),
@@ -91,9 +91,9 @@ class ImageGalleryWidget extends StatelessWidget {
             itemCount: imageUrls.length + (onAddImage != null ? 1 : 0),
             itemBuilder: (context, index) {
               if (index == imageUrls.length && onAddImage != null) {
-                return _buildAddImageButton();
+                return _buildAddImageButton(context);
               }
-              return _buildThumbnail(index);
+              return _buildThumbnail(context, index);
             },
           ),
         ),
@@ -101,7 +101,7 @@ class ImageGalleryWidget extends StatelessWidget {
     );
   }
 
-  Widget _buildThumbnail(int index) {
+  Widget _buildThumbnail(BuildContext context, int index) {
     final isSelected = index == selectedIndex;
     return GestureDetector(
       onTap: () => onImageSelected?.call(index),
@@ -113,7 +113,7 @@ class ImageGalleryWidget extends StatelessWidget {
           border: Border.all(
             color: isSelected
                 ? const Color(0xFF135BEC)
-                : const Color(0xFF363C4A),
+                : AppColors.of(context).border,
             width: isSelected ? 2 : 1,
           ),
           borderRadius: BorderRadius.circular(4),
@@ -129,10 +129,10 @@ class ImageGalleryWidget extends StatelessWidget {
                 fit: BoxFit.cover,
                 errorBuilder: (context, error, stackTrace) {
                   return Container(
-                    color: AppColors.inputBackground,
-                    child: const Icon(
+                    color: AppColors.of(context).inputBackground,
+                    child: Icon(
                       Icons.image_outlined,
-                      color: AppColors.textMuted,
+                      color: AppColors.of(context).textMuted,
                       size: 24,
                     ),
                   );
@@ -146,13 +146,13 @@ class ImageGalleryWidget extends StatelessWidget {
     );
   }
 
-  Widget _buildAddImageButton() {
+  Widget _buildAddImageButton(BuildContext context) {
     return Container(
       width: 64,
       height: 64,
       margin: const EdgeInsets.only(left: 8),
       decoration: BoxDecoration(
-        border: Border.all(color: const Color(0xFF4B5563)),
+        border: Border.all(color: AppColors.of(context).textDisabled),
         borderRadius: BorderRadius.circular(4),
       ),
       child: InkWell(
@@ -160,14 +160,14 @@ class ImageGalleryWidget extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.add, color: AppColors.textMuted, size: 24),
+            Icon(Icons.add, color: AppColors.of(context).textMuted, size: 24),
             const SizedBox(height: 4),
             Text(
               'Add',
-              style: AppTextStyles.caption.copyWith(
+              style: AppTextStyles.of(context).caption.copyWith(
                 fontSize: 9,
                 fontWeight: FontWeight.w700,
-                color: AppColors.textMuted,
+                color: AppColors.of(context).textMuted,
               ),
             ),
           ],
@@ -176,29 +176,29 @@ class ImageGalleryWidget extends StatelessWidget {
     );
   }
 
-  Widget _buildEmptyGallery() {
+  Widget _buildEmptyGallery(BuildContext context) {
     return Container(
       height: 339.78,
       decoration: BoxDecoration(
-        color: Colors.black,
+        color: AppColors.of(context).surfaceColor,
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: const Color(0xFF363C4A)),
+        border: Border.all(color: AppColors.of(context).border),
       ),
       child: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(
+            Icon(
               Icons.image_outlined,
-              color: AppColors.textMuted,
+              color: AppColors.of(context).textMuted,
               size: 48,
             ),
             const SizedBox(height: 16),
             Text(
               'لا توجد صور',
-              style: AppTextStyles.bodyMedium.copyWith(
-                color: AppColors.textMuted,
-              ),
+              style: AppTextStyles.of(
+                context,
+              ).bodyMedium.copyWith(color: AppColors.of(context).textMuted),
             ),
             if (onAddImage != null) ...[
               const SizedBox(height: 16),
@@ -208,8 +208,8 @@ class ImageGalleryWidget extends StatelessWidget {
                 icon: const Icon(Icons.add, size: 20),
                 label: const Text('إضافة صورة'),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.cardBackground,
-                  foregroundColor: AppColors.textPrimary,
+                  backgroundColor: AppColors.of(context).cardBackground,
+                  foregroundColor: AppColors.of(context).textPrimary,
                 ),
               ),
             ],

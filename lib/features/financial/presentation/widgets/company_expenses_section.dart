@@ -16,15 +16,15 @@ class CompanyProfitPanel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final netColor = profit.netCompanyProfit >= 0
-        ? AppColors.success
-        : AppColors.error;
+        ? AppColors.of(context).success
+        : AppColors.of(context).error;
 
     return Container(
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: AppColors.cardBackground,
+        color: AppColors.of(context).cardBackground,
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: AppColors.border),
+        border: Border.all(color: AppColors.of(context).border),
       ),
       child: LayoutBuilder(
         builder: (context, constraints) {
@@ -70,9 +70,9 @@ class CompanyExpensesSection extends StatelessWidget {
     final total = expenses.fold<double>(0, (sum, item) => sum + item.amount);
     return Container(
       decoration: BoxDecoration(
-        color: AppColors.cardBackground,
+        color: AppColors.of(context).cardBackground,
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: AppColors.border),
+        border: Border.all(color: AppColors.of(context).border),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -84,7 +84,7 @@ class CompanyExpensesSection extends StatelessWidget {
             onAdd: () => _openExpenseDialog(context),
           ),
           if (loading)
-            const LinearProgressIndicator(color: AppColors.primary)
+            LinearProgressIndicator(color: AppColors.of(context).primary)
           else if (expenses.isEmpty)
             _EmptyLedgerState(onAdd: () => _openExpenseDialog(context))
           else
@@ -144,18 +144,18 @@ class _NetProfitBlock extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text('صافي ربح الشركة', style: AppTextStyles.label),
+              Text('صافي ربح الشركة', style: AppTextStyles.of(context).label),
               const SizedBox(height: 4),
               Text(
                 formatKwd(profit.netCompanyProfit),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: AppTextStyles.h4.copyWith(color: color),
+                style: AppTextStyles.of(context).h4.copyWith(color: color),
               ),
               const SizedBox(height: 4),
               Text(
                 '${profit.completedProjectCount} مشروع مكتمل داخل الحساب',
-                style: AppTextStyles.caption,
+                style: AppTextStyles.of(context).caption,
               ),
             ],
           ),
@@ -222,28 +222,28 @@ class _ProfitDetailChip extends StatelessWidget {
       constraints: const BoxConstraints(minWidth: 190),
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(
-        color: AppColors.surfaceColor,
+        color: AppColors.of(context).surfaceColor,
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: AppColors.border),
+        border: Border.all(color: AppColors.of(context).border),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, color: AppColors.textMuted, size: 18),
+          Icon(icon, color: AppColors.of(context).textMuted, size: 18),
           const SizedBox(width: 8),
           Flexible(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(label, style: AppTextStyles.caption),
+                Text(label, style: AppTextStyles.of(context).caption),
                 const SizedBox(height: 2),
                 Text(
                   value,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: AppTextStyles.label.copyWith(
-                    color: AppColors.textPrimary,
-                  ),
+                  style: AppTextStyles.of(
+                    context,
+                  ).label.copyWith(color: AppColors.of(context).textPrimary),
                 ),
               ],
             ),
@@ -280,12 +280,12 @@ class _LedgerHeader extends StatelessWidget {
                 width: 40,
                 height: 40,
                 decoration: BoxDecoration(
-                  color: AppColors.primary.withValues(alpha: 0.12),
+                  color: AppColors.of(context).primary.withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: const Icon(
+                child: Icon(
                   Icons.account_balance_wallet_outlined,
-                  color: AppColors.primary,
+                  color: AppColors.of(context).primary,
                   size: 22,
                 ),
               ),
@@ -294,11 +294,14 @@ class _LedgerHeader extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text('دفتر مصروفات الشركة', style: AppTextStyles.h5),
+                    Text(
+                      'دفتر مصروفات الشركة',
+                      style: AppTextStyles.of(context).h5,
+                    ),
                     const SizedBox(height: 2),
                     Text(
                       '$count عملية في الفترة المحددة',
-                      style: AppTextStyles.caption,
+                      style: AppTextStyles.of(context).caption,
                     ),
                   ],
                 ),
@@ -312,7 +315,9 @@ class _LedgerHeader extends StatelessWidget {
                 formatKwd(total),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: AppTextStyles.h6.copyWith(color: AppColors.error),
+                style: AppTextStyles.of(
+                  context,
+                ).h6.copyWith(color: AppColors.of(context).error),
               ),
               const SizedBox(width: 12),
               FilledButton.icon(
@@ -419,34 +424,46 @@ class _LedgerTableHeader extends StatelessWidget {
     return Container(
       height: 44,
       padding: const EdgeInsets.symmetric(horizontal: 16),
-      decoration: const BoxDecoration(
-        color: AppColors.tableHeader,
+      decoration: BoxDecoration(
+        color: AppColors.of(context).tableHeader,
         border: Border(
-          top: BorderSide(color: AppColors.border),
-          bottom: BorderSide(color: AppColors.border),
+          top: BorderSide(color: AppColors.of(context).border),
+          bottom: BorderSide(color: AppColors.of(context).border),
         ),
       ),
-      child: const Row(
+      child: Row(
         children: [
           SizedBox(
             width: 112,
-            child: Text('التاريخ', style: AppTextStyles.tableHeader),
+            child: Text(
+              'التاريخ',
+              style: AppTextStyles.of(context).tableHeader,
+            ),
           ),
           Expanded(
             flex: 4,
-            child: Text('المصروف', style: AppTextStyles.tableHeader),
+            child: Text(
+              'المصروف',
+              style: AppTextStyles.of(context).tableHeader,
+            ),
           ),
           Expanded(
             flex: 2,
-            child: Text('التصنيف', style: AppTextStyles.tableHeader),
+            child: Text(
+              'التصنيف',
+              style: AppTextStyles.of(context).tableHeader,
+            ),
           ),
           SizedBox(
             width: 140,
-            child: Text('المبلغ', style: AppTextStyles.tableHeader),
+            child: Text('المبلغ', style: AppTextStyles.of(context).tableHeader),
           ),
           SizedBox(
             width: 96,
-            child: Text('إجراءات', style: AppTextStyles.tableHeader),
+            child: Text(
+              'إجراءات',
+              style: AppTextStyles.of(context).tableHeader,
+            ),
           ),
         ],
       ),
@@ -470,13 +487,13 @@ class _DesktopExpenseRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final rowColor = index.isEven
-        ? AppColors.tableRowEven
-        : AppColors.tableRowOdd;
+        ? AppColors.of(context).tableRowEven
+        : AppColors.of(context).tableRowOdd;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
         color: rowColor,
-        border: const Border(bottom: BorderSide(color: AppColors.border)),
+        border: Border(bottom: BorderSide(color: AppColors.of(context).border)),
       ),
       child: Row(
         children: [
@@ -484,7 +501,7 @@ class _DesktopExpenseRow extends StatelessWidget {
             width: 112,
             child: Text(
               _dateFormat.format(expense.transactionDate),
-              style: AppTextStyles.tableCell,
+              style: AppTextStyles.of(context).tableCell,
             ),
           ),
           Expanded(flex: 4, child: _ExpenseTitleBlock(expense: expense)),
@@ -500,9 +517,9 @@ class _DesktopExpenseRow extends StatelessWidget {
             child: Text(
               formatKwd(expense.amount),
               textAlign: TextAlign.end,
-              style: AppTextStyles.tableCellBold.copyWith(
-                color: AppColors.error,
-              ),
+              style: AppTextStyles.of(
+                context,
+              ).tableCellBold.copyWith(color: AppColors.of(context).error),
             ),
           ),
           SizedBox(
@@ -535,9 +552,9 @@ class _MobileExpenseCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: AppColors.surfaceColor,
+        color: AppColors.of(context).surfaceColor,
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: AppColors.border),
+        border: Border.all(color: AppColors.of(context).border),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -549,18 +566,24 @@ class _MobileExpenseCard extends StatelessWidget {
               const SizedBox(width: 12),
               Text(
                 formatKwd(expense.amount),
-                style: AppTextStyles.h6.copyWith(color: AppColors.error),
+                style: AppTextStyles.of(
+                  context,
+                ).h6.copyWith(color: AppColors.of(context).error),
               ),
             ],
           ),
           const SizedBox(height: 12),
           Row(
             children: [
-              Icon(Icons.event_outlined, size: 16, color: AppColors.textMuted),
+              Icon(
+                Icons.event_outlined,
+                size: 16,
+                color: AppColors.of(context).textMuted,
+              ),
               const SizedBox(width: 6),
               Text(
                 _dateFormat.format(expense.transactionDate),
-                style: AppTextStyles.caption,
+                style: AppTextStyles.of(context).caption,
               ),
               const SizedBox(width: 10),
               _CategoryBadge(category: expense.category),
@@ -589,7 +612,7 @@ class _ExpenseTitleBlock extends StatelessWidget {
           expense.title,
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
-          style: AppTextStyles.tableCellBold,
+          style: AppTextStyles.of(context).tableCellBold,
         ),
         if (description != null && description.isNotEmpty) ...[
           const SizedBox(height: 4),
@@ -597,7 +620,7 @@ class _ExpenseTitleBlock extends StatelessWidget {
             description,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: AppTextStyles.caption,
+            style: AppTextStyles.of(context).caption,
           ),
         ],
       ],
@@ -616,15 +639,17 @@ class _CategoryBadge extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
       decoration: BoxDecoration(
-        color: AppColors.selectedSurface,
+        color: AppColors.of(context).selectedSurface,
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: AppColors.selectedSurfaceStrong),
+        border: Border.all(color: AppColors.of(context).selectedSurfaceStrong),
       ),
       child: Text(
         text == null || text.isEmpty ? 'بدون تصنيف' : text,
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
-        style: AppTextStyles.labelSmall.copyWith(color: AppColors.primaryLight),
+        style: AppTextStyles.of(
+          context,
+        ).labelSmall.copyWith(color: AppColors.of(context).primaryLight),
       ),
     );
   }
@@ -653,7 +678,7 @@ class _ExpenseActions extends StatelessWidget {
             visualDensity: VisualDensity.compact,
             onPressed: saving ? null : () => onEdit(expense),
             icon: const Icon(Icons.edit_outlined, size: 20),
-            color: AppColors.primaryLight,
+            color: AppColors.of(context).primaryLight,
           ),
         ),
         Tooltip(
@@ -662,7 +687,7 @@ class _ExpenseActions extends StatelessWidget {
             visualDensity: VisualDensity.compact,
             onPressed: saving ? null : () => _confirmDelete(context, expense),
             icon: const Icon(Icons.delete_outline, size: 20),
-            color: AppColors.error,
+            color: AppColors.of(context).error,
           ),
         ),
       ],
@@ -693,8 +718,8 @@ class _EmptyLedgerState extends StatelessWidget {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 26),
-      decoration: const BoxDecoration(
-        border: Border(top: BorderSide(color: AppColors.border)),
+      decoration: BoxDecoration(
+        border: Border(top: BorderSide(color: AppColors.of(context).border)),
       ),
       child: Column(
         children: [
@@ -702,22 +727,22 @@ class _EmptyLedgerState extends StatelessWidget {
             width: 48,
             height: 48,
             decoration: BoxDecoration(
-              color: AppColors.surfaceColor,
+              color: AppColors.of(context).surfaceColor,
               borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: AppColors.border),
+              border: Border.all(color: AppColors.of(context).border),
             ),
-            child: const Icon(
+            child: Icon(
               Icons.receipt_long_outlined,
-              color: AppColors.textMuted,
+              color: AppColors.of(context).textMuted,
             ),
           ),
           const SizedBox(height: 12),
-          const Text('لا توجد مصروفات شركة', style: AppTextStyles.h6),
+          Text('لا توجد مصروفات شركة', style: AppTextStyles.of(context).h6),
           const SizedBox(height: 6),
-          const Text(
+          Text(
             'أضف أول مصروف ليظهر في حساب صافي ربح الشركة لهذه الفترة.',
             textAlign: TextAlign.center,
-            style: AppTextStyles.bodySmall,
+            style: AppTextStyles.of(context).bodySmall,
           ),
           const SizedBox(height: 14),
           OutlinedButton.icon(
@@ -777,7 +802,7 @@ class _CompanyExpenseDialogState extends State<_CompanyExpenseDialog> {
   Widget build(BuildContext context) {
     final isEditing = widget.expense != null;
     return AlertDialog(
-      backgroundColor: AppColors.cardBackground,
+      backgroundColor: AppColors.of(context).cardBackground,
       surfaceTintColor: Colors.transparent,
       insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
       titlePadding: const EdgeInsets.fromLTRB(24, 22, 24, 0),
@@ -789,19 +814,19 @@ class _CompanyExpenseDialogState extends State<_CompanyExpenseDialog> {
             width: 40,
             height: 40,
             decoration: BoxDecoration(
-              color: AppColors.primary.withValues(alpha: 0.12),
+              color: AppColors.of(context).primary.withValues(alpha: 0.12),
               borderRadius: BorderRadius.circular(8),
             ),
-            child: const Icon(
+            child: Icon(
               Icons.receipt_long_outlined,
-              color: AppColors.primary,
+              color: AppColors.of(context).primary,
             ),
           ),
           const SizedBox(width: 12),
           Expanded(
             child: Text(
               isEditing ? 'تعديل مصروف شركة' : 'إضافة مصروف شركة',
-              style: AppTextStyles.h5,
+              style: AppTextStyles.of(context).h5,
             ),
           ),
         ],
@@ -823,8 +848,9 @@ class _CompanyExpenseDialogState extends State<_CompanyExpenseDialog> {
                       keyboardType: const TextInputType.numberWithOptions(
                         decimal: true,
                       ),
-                      style: AppTextStyles.inputText,
+                      style: AppTextStyles.of(context).inputText,
                       decoration: _inputDecoration(
+                        context,
                         label: 'المبلغ',
                         icon: Icons.payments_outlined,
                       ),
@@ -863,8 +889,9 @@ class _CompanyExpenseDialogState extends State<_CompanyExpenseDialog> {
                 TextFormField(
                   inputFormatters: const [ArabicNumberInputFormatter()],
                   controller: titleController,
-                  style: AppTextStyles.inputText,
+                  style: AppTextStyles.of(context).inputText,
                   decoration: _inputDecoration(
+                    context,
                     label: 'البند',
                     icon: Icons.title_outlined,
                   ),
@@ -883,13 +910,14 @@ class _CompanyExpenseDialogState extends State<_CompanyExpenseDialog> {
                       setState(() => selectedCategory = value);
                     }
                   },
-                  dropdownColor: AppColors.surfaceColor,
-                  style: AppTextStyles.inputText,
-                  icon: const Icon(
+                  dropdownColor: AppColors.of(context).surfaceColor,
+                  style: AppTextStyles.of(context).inputText,
+                  icon: Icon(
                     Icons.keyboard_arrow_down,
-                    color: AppColors.textSecondary,
+                    color: AppColors.of(context).textSecondary,
                   ),
                   decoration: _inputDecoration(
+                    context,
                     label: 'التصنيف',
                     icon: Icons.sell_outlined,
                   ),
@@ -898,10 +926,11 @@ class _CompanyExpenseDialogState extends State<_CompanyExpenseDialog> {
                 TextFormField(
                   inputFormatters: const [ArabicNumberInputFormatter()],
                   controller: descriptionController,
-                  style: AppTextStyles.inputText,
+                  style: AppTextStyles.of(context).inputText,
                   minLines: 3,
                   maxLines: 5,
                   decoration: _inputDecoration(
+                    context,
                     label: 'الوصف',
                     icon: Icons.notes_outlined,
                   ),
@@ -962,7 +991,7 @@ class _DateFieldButton extends StatelessWidget {
       style: OutlinedButton.styleFrom(
         alignment: AlignmentDirectional.centerStart,
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 17),
-        side: const BorderSide(color: AppColors.inputBorder),
+        side: BorderSide(color: AppColors.of(context).inputBorder),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
       ),
       child: Row(
@@ -973,9 +1002,12 @@ class _DateFieldButton extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text('التاريخ', style: AppTextStyles.caption),
+                Text('التاريخ', style: AppTextStyles.of(context).caption),
                 const SizedBox(height: 2),
-                Text(_dateFormat.format(date), style: AppTextStyles.inputText),
+                Text(
+                  _dateFormat.format(date),
+                  style: AppTextStyles.of(context).inputText,
+                ),
               ],
             ),
           ),
@@ -993,34 +1025,39 @@ class _DeleteCompanyExpenseDialog extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      backgroundColor: AppColors.cardBackground,
+      backgroundColor: AppColors.of(context).cardBackground,
       surfaceTintColor: Colors.transparent,
-      title: const Text('حذف مصروف الشركة', style: AppTextStyles.h5),
+      title: Text('حذف مصروف الشركة', style: AppTextStyles.of(context).h5),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
+          Text(
             'سيتم حذف هذا السجل من دفتر مصروفات الشركة.',
-            style: AppTextStyles.bodyMedium,
+            style: AppTextStyles.of(context).bodyMedium,
           ),
           const SizedBox(height: 14),
           Container(
             width: double.infinity,
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: AppColors.surfaceColor,
+              color: AppColors.of(context).surfaceColor,
               borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: AppColors.border),
+              border: Border.all(color: AppColors.of(context).border),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(expense.title, style: AppTextStyles.tableCellBold),
+                Text(
+                  expense.title,
+                  style: AppTextStyles.of(context).tableCellBold,
+                ),
                 const SizedBox(height: 6),
                 Text(
                   '${_dateFormat.format(expense.transactionDate)}  •  ${formatKwd(expense.amount)}',
-                  style: AppTextStyles.caption.copyWith(color: AppColors.error),
+                  style: AppTextStyles.of(
+                    context,
+                  ).caption.copyWith(color: AppColors.of(context).error),
                 ),
               ],
             ),
@@ -1033,7 +1070,9 @@ class _DeleteCompanyExpenseDialog extends StatelessWidget {
           child: const Text('إلغاء'),
         ),
         FilledButton.icon(
-          style: FilledButton.styleFrom(backgroundColor: AppColors.error),
+          style: FilledButton.styleFrom(
+            backgroundColor: AppColors.of(context).error,
+          ),
           onPressed: () => Navigator.of(context).pop(true),
           icon: const Icon(Icons.delete_outline, size: 18),
           label: const Text('حذف'),
@@ -1071,23 +1110,24 @@ class _CompanyExpenseFormValue {
   });
 }
 
-InputDecoration _inputDecoration({
+InputDecoration _inputDecoration(
+  BuildContext context, {
   required String label,
   required IconData icon,
 }) {
   return InputDecoration(
     labelText: label,
-    prefixIcon: Icon(icon, color: AppColors.textMuted),
-    labelStyle: AppTextStyles.inputLabel,
+    prefixIcon: Icon(icon, color: AppColors.of(context).textMuted),
+    labelStyle: AppTextStyles.of(context).inputLabel,
     filled: true,
-    fillColor: AppColors.inputBackground,
+    fillColor: AppColors.of(context).inputBackground,
     enabledBorder: OutlineInputBorder(
       borderRadius: BorderRadius.circular(8),
-      borderSide: const BorderSide(color: AppColors.inputBorder),
+      borderSide: BorderSide(color: AppColors.of(context).inputBorder),
     ),
     focusedBorder: OutlineInputBorder(
       borderRadius: BorderRadius.circular(8),
-      borderSide: const BorderSide(color: AppColors.inputFocusBorder),
+      borderSide: BorderSide(color: AppColors.of(context).inputFocusBorder),
     ),
   );
 }

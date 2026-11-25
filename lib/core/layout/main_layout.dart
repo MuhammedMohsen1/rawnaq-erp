@@ -31,7 +31,7 @@ class MainLayout extends StatelessWidget {
         if (isDesktop) {
           // Desktop layout with sidebar on the left
           return Scaffold(
-            backgroundColor: AppColors.scaffoldBackground,
+            backgroundColor: AppColors.of(context).scaffoldBackground,
             body: Row(
               children: [
                 // Sidebar (on the left)
@@ -89,7 +89,7 @@ class MainLayout extends StatelessWidget {
         } else {
           // Mobile layout with bottom navigation
           return Scaffold(
-            backgroundColor: AppColors.sidebarBackground,
+            backgroundColor: AppColors.of(context).sidebarBackground,
             body: SafeArea(
               top: true,
               left: false,
@@ -200,9 +200,11 @@ class _SidebarState extends State<_Sidebar> {
       duration: const Duration(milliseconds: 400),
       curve: Curves.fastOutSlowIn,
       width: _isCollapsed ? 100 : 260,
-      decoration: const BoxDecoration(
-        color: Color(0xFF1C2128),
-        border: Border(left: BorderSide(color: Color(0xFF312F31), width: 1)),
+      decoration: BoxDecoration(
+        color: AppColors.of(context).cardBackground,
+        border: Border(
+          left: BorderSide(color: AppColors.of(context).border, width: 1),
+        ),
       ),
       child: AnimatedSwitcher(
         duration: const Duration(milliseconds: 300),
@@ -237,9 +239,9 @@ class _SidebarState extends State<_Sidebar> {
       // Logo/Company section
       Container(
         padding: const EdgeInsets.all(10),
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           border: Border(
-            bottom: BorderSide(color: AppColors.divider, width: 1),
+            bottom: BorderSide(color: AppColors.of(context).divider, width: 1),
           ),
         ),
         child: Row(
@@ -263,7 +265,7 @@ class _SidebarState extends State<_Sidebar> {
               child: Center(
                 child: Icon(
                   Icons.business,
-                  color: AppColors.scaffoldBackground,
+                  color: AppColors.of(context).scaffoldBackground,
                   size: 24,
                 ),
               ),
@@ -518,7 +520,7 @@ class _SidebarState extends State<_Sidebar> {
       ),
 
       // Bottom section
-      const Divider(color: AppColors.divider, height: 1),
+      Divider(color: AppColors.of(context).divider, height: 1),
       Padding(
         padding: const EdgeInsets.all(12),
         child: Column(
@@ -574,8 +576,11 @@ class _SidebarState extends State<_Sidebar> {
                   width: 44,
                   height: 44,
                   decoration: BoxDecoration(
-                    color: AppColors.cardBackground,
-                    border: Border.all(color: AppColors.border, width: 1),
+                    color: AppColors.of(context).cardBackground,
+                    border: Border.all(
+                      color: AppColors.of(context).border,
+                      width: 1,
+                    ),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Center(
@@ -587,7 +592,7 @@ class _SidebarState extends State<_Sidebar> {
                       child: Icon(
                         _isCollapsed ? Icons.chevron_right : Icons.chevron_left,
                         key: ValueKey<bool>(_isCollapsed),
-                        color: AppColors.textSecondary,
+                        color: AppColors.of(context).textSecondary,
                         size: 20,
                       ),
                     ),
@@ -879,7 +884,7 @@ class _SidebarState extends State<_Sidebar> {
       ),
 
       // Bottom section
-      const Divider(color: AppColors.divider, height: 1),
+      Divider(color: AppColors.of(context).divider, height: 1),
       Padding(
         padding: const EdgeInsets.all(12),
         child: Column(
@@ -937,8 +942,11 @@ class _SidebarState extends State<_Sidebar> {
                   width: double.infinity,
                   padding: const EdgeInsets.symmetric(vertical: 12),
                   decoration: BoxDecoration(
-                    color: AppColors.cardBackground,
-                    border: Border.all(color: AppColors.border, width: 1),
+                    color: AppColors.of(context).cardBackground,
+                    border: Border.all(
+                      color: AppColors.of(context).border,
+                      width: 1,
+                    ),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Row(
@@ -957,7 +965,7 @@ class _SidebarState extends State<_Sidebar> {
                               ? Icons.chevron_right
                               : Icons.chevron_left,
                           key: ValueKey<bool>(_isCollapsed),
-                          color: AppColors.textSecondary,
+                          color: AppColors.of(context).textSecondary,
                           size: 20,
                         ),
                       ),
@@ -999,7 +1007,7 @@ class _SidebarState extends State<_Sidebar> {
             child: Center(
               child: Icon(
                 Icons.business,
-                color: AppColors.scaffoldBackground,
+                color: AppColors.of(context).scaffoldBackground,
                 size: 24,
               ),
             ),
@@ -1013,16 +1021,16 @@ class _SidebarState extends State<_Sidebar> {
                 children: [
                   Text(
                     'Rawnaq',
-                    style: AppTextStyles.h6.copyWith(
-                      color: AppColors.textPrimary,
-                    ),
+                    style: AppTextStyles.of(
+                      context,
+                    ).h6.copyWith(color: AppColors.of(context).textPrimary),
                   ),
                   const SizedBox(height: 2),
                   Text(
                     'نظام إدارة المشاريع',
-                    style: AppTextStyles.caption.copyWith(
-                      color: AppColors.textMuted,
-                    ),
+                    style: AppTextStyles.of(
+                      context,
+                    ).caption.copyWith(color: AppColors.of(context).textMuted),
                   ),
                 ],
               ),
@@ -1059,12 +1067,14 @@ class _SidebarState extends State<_Sidebar> {
               margin: const EdgeInsets.symmetric(horizontal: 4),
               decoration: BoxDecoration(
                 color: isActive
-                    ? AppColors.primary.withValues(alpha: 0.15)
+                    ? AppColors.of(context).primary.withValues(alpha: 0.15)
                     : Colors.transparent,
                 borderRadius: BorderRadius.circular(8),
                 border: isActive
                     ? Border.all(
-                        color: AppColors.primary.withValues(alpha: 0.3),
+                        color: AppColors.of(
+                          context,
+                        ).primary.withValues(alpha: 0.3),
                         width: 1,
                       )
                     : null,
@@ -1072,7 +1082,9 @@ class _SidebarState extends State<_Sidebar> {
               child: Icon(
                 isActive ? activeIcon : icon,
                 size: 22,
-                color: isActive ? AppColors.primary : AppColors.textSecondary,
+                color: isActive
+                    ? AppColors.of(context).primary
+                    : AppColors.of(context).textSecondary,
               ),
             ),
           ),
@@ -1153,12 +1165,14 @@ class _SidebarState extends State<_Sidebar> {
                   : const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
               decoration: BoxDecoration(
                 color: isActive
-                    ? AppColors.primary.withValues(alpha: 0.15)
+                    ? AppColors.of(context).primary.withValues(alpha: 0.15)
                     : Colors.transparent,
                 borderRadius: BorderRadius.circular(8),
                 border: isActive
                     ? Border.all(
-                        color: AppColors.primary.withValues(alpha: 0.3),
+                        color: AppColors.of(
+                          context,
+                        ).primary.withValues(alpha: 0.3),
                         width: 1,
                       )
                     : null,
@@ -1172,8 +1186,8 @@ class _SidebarState extends State<_Sidebar> {
                     isActive ? activeIcon : icon,
                     size: 22,
                     color: isActive
-                        ? AppColors.primary
-                        : AppColors.textSecondary,
+                        ? AppColors.of(context).primary
+                        : AppColors.of(context).textSecondary,
                   ),
                   if (!_isCollapsed) ...[
                     const SizedBox(width: 12),
@@ -1181,18 +1195,18 @@ class _SidebarState extends State<_Sidebar> {
                       child: Text(
                         label,
                         style: isActive
-                            ? AppTextStyles.navItemActive.copyWith(
-                                color: AppColors.primary,
+                            ? AppTextStyles.of(context).navItemActive.copyWith(
+                                color: AppColors.of(context).primary,
                               )
-                            : AppTextStyles.navItem,
+                            : AppTextStyles.of(context).navItem,
                       ),
                     ),
                     if (isActive)
                       Container(
                         width: 6,
                         height: 6,
-                        decoration: const BoxDecoration(
-                          color: AppColors.primary,
+                        decoration: BoxDecoration(
+                          color: AppColors.of(context).primary,
                           shape: BoxShape.circle,
                         ),
                       ),
@@ -1228,7 +1242,9 @@ class _SidebarState extends State<_Sidebar> {
                 Expanded(
                   child: Text(
                     label,
-                    style: AppTextStyles.navItem.copyWith(color: Colors.red),
+                    style: AppTextStyles.of(
+                      context,
+                    ).navItem.copyWith(color: Colors.red),
                   ),
                 ),
               ],
@@ -1254,11 +1270,11 @@ class MainLayoutPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.sidebarBackground,
+      backgroundColor: AppColors.of(context).sidebarBackground,
       body: Container(
         width: double.infinity,
         height: double.infinity,
-        color: AppColors.sidebarBackground,
+        color: AppColors.of(context).sidebarBackground,
         child: child,
       ),
       floatingActionButton: floatingActionButton,

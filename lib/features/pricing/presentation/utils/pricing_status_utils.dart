@@ -5,20 +5,20 @@ import '../../../../core/constants/app_colors.dart';
 /// Utilities for pricing status
 class PricingStatusUtils {
   /// Get status color based on pricing status
-  static Color getStatusColor(String? status) {
-    if (status == null) return AppColors.info;
+  static Color getStatusColor(BuildContext context, String? status) {
+    if (status == null) return AppColors.of(context).info;
 
     switch (status.toUpperCase()) {
       case 'DRAFT':
-        return AppColors.textMuted;
+        return AppColors.of(context).textMuted;
       case 'PENDING_SIGNATURE':
-        return AppColors.warning;
+        return AppColors.of(context).warning;
       case 'APPROVED':
-        return AppColors.statusCompleted;
+        return AppColors.of(context).statusCompleted;
       case 'REJECTED':
-        return AppColors.statusDelayed;
+        return AppColors.of(context).statusDelayed;
       default:
-        return AppColors.info;
+        return AppColors.of(context).info;
     }
   }
 

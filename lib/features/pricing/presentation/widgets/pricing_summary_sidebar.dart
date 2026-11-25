@@ -1,3 +1,5 @@
+import 'package:rawnaq/core/widgets/app_toast.dart';
+import 'package:rawnaq/core/constants/app_colors.dart';
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -254,7 +256,8 @@ class _PricingSummarySidebarState extends State<PricingSummarySidebar> {
       });
 
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
+        AppToast.build(
+          tone: ToastTone.success,
           content: Text('تم تحديث الملاحظات من الإعدادات'),
           duration: Duration(seconds: 2),
         ),
@@ -265,7 +268,8 @@ class _PricingSummarySidebarState extends State<PricingSummarySidebar> {
         _isRefreshingDefaultNotes = false;
       });
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
+        AppToast.build(
+          tone: ToastTone.error,
           duration: const Duration(seconds: 2),
           content: Text('فشل تحديث الملاحظات: ${e.toString()}'),
         ),
@@ -304,12 +308,12 @@ class _PricingSummarySidebarState extends State<PricingSummarySidebar> {
           width: double.infinity,
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: const Color(0xFF1C212B),
-            border: Border.all(color: const Color(0xFF363C4A)),
+            color: AppColors.of(context).cardBackground,
+            border: Border.all(color: AppColors.of(context).border),
             borderRadius: BorderRadius.circular(12),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.4),
+                color: AppColors.of(context).shadow,
                 blurRadius: 20,
                 offset: const Offset(0, 8),
               ),
@@ -360,9 +364,12 @@ class _PricingSummarySidebarState extends State<PricingSummarySidebar> {
           horizontal: isMobile ? 8 : 10,
           vertical: isMobile ? 3 : 4,
         ),
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           gradient: LinearGradient(
-            colors: [Color(0xFF1C212B), Color(0xFF232936)],
+            colors: [
+              AppColors.of(context).cardBackground,
+              AppColors.of(context).surfaceColor,
+            ],
             begin: Alignment.centerRight,
             end: Alignment.centerLeft,
           ),
@@ -498,9 +505,9 @@ class _PricingSummarySidebarState extends State<PricingSummarySidebar> {
           child: Container(
             padding: EdgeInsets.all(isMobile ? 4 : 6),
             decoration: BoxDecoration(
-              color: const Color(0xFF15181E),
+              color: AppColors.of(context).scaffoldBackground,
               borderRadius: BorderRadius.circular(6),
-              border: Border.all(color: const Color(0xFF363C4A)),
+              border: Border.all(color: AppColors.of(context).border),
             ),
             child: Row(
               children: [
@@ -524,15 +531,19 @@ class _PricingSummarySidebarState extends State<PricingSummarySidebar> {
                         fontSize: isMobile ? 10 : 11,
                       ),
                       filled: true,
-                      fillColor: const Color(0xFF0F1217),
+                      fillColor: AppColors.of(context).inputBackground,
                       isDense: true,
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(4),
-                        borderSide: const BorderSide(color: Color(0xFF363C4A)),
+                        borderSide: BorderSide(
+                          color: AppColors.of(context).border,
+                        ),
                       ),
                       enabledBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(4),
-                        borderSide: const BorderSide(color: Color(0xFF363C4A)),
+                        borderSide: BorderSide(
+                          color: AppColors.of(context).border,
+                        ),
                       ),
                       focusedBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(4),
@@ -552,7 +563,8 @@ class _PricingSummarySidebarState extends State<PricingSummarySidebar> {
                     if (value != null && value >= 0) {
                       widget.onBulkProfitMarginUpdate!(value);
                       ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
+                        AppToast.build(
+                          tone: ToastTone.success,
                           content: Text(
                             'تم تطبيق نسبة الربح $value% على جميع الفئات الفرعية',
                           ),

@@ -23,22 +23,28 @@ class PendingApprovalsCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: AppColors.cardBackground,
+        color: AppColors.of(context).cardBackground,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.warning.withValues(alpha: 0.5)),
+        border: Border.all(
+          color: AppColors.of(context).warning.withValues(alpha: 0.5),
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              Icon(Icons.pending_actions, color: AppColors.warning, size: 24),
+              Icon(
+                Icons.pending_actions,
+                color: AppColors.of(context).warning,
+                size: 24,
+              ),
               const SizedBox(width: 12),
               Text(
                 'طلبات بنود جدول الدفعات المعلقة (${pendingRequests.length})',
-                style: AppTextStyles.sectionTitle.copyWith(
-                  color: AppColors.warning,
-                ),
+                style: AppTextStyles.of(
+                  context,
+                ).sectionTitle.copyWith(color: AppColors.of(context).warning),
               ),
             ],
           ),
@@ -83,7 +89,9 @@ class PendingApprovalsCard extends StatelessWidget {
                 onReject(requestId, reasonController.text);
               }
             },
-            style: ElevatedButton.styleFrom(backgroundColor: AppColors.error),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.of(context).error,
+            ),
             child: const Text('رفض'),
           ),
         ],
@@ -111,9 +119,9 @@ class _PendingRequestItem extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.scaffoldBackground,
+        color: AppColors.of(context).scaffoldBackground,
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: AppColors.border),
+        border: Border.all(color: AppColors.of(context).border),
       ),
       child: Row(
         children: [
@@ -121,16 +129,19 @@ class _PendingRequestItem extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(request.phaseName, style: AppTextStyles.tableCellBold),
+                Text(
+                  request.phaseName,
+                  style: AppTextStyles.of(context).tableCellBold,
+                ),
                 const SizedBox(height: 4),
                 Text(
                   'مقدم من: ${request.requestedByName}',
-                  style: AppTextStyles.bodySmall,
+                  style: AppTextStyles.of(context).bodySmall,
                 ),
                 const SizedBox(height: 4),
                 Text(
                   'التاريخ: ${dateFormat.format(request.createdAt)}',
-                  style: AppTextStyles.bodySmall,
+                  style: AppTextStyles.of(context).bodySmall,
                 ),
                 if (request.attachments.isNotEmpty) ...[
                   const SizedBox(height: 8),
@@ -147,9 +158,9 @@ class _PendingRequestItem extends StatelessWidget {
             children: [
               Text(
                 '${request.requestedAmount.toStringAsFixed(3)} د.ك',
-                style: AppTextStyles.tableCellBold.copyWith(
-                  color: AppColors.success,
-                ),
+                style: AppTextStyles.of(
+                  context,
+                ).tableCellBold.copyWith(color: AppColors.of(context).success),
               ),
               const SizedBox(height: 8),
               Row(
@@ -157,19 +168,26 @@ class _PendingRequestItem extends StatelessWidget {
                 children: [
                   IconButton(
                     onPressed: onReject,
-                    icon: const Icon(Icons.close, color: AppColors.error),
+                    icon: Icon(Icons.close, color: AppColors.of(context).error),
                     tooltip: 'رفض',
                     style: IconButton.styleFrom(
-                      backgroundColor: AppColors.error.withValues(alpha: 0.1),
+                      backgroundColor: AppColors.of(
+                        context,
+                      ).error.withValues(alpha: 0.1),
                     ),
                   ),
                   const SizedBox(width: 8),
                   IconButton(
                     onPressed: onApprove,
-                    icon: const Icon(Icons.check, color: AppColors.success),
+                    icon: Icon(
+                      Icons.check,
+                      color: AppColors.of(context).success,
+                    ),
                     tooltip: 'قبول',
                     style: IconButton.styleFrom(
-                      backgroundColor: AppColors.success.withValues(alpha: 0.1),
+                      backgroundColor: AppColors.of(
+                        context,
+                      ).success.withValues(alpha: 0.1),
                     ),
                   ),
                 ],

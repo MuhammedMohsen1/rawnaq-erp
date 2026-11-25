@@ -1,3 +1,4 @@
+import 'package:rawnaq/core/widgets/app_toast.dart';
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -50,7 +51,11 @@ class _ProjectListItemCardState extends State<ProjectListItemCard> {
     Clipboard.setData(ClipboardData(text: text));
     if (context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(message), duration: const Duration(seconds: 1)),
+        AppToast.build(
+          tone: ToastTone.success,
+          content: Text(message),
+          duration: const Duration(seconds: 1),
+        ),
       );
     }
   }
@@ -58,6 +63,7 @@ class _ProjectListItemCardState extends State<ProjectListItemCard> {
   @override
   Widget build(BuildContext context) {
     final meta = _metaOf(
+      context,
       widget.project.status,
       widget.project.lastEditAt,
       widget.project.type,
@@ -83,7 +89,7 @@ class _ProjectListItemCardState extends State<ProjectListItemCard> {
           curve: Curves.easeOutCubic,
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(borderRadius),
-            border: Border.all(color: AppColors.border),
+            border: Border.all(color: AppColors.of(context).border),
           ),
           child: ClipRRect(
             borderRadius: BorderRadius.circular(borderRadius),
@@ -140,12 +146,16 @@ class _ProjectListItemCardState extends State<ProjectListItemCard> {
                                       widget.project.name,
                                       maxLines: 1,
                                       overflow: TextOverflow.ellipsis,
-                                      style: AppTextStyles.bodyMedium.copyWith(
-                                        color: AppColors.textPrimary,
-                                        fontWeight: FontWeight.w800,
-                                        fontSize: compact ? 12.5 : null,
-                                        height: compact ? 1.15 : null,
-                                      ),
+                                      style: AppTextStyles.of(context)
+                                          .bodyMedium
+                                          .copyWith(
+                                            color: AppColors.of(
+                                              context,
+                                            ).textPrimary,
+                                            fontWeight: FontWeight.w800,
+                                            fontSize: compact ? 12.5 : null,
+                                            height: compact ? 1.15 : null,
+                                          ),
                                     ),
                                   ],
                                 ),
@@ -224,6 +234,7 @@ class _StatusMeta {
 }
 
 _StatusMeta _metaOf(
+  BuildContext context,
   ProjectStatus status,
   DateTime? lastEditAt,
   ProjectType projectType,
@@ -234,37 +245,47 @@ _StatusMeta _metaOf(
   switch (status) {
     case ProjectStatus.underPricing:
       return _StatusMeta(
-        accent: daysSinceEdit > 20 ? Colors.red : AppColors.primary,
+        accent: daysSinceEdit > 20 ? Colors.red : AppColors.of(context).primary,
         icon: Icons.calculate_rounded,
         groupLabel: 'العرض',
       );
     case ProjectStatus.pendingSignature:
       return _StatusMeta(
-        accent: daysSinceEdit > 20 ? Colors.red : AppColors.statusOnHold,
+        accent: daysSinceEdit > 20
+            ? Colors.red
+            : AppColors.of(context).statusOnHold,
         icon: Icons.draw_rounded,
         groupLabel: 'التعاقد',
       );
     case ProjectStatus.execution:
       return _StatusMeta(
-        accent: daysSinceEdit > 20 ? Colors.red : AppColors.secondary,
+        accent: daysSinceEdit > 20
+            ? Colors.red
+            : AppColors.of(context).secondary,
         icon: Icons.rocket_launch_rounded,
         groupLabel: projectType == ProjectType.design ? 'تصميم' : 'التنفيذ',
       );
     case ProjectStatus.completed:
       return _StatusMeta(
-        accent: daysSinceEdit > 20 ? Colors.red : AppColors.statusCompleted,
+        accent: daysSinceEdit > 20
+            ? Colors.red
+            : AppColors.of(context).statusCompleted,
         icon: Icons.verified_rounded,
         groupLabel: 'الإغلاق',
       );
     case ProjectStatus.draft:
       return _StatusMeta(
-        accent: daysSinceEdit > 20 ? Colors.red : AppColors.textMuted,
+        accent: daysSinceEdit > 20
+            ? Colors.red
+            : AppColors.of(context).textMuted,
         icon: Icons.folder_rounded,
         groupLabel: 'مسودة',
       );
     default:
       return _StatusMeta(
-        accent: daysSinceEdit > 20 ? Colors.red : AppColors.textMuted,
+        accent: daysSinceEdit > 20
+            ? Colors.red
+            : AppColors.of(context).textMuted,
         icon: Icons.folder_rounded,
         groupLabel: 'أخرى',
       );
@@ -298,8 +319,8 @@ class ProjectsListCenteredLoader extends StatelessWidget {
   const ProjectsListCenteredLoader({super.key});
 
   @override
-  Widget build(BuildContext context) => const Center(
-    child: CircularProgressIndicator(color: AppColors.secondary),
+  Widget build(BuildContext context) => Center(
+    child: CircularProgressIndicator(color: AppColors.of(context).secondary),
   );
 }
 
@@ -307,13 +328,15 @@ class ProjectsListBottomLoader extends StatelessWidget {
   const ProjectsListBottomLoader({super.key});
 
   @override
-  Widget build(BuildContext context) => const Center(
+  Widget build(BuildContext context) => Center(
     child: Padding(
       padding: EdgeInsets.all(18),
       child: SizedBox(
         width: 22,
         height: 22,
-        child: CircularProgressIndicator(color: AppColors.secondary),
+        child: CircularProgressIndicator(
+          color: AppColors.of(context).secondary,
+        ),
       ),
     ),
   );

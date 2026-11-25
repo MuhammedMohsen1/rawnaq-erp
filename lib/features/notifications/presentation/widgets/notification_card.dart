@@ -15,10 +15,10 @@ class NotificationCard extends StatelessWidget {
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: notification.isUnread
-            ? Colors.white.withValues(alpha: 0.05)
-            : AppColors.cardBackground,
+            ? AppColors.of(context).selectedSurface
+            : AppColors.of(context).cardBackground,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.border, width: 1),
+        border: Border.all(color: AppColors.of(context).border, width: 1),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -43,8 +43,8 @@ class NotificationCard extends StatelessWidget {
               children: [
                 Text(
                   notification.message,
-                  style: AppTextStyles.bodyMedium.copyWith(
-                    color: AppColors.textPrimary,
+                  style: AppTextStyles.of(context).bodyMedium.copyWith(
+                    color: AppColors.of(context).textPrimary,
                   ),
                 ),
                 const SizedBox(height: 12),
@@ -52,8 +52,8 @@ class NotificationCard extends StatelessWidget {
                   children: [
                     Text(
                       notification.timestamp,
-                      style: AppTextStyles.caption.copyWith(
-                        color: AppColors.textMuted,
+                      style: AppTextStyles.of(context).caption.copyWith(
+                        color: AppColors.of(context).textMuted,
                       ),
                     ),
                     const Spacer(),
@@ -99,8 +99,8 @@ class _NotificationActionButton extends StatelessWidget {
             ),
           )
         : OutlinedButton.styleFrom(
-            foregroundColor: AppColors.textSecondary,
-            side: const BorderSide(color: AppColors.border),
+            foregroundColor: AppColors.of(context).textSecondary,
+            side: BorderSide(color: AppColors.of(context).border),
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             minimumSize: const Size(0, 32),
             shape: RoundedRectangleBorder(

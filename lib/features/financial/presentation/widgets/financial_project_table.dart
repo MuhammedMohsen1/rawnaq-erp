@@ -19,9 +19,9 @@ class FinancialProjectTable extends StatelessWidget {
 
     return Container(
       decoration: BoxDecoration(
-        color: AppColors.cardBackground,
+        color: AppColors.of(context).cardBackground,
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: AppColors.border),
+        border: Border.all(color: AppColors.of(context).border),
       ),
       child: LayoutBuilder(
         builder: (context, constraints) {
@@ -81,13 +81,17 @@ class _PinnedFinancialProjectTable extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            _buildHeaderTable(),
-            const Divider(height: 1, thickness: 1, color: AppColors.border),
+            _buildHeaderTable(context),
+            Divider(
+              height: 1,
+              thickness: 1,
+              color: AppColors.of(context).border,
+            ),
             SizedBox(
               height: _bodyHeight,
               child: Scrollbar(
                 thumbVisibility: projects.length > 5,
-                child: SingleChildScrollView(child: _buildBodyTable()),
+                child: SingleChildScrollView(child: _buildBodyTable(context)),
               ),
             ),
           ],
@@ -101,12 +105,12 @@ class _PinnedFinancialProjectTable extends StatelessWidget {
     return estimatedHeight < 220 ? estimatedHeight : 420;
   }
 
-  Widget _buildHeaderTable() {
+  Widget _buildHeaderTable(BuildContext context) {
     return Table(
       columnWidths: _columnWidths,
       children: [
         TableRow(
-          decoration: const BoxDecoration(color: AppColors.tableHeader),
+          decoration: BoxDecoration(color: AppColors.of(context).tableHeader),
           children: [
             for (int index = 0; index < _headers.length; index++)
               _HeaderCell(
@@ -119,7 +123,7 @@ class _PinnedFinancialProjectTable extends StatelessWidget {
     );
   }
 
-  Widget _buildBodyTable() {
+  Widget _buildBodyTable(BuildContext context) {
     return Table(
       columnWidths: _columnWidths,
       defaultVerticalAlignment: TableCellVerticalAlignment.middle,
@@ -129,15 +133,20 @@ class _PinnedFinancialProjectTable extends StatelessWidget {
             decoration: BoxDecoration(
               border: index == projects.length - 1
                   ? null
-                  : const Border(bottom: BorderSide(color: AppColors.border)),
+                  : Border(
+                      bottom: BorderSide(color: AppColors.of(context).border),
+                    ),
             ),
-            children: _buildRowCells(projects[index]),
+            children: _buildRowCells(context, projects[index]),
           ),
       ],
     );
   }
 
-  List<Widget> _buildRowCells(FinancialProjectModel project) {
+  List<Widget> _buildRowCells(
+    BuildContext context,
+    FinancialProjectModel project,
+  ) {
     final profit = project.totalReceived - project.totalExpenses;
     final profitPercentage = project.totalExpenses > 0
         ? (profit / project.totalExpenses) * 100
@@ -163,29 +172,31 @@ class _PinnedFinancialProjectTable extends StatelessWidget {
         alignment: Alignment.centerLeft,
         child: Text(
           formatKwd(project.totalContractValue),
-          style: AppTextStyles.tableCell,
+          style: AppTextStyles.of(context).tableCell,
         ),
       ),
       _BodyCell(
         alignment: Alignment.centerLeft,
         child: Text(
           formatKwd(project.totalReceived),
-          style: AppTextStyles.tableCell,
+          style: AppTextStyles.of(context).tableCell,
         ),
       ),
       _BodyCell(
         alignment: Alignment.centerLeft,
         child: Text(
           formatKwd(project.totalExpenses),
-          style: AppTextStyles.tableCell,
+          style: AppTextStyles.of(context).tableCell,
         ),
       ),
       _BodyCell(
         alignment: Alignment.centerLeft,
         child: Text(
           formatKwd(profit),
-          style: AppTextStyles.tableCell.copyWith(
-            color: profit >= 0 ? AppColors.success : AppColors.error,
+          style: AppTextStyles.of(context).tableCell.copyWith(
+            color: profit >= 0
+                ? AppColors.of(context).success
+                : AppColors.of(context).error,
           ),
         ),
       ),
@@ -193,8 +204,10 @@ class _PinnedFinancialProjectTable extends StatelessWidget {
         alignment: Alignment.center,
         child: Text(
           formatPercent(profitPercentage),
-          style: AppTextStyles.tableCell.copyWith(
-            color: profit >= 0 ? AppColors.success : AppColors.error,
+          style: AppTextStyles.of(context).tableCell.copyWith(
+            color: profit >= 0
+                ? AppColors.of(context).success
+                : AppColors.of(context).error,
           ),
         ),
       ),
@@ -218,7 +231,7 @@ class _HeaderCell extends StatelessWidget {
       height: 56,
       alignment: numeric ? Alignment.centerLeft : Alignment.centerRight,
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      child: Text(label, style: AppTextStyles.tableHeader),
+      child: Text(label, style: AppTextStyles.of(context).tableHeader),
     );
   }
 }
@@ -252,7 +265,7 @@ class _ProjectCardList extends StatelessWidget {
         for (int index = 0; index < projects.length; index++) ...[
           _MobileProjectTile(project: projects[index]),
           if (index != projects.length - 1)
-            const Divider(height: 1, color: AppColors.border),
+            Divider(height: 1, color: AppColors.of(context).border),
         ],
       ],
     );
@@ -316,15 +329,15 @@ class _MobileProjectTile extends StatelessWidget {
                   label: 'الربح',
                   value: formatKwd(profit),
                   valueColor: profit >= 0
-                      ? AppColors.success
-                      : AppColors.error,
+                      ? AppColors.of(context).success
+                      : AppColors.of(context).error,
                 ),
                 _MiniMetric(
                   label: 'نسبة الربح',
                   value: formatPercent(profitPercentage),
                   valueColor: profit >= 0
-                      ? AppColors.success
-                      : AppColors.error,
+                      ? AppColors.of(context).success
+                      : AppColors.of(context).error,
                 ),
               ],
             ),
@@ -358,9 +371,9 @@ class _ProjectName extends StatelessWidget {
               project.projectName,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: AppTextStyles.tableCellBold.copyWith(
-                color: AppColors.primary,
-              ),
+              style: AppTextStyles.of(
+                context,
+              ).tableCellBold.copyWith(color: AppColors.of(context).primary),
             ),
             if ((project.clientName ?? '').isNotEmpty) ...[
               const SizedBox(height: 3),
@@ -368,7 +381,7 @@ class _ProjectName extends StatelessWidget {
                 project.clientName!,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: AppTextStyles.caption,
+                style: AppTextStyles.of(context).caption,
               ),
             ],
           ],
@@ -389,12 +402,14 @@ class _ProjectTypeBadge extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
       decoration: BoxDecoration(
-        color: AppColors.primary.withValues(alpha: 0.12),
+        color: AppColors.of(context).primary.withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(4),
       ),
       child: Text(
         projectTypeLabel,
-        style: AppTextStyles.caption.copyWith(color: AppColors.primary),
+        style: AppTextStyles.of(
+          context,
+        ).caption.copyWith(color: AppColors.of(context).primary),
       ),
     );
   }
@@ -409,11 +424,11 @@ class _StatusBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final color = switch (status) {
-      'COMPLETED' => AppColors.success,
-      'PENDING_SIGNATURE' => AppColors.warning,
-      'CANCELLED' => AppColors.error,
-      'DRAFT' => AppColors.textMuted,
-      _ => AppColors.info,
+      'COMPLETED' => AppColors.of(context).success,
+      'PENDING_SIGNATURE' => AppColors.of(context).warning,
+      'CANCELLED' => AppColors.of(context).error,
+      'DRAFT' => AppColors.of(context).textMuted,
+      _ => AppColors.of(context).info,
     };
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
@@ -424,7 +439,7 @@ class _StatusBadge extends StatelessWidget {
       ),
       child: Text(
         formatProjectStatus(status, projectType: projectType),
-        style: AppTextStyles.statusBadge.copyWith(color: color),
+        style: AppTextStyles.of(context).statusBadge.copyWith(color: color),
       ),
     );
   }
@@ -448,11 +463,13 @@ class _MiniMetric extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(label, style: AppTextStyles.caption),
+          Text(label, style: AppTextStyles.of(context).caption),
           const SizedBox(height: 4),
           Text(
             value,
-            style: AppTextStyles.tableCellBold.copyWith(color: valueColor),
+            style: AppTextStyles.of(
+              context,
+            ).tableCellBold.copyWith(color: valueColor),
           ),
         ],
       ),
@@ -474,7 +491,7 @@ class _RowActions extends StatelessWidget {
           message: 'كشف الحساب المالي',
           child: IconButton(
             icon: const Icon(Icons.receipt_long_outlined, size: 20),
-            color: AppColors.success,
+            color: AppColors.of(context).success,
             onPressed: () => context.push(
               AppRoutes.projectFinancialOverview(project.projectId),
             ),
@@ -485,7 +502,7 @@ class _RowActions extends StatelessWidget {
             message: 'فتح التنفيذ',
             child: IconButton(
               icon: const Icon(Icons.open_in_new, size: 20),
-              color: AppColors.primary,
+              color: AppColors.of(context).primary,
               onPressed: () =>
                   context.push(AppRoutes.execution(project.projectId)),
             ),
@@ -494,7 +511,7 @@ class _RowActions extends StatelessWidget {
           message: 'تفاصيل المشروع',
           child: IconButton(
             icon: const Icon(Icons.folder_open_outlined, size: 20),
-            color: AppColors.textSecondary,
+            color: AppColors.of(context).textSecondary,
             onPressed: () =>
                 context.push(AppRoutes.projectDetails(project.projectId)),
           ),
@@ -513,23 +530,26 @@ class _EmptyProjectsState extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 44),
       decoration: BoxDecoration(
-        color: AppColors.cardBackground,
+        color: AppColors.of(context).cardBackground,
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: AppColors.border),
+        border: Border.all(color: AppColors.of(context).border),
       ),
       child: Column(
         children: [
           Icon(
             Icons.account_balance_wallet_outlined,
-            color: AppColors.textMuted,
+            color: AppColors.of(context).textMuted,
             size: 42,
           ),
           const SizedBox(height: 12),
-          Text('لا توجد مشاريع مالية مطابقة', style: AppTextStyles.h6),
+          Text(
+            'لا توجد مشاريع مالية مطابقة',
+            style: AppTextStyles.of(context).h6,
+          ),
           const SizedBox(height: 6),
           Text(
             'جرب تغيير البحث أو راجع مشاريع التنفيذ والمكتملة.',
-            style: AppTextStyles.bodySmall,
+            style: AppTextStyles.of(context).bodySmall,
           ),
         ],
       ),

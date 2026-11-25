@@ -1,3 +1,4 @@
+import 'package:rawnaq/core/widgets/app_toast.dart';
 import 'package:rawnaq/core/utils/arabic_number_input_formatter.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -104,9 +105,9 @@ class _CreateProjectDialogState extends State<CreateProjectDialog> {
         child: Container(
           constraints: const BoxConstraints(maxWidth: 600),
           decoration: BoxDecoration(
-            color: AppColors.cardBackground,
+            color: AppColors.of(context).cardBackground,
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: AppColors.border, width: 1),
+            border: Border.all(color: AppColors.of(context).border, width: 1),
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -135,27 +136,29 @@ class _CreateProjectDialogState extends State<CreateProjectDialog> {
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        border: Border(bottom: BorderSide(color: AppColors.border, width: 1)),
+        border: Border(
+          bottom: BorderSide(color: AppColors.of(context).border, width: 1),
+        ),
       ),
       child: Row(
         children: [
-          const Icon(
+          Icon(
             Icons.add_circle_outline,
-            color: AppColors.primary,
+            color: AppColors.of(context).primary,
             size: 28,
           ),
           const SizedBox(width: 12),
           Expanded(
             child: Text(
               'إنشاء مشروع جديد',
-              style: AppTextStyles.h5.copyWith(
-                color: AppColors.textPrimary,
+              style: AppTextStyles.of(context).h5.copyWith(
+                color: AppColors.of(context).textPrimary,
                 fontWeight: FontWeight.bold,
               ),
             ),
           ),
           IconButton(
-            icon: const Icon(Icons.close, color: AppColors.textSecondary),
+            icon: Icon(Icons.close, color: AppColors.of(context).textSecondary),
             onPressed: () => Navigator.of(context).pop(),
           ),
         ],
@@ -178,17 +181,17 @@ class _CreateProjectDialogState extends State<CreateProjectDialog> {
       children: [
         Text(
           'اختر نوع المشروع',
-          style: AppTextStyles.h6.copyWith(
-            color: AppColors.textPrimary,
+          style: AppTextStyles.of(context).h6.copyWith(
+            color: AppColors.of(context).textPrimary,
             fontWeight: FontWeight.bold,
           ),
         ),
         const SizedBox(height: 8),
         Text(
           'اختر نوع المشروع الذي تريد إنشاءه',
-          style: AppTextStyles.bodyMedium.copyWith(
-            color: AppColors.textSecondary,
-          ),
+          style: AppTextStyles.of(
+            context,
+          ).bodyMedium.copyWith(color: AppColors.of(context).textSecondary),
         ),
         const SizedBox(height: 32),
 
@@ -235,10 +238,10 @@ class _CreateProjectDialogState extends State<CreateProjectDialog> {
         decoration: BoxDecoration(
           color: isSelected
               ? color.withValues(alpha: 0.1)
-              : AppColors.surfaceColor,
+              : AppColors.of(context).surfaceColor,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: isSelected ? color : AppColors.border,
+            color: isSelected ? color : AppColors.of(context).border,
             width: isSelected ? 2 : 1,
           ),
         ),
@@ -259,16 +262,16 @@ class _CreateProjectDialogState extends State<CreateProjectDialog> {
                 children: [
                   Text(
                     title,
-                    style: AppTextStyles.bodyLarge.copyWith(
-                      color: AppColors.textPrimary,
+                    style: AppTextStyles.of(context).bodyLarge.copyWith(
+                      color: AppColors.of(context).textPrimary,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
                   const SizedBox(height: 4),
                   Text(
                     subtitle,
-                    style: AppTextStyles.bodySmall.copyWith(
-                      color: AppColors.textSecondary,
+                    style: AppTextStyles.of(context).bodySmall.copyWith(
+                      color: AppColors.of(context).textSecondary,
                     ),
                   ),
                 ],
@@ -289,8 +292,8 @@ class _CreateProjectDialogState extends State<CreateProjectDialog> {
         children: [
           Text(
             'معلومات المشروع',
-            style: AppTextStyles.h6.copyWith(
-              color: AppColors.textPrimary,
+            style: AppTextStyles.of(context).h6.copyWith(
+              color: AppColors.of(context).textPrimary,
               fontWeight: FontWeight.bold,
             ),
           ),
@@ -339,8 +342,8 @@ class _CreateProjectDialogState extends State<CreateProjectDialog> {
           // Client Information Section
           Text(
             'معلومات العميل',
-            style: AppTextStyles.bodyLarge.copyWith(
-              color: AppColors.textPrimary,
+            style: AppTextStyles.of(context).bodyLarge.copyWith(
+              color: AppColors.of(context).textPrimary,
               fontWeight: FontWeight.w600,
             ),
           ),
@@ -368,8 +371,8 @@ class _CreateProjectDialogState extends State<CreateProjectDialog> {
             const SizedBox(height: 24),
             Text(
               'البيانات المالية لمشروع التصميم',
-              style: AppTextStyles.bodyLarge.copyWith(
-                color: AppColors.textPrimary,
+              style: AppTextStyles.of(context).bodyLarge.copyWith(
+                color: AppColors.of(context).textPrimary,
                 fontWeight: FontWeight.w600,
               ),
             ),
@@ -399,8 +402,8 @@ class _CreateProjectDialogState extends State<CreateProjectDialog> {
             Expanded(
               child: Text(
                 'أرقام الهاتف',
-                style: AppTextStyles.bodyMedium.copyWith(
-                  color: AppColors.textSecondary,
+                style: AppTextStyles.of(context).bodyMedium.copyWith(
+                  color: AppColors.of(context).textSecondary,
                   fontWeight: FontWeight.w500,
                 ),
               ),
@@ -450,7 +453,7 @@ class _CreateProjectDialogState extends State<CreateProjectDialog> {
                     });
                   },
                   icon: const Icon(Icons.delete_outline),
-                  color: AppColors.error,
+                  color: AppColors.of(context).error,
                 ),
               ],
             ],
@@ -471,8 +474,8 @@ class _CreateProjectDialogState extends State<CreateProjectDialog> {
             Expanded(
               child: Text(
                 'دفعات المشروع',
-                style: AppTextStyles.bodyMedium.copyWith(
-                  color: AppColors.textSecondary,
+                style: AppTextStyles.of(context).bodyMedium.copyWith(
+                  color: AppColors.of(context).textSecondary,
                   fontWeight: FontWeight.w500,
                 ),
               ),
@@ -534,7 +537,7 @@ class _CreateProjectDialogState extends State<CreateProjectDialog> {
                         });
                       },
                       icon: const Icon(Icons.delete_outline),
-                      color: AppColors.error,
+                      color: AppColors.of(context).error,
                     ),
                   ],
                 ],
@@ -570,8 +573,8 @@ class _CreateProjectDialogState extends State<CreateProjectDialog> {
       children: [
         Text(
           label,
-          style: AppTextStyles.bodyMedium.copyWith(
-            color: AppColors.textSecondary,
+          style: AppTextStyles.of(context).bodyMedium.copyWith(
+            color: AppColors.of(context).textSecondary,
             fontWeight: FontWeight.w500,
           ),
         ),
@@ -582,39 +585,49 @@ class _CreateProjectDialogState extends State<CreateProjectDialog> {
           maxLines: maxLines,
           keyboardType: keyboardType,
           validator: validator,
-          style: AppTextStyles.bodyMedium.copyWith(
-            color: AppColors.textPrimary,
-          ),
+          style: AppTextStyles.of(
+            context,
+          ).bodyMedium.copyWith(color: AppColors.of(context).textPrimary),
           decoration: InputDecoration(
             hintText: hint,
-            hintStyle: AppTextStyles.bodyMedium.copyWith(
-              color: AppColors.textMuted,
+            hintStyle: AppTextStyles.of(
+              context,
+            ).bodyMedium.copyWith(color: AppColors.of(context).textMuted),
+            prefixIcon: Icon(
+              icon,
+              color: AppColors.of(context).textSecondary,
+              size: 20,
             ),
-            prefixIcon: Icon(icon, color: AppColors.textSecondary, size: 20),
             filled: true,
-            fillColor: AppColors.inputBackground,
+            fillColor: AppColors.of(context).inputBackground,
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
-              borderSide: BorderSide(color: AppColors.inputBorder),
+              borderSide: BorderSide(color: AppColors.of(context).inputBorder),
             ),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
-              borderSide: BorderSide(color: AppColors.inputBorder),
+              borderSide: BorderSide(color: AppColors.of(context).inputBorder),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
               borderSide: BorderSide(
-                color: AppColors.inputFocusBorder,
+                color: AppColors.of(context).inputFocusBorder,
                 width: 2,
               ),
             ),
             errorBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
-              borderSide: const BorderSide(color: AppColors.error, width: 1),
+              borderSide: BorderSide(
+                color: AppColors.of(context).error,
+                width: 1,
+              ),
             ),
             focusedErrorBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
-              borderSide: const BorderSide(color: AppColors.error, width: 2),
+              borderSide: BorderSide(
+                color: AppColors.of(context).error,
+                width: 2,
+              ),
             ),
           ),
         ),
@@ -631,8 +644,8 @@ class _CreateProjectDialogState extends State<CreateProjectDialog> {
       children: [
         Text(
           'القسم',
-          style: AppTextStyles.bodyMedium.copyWith(
-            color: AppColors.textSecondary,
+          style: AppTextStyles.of(context).bodyMedium.copyWith(
+            color: AppColors.of(context).textSecondary,
             fontWeight: FontWeight.w500,
           ),
         ),
@@ -640,23 +653,23 @@ class _CreateProjectDialogState extends State<CreateProjectDialog> {
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
           decoration: BoxDecoration(
-            color: AppColors.inputBackground,
+            color: AppColors.of(context).inputBackground,
             borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: AppColors.inputBorder),
+            border: Border.all(color: AppColors.of(context).inputBorder),
           ),
           child: Row(
             children: [
-              const Icon(
+              Icon(
                 Icons.business_outlined,
-                color: AppColors.textSecondary,
+                color: AppColors.of(context).textSecondary,
                 size: 20,
               ),
               const SizedBox(width: 12),
               Expanded(
                 child: Text(
                   departmentName,
-                  style: AppTextStyles.bodyMedium.copyWith(
-                    color: AppColors.textPrimary,
+                  style: AppTextStyles.of(context).bodyMedium.copyWith(
+                    color: AppColors.of(context).textPrimary,
                   ),
                 ),
               ),
@@ -677,8 +690,8 @@ class _CreateProjectDialogState extends State<CreateProjectDialog> {
       children: [
         Text(
           label,
-          style: AppTextStyles.bodyMedium.copyWith(
-            color: AppColors.textSecondary,
+          style: AppTextStyles.of(context).bodyMedium.copyWith(
+            color: AppColors.of(context).textSecondary,
             fontWeight: FontWeight.w500,
           ),
         ),
@@ -693,11 +706,11 @@ class _CreateProjectDialogState extends State<CreateProjectDialog> {
               builder: (context, child) {
                 return Theme(
                   data: Theme.of(context).copyWith(
-                    colorScheme: const ColorScheme.dark(
-                      primary: AppColors.primary,
-                      onPrimary: AppColors.scaffoldBackground,
-                      surface: AppColors.cardBackground,
-                      onSurface: AppColors.textPrimary,
+                    colorScheme: ColorScheme.dark(
+                      primary: AppColors.of(context).primary,
+                      onPrimary: AppColors.of(context).scaffoldBackground,
+                      surface: AppColors.of(context).cardBackground,
+                      onSurface: AppColors.of(context).textPrimary,
                     ),
                   ),
                   child: child!,
@@ -711,29 +724,29 @@ class _CreateProjectDialogState extends State<CreateProjectDialog> {
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
             decoration: BoxDecoration(
-              color: AppColors.inputBackground,
+              color: AppColors.of(context).inputBackground,
               borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: AppColors.inputBorder),
+              border: Border.all(color: AppColors.of(context).inputBorder),
             ),
             child: Row(
               children: [
-                const Icon(
+                Icon(
                   Icons.calendar_today_outlined,
-                  color: AppColors.textSecondary,
+                  color: AppColors.of(context).textSecondary,
                   size: 20,
                 ),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Text(
                     '${date.year}/${date.month}/${date.day}',
-                    style: AppTextStyles.bodyMedium.copyWith(
-                      color: AppColors.textPrimary,
+                    style: AppTextStyles.of(context).bodyMedium.copyWith(
+                      color: AppColors.of(context).textPrimary,
                     ),
                   ),
                 ),
-                const Icon(
+                Icon(
                   Icons.arrow_drop_down,
-                  color: AppColors.textSecondary,
+                  color: AppColors.of(context).textSecondary,
                 ),
               ],
             ),
@@ -747,7 +760,9 @@ class _CreateProjectDialogState extends State<CreateProjectDialog> {
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        border: Border(top: BorderSide(color: AppColors.border, width: 1)),
+        border: Border(
+          top: BorderSide(color: AppColors.of(context).border, width: 1),
+        ),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -769,8 +784,8 @@ class _CreateProjectDialogState extends State<CreateProjectDialog> {
           ElevatedButton(
             onPressed: _handleNextOrSubmit,
             style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.primary,
-              foregroundColor: AppColors.scaffoldBackground,
+              backgroundColor: AppColors.of(context).primary,
+              foregroundColor: AppColors.of(context).scaffoldBackground,
               padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(8),
@@ -791,10 +806,10 @@ class _CreateProjectDialogState extends State<CreateProjectDialog> {
       // Validate project type selection
       if (_selectedProjectType == null) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
+          AppToast.build(
+            tone: ToastTone.error,
             duration: const Duration(seconds: 2),
             content: Text('يرجى اختيار نوع المشروع'),
-            backgroundColor: AppColors.error,
           ),
         );
         return;
@@ -820,10 +835,10 @@ class _CreateProjectDialogState extends State<CreateProjectDialog> {
       // Department is auto-selected, but verify it's set
       if (_selectedDepartmentId == null || _departments.isEmpty) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
+          AppToast.build(
+            tone: ToastTone.error,
             duration: const Duration(seconds: 2),
             content: Text('خطأ في تحديد القسم'),
-            backgroundColor: AppColors.error,
           ),
         );
         return;
@@ -842,10 +857,10 @@ class _CreateProjectDialogState extends State<CreateProjectDialog> {
         );
         if ((paymentsTotal - projectValue).abs() > 0.01) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
+            AppToast.build(
+              tone: ToastTone.error,
               duration: const Duration(seconds: 2),
               content: Text('إجمالي الدفعات يجب أن يساوي قيمة المشروع'),
-              backgroundColor: AppColors.error,
             ),
           );
           return;

@@ -24,9 +24,11 @@ class TopBar extends StatelessWidget {
       height: 72,
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-      decoration: const BoxDecoration(
-        color: AppColors.scaffoldBackground,
-        border: Border(bottom: BorderSide(color: AppColors.border, width: 1)),
+      decoration: BoxDecoration(
+        color: AppColors.of(context).scaffoldBackground,
+        border: Border(
+          bottom: BorderSide(color: AppColors.of(context).border, width: 1),
+        ),
       ),
       child: Stack(
         alignment: Alignment.center,
@@ -46,8 +48,8 @@ class TopBar extends StatelessWidget {
                   child: Text(
                     title,
                     overflow: TextOverflow.ellipsis,
-                    style: AppTextStyles.h3.copyWith(
-                      color: AppColors.textPrimary,
+                    style: AppTextStyles.of(context).h3.copyWith(
+                      color: AppColors.of(context).textPrimary,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
@@ -140,17 +142,17 @@ class _TopBarBackButton extends StatelessWidget {
       width: 40,
       height: 40,
       decoration: BoxDecoration(
-        color: AppColors.inputBackground,
+        color: AppColors.of(context).inputBackground,
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: AppColors.inputBorder),
+        border: Border.all(color: AppColors.of(context).inputBorder),
       ),
       child: IconButton(
         tooltip: 'رجوع',
         padding: EdgeInsets.zero,
         constraints: const BoxConstraints.tightFor(width: 40, height: 40),
-        icon: const Icon(
+        icon: Icon(
           Icons.chevron_left,
-          color: AppColors.textSecondary,
+          color: AppColors.of(context).textSecondary,
           size: 20,
         ),
         onPressed: onBackPressed,
@@ -171,15 +173,19 @@ class _TopBarActionButton extends StatelessWidget {
       height: 40,
       alignment: Alignment.center,
       decoration: BoxDecoration(
-        color: AppColors.inputBackground,
+        color: AppColors.of(context).inputBackground,
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: AppColors.inputBorder),
+        border: Border.all(color: AppColors.of(context).inputBorder),
       ),
       child: IconButton(
         tooltip: action.tooltip,
         padding: EdgeInsets.zero,
         constraints: const BoxConstraints.tightFor(width: 40, height: 40),
-        icon: Icon(action.icon, color: AppColors.textSecondary, size: 20),
+        icon: Icon(
+          action.icon,
+          color: AppColors.of(context).textSecondary,
+          size: 20,
+        ),
         onPressed: action.onPressed,
       ),
     );

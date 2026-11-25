@@ -32,7 +32,9 @@ class InstallmentsHeader extends StatelessWidget {
             children: [
               Text(
                 'جدول الدفعات',
-                style: AppTextStyles.h3.copyWith(fontWeight: FontWeight.bold),
+                style: AppTextStyles.of(
+                  context,
+                ).h3.copyWith(fontWeight: FontWeight.bold),
               ),
               if (isAdminOrManager)
                 Container(
@@ -41,13 +43,13 @@ class InstallmentsHeader extends StatelessWidget {
                     vertical: 6,
                   ),
                   decoration: BoxDecoration(
-                    color: AppColors.success.withValues(alpha: 0.1),
+                    color: AppColors.of(context).success.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: Text(
                     'الربح: ${profitPercentage.toStringAsFixed(1)}%',
-                    style: AppTextStyles.bodySmall.copyWith(
-                      color: AppColors.success,
+                    style: AppTextStyles.of(context).bodySmall.copyWith(
+                      color: AppColors.of(context).success,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
@@ -61,21 +63,21 @@ class InstallmentsHeader extends StatelessWidget {
                 InstallmentsSummaryItem(
                   label: 'إجمالي السعر',
                   value: totalPrice,
-                  color: AppColors.primary,
+                  color: AppColors.of(context).primary,
                 ),
                 const SizedBox(width: 32),
               ],
               InstallmentsSummaryItem(
                 label: 'إجمالي التكلفة',
                 value: totalCost,
-                color: AppColors.textPrimary,
+                color: AppColors.of(context).textPrimary,
               ),
               if (isAdminOrManager) ...[
                 const SizedBox(width: 32),
                 InstallmentsSummaryItem(
                   label: 'الربح',
                   value: totalProfit,
-                  color: AppColors.success,
+                  color: AppColors.of(context).success,
                 ),
               ],
             ],
@@ -105,17 +107,16 @@ class InstallmentsSummaryItem extends StatelessWidget {
       children: [
         Text(
           label,
-          style: AppTextStyles.bodySmall.copyWith(
-            color: AppColors.textSecondary,
-          ),
+          style: AppTextStyles.of(
+            context,
+          ).bodySmall.copyWith(color: AppColors.of(context).textSecondary),
         ),
         const SizedBox(height: 4),
         Text(
           '${value.toStringAsFixed(3)} د.ك',
-          style: AppTextStyles.h4.copyWith(
-            color: color,
-            fontWeight: FontWeight.bold,
-          ),
+          style: AppTextStyles.of(
+            context,
+          ).h4.copyWith(color: color, fontWeight: FontWeight.bold),
         ),
       ],
     );
@@ -132,26 +133,26 @@ class InstallmentsStatusBadge extends StatelessWidget {
     final (statusText, backgroundColor, textColor, icon) = switch (phase) {
       PaymentPhaseModel(isCollected: true) => (
         'تم التحصيل',
-        AppColors.success.withValues(alpha: 0.1),
-        AppColors.success,
+        AppColors.of(context).success.withValues(alpha: 0.1),
+        AppColors.of(context).success,
         Icons.check_circle,
       ),
       PaymentPhaseModel(isApproved: true) => (
         'معتمد',
-        AppColors.info.withValues(alpha: 0.1),
-        AppColors.info,
+        AppColors.of(context).info.withValues(alpha: 0.1),
+        AppColors.of(context).info,
         Icons.verified,
       ),
       PaymentPhaseModel(isRequested: true) => (
         'قيد الانتظار',
-        AppColors.warning.withValues(alpha: 0.1),
-        AppColors.warning,
+        AppColors.of(context).warning.withValues(alpha: 0.1),
+        AppColors.of(context).warning,
         Icons.hourglass_empty,
       ),
       _ => (
         'متاح',
-        AppColors.textSecondary.withValues(alpha: 0.1),
-        AppColors.textSecondary,
+        AppColors.of(context).textSecondary.withValues(alpha: 0.1),
+        AppColors.of(context).textSecondary,
         Icons.radio_button_unchecked,
       ),
     };
@@ -169,10 +170,9 @@ class InstallmentsStatusBadge extends StatelessWidget {
           const SizedBox(width: 4),
           Text(
             statusText,
-            style: AppTextStyles.bodySmall.copyWith(
-              color: textColor,
-              fontWeight: FontWeight.w500,
-            ),
+            style: AppTextStyles.of(
+              context,
+            ).bodySmall.copyWith(color: textColor, fontWeight: FontWeight.w500),
           ),
         ],
       ),
@@ -196,10 +196,13 @@ class InstallmentsActionButton extends StatelessWidget {
   Widget build(BuildContext context) {
     if (!isAdminOrManager) return const SizedBox.shrink();
     if (!phase.isApproved) {
-      return const SizedBox(
+      return SizedBox(
         height: 36,
         child: Center(
-          child: Text('-', style: TextStyle(color: AppColors.textSecondary)),
+          child: Text(
+            '-',
+            style: TextStyle(color: AppColors.of(context).textSecondary),
+          ),
         ),
       );
     }
@@ -214,14 +217,16 @@ class InstallmentsActionButton extends StatelessWidget {
         style: TextButton.styleFrom(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
           backgroundColor: isCollected
-              ? AppColors.warning.withValues(alpha: 0.1)
-              : AppColors.success.withValues(alpha: 0.1),
+              ? AppColors.of(context).warning.withValues(alpha: 0.1)
+              : AppColors.of(context).success.withValues(alpha: 0.1),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
         ),
         child: Text(
           isCollected ? 'إلغاء' : 'تحصيل',
-          style: AppTextStyles.bodySmall.copyWith(
-            color: isCollected ? AppColors.warning : AppColors.success,
+          style: AppTextStyles.of(context).bodySmall.copyWith(
+            color: isCollected
+                ? AppColors.of(context).warning
+                : AppColors.of(context).success,
             fontWeight: FontWeight.bold,
           ),
         ),

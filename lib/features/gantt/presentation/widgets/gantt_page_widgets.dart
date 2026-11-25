@@ -20,11 +20,17 @@ class GanttErrorState extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.error_outline, size: 56, color: AppColors.statusDelayed),
+          Icon(
+            Icons.error_outline,
+            size: 56,
+            color: AppColors.of(context).statusDelayed,
+          ),
           const SizedBox(height: 12),
           Text(
             errorMessage ?? 'حدث خطأ',
-            style: AppTextStyles.h5.copyWith(color: AppColors.textPrimary),
+            style: AppTextStyles.of(
+              context,
+            ).h5.copyWith(color: AppColors.of(context).textPrimary),
           ),
           const SizedBox(height: 12),
           TextButton.icon(
@@ -59,9 +65,9 @@ class _GanttCompactInfoBarState extends State<GanttCompactInfoBar> {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: AppColors.cardBackground,
+        color: AppColors.of(context).cardBackground,
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: AppColors.border),
+        border: Border.all(color: AppColors.of(context).border),
       ),
       child: InkWell(
         onTap: widget.onToggleDraftPanel,
@@ -77,8 +83,10 @@ class _GanttCompactInfoBarState extends State<GanttCompactInfoBar> {
                 ),
                 decoration: BoxDecoration(
                   color: widget.draftTasks.isEmpty
-                      ? AppColors.surfaceColor
-                      : AppColors.statusOnHold.withValues(alpha: 0.15),
+                      ? AppColors.of(context).surfaceColor
+                      : AppColors.of(
+                          context,
+                        ).statusOnHold.withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(6),
                 ),
                 child: Row(
@@ -88,16 +96,16 @@ class _GanttCompactInfoBarState extends State<GanttCompactInfoBar> {
                       Icons.pending_actions,
                       size: 16,
                       color: widget.draftTasks.isEmpty
-                          ? AppColors.textMuted
-                          : AppColors.statusOnHold,
+                          ? AppColors.of(context).textMuted
+                          : AppColors.of(context).statusOnHold,
                     ),
                     const SizedBox(width: 6),
                     Text(
                       'معلقة: ${widget.draftTasks.length}',
                       style: TextStyle(
                         color: widget.draftTasks.isEmpty
-                            ? AppColors.textMuted
-                            : AppColors.statusOnHold,
+                            ? AppColors.of(context).textMuted
+                            : AppColors.of(context).statusOnHold,
                         fontSize: 12,
                         fontWeight: FontWeight.w600,
                       ),
@@ -108,7 +116,7 @@ class _GanttCompactInfoBarState extends State<GanttCompactInfoBar> {
                           ? Icons.expand_less
                           : Icons.expand_more,
                       size: 16,
-                      color: AppColors.textMuted,
+                      color: AppColors.of(context).textMuted,
                     ),
                   ],
                 ),

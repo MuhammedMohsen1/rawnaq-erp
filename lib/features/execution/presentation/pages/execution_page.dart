@@ -1,3 +1,4 @@
+import 'package:rawnaq/core/widgets/app_toast.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:dio/dio.dart';
@@ -48,9 +49,9 @@ class _ExecutionPageContent extends StatelessWidget {
       listener: (context, state) {
         if (state is ExecutionError) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
+            AppToast.build(
+              tone: ToastTone.error,
               content: Text(state.message),
-              backgroundColor: AppColors.error,
               duration: Duration(seconds: 2),
             ),
           );
@@ -58,10 +59,12 @@ class _ExecutionPageContent extends StatelessWidget {
       },
       builder: (context, state) {
         if (state is ExecutionLoading) {
-          return const Scaffold(
-            backgroundColor: AppColors.scaffoldBackground,
+          return Scaffold(
+            backgroundColor: AppColors.of(context).scaffoldBackground,
             body: Center(
-              child: CircularProgressIndicator(color: AppColors.primary),
+              child: CircularProgressIndicator(
+                color: AppColors.of(context).primary,
+              ),
             ),
           );
         }
@@ -126,7 +129,7 @@ class _ExecutionLayout extends StatelessWidget {
         final canEditExecution = !isCompleted;
 
         return Scaffold(
-          backgroundColor: AppColors.scaffoldBackground,
+          backgroundColor: AppColors.of(context).scaffoldBackground,
           body: SingleChildScrollView(
             padding: EdgeInsets.all(padding),
             child: Column(
@@ -261,7 +264,8 @@ class _ExecutionLayout extends StatelessWidget {
       final refreshToken = DateTime.now().millisecondsSinceEpoch;
       context.go('${AppRoutes.projects}?refresh=$refreshToken');
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
+        AppToast.build(
+          tone: ToastTone.success,
           duration: Duration(seconds: 2),
           content: Text('تم تعليم المشروع كمكتمل'),
         ),
@@ -269,7 +273,8 @@ class _ExecutionLayout extends StatelessWidget {
     } catch (e) {
       if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
+        AppToast.build(
+          tone: ToastTone.error,
           duration: Duration(seconds: 2),
           content: Text('فشل إكمال المشروع: ${e.toString()}'),
         ),
@@ -342,7 +347,8 @@ class _ExecutionLayout extends StatelessWidget {
       if (!context.mounted) return;
       Navigator.of(context, rootNavigator: true).pop();
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
+        AppToast.build(
+          tone: ToastTone.success,
           duration: Duration(seconds: 2),
           content: Text('تم تحديث جدول دفعات التنفيذ'),
         ),
@@ -350,7 +356,8 @@ class _ExecutionLayout extends StatelessWidget {
     } catch (e) {
       if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
+        AppToast.build(
+          tone: ToastTone.error,
           duration: Duration(seconds: 2),
           content: Text('فشل تحديث جدول الدفعات: ${e.toString()}'),
         ),
@@ -435,7 +442,8 @@ class _ExecutionLayout extends StatelessWidget {
       if (!context.mounted) return;
       context.read<ExecutionCubit>().loadDashboard(project.id);
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
+        AppToast.build(
+          tone: ToastTone.success,
           duration: Duration(seconds: 2),
           content: Text('تمت إعادة المشروع إلى قيد التنفيذ'),
         ),
@@ -443,7 +451,8 @@ class _ExecutionLayout extends StatelessWidget {
     } catch (e) {
       if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
+        AppToast.build(
+          tone: ToastTone.error,
           duration: Duration(seconds: 2),
           content: Text('فشل إعادة المشروع: ${e.toString()}'),
         ),
@@ -473,7 +482,8 @@ class _ExecutionLayout extends StatelessWidget {
         );
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
+            AppToast.build(
+              tone: ToastTone.success,
               duration: Duration(seconds: 2),
               content: Text('تم إلغاء تحصيل بند جدول الدفعات'),
             ),
@@ -486,7 +496,8 @@ class _ExecutionLayout extends StatelessWidget {
         );
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
+            AppToast.build(
+              tone: ToastTone.success,
               duration: Duration(seconds: 2),
               content: Text('تم تحصيل بند جدول الدفعات'),
             ),
@@ -496,7 +507,8 @@ class _ExecutionLayout extends StatelessWidget {
     } catch (e) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
+          AppToast.build(
+            tone: ToastTone.error,
             duration: Duration(seconds: 2),
             content: Text('فشل تحديث حالة التحصيل: ${e.toString()}'),
           ),
@@ -518,7 +530,8 @@ class _ExecutionLayout extends StatelessWidget {
 
     if (availablePhases.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
+        AppToast.build(
+          tone: ToastTone.warning,
           duration: Duration(seconds: 2),
           content: Text('لا توجد بنود متاحة في جدول الدفعات'),
         ),
@@ -545,7 +558,8 @@ class _ExecutionLayout extends StatelessWidget {
         );
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
+            AppToast.build(
+              tone: ToastTone.success,
               duration: Duration(seconds: 2),
               content: Text('تم إرسال طلب بند جدول الدفعات للموافقة'),
             ),
@@ -554,7 +568,8 @@ class _ExecutionLayout extends StatelessWidget {
       } catch (e) {
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
+            AppToast.build(
+              tone: ToastTone.error,
               duration: Duration(seconds: 2),
               content: Text('فشل إرسال الطلب: ${e.toString()}'),
             ),
@@ -606,7 +621,8 @@ class _ExecutionLayout extends StatelessWidget {
       }
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
+          AppToast.build(
+            tone: ToastTone.success,
             duration: Duration(seconds: 2),
             content: Text(
               isAdmin
@@ -619,7 +635,8 @@ class _ExecutionLayout extends StatelessWidget {
     } catch (e) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
+          AppToast.build(
+            tone: ToastTone.error,
             duration: Duration(seconds: 2),
             content: Text('فشل إرسال الطلب: ${e.toString()}'),
           ),
@@ -639,7 +656,8 @@ class _ExecutionLayout extends StatelessWidget {
       );
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
+          AppToast.build(
+            tone: ToastTone.success,
             duration: Duration(seconds: 2),
             content: Text('تم قبول طلب بند جدول الدفعات'),
           ),
@@ -648,7 +666,8 @@ class _ExecutionLayout extends StatelessWidget {
     } catch (e) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
+          AppToast.build(
+            tone: ToastTone.error,
             duration: Duration(seconds: 2),
             content: Text('فشل قبول الطلب: ${e.toString()}'),
           ),
@@ -670,7 +689,8 @@ class _ExecutionLayout extends StatelessWidget {
       );
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
+          AppToast.build(
+            tone: ToastTone.success,
             duration: Duration(seconds: 2),
             content: Text('تم رفض طلب بند جدول الدفعات'),
           ),
@@ -679,7 +699,8 @@ class _ExecutionLayout extends StatelessWidget {
     } catch (e) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
+          AppToast.build(
+            tone: ToastTone.error,
             duration: Duration(seconds: 2),
             content: Text('فشل رفض الطلب: ${e.toString()}'),
           ),
@@ -720,7 +741,7 @@ class _CompactExecutionHeader extends StatelessWidget {
         Expanded(
           child: Text(
             project.name,
-            style: AppTextStyles.h3,
+            style: AppTextStyles.of(context).h3,
             overflow: TextOverflow.ellipsis,
             maxLines: 1,
           ),
@@ -742,9 +763,11 @@ class _CompactExecutionHeader extends StatelessWidget {
             child: IconButton(
               onPressed: onOpenPaymentSchedule,
               icon: const Icon(Icons.payments_outlined),
-              color: AppColors.success,
+              color: AppColors.of(context).success,
               style: IconButton.styleFrom(
-                backgroundColor: AppColors.success.withValues(alpha: 0.08),
+                backgroundColor: AppColors.of(
+                  context,
+                ).success.withValues(alpha: 0.08),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(10),
                 ),
@@ -760,9 +783,11 @@ class _CompactExecutionHeader extends StatelessWidget {
           child: IconButton(
             onPressed: onOpenPastPricing,
             icon: const Icon(Icons.history_rounded),
-            color: AppColors.primary,
+            color: AppColors.of(context).primary,
             style: IconButton.styleFrom(
-              backgroundColor: AppColors.primary.withValues(alpha: 0.08),
+              backgroundColor: AppColors.of(
+                context,
+              ).primary.withValues(alpha: 0.08),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(10),
               ),
@@ -778,9 +803,11 @@ class _CompactExecutionHeader extends StatelessWidget {
             child: IconButton(
               onPressed: onMarkComplete,
               icon: const Icon(Icons.check_circle_outline_rounded),
-              color: AppColors.success,
+              color: AppColors.of(context).success,
               style: IconButton.styleFrom(
-                backgroundColor: AppColors.success.withValues(alpha: 0.08),
+                backgroundColor: AppColors.of(
+                  context,
+                ).success.withValues(alpha: 0.08),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(10),
                 ),
@@ -795,9 +822,11 @@ class _CompactExecutionHeader extends StatelessWidget {
             child: IconButton(
               onPressed: onReturnToExecution,
               icon: const Icon(Icons.replay_circle_filled_rounded),
-              color: AppColors.primary,
+              color: AppColors.of(context).primary,
               style: IconButton.styleFrom(
-                backgroundColor: AppColors.primary.withValues(alpha: 0.08),
+                backgroundColor: AppColors.of(
+                  context,
+                ).primary.withValues(alpha: 0.08),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(10),
                 ),
@@ -830,7 +859,7 @@ class _AttachmentsDialogButton extends StatelessWidget {
             context: context,
             builder: (context) => Dialog(
               insetPadding: const EdgeInsets.all(16),
-              backgroundColor: AppColors.cardBackground,
+              backgroundColor: AppColors.of(context).cardBackground,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
               ),
@@ -844,12 +873,12 @@ class _AttachmentsDialogButton extends StatelessWidget {
                     children: [
                       Row(
                         children: [
-                          Text('المرفقات', style: AppTextStyles.h5),
+                          Text('المرفقات', style: AppTextStyles.of(context).h5),
                           const Spacer(),
                           IconButton(
                             onPressed: () => Navigator.of(context).pop(),
                             icon: const Icon(Icons.close_rounded),
-                            color: AppColors.textSecondary,
+                            color: AppColors.of(context).textSecondary,
                             tooltip: 'إغلاق',
                           ),
                         ],
@@ -870,9 +899,11 @@ class _AttachmentsDialogButton extends StatelessWidget {
             ),
           ),
           icon: const Icon(Icons.attach_file_rounded),
-          color: AppColors.primary,
+          color: AppColors.of(context).primary,
           style: IconButton.styleFrom(
-            backgroundColor: AppColors.primary.withValues(alpha: 0.08),
+            backgroundColor: AppColors.of(
+              context,
+            ).primary.withValues(alpha: 0.08),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(10),
             ),
@@ -992,16 +1023,16 @@ class _RequestInstallmentDialogState extends State<_RequestInstallmentDialog> {
                 constraints: const BoxConstraints(maxWidth: 180),
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
-                  color: AppColors.primary.withValues(alpha: 0.08),
+                  color: AppColors.of(context).primary.withValues(alpha: 0.08),
                   borderRadius: BorderRadius.circular(999),
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Icon(
+                    Icon(
                       Icons.image_outlined,
                       size: 13,
-                      color: AppColors.primary,
+                      color: AppColors.of(context).primary,
                     ),
                     const SizedBox(width: 4),
                     Flexible(
@@ -1009,8 +1040,8 @@ class _RequestInstallmentDialogState extends State<_RequestInstallmentDialog> {
                         file.name,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: AppTextStyles.caption.copyWith(
-                          color: AppColors.primary,
+                        style: AppTextStyles.of(context).caption.copyWith(
+                          color: AppColors.of(context).primary,
                         ),
                       ),
                     ),
@@ -1021,10 +1052,10 @@ class _RequestInstallmentDialogState extends State<_RequestInstallmentDialog> {
                           : () => setState(
                               () => _attachments.removeAt(entry.key),
                             ),
-                      child: const Icon(
+                      child: Icon(
                         Icons.close,
                         size: 13,
-                        color: AppColors.textMuted,
+                        color: AppColors.of(context).textMuted,
                       ),
                     ),
                   ],
@@ -1052,8 +1083,8 @@ class _RequestInstallmentDialogState extends State<_RequestInstallmentDialog> {
             if (widget.canViewProfitData) ...[
               Text(
                 'سيتم خصم نسبة الربح (${widget.profitPercentage.toStringAsFixed(1)}%) من المبلغ',
-                style: AppTextStyles.bodySmall.copyWith(
-                  color: AppColors.textSecondary,
+                style: AppTextStyles.of(context).bodySmall.copyWith(
+                  color: AppColors.of(context).textSecondary,
                 ),
               ),
               const SizedBox(height: 16),
@@ -1073,8 +1104,8 @@ class _RequestInstallmentDialogState extends State<_RequestInstallmentDialog> {
                         ? Icons.radio_button_checked
                         : Icons.radio_button_unchecked,
                     color: selected
-                        ? AppColors.primary
-                        : AppColors.textSecondary,
+                        ? AppColors.of(context).primary
+                        : AppColors.of(context).textSecondary,
                   ),
                   title: Text(displayNotes),
                   subtitle: Column(
@@ -1086,8 +1117,8 @@ class _RequestInstallmentDialogState extends State<_RequestInstallmentDialog> {
                       if (widget.canViewProfitData)
                         Text(
                           'التكلفة (بدون الربح): ${phase.costAmount.toStringAsFixed(3)} د.ك',
-                          style: const TextStyle(
-                            color: AppColors.success,
+                          style: TextStyle(
+                            color: AppColors.of(context).success,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
@@ -1133,16 +1164,22 @@ class _ErrorView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.scaffoldBackground,
+      backgroundColor: AppColors.of(context).scaffoldBackground,
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.error_outline, size: 64, color: AppColors.error),
+            Icon(
+              Icons.error_outline,
+              size: 64,
+              color: AppColors.of(context).error,
+            ),
             const SizedBox(height: 16),
             Text(
               message,
-              style: AppTextStyles.bodyLarge.copyWith(color: AppColors.error),
+              style: AppTextStyles.of(
+                context,
+              ).bodyLarge.copyWith(color: AppColors.of(context).error),
             ),
             const SizedBox(height: 16),
             ElevatedButton(

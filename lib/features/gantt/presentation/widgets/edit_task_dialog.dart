@@ -1,3 +1,4 @@
+import 'package:rawnaq/core/widgets/app_toast.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../../../core/constants/app_colors.dart';
@@ -55,7 +56,7 @@ class _EditTaskDialogState extends State<EditTaskDialog> {
       onSubmit: _saveChanges,
       onClose: () => Navigator.pop(context),
       child: Dialog(
-        backgroundColor: AppColors.cardBackground,
+        backgroundColor: AppColors.of(context).cardBackground,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         child: Container(
           width: 480,
@@ -91,9 +92,9 @@ class _EditTaskDialogState extends State<EditTaskDialog> {
                         isAppointment
                             ? 'تاريخ ووقت الموعد'
                             : 'تاريخ ووقت البداية',
-                        style: AppTextStyles.inputLabel.copyWith(
-                          fontWeight: FontWeight.w600,
-                        ),
+                        style: AppTextStyles.of(
+                          context,
+                        ).inputLabel.copyWith(fontWeight: FontWeight.w600),
                       ),
                       const SizedBox(height: 8),
                       Row(
@@ -121,9 +122,9 @@ class _EditTaskDialogState extends State<EditTaskDialog> {
                         const SizedBox(height: 16),
                         Text(
                           'تاريخ ووقت النهاية',
-                          style: AppTextStyles.inputLabel.copyWith(
-                            fontWeight: FontWeight.w600,
-                          ),
+                          style: AppTextStyles.of(
+                            context,
+                          ).inputLabel.copyWith(fontWeight: FontWeight.w600),
                         ),
                         const SizedBox(height: 8),
                         Row(
@@ -161,8 +162,8 @@ class _EditTaskDialogState extends State<EditTaskDialog> {
   Widget _buildHeader() {
     return Container(
       padding: const EdgeInsets.all(16),
-      decoration: const BoxDecoration(
-        color: AppColors.surfaceColor,
+      decoration: BoxDecoration(
+        color: AppColors.of(context).surfaceColor,
         borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
       ),
       child: Row(
@@ -170,12 +171,14 @@ class _EditTaskDialogState extends State<EditTaskDialog> {
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: widget.task.taskType.color.withValues(alpha: 0.15),
+              color: widget.task.taskType
+                  .color(context)
+                  .withValues(alpha: 0.15),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Icon(
               widget.task.taskType.icon,
-              color: widget.task.taskType.color,
+              color: widget.task.taskType.color(context),
               size: 20,
             ),
           ),
@@ -184,18 +187,22 @@ class _EditTaskDialogState extends State<EditTaskDialog> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('تعديل المهمة', style: AppTextStyles.h6),
+                Text('تعديل المهمة', style: AppTextStyles.of(context).h6),
                 const SizedBox(height: 2),
                 Text(
                   widget.task.taskType.arabicName,
-                  style: AppTextStyles.caption,
+                  style: AppTextStyles.of(context).caption,
                 ),
               ],
             ),
           ),
           IconButton(
             onPressed: () => Navigator.pop(context),
-            icon: const Icon(Icons.close, color: AppColors.textMuted, size: 20),
+            icon: Icon(
+              Icons.close,
+              color: AppColors.of(context).textMuted,
+              size: 20,
+            ),
           ),
         ],
       ),
@@ -206,30 +213,34 @@ class _EditTaskDialogState extends State<EditTaskDialog> {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: AppColors.surfaceColor,
+        color: AppColors.of(context).surfaceColor,
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: AppColors.border),
+        border: Border.all(color: AppColors.of(context).border),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             widget.task.name,
-            style: AppTextStyles.bodyMedium.copyWith(
-              fontWeight: FontWeight.w600,
-            ),
+            style: AppTextStyles.of(
+              context,
+            ).bodyMedium.copyWith(fontWeight: FontWeight.w600),
           ),
           if (widget.task.projectName != null) ...[
             const SizedBox(height: 6),
             Row(
               children: [
-                Icon(Icons.folder_outlined, size: 14, color: AppColors.primary),
+                Icon(
+                  Icons.folder_outlined,
+                  size: 14,
+                  color: AppColors.of(context).primary,
+                ),
                 const SizedBox(width: 6),
                 Text(
                   widget.task.projectName!,
-                  style: AppTextStyles.caption.copyWith(
-                    color: AppColors.primary,
-                  ),
+                  style: AppTextStyles.of(
+                    context,
+                  ).caption.copyWith(color: AppColors.of(context).primary),
                 ),
               ],
             ),
@@ -241,10 +252,13 @@ class _EditTaskDialogState extends State<EditTaskDialog> {
                 Icon(
                   Icons.person_outline,
                   size: 14,
-                  color: AppColors.textMuted,
+                  color: AppColors.of(context).textMuted,
                 ),
                 const SizedBox(width: 6),
-                Text(widget.task.customerName!, style: AppTextStyles.caption),
+                Text(
+                  widget.task.customerName!,
+                  style: AppTextStyles.of(context).caption,
+                ),
               ],
             ),
           ],
@@ -257,21 +271,21 @@ class _EditTaskDialogState extends State<EditTaskDialog> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('الموظف المسؤول', style: AppTextStyles.inputLabel),
+        Text('الموظف المسؤول', style: AppTextStyles.of(context).inputLabel),
         const SizedBox(height: 8),
         Container(
           decoration: BoxDecoration(
-            color: AppColors.inputBackground,
+            color: AppColors.of(context).inputBackground,
             borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: AppColors.inputBorder),
+            border: Border.all(color: AppColors.of(context).inputBorder),
           ),
           child: DropdownButtonHideUnderline(
             child: DropdownButton<String?>(
               value: _assigneeId,
               isExpanded: true,
               padding: const EdgeInsets.symmetric(horizontal: 12),
-              dropdownColor: AppColors.cardBackground,
-              style: AppTextStyles.inputText,
+              dropdownColor: AppColors.of(context).cardBackground,
+              style: AppTextStyles.of(context).inputText,
               items: widget.teamMembers.map((member) {
                 return DropdownMenuItem(
                   value: member.id,
@@ -279,13 +293,13 @@ class _EditTaskDialogState extends State<EditTaskDialog> {
                     children: [
                       CircleAvatar(
                         radius: 12,
-                        backgroundColor: AppColors.primary.withValues(
-                          alpha: 0.2,
-                        ),
+                        backgroundColor: AppColors.of(
+                          context,
+                        ).primary.withValues(alpha: 0.2),
                         child: Text(
                           member.name.substring(0, 1),
                           style: TextStyle(
-                            color: AppColors.primary,
+                            color: AppColors.of(context).primary,
                             fontSize: 11,
                             fontWeight: FontWeight.bold,
                           ),
@@ -309,21 +323,21 @@ class _EditTaskDialogState extends State<EditTaskDialog> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('الحالة', style: AppTextStyles.inputLabel),
+        Text('الحالة', style: AppTextStyles.of(context).inputLabel),
         const SizedBox(height: 8),
         Container(
           decoration: BoxDecoration(
-            color: AppColors.inputBackground,
+            color: AppColors.of(context).inputBackground,
             borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: AppColors.inputBorder),
+            border: Border.all(color: AppColors.of(context).inputBorder),
           ),
           child: DropdownButtonHideUnderline(
             child: DropdownButton<TaskStatus>(
               value: _status,
               isExpanded: true,
               padding: const EdgeInsets.symmetric(horizontal: 12),
-              dropdownColor: AppColors.cardBackground,
-              style: AppTextStyles.inputText,
+              dropdownColor: AppColors.of(context).cardBackground,
+              style: AppTextStyles.of(context).inputText,
               items: TaskStatus.values.map((status) {
                 return DropdownMenuItem(
                   value: status,
@@ -333,7 +347,7 @@ class _EditTaskDialogState extends State<EditTaskDialog> {
                         width: 12,
                         height: 12,
                         decoration: BoxDecoration(
-                          color: status.color,
+                          color: status.color(context),
                           borderRadius: BorderRadius.circular(3),
                         ),
                       ),
@@ -368,18 +382,24 @@ class _EditTaskDialogState extends State<EditTaskDialog> {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
         decoration: BoxDecoration(
-          color: AppColors.inputBackground,
+          color: AppColors.of(context).inputBackground,
           borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: AppColors.inputBorder),
+          border: Border.all(color: AppColors.of(context).inputBorder),
         ),
         child: Row(
           children: [
-            Icon(Icons.calendar_today, color: AppColors.primary, size: 18),
+            Icon(
+              Icons.calendar_today,
+              color: AppColors.of(context).primary,
+              size: 18,
+            ),
             const SizedBox(width: 10),
             Expanded(
               child: Text(
                 dateFormat.format(value),
-                style: AppTextStyles.inputText.copyWith(fontSize: 13),
+                style: AppTextStyles.of(
+                  context,
+                ).inputText.copyWith(fontSize: 13),
               ),
             ),
           ],
@@ -398,18 +418,24 @@ class _EditTaskDialogState extends State<EditTaskDialog> {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
         decoration: BoxDecoration(
-          color: AppColors.inputBackground,
+          color: AppColors.of(context).inputBackground,
           borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: AppColors.inputBorder),
+          border: Border.all(color: AppColors.of(context).inputBorder),
         ),
         child: Row(
           children: [
-            Icon(Icons.access_time, color: AppColors.primary, size: 18),
+            Icon(
+              Icons.access_time,
+              color: AppColors.of(context).primary,
+              size: 18,
+            ),
             const SizedBox(width: 10),
             Expanded(
               child: Text(
                 _formatTime(value),
-                style: AppTextStyles.inputText.copyWith(fontSize: 13),
+                style: AppTextStyles.of(
+                  context,
+                ).inputText.copyWith(fontSize: 13),
               ),
             ),
           ],
@@ -434,9 +460,9 @@ class _EditTaskDialogState extends State<EditTaskDialog> {
       builder: (context, child) {
         return Theme(
           data: Theme.of(context).copyWith(
-            colorScheme: const ColorScheme.dark(
-              primary: AppColors.primary,
-              surface: AppColors.cardBackground,
+            colorScheme: ColorScheme.dark(
+              primary: AppColors.of(context).primary,
+              surface: AppColors.of(context).cardBackground,
             ),
           ),
           child: child!,
@@ -467,9 +493,9 @@ class _EditTaskDialogState extends State<EditTaskDialog> {
       builder: (context, child) {
         return Theme(
           data: Theme.of(context).copyWith(
-            colorScheme: const ColorScheme.dark(
-              primary: AppColors.primary,
-              surface: AppColors.cardBackground,
+            colorScheme: ColorScheme.dark(
+              primary: AppColors.of(context).primary,
+              surface: AppColors.of(context).cardBackground,
             ),
           ),
           child: child!,
@@ -494,8 +520,8 @@ class _EditTaskDialogState extends State<EditTaskDialog> {
   Widget _buildActions() {
     return Container(
       padding: const EdgeInsets.all(16),
-      decoration: const BoxDecoration(
-        border: Border(top: BorderSide(color: AppColors.divider)),
+      decoration: BoxDecoration(
+        border: Border(top: BorderSide(color: AppColors.of(context).divider)),
       ),
       child: Row(
         children: [
@@ -506,15 +532,15 @@ class _EditTaskDialogState extends State<EditTaskDialog> {
               icon: const Icon(Icons.delete_outline),
               tooltip: 'حذف المهمة',
               style: IconButton.styleFrom(
-                foregroundColor: AppColors.statusDelayed,
+                foregroundColor: AppColors.of(context).statusDelayed,
               ),
             ),
           const Spacer(),
           OutlinedButton(
             onPressed: () => Navigator.pop(context),
             style: OutlinedButton.styleFrom(
-              foregroundColor: AppColors.textSecondary,
-              side: const BorderSide(color: AppColors.border),
+              foregroundColor: AppColors.of(context).textSecondary,
+              side: BorderSide(color: AppColors.of(context).border),
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
             ),
             child: const Text('إلغاء'),
@@ -525,8 +551,8 @@ class _EditTaskDialogState extends State<EditTaskDialog> {
             icon: const Icon(Icons.check, size: 18),
             label: Text(_isSaving ? 'جار الحفظ...' : 'حفظ التغييرات'),
             style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.primary,
-              foregroundColor: AppColors.scaffoldBackground,
+              backgroundColor: AppColors.of(context).primary,
+              foregroundColor: AppColors.of(context).scaffoldBackground,
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
             ),
           ),
@@ -539,7 +565,7 @@ class _EditTaskDialogState extends State<EditTaskDialog> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: AppColors.cardBackground,
+        backgroundColor: AppColors.of(context).cardBackground,
         title: const Text('حذف المهمة'),
         content: const Text('هل أنت متأكد من حذف هذه المهمة؟'),
         actions: [
@@ -554,7 +580,7 @@ class _EditTaskDialogState extends State<EditTaskDialog> {
               widget.onTaskDeleted?.call();
             },
             style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.statusDelayed,
+              backgroundColor: AppColors.of(context).statusDelayed,
             ),
             child: const Text('حذف'),
           ),
@@ -568,10 +594,10 @@ class _EditTaskDialogState extends State<EditTaskDialog> {
     final remainsDraft = widget.task.isDraft || widget.task.assigneeId == null;
     if (_assigneeId == null && !remainsDraft) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
+        AppToast.build(
+          tone: ToastTone.error,
           duration: const Duration(seconds: 2),
           content: Text('يرجى اختيار الموظف المسؤول'),
-          backgroundColor: AppColors.statusDelayed,
         ),
       );
       return;
@@ -624,10 +650,10 @@ class _EditTaskDialogState extends State<EditTaskDialog> {
       if (!mounted) return;
       setState(() => _isSaving = false);
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
+        AppToast.build(
+          tone: ToastTone.error,
           duration: const Duration(seconds: 2),
           content: Text('تعذر حفظ التغييرات'),
-          backgroundColor: AppColors.statusDelayed,
         ),
       );
     }

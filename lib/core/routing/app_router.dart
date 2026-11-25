@@ -1,3 +1,4 @@
+import 'package:rawnaq/core/constants/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -563,11 +564,15 @@ class _PlaceholderPage extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(24),
             decoration: BoxDecoration(
-              color: const Color(0xFF161B22),
+              color: AppColors.of(context).scaffoldBackground,
               shape: BoxShape.circle,
-              border: Border.all(color: const Color(0xFF30363D)),
+              border: Border.all(color: AppColors.of(context).border),
             ),
-            child: Icon(icon, size: 64, color: const Color(0xFF8B949E)),
+            child: Icon(
+              icon,
+              size: 64,
+              color: AppColors.of(context).textSecondary,
+            ),
           ),
           const SizedBox(height: 24),
           Text(
@@ -579,9 +584,9 @@ class _PlaceholderPage extends StatelessWidget {
           const SizedBox(height: 8),
           Text(
             subtitle,
-            style: Theme.of(
-              context,
-            ).textTheme.bodyLarge?.copyWith(color: const Color(0xFF8B949E)),
+            style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+              color: AppColors.of(context).textSecondary,
+            ),
           ),
         ],
       ),

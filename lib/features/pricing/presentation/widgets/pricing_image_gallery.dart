@@ -77,7 +77,7 @@ class _MainImageDisplay extends StatelessWidget {
       margin: const EdgeInsets.all(4),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: const Color(0xFF363C4A)),
+        border: Border.all(color: AppColors.of(context).border),
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(8),
@@ -91,12 +91,12 @@ class _MainImageDisplay extends StatelessWidget {
               height: double.infinity,
               errorBuilder: (context, error, stackTrace) {
                 return Container(
-                  color: const Color(0xFF2A313D),
-                  child: const Center(
+                  color: AppColors.of(context).surfaceColor,
+                  child: Center(
                     child: Icon(
                       Icons.broken_image,
                       size: 64,
-                      color: AppColors.textMuted,
+                      color: AppColors.of(context).textMuted,
                     ),
                   ),
                 );
@@ -104,11 +104,11 @@ class _MainImageDisplay extends StatelessWidget {
               loadingBuilder: (context, child, loadingProgress) {
                 if (loadingProgress == null) return child;
                 return Container(
-                  color: const Color(0xFF2A313D),
-                  child: const Center(
+                  color: AppColors.of(context).surfaceColor,
+                  child: Center(
                     child: CircularProgressIndicator(
                       strokeWidth: 2,
-                      color: AppColors.primary,
+                      color: AppColors.of(context).primary,
                     ),
                   ),
                 );
@@ -209,8 +209,8 @@ class _ThumbnailsRow extends StatelessWidget {
                 borderRadius: BorderRadius.circular(4),
                 border: Border.all(
                   color: isSelected
-                      ? AppColors.primary
-                      : const Color(0xFF363C4A),
+                      ? AppColors.of(context).primary
+                      : AppColors.of(context).border,
                   width: isSelected ? 2 : 1,
                 ),
               ),
@@ -221,11 +221,11 @@ class _ThumbnailsRow extends StatelessWidget {
                   fit: BoxFit.cover,
                   errorBuilder: (context, error, stackTrace) {
                     return Container(
-                      color: const Color(0xFF2A313D),
-                      child: const Icon(
+                      color: AppColors.of(context).surfaceColor,
+                      child: Icon(
                         Icons.broken_image,
                         size: 20,
-                        color: AppColors.textMuted,
+                        color: AppColors.of(context).textMuted,
                       ),
                     );
                   },
@@ -247,19 +247,26 @@ class _EmptyGallery extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: const Color(0xFF2A313D),
+        color: AppColors.of(context).surfaceColor,
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: const Color(0xFF363C4A)),
+        border: Border.all(color: AppColors.of(context).border),
       ),
-      child: const Center(
+      child: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.image_outlined, size: 48, color: AppColors.textMuted),
+            Icon(
+              Icons.image_outlined,
+              size: 48,
+              color: AppColors.of(context).textMuted,
+            ),
             SizedBox(height: 8),
             Text(
               'لا توجد صور',
-              style: TextStyle(color: AppColors.textMuted, fontSize: 14),
+              style: TextStyle(
+                color: AppColors.of(context).textMuted,
+                fontSize: 14,
+              ),
             ),
           ],
         ),

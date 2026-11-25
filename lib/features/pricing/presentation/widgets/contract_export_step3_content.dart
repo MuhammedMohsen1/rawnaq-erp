@@ -47,10 +47,10 @@ class ContractExportStep3Content extends StatelessWidget {
             children: [
               Text(
                 'إجمالي المبلغ: ${totalAmount.toStringAsFixed(3)} د.ك',
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 13,
                   fontWeight: FontWeight.bold,
-                  color: AppColors.textPrimary,
+                  color: AppColors.of(context).textPrimary,
                 ),
               ),
               TextButton.icon(
@@ -144,9 +144,12 @@ class ContractExportStep3Content extends StatelessWidget {
                   margin: const EdgeInsets.only(bottom: 10),
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: AppColors.surfaceColor,
+                    color: AppColors.of(context).surfaceColor,
                     borderRadius: BorderRadius.circular(10),
-                    border: Border.all(color: AppColors.border, width: 1),
+                    border: Border.all(
+                      color: AppColors.of(context).border,
+                      width: 1,
+                    ),
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -159,7 +162,9 @@ class ContractExportStep3Content extends StatelessWidget {
                               vertical: 4,
                             ),
                             decoration: BoxDecoration(
-                              color: AppColors.primary.withValues(alpha: 0.1),
+                              color: AppColors.of(
+                                context,
+                              ).primary.withValues(alpha: 0.1),
                               borderRadius: BorderRadius.circular(4),
                             ),
                             child: Text(
@@ -167,7 +172,7 @@ class ContractExportStep3Content extends StatelessWidget {
                               style: TextStyle(
                                 fontSize: 11,
                                 fontWeight: FontWeight.bold,
-                                color: AppColors.primary,
+                                color: AppColors.of(context).primary,
                               ),
                             ),
                           ),
@@ -195,38 +200,38 @@ class ContractExportStep3Content extends StatelessWidget {
                         decoration: InputDecoration(
                           labelText: 'الملاحظات',
                           hintText: 'مثال: بعد اعتماد المخططات',
-                          prefixIcon: const Icon(
+                          prefixIcon: Icon(
                             Icons.sticky_note_2_outlined,
                             size: 18,
-                            color: AppColors.textSecondary,
+                            color: AppColors.of(context).textSecondary,
                           ),
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(8),
                           ),
                           enabledBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(8),
-                            borderSide: const BorderSide(
-                              color: AppColors.inputBorder,
+                            borderSide: BorderSide(
+                              color: AppColors.of(context).inputBorder,
                             ),
                           ),
                           focusedBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(8),
-                            borderSide: const BorderSide(
-                              color: AppColors.inputFocusBorder,
+                            borderSide: BorderSide(
+                              color: AppColors.of(context).inputFocusBorder,
                               width: 2,
                             ),
                           ),
                           filled: true,
-                          fillColor: AppColors.inputBackground,
+                          fillColor: AppColors.of(context).inputBackground,
                           contentPadding: const EdgeInsets.symmetric(
                             horizontal: 12,
                             vertical: 12,
                           ),
                           isDense: true,
                         ),
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 13,
-                          color: AppColors.textPrimary,
+                          color: AppColors.of(context).textPrimary,
                         ),
                         textDirection: TextDirection.rtl,
                         textAlign: TextAlign.right,
@@ -236,7 +241,9 @@ class ContractExportStep3Content extends StatelessWidget {
                         children: [
                           Expanded(
                             child: TextField(
-                              inputFormatters: const [ArabicNumberInputFormatter()],
+                              inputFormatters: const [
+                                ArabicNumberInputFormatter(),
+                              ],
                               controller:
                                   paymentControllers[index]['percentage'],
                               onChanged: (value) => onPercentageChanged(
@@ -245,29 +252,33 @@ class ContractExportStep3Content extends StatelessWidget {
                               ),
                               decoration: InputDecoration(
                                 labelText: 'النسبة %',
-                                prefixIcon: const Icon(
+                                prefixIcon: Icon(
                                   Icons.percent,
                                   size: 18,
-                                  color: AppColors.textSecondary,
+                                  color: AppColors.of(context).textSecondary,
                                 ),
                                 border: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(8),
                                 ),
                                 enabledBorder: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(8),
-                                  borderSide: const BorderSide(
-                                    color: AppColors.inputBorder,
+                                  borderSide: BorderSide(
+                                    color: AppColors.of(context).inputBorder,
                                   ),
                                 ),
                                 focusedBorder: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(8),
-                                  borderSide: const BorderSide(
-                                    color: AppColors.inputFocusBorder,
+                                  borderSide: BorderSide(
+                                    color: AppColors.of(
+                                      context,
+                                    ).inputFocusBorder,
                                     width: 2,
                                   ),
                                 ),
                                 filled: true,
-                                fillColor: AppColors.inputBackground,
+                                fillColor: AppColors.of(
+                                  context,
+                                ).inputBackground,
                                 contentPadding: const EdgeInsets.symmetric(
                                   horizontal: 12,
                                   vertical: 12,
@@ -280,17 +291,19 @@ class ContractExportStep3Content extends StatelessWidget {
                                   ),
                               textDirection: TextDirection.ltr,
                               textAlign: TextAlign.center,
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontSize: 13,
                                 fontWeight: FontWeight.bold,
-                                color: AppColors.textPrimary,
+                                color: AppColors.of(context).textPrimary,
                               ),
                             ),
                           ),
                           const SizedBox(width: 8),
                           Expanded(
                             child: TextField(
-                              inputFormatters: const [ArabicNumberInputFormatter()],
+                              inputFormatters: const [
+                                ArabicNumberInputFormatter(),
+                              ],
                               controller: paymentControllers[index]['amount'],
                               onChanged: (value) => onAmountChanged(
                                 index,
@@ -299,29 +312,33 @@ class ContractExportStep3Content extends StatelessWidget {
                               decoration: InputDecoration(
                                 labelText: 'المبلغ',
                                 suffixText: 'د.ك',
-                                prefixIcon: const Icon(
+                                prefixIcon: Icon(
                                   Icons.attach_money,
                                   size: 18,
-                                  color: AppColors.textSecondary,
+                                  color: AppColors.of(context).textSecondary,
                                 ),
                                 border: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(8),
                                 ),
                                 enabledBorder: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(8),
-                                  borderSide: const BorderSide(
-                                    color: AppColors.inputBorder,
+                                  borderSide: BorderSide(
+                                    color: AppColors.of(context).inputBorder,
                                   ),
                                 ),
                                 focusedBorder: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(8),
-                                  borderSide: const BorderSide(
-                                    color: AppColors.inputFocusBorder,
+                                  borderSide: BorderSide(
+                                    color: AppColors.of(
+                                      context,
+                                    ).inputFocusBorder,
                                     width: 2,
                                   ),
                                 ),
                                 filled: true,
-                                fillColor: AppColors.inputBackground,
+                                fillColor: AppColors.of(
+                                  context,
+                                ).inputBackground,
                                 contentPadding: const EdgeInsets.symmetric(
                                   horizontal: 12,
                                   vertical: 12,
@@ -334,10 +351,10 @@ class ContractExportStep3Content extends StatelessWidget {
                                   ),
                               textDirection: TextDirection.ltr,
                               textAlign: TextAlign.center,
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontSize: 13,
                                 fontWeight: FontWeight.bold,
-                                color: AppColors.textPrimary,
+                                color: AppColors.of(context).textPrimary,
                               ),
                             ),
                           ),

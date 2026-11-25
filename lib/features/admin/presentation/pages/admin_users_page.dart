@@ -1,3 +1,4 @@
+import 'package:rawnaq/core/widgets/app_toast.dart';
 import 'package:rawnaq/core/utils/arabic_number_input_formatter.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -50,12 +51,12 @@ class _AdminUsersView extends StatelessWidget {
         if (message == null) return;
 
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
+          AppToast.build(
+            tone: state.errorMessage == null
+                ? ToastTone.success
+                : ToastTone.error,
             duration: const Duration(seconds: 2),
             content: Text(message, textDirection: TextDirection.rtl),
-            backgroundColor: state.errorMessage == null
-                ? AppColors.success
-                : AppColors.error,
           ),
         );
       },
@@ -100,10 +101,11 @@ class _Toolbar extends StatelessWidget {
           child: TextField(
             inputFormatters: const [ArabicNumberInputFormatter()],
             onChanged: context.read<AdminUsersCubit>().updateSearch,
-            style: AppTextStyles.bodyMedium.copyWith(
-              color: AppColors.textPrimary,
-            ),
+            style: AppTextStyles.of(
+              context,
+            ).bodyMedium.copyWith(color: AppColors.of(context).textPrimary),
             decoration: _inputDecoration(
+              context,
               hintText: 'بحث بالاسم أو البريد أو الهاتف',
               prefixIcon: Icons.search,
             ),
@@ -181,6 +183,7 @@ class _ToolbarIconButton extends StatelessWidget {
         child: OutlinedButton(
           onPressed: onPressed,
           style: _toolbarButtonStyle(
+            context,
             padding: EdgeInsets.zero,
             disabledOpacity: 0.45,
           ),
@@ -209,13 +212,16 @@ class _ToolbarTextButton extends StatelessWidget {
       child: OutlinedButton.icon(
         onPressed: onPressed,
         style: _toolbarButtonStyle(
+          context,
           padding: const EdgeInsets.symmetric(horizontal: 14),
           disabledOpacity: 0.45,
         ),
         icon: icon,
         label: Text(
           label,
-          style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.w700),
+          style: AppTextStyles.of(
+            context,
+          ).bodyMedium.copyWith(fontWeight: FontWeight.w700),
         ),
       ),
     );
@@ -237,10 +243,12 @@ class _FilterDropdown extends StatelessWidget {
   Widget build(BuildContext context) {
     return DropdownButtonFormField<String>(
       initialValue: value,
-      dropdownColor: AppColors.surfaceColor,
-      iconEnabledColor: AppColors.textSecondary,
-      style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textPrimary),
-      decoration: _inputDecoration(),
+      dropdownColor: AppColors.of(context).surfaceColor,
+      iconEnabledColor: AppColors.of(context).textSecondary,
+      style: AppTextStyles.of(
+        context,
+      ).bodyMedium.copyWith(color: AppColors.of(context).textPrimary),
+      decoration: _inputDecoration(context),
       items: items.entries
           .map(
             (entry) =>
@@ -289,19 +297,19 @@ class _UsersBody extends StatelessWidget {
 
     return DecoratedBox(
       decoration: BoxDecoration(
-        color: AppColors.cardBackground,
-        border: Border.all(color: AppColors.border),
+        color: AppColors.of(context).cardBackground,
+        border: Border.all(color: AppColors.of(context).border),
         borderRadius: BorderRadius.circular(8),
       ),
       child: Column(
         children: [
           _TableHeader(total: users.length),
-          const Divider(color: AppColors.divider, height: 1),
+          Divider(color: AppColors.of(context).divider, height: 1),
           Expanded(
             child: ListView.separated(
               itemCount: users.length,
               separatorBuilder: (_, __) =>
-                  const Divider(color: AppColors.divider, height: 1),
+                  Divider(color: AppColors.of(context).divider, height: 1),
               itemBuilder: (context, index) => _UserRow(user: users[index]),
             ),
           ),
@@ -321,13 +329,13 @@ class _TableHeader extends StatelessWidget {
     return Container(
       height: 48,
       padding: const EdgeInsets.symmetric(horizontal: 16),
-      color: AppColors.tableHeader,
+      color: AppColors.of(context).tableHeader,
       child: Row(
         children: [
           Text(
             'المستخدمون ($total)',
-            style: AppTextStyles.bodyMedium.copyWith(
-              color: AppColors.textPrimary,
+            style: AppTextStyles.of(context).bodyMedium.copyWith(
+              color: AppColors.of(context).textPrimary,
               fontWeight: FontWeight.w700,
             ),
           ),
@@ -354,7 +362,9 @@ class _HeaderLabel extends StatelessWidget {
       width: width,
       child: Text(
         text,
-        style: AppTextStyles.caption.copyWith(color: AppColors.textMuted),
+        style: AppTextStyles.of(
+          context,
+        ).caption.copyWith(color: AppColors.of(context).textMuted),
       ),
     );
   }
@@ -374,15 +384,15 @@ class _UserRow extends StatelessWidget {
         children: [
           CircleAvatar(
             radius: 20,
-            backgroundColor: AppColors.surfaceColor,
+            backgroundColor: AppColors.of(context).surfaceColor,
             backgroundImage: user.avatar == null
                 ? null
                 : NetworkImage(user.avatar!),
             child: user.avatar == null
                 ? Text(
                     user.name.isEmpty ? '?' : user.name.characters.first,
-                    style: AppTextStyles.bodyMedium.copyWith(
-                      color: AppColors.textPrimary,
+                    style: AppTextStyles.of(context).bodyMedium.copyWith(
+                      color: AppColors.of(context).textPrimary,
                     ),
                   )
                 : null,
@@ -397,8 +407,8 @@ class _UserRow extends StatelessWidget {
                   user.name,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: AppTextStyles.bodyMedium.copyWith(
-                    color: AppColors.textPrimary,
+                  style: AppTextStyles.of(context).bodyMedium.copyWith(
+                    color: AppColors.of(context).textPrimary,
                     fontWeight: FontWeight.w700,
                   ),
                 ),
@@ -411,8 +421,8 @@ class _UserRow extends StatelessWidget {
                   ].join('  |  '),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: AppTextStyles.caption.copyWith(
-                    color: AppColors.textSecondary,
+                  style: AppTextStyles.of(context).caption.copyWith(
+                    color: AppColors.of(context).textSecondary,
                   ),
                 ),
               ],
@@ -426,9 +436,9 @@ class _UserRow extends StatelessWidget {
               user.lastLoginAt == null
                   ? 'لم يسجل'
                   : DateHelper.formatDate(user.lastLoginAt!),
-              style: AppTextStyles.caption.copyWith(
-                color: AppColors.textSecondary,
-              ),
+              style: AppTextStyles.of(
+                context,
+              ).caption.copyWith(color: AppColors.of(context).textSecondary),
             ),
           ),
           SizedBox(
@@ -444,7 +454,7 @@ class _UserRow extends StatelessWidget {
                 ),
                 PopupMenuButton<String>(
                   tooltip: 'إجراءات',
-                  color: AppColors.surfaceColor,
+                  color: AppColors.of(context).surfaceColor,
                   icon: const Icon(Icons.more_vert),
                   onSelected: (value) => _handleAction(context, user, value),
                   itemBuilder: (_) => [
@@ -486,7 +496,7 @@ class _UserRow extends StatelessWidget {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: AppColors.cardBackground,
+        backgroundColor: AppColors.of(context).cardBackground,
         title: const Text('حذف المستخدم'),
         content: Text('هل تريد حذف ${user.name}؟ سيتم الحذف بشكل ناعم.'),
         actions: [
@@ -527,8 +537,8 @@ class _RoleBadge extends StatelessWidget {
                 (role) => _Badge(
                   text: _roleLabel(role),
                   color: role == AppConstants.adminRole
-                      ? AppColors.info
-                      : AppColors.primaryDark,
+                      ? AppColors.of(context).info
+                      : AppColors.of(context).primaryDark,
                 ),
               )
               .toList(),
@@ -551,7 +561,9 @@ class _StatusBadge extends StatelessWidget {
         alignment: Alignment.centerRight,
         child: _Badge(
           text: isActive ? 'نشط' : 'موقوف',
-          color: isActive ? AppColors.success : AppColors.warning,
+          color: isActive
+              ? AppColors.of(context).success
+              : AppColors.of(context).warning,
         ),
       ),
     );
@@ -577,7 +589,7 @@ class _Badge extends StatelessWidget {
         text,
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
-        style: AppTextStyles.caption.copyWith(color: color),
+        style: AppTextStyles.of(context).caption.copyWith(color: color),
       ),
     );
   }
@@ -602,18 +614,20 @@ class _EmptyState extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 48, color: AppColors.textMuted),
+          Icon(icon, size: 48, color: AppColors.of(context).textMuted),
           const SizedBox(height: 12),
           Text(
             title,
-            style: AppTextStyles.h6.copyWith(color: AppColors.textPrimary),
+            style: AppTextStyles.of(
+              context,
+            ).h6.copyWith(color: AppColors.of(context).textPrimary),
           ),
           const SizedBox(height: 6),
           Text(
             subtitle,
-            style: AppTextStyles.bodySmall.copyWith(
-              color: AppColors.textSecondary,
-            ),
+            style: AppTextStyles.of(
+              context,
+            ).bodySmall.copyWith(color: AppColors.of(context).textSecondary),
           ),
           if (action != null) ...[const SizedBox(height: 12), action!],
         ],
@@ -689,7 +703,7 @@ class _UserFormDialogState extends State<_UserFormDialog> {
     return Directionality(
       textDirection: TextDirection.rtl,
       child: AlertDialog(
-        backgroundColor: AppColors.cardBackground,
+        backgroundColor: AppColors.of(context).cardBackground,
         title: Text(_isEditing ? 'تعديل مستخدم' : 'إضافة مستخدم'),
         content: SizedBox(
           width: 560,
@@ -702,7 +716,7 @@ class _UserFormDialogState extends State<_UserFormDialog> {
                   TextFormField(
                     inputFormatters: const [ArabicNumberInputFormatter()],
                     controller: _nameController,
-                    decoration: _inputDecoration(hintText: 'الاسم'),
+                    decoration: _inputDecoration(context, hintText: 'الاسم'),
                     validator: (value) =>
                         value == null || value.trim().length < 2
                         ? 'أدخل اسم المستخدم'
@@ -713,7 +727,10 @@ class _UserFormDialogState extends State<_UserFormDialog> {
                     inputFormatters: const [ArabicNumberInputFormatter()],
                     controller: _emailController,
                     enabled: !_isEditing,
-                    decoration: _inputDecoration(hintText: 'البريد الإلكتروني'),
+                    decoration: _inputDecoration(
+                      context,
+                      hintText: 'البريد الإلكتروني',
+                    ),
                     validator: (value) {
                       if (_isEditing) return null;
                       final email = value?.trim() ?? '';
@@ -724,7 +741,10 @@ class _UserFormDialogState extends State<_UserFormDialog> {
                   TextFormField(
                     inputFormatters: const [ArabicNumberInputFormatter()],
                     controller: _phoneController,
-                    decoration: _inputDecoration(hintText: 'الهاتف اختياري'),
+                    decoration: _inputDecoration(
+                      context,
+                      hintText: 'الهاتف اختياري',
+                    ),
                   ),
                   const SizedBox(height: 12),
                   TextFormField(
@@ -732,6 +752,7 @@ class _UserFormDialogState extends State<_UserFormDialog> {
                     controller: _passwordController,
                     obscureText: true,
                     decoration: _inputDecoration(
+                      context,
                       hintText: _isEditing
                           ? 'كلمة مرور جديدة اختياري'
                           : 'كلمة المرور',
@@ -837,8 +858,8 @@ class _DialogDropdown extends StatelessWidget {
   Widget build(BuildContext context) {
     return DropdownButtonFormField<String>(
       initialValue: value,
-      dropdownColor: AppColors.surfaceColor,
-      decoration: _inputDecoration(hintText: label),
+      dropdownColor: AppColors.of(context).surfaceColor,
+      decoration: _inputDecoration(context, hintText: label),
       items: items.entries
           .map(
             (entry) =>
@@ -876,8 +897,8 @@ class _RolesSelector extends StatelessWidget {
         children: [
           Text(
             'الأدوار',
-            style: AppTextStyles.caption.copyWith(
-              color: AppColors.textSecondary,
+            style: AppTextStyles.of(context).caption.copyWith(
+              color: AppColors.of(context).textSecondary,
               fontWeight: FontWeight.w700,
             ),
           ),
@@ -944,29 +965,34 @@ class _AdminSubRolesSelector extends StatelessWidget {
   }
 }
 
-InputDecoration _inputDecoration({String? hintText, IconData? prefixIcon}) {
+InputDecoration _inputDecoration(
+  BuildContext context, {
+  String? hintText,
+  IconData? prefixIcon,
+}) {
   return InputDecoration(
     hintText: hintText,
     prefixIcon: prefixIcon == null ? null : Icon(prefixIcon, size: 18),
     filled: true,
-    fillColor: AppColors.inputBackground,
+    fillColor: AppColors.of(context).inputBackground,
     isDense: true,
     border: OutlineInputBorder(
       borderRadius: BorderRadius.circular(8),
-      borderSide: const BorderSide(color: AppColors.inputBorder),
+      borderSide: BorderSide(color: AppColors.of(context).inputBorder),
     ),
     enabledBorder: OutlineInputBorder(
       borderRadius: BorderRadius.circular(8),
-      borderSide: const BorderSide(color: AppColors.inputBorder),
+      borderSide: BorderSide(color: AppColors.of(context).inputBorder),
     ),
     focusedBorder: OutlineInputBorder(
       borderRadius: BorderRadius.circular(8),
-      borderSide: const BorderSide(color: AppColors.inputFocusBorder),
+      borderSide: BorderSide(color: AppColors.of(context).inputFocusBorder),
     ),
   );
 }
 
-ButtonStyle _toolbarButtonStyle({
+ButtonStyle _toolbarButtonStyle(
+  BuildContext context, {
   required EdgeInsetsGeometry padding,
   double disabledOpacity = 0.5,
 }) {
@@ -974,36 +1000,38 @@ ButtonStyle _toolbarButtonStyle({
     padding: WidgetStatePropertyAll(padding),
     backgroundColor: WidgetStateProperty.resolveWith((states) {
       if (states.contains(WidgetState.disabled)) {
-        return AppColors.surfaceColor.withValues(alpha: disabledOpacity);
+        return AppColors.of(
+          context,
+        ).surfaceColor.withValues(alpha: disabledOpacity);
       }
       if (states.contains(WidgetState.hovered)) {
-        return AppColors.tableRowHover;
+        return AppColors.of(context).tableRowHover;
       }
-      return AppColors.surfaceColor;
+      return AppColors.of(context).surfaceColor;
     }),
     foregroundColor: WidgetStateProperty.resolveWith((states) {
       if (states.contains(WidgetState.disabled)) {
-        return AppColors.textDisabled;
+        return AppColors.of(context).textDisabled;
       }
-      return AppColors.textPrimary;
+      return AppColors.of(context).textPrimary;
     }),
     iconColor: WidgetStateProperty.resolveWith((states) {
       if (states.contains(WidgetState.disabled)) {
-        return AppColors.textDisabled;
+        return AppColors.of(context).textDisabled;
       }
-      return AppColors.primary;
+      return AppColors.of(context).primary;
     }),
     side: WidgetStateProperty.resolveWith((states) {
       final color = states.contains(WidgetState.hovered)
-          ? AppColors.primaryDark
-          : AppColors.border;
+          ? AppColors.of(context).primaryDark
+          : AppColors.of(context).border;
       return BorderSide(color: color);
     }),
     shape: WidgetStatePropertyAll(
       RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
     ),
     overlayColor: WidgetStatePropertyAll(
-      AppColors.primary.withValues(alpha: 0.08),
+      AppColors.of(context).primary.withValues(alpha: 0.08),
     ),
   );
 }

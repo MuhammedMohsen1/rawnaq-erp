@@ -2,107 +2,110 @@ import 'package:flutter/material.dart';
 import 'app_colors.dart';
 
 class AppTextStyles {
-  // ============================================
-  // DARK THEME TEXT STYLES - Rawnaq Project Management
-  // ============================================
+  const AppTextStyles._(this._colors);
+
+  factory AppTextStyles.of(BuildContext context) =>
+      AppTextStyles._(AppColors.of(context));
+
+  final AppColors _colors;
 
   // Page titles
-  static const TextStyle pageTitle = TextStyle(
+  TextStyle get pageTitle => TextStyle(
     fontSize: 24,
     fontWeight: FontWeight.bold,
-    color: AppColors.textPrimary,
+    color: _colors.textPrimary,
     height: 1.3,
   );
 
   // Section titles
-  static const TextStyle sectionTitle = TextStyle(
+  TextStyle get sectionTitle => TextStyle(
     fontSize: 18,
     fontWeight: FontWeight.w600,
-    color: AppColors.textPrimary,
+    color: _colors.textPrimary,
     height: 1.4,
   );
 
   // Headings
-  static const TextStyle h1 = TextStyle(
+  TextStyle get h1 => TextStyle(
     fontSize: 32,
     fontWeight: FontWeight.bold,
-    color: AppColors.textPrimary,
+    color: _colors.textPrimary,
     height: 1.2,
   );
 
-  static const TextStyle h2 = TextStyle(
+  TextStyle get h2 => TextStyle(
     fontSize: 28,
     fontWeight: FontWeight.bold,
-    color: AppColors.textPrimary,
+    color: _colors.textPrimary,
     height: 1.2,
   );
 
-  static const TextStyle h3 = TextStyle(
+  TextStyle get h3 => TextStyle(
     fontSize: 24,
     fontWeight: FontWeight.w600,
-    color: AppColors.textPrimary,
+    color: _colors.textPrimary,
     height: 1.3,
   );
 
-  static const TextStyle h4 = TextStyle(
+  TextStyle get h4 => TextStyle(
     fontSize: 20,
     fontWeight: FontWeight.w600,
-    color: AppColors.textPrimary,
+    color: _colors.textPrimary,
     height: 1.3,
   );
 
-  static const TextStyle h5 = TextStyle(
+  TextStyle get h5 => TextStyle(
     fontSize: 18,
     fontWeight: FontWeight.w600,
-    color: AppColors.textPrimary,
+    color: _colors.textPrimary,
     height: 1.4,
   );
 
-  static const TextStyle h6 = TextStyle(
+  TextStyle get h6 => TextStyle(
     fontSize: 16,
     fontWeight: FontWeight.w600,
-    color: AppColors.textPrimary,
+    color: _colors.textPrimary,
     height: 1.4,
   );
 
   // Body text
-  static const TextStyle bodyLarge = TextStyle(
+  TextStyle get bodyLarge => TextStyle(
     fontSize: 16,
     fontWeight: FontWeight.normal,
-    color: AppColors.textSecondary,
+    color: _colors.textSecondary,
     height: 1.5,
   );
 
-  static const TextStyle bodyMedium = TextStyle(
+  TextStyle get bodyMedium => TextStyle(
     fontSize: 14,
     fontWeight: FontWeight.normal,
-    color: AppColors.textSecondary,
+    color: _colors.textSecondary,
     height: 1.5,
   );
 
-  static const TextStyle bodySmall = TextStyle(
+  TextStyle get bodySmall => TextStyle(
     fontSize: 12,
     fontWeight: FontWeight.normal,
-    color: AppColors.textMuted,
+    color: _colors.textMuted,
     height: 1.5,
   );
 
   // Buttons
-  static const TextStyle buttonLarge = TextStyle(
+  TextStyle get buttonLarge => TextStyle(
     fontSize: 16,
     fontWeight: FontWeight.w600,
     color: AppColors.white,
     height: 1.2,
   );
 
-  static const TextStyle buttonMedium = TextStyle(
+  TextStyle get buttonMedium => TextStyle(
     fontSize: 14,
     fontWeight: FontWeight.w600,
     color: AppColors.white,
     height: 1.2,
   );
 
-  static const TextStyle buttonSmall = TextStyle(
+  TextStyle get buttonSmall => TextStyle(
     fontSize: 12,
     fontWeight: FontWeight.w600,
     color: AppColors.white,
@@ -110,151 +113,148 @@ class AppTextStyles {
   );
 
   // Table styles
-  static const TextStyle tableHeader = TextStyle(
+  TextStyle get tableHeader => TextStyle(
     fontSize: 14,
     fontWeight: FontWeight.w600,
-    color: AppColors.textPrimary,
+    color: _colors.textPrimary,
     height: 1.3,
   );
 
-  static const TextStyle tableCell = TextStyle(
+  TextStyle get tableCell => TextStyle(
     fontSize: 14,
     fontWeight: FontWeight.normal,
-    color: AppColors.textSecondary,
+    color: _colors.textSecondary,
     height: 1.4,
   );
 
-  static const TextStyle tableCellBold = TextStyle(
+  TextStyle get tableCellBold => TextStyle(
     fontSize: 14,
     fontWeight: FontWeight.w500,
-    color: AppColors.textPrimary,
+    color: _colors.textPrimary,
     height: 1.4,
   );
 
   // Captions and labels
-  static const TextStyle caption = TextStyle(
+  TextStyle get caption => TextStyle(
     fontSize: 12,
     fontWeight: FontWeight.normal,
-    color: AppColors.textMuted,
+    color: _colors.textMuted,
     height: 1.3,
   );
 
-  static const TextStyle label = TextStyle(
+  TextStyle get label => TextStyle(
     fontSize: 14,
     fontWeight: FontWeight.w500,
-    color: AppColors.textSecondary,
+    color: _colors.textSecondary,
     height: 1.3,
   );
 
-  static const TextStyle labelSmall = TextStyle(
+  TextStyle get labelSmall => TextStyle(
     fontSize: 12,
     fontWeight: FontWeight.w500,
-    color: AppColors.textMuted,
+    color: _colors.textMuted,
     height: 1.3,
   );
 
-  static const TextStyle overline = TextStyle(
+  TextStyle get overline => TextStyle(
     fontSize: 10,
     fontWeight: FontWeight.w500,
-    color: AppColors.textMuted,
+    color: _colors.textMuted,
     height: 1.6,
     letterSpacing: 1.5,
   );
 
   // Status badge styles
-  static const TextStyle statusBadge = TextStyle(
-    fontSize: 12,
-    fontWeight: FontWeight.w600,
-    height: 1.2,
-  );
+  TextStyle get statusBadge =>
+      TextStyle(fontSize: 12, fontWeight: FontWeight.w600, height: 1.2);
 
   // Navigation styles
-  static const TextStyle navItem = TextStyle(
+  TextStyle get navItem => TextStyle(
     fontSize: 14,
     fontWeight: FontWeight.w500,
-    color: AppColors.textSecondary,
+    color: _colors.textSecondary,
     height: 1.3,
   );
 
-  static const TextStyle navItemActive = TextStyle(
+  TextStyle get navItemActive => TextStyle(
     fontSize: 14,
     fontWeight: FontWeight.w600,
-    color: AppColors.textPrimary,
+    color: _colors.textPrimary,
     height: 1.3,
   );
 
   // Input styles
-  static const TextStyle inputText = TextStyle(
+  TextStyle get inputText => TextStyle(
     fontSize: 14,
     fontWeight: FontWeight.normal,
-    color: AppColors.textPrimary,
+    color: _colors.textPrimary,
     height: 1.4,
   );
 
-  static const TextStyle inputHint = TextStyle(
+  TextStyle get inputHint => TextStyle(
     fontSize: 14,
     fontWeight: FontWeight.normal,
-    color: AppColors.textMuted,
+    color: _colors.textMuted,
     height: 1.4,
   );
 
-  static const TextStyle inputLabel = TextStyle(
+  TextStyle get inputLabel => TextStyle(
     fontSize: 14,
     fontWeight: FontWeight.w500,
-    color: AppColors.textSecondary,
+    color: _colors.textSecondary,
     height: 1.3,
   );
 
   // Special styles
-  static const TextStyle error = TextStyle(
+  TextStyle get error => TextStyle(
     fontSize: 12,
     fontWeight: FontWeight.normal,
-    color: AppColors.error,
+    color: _colors.error,
     height: 1.3,
   );
 
-  static const TextStyle success = TextStyle(
+  TextStyle get success => TextStyle(
     fontSize: 12,
     fontWeight: FontWeight.normal,
-    color: AppColors.success,
+    color: _colors.success,
     height: 1.3,
   );
 
-  static const TextStyle warning = TextStyle(
+  TextStyle get warning => TextStyle(
     fontSize: 12,
     fontWeight: FontWeight.normal,
-    color: AppColors.warning,
+    color: _colors.warning,
     height: 1.3,
   );
 
-  static const TextStyle link = TextStyle(
+  TextStyle get link => TextStyle(
     fontSize: 14,
     fontWeight: FontWeight.w500,
-    color: AppColors.primary,
+    color: _colors.primary,
     height: 1.3,
     decoration: TextDecoration.underline,
   );
 
   // Stats/Numbers
-  static const TextStyle statNumber = TextStyle(
+  TextStyle get statNumber => TextStyle(
     fontSize: 28,
     fontWeight: FontWeight.bold,
-    color: AppColors.textPrimary,
+    color: _colors.textPrimary,
     height: 1.2,
   );
 
-  static const TextStyle statLabel = TextStyle(
+  TextStyle get statLabel => TextStyle(
     fontSize: 12,
     fontWeight: FontWeight.w500,
-    color: AppColors.textMuted,
+    color: _colors.textMuted,
     height: 1.3,
   );
 
   // Percentage/Progress
-  static const TextStyle percentage = TextStyle(
+  TextStyle get percentage => TextStyle(
     fontSize: 14,
     fontWeight: FontWeight.w600,
-    color: AppColors.textPrimary,
+    color: _colors.textPrimary,
     height: 1.2,
   );
 }

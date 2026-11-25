@@ -6,6 +6,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:rawnaq/core/di/injection_container.dart';
 import 'package:rawnaq/core/layout/main_layout.dart';
+import 'package:rawnaq/core/theme/app_theme.dart';
 import 'package:rawnaq/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:rawnaq/features/pricing/data/models/pricing_version_model.dart';
 import 'package:rawnaq/features/pricing/presentation/cubit/pricing_cubit.dart';
@@ -101,10 +102,20 @@ void main() {
       );
       addTearDown(router.dispose);
 
+      final mode = ValueNotifier(ThemeMode.dark);
+      addTearDown(mode.dispose);
       await tester.pumpWidget(
         BlocProvider<AuthBloc>(
           create: (_) => _TestAuthBloc(),
-          child: MaterialApp.router(routerConfig: router),
+          child: ValueListenableBuilder<ThemeMode>(
+            valueListenable: mode,
+            builder: (_, mode, _) => MaterialApp.router(
+              theme: AppTheme.lightTheme,
+              darkTheme: AppTheme.darkTheme,
+              themeMode: mode,
+              routerConfig: router,
+            ),
+          ),
         ),
       );
       await tester.pumpAndSettle();
@@ -187,15 +198,48 @@ void main() {
         'keyboard draft',
         () async => writes++,
       );
-      await tester.pump();
+      var failSave = true;
+      activeDrafts.stage(
+        (itemId: '1', subItemId: '1', field: 'profitMargin'),
+        '20',
+        () async {
+          if (failSave) throw StateError('Write failed');
+        },
+      );
+      mode.value = ThemeMode.light;
+      await tester.pumpAndSettle();
+      expect(Theme.of(tester.element(save)).brightness, Brightness.light);
+      expect(tester.element(save).read<PricingDrafts>(), same(activeDrafts));
+      expect(tester.widget<FilledButton>(save).onPressed, isNotNull);
+
       final modifier = platform == TargetPlatform.macOS
           ? LogicalKeyboardKey.metaLeft
           : LogicalKeyboardKey.controlLeft;
-      await tester.sendKeyDownEvent(modifier);
-      await tester.sendKeyEvent(LogicalKeyboardKey.keyS);
-      await tester.sendKeyUpEvent(modifier);
+      Future<void> pressSaveShortcut() async {
+        await tester.sendKeyDownEvent(modifier);
+        await tester.sendKeyEvent(LogicalKeyboardKey.keyS);
+        await tester.sendKeyUpEvent(modifier);
+        await tester.pumpAndSettle();
+      }
+
+      await pressSaveShortcut();
+      expect(writes, 1);
+      expect(find.byIcon(Icons.error_outline), findsOneWidget);
+      expect(tester.widget<FilledButton>(save).onPressed, isNotNull);
+
+      ScaffoldMessenger.of(tester.element(save)).removeCurrentSnackBar();
+      failSave = false;
+      await tester.tap(save);
       await tester.pumpAndSettle();
       expect(writes, 1);
+      expect(find.text('تم حفظ التعديلات'), findsOneWidget);
+      expect(
+        find.descendant(
+          of: find.byType(SnackBar),
+          matching: find.byIcon(Icons.check_circle_outline),
+        ),
+        findsOneWidget,
+      );
       expect(tester.widget<FilledButton>(save).onPressed, isNull);
 
       await tester.tap(find.byTooltip('رجوع'));

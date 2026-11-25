@@ -7,7 +7,8 @@ import '../../../tasks/domain/enums/task_status.dart';
 import '../../../tasks/domain/enums/task_type.dart';
 import '../widgets/appointment_widgets.dart';
 
-Color ganttTaskColor(TaskEntity task) => task.status.color;
+Color ganttTaskColor(BuildContext context, TaskEntity task) =>
+    task.status.color(context);
 
 double _workdayOffset(
   DateTime dateTime,
@@ -68,16 +69,20 @@ class _DraftTaskChipContent extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
-        color: isDragging ? AppColors.cardBackground : AppColors.surfaceColor,
+        color: isDragging
+            ? AppColors.of(context).cardBackground
+            : AppColors.of(context).surfaceColor,
         borderRadius: BorderRadius.circular(8),
         border: Border.all(
-          color: isDragging ? AppColors.primary : AppColors.border,
+          color: isDragging
+              ? AppColors.of(context).primary
+              : AppColors.of(context).border,
           width: isDragging ? 2 : 1,
         ),
         boxShadow: isDragging
             ? [
                 BoxShadow(
-                  color: AppColors.primary.withValues(alpha: 0.3),
+                  color: AppColors.of(context).primary.withValues(alpha: 0.3),
                   blurRadius: 12,
                 ),
               ]
@@ -86,7 +91,11 @@ class _DraftTaskChipContent extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(task.taskType.icon, size: 14, color: task.taskType.color),
+          Icon(
+            task.taskType.icon,
+            size: 14,
+            color: task.taskType.color(context),
+          ),
           const SizedBox(width: 6),
           ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 150),
@@ -95,7 +104,9 @@ class _DraftTaskChipContent extends StatelessWidget {
               style: TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.w500,
-                color: isDragging ? AppColors.primary : AppColors.textPrimary,
+                color: isDragging
+                    ? AppColors.of(context).primary
+                    : AppColors.of(context).textPrimary,
               ),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
@@ -106,12 +117,15 @@ class _DraftTaskChipContent extends StatelessWidget {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
               decoration: BoxDecoration(
-                color: AppColors.primary.withValues(alpha: 0.1),
+                color: AppColors.of(context).primary.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(4),
               ),
               child: Text(
                 task.projectName!,
-                style: TextStyle(fontSize: 10, color: AppColors.primary),
+                style: TextStyle(
+                  fontSize: 10,
+                  color: AppColors.of(context).primary,
+                ),
               ),
             ),
           ],
@@ -119,7 +133,9 @@ class _DraftTaskChipContent extends StatelessWidget {
           Icon(
             Icons.drag_indicator,
             size: 14,
-            color: isDragging ? AppColors.primary : AppColors.textMuted,
+            color: isDragging
+                ? AppColors.of(context).primary
+                : AppColors.of(context).textMuted,
           ),
           if (!isDragging && onDelete != null) ...[
             const SizedBox(width: 4),
@@ -131,7 +147,7 @@ class _DraftTaskChipContent extends StatelessWidget {
               padding: EdgeInsets.zero,
               constraints: const BoxConstraints(minWidth: 24, minHeight: 24),
               style: IconButton.styleFrom(
-                foregroundColor: AppColors.statusDelayed,
+                foregroundColor: AppColors.of(context).statusDelayed,
               ),
             ),
           ],
@@ -437,15 +453,21 @@ class GanttBarsForEmployee extends StatelessWidget {
                       return Container(
                         decoration: BoxDecoration(
                           color: hovering
-                              ? AppColors.primary.withValues(alpha: 0.2)
+                              ? AppColors.of(
+                                  context,
+                                ).primary.withValues(alpha: 0.2)
                               : (today
-                                    ? AppColors.primary.withValues(alpha: 0.05)
+                                    ? AppColors.of(
+                                        context,
+                                      ).primary.withValues(alpha: 0.05)
                                     : null),
                           border: Border(
                             left: BorderSide(
                               color: weekStart
-                                  ? AppColors.primary.withValues(alpha: 0.3)
-                                  : AppColors.border,
+                                  ? AppColors.of(
+                                      context,
+                                    ).primary.withValues(alpha: 0.3)
+                                  : AppColors.of(context).border,
                               width: weekStart ? 2 : 1,
                             ),
                           ),
@@ -454,8 +476,8 @@ class GanttBarsForEmployee extends StatelessWidget {
                             ? Center(
                                 child: Container(
                                   padding: const EdgeInsets.all(4),
-                                  decoration: const BoxDecoration(
-                                    color: AppColors.primary,
+                                  decoration: BoxDecoration(
+                                    color: AppColors.of(context).primary,
                                     shape: BoxShape.circle,
                                   ),
                                   child: const Icon(
@@ -557,7 +579,7 @@ class _GanttResizableTaskBarState extends State<GanttResizableTaskBar> {
   static const double _handleWidth = 8.0;
   static const double _minBarWidth = 20.0;
 
-  Color get _color => ganttTaskColor(widget.task);
+  Color get _color => ganttTaskColor(context, widget.task);
 
   @override
   Widget build(BuildContext context) {

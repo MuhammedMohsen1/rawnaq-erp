@@ -19,15 +19,15 @@ class MyTaskCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final color = task.taskType == TaskType.generalTask
-        ? TaskType.generalTask.color
-        : task.status.color;
+        ? TaskType.generalTask.color(context)
+        : task.status.color(context);
 
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.cardBackground,
+        color: AppColors.of(context).cardBackground,
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: AppColors.border),
+        border: Border.all(color: AppColors.of(context).border),
       ),
       child: Row(
         children: [
@@ -48,7 +48,7 @@ class MyTaskCard extends StatelessWidget {
               children: [
                 Text(
                   task.name,
-                  style: AppTextStyles.tableCellBold,
+                  style: AppTextStyles.of(context).tableCellBold,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -121,11 +121,13 @@ class _TaskMeta extends StatelessWidget {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(icon, size: 14, color: AppColors.textMuted),
+        Icon(icon, size: 14, color: AppColors.of(context).textMuted),
         const SizedBox(width: 4),
         Text(
           text,
-          style: AppTextStyles.caption.copyWith(color: AppColors.textSecondary),
+          style: AppTextStyles.of(
+            context,
+          ).caption.copyWith(color: AppColors.of(context).textSecondary),
         ),
       ],
     );
@@ -142,7 +144,7 @@ class _TaskStatusMenu extends StatelessWidget {
   Widget build(BuildContext context) {
     return PopupMenuButton<TaskStatus>(
       tooltip: 'تحديث الحالة',
-      color: AppColors.cardBackground,
+      color: AppColors.of(context).cardBackground,
       onSelected: onSelected,
       itemBuilder: (context) =>
           [TaskStatus.waiting, TaskStatus.inProgress, TaskStatus.completed].map(
@@ -155,7 +157,7 @@ class _TaskStatusMenu extends StatelessWidget {
                       width: 10,
                       height: 10,
                       decoration: BoxDecoration(
-                        color: status.color,
+                        color: status.color(context),
                         borderRadius: BorderRadius.circular(3),
                       ),
                     ),
@@ -169,14 +171,16 @@ class _TaskStatusMenu extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
         decoration: BoxDecoration(
-          color: task.status.color.withValues(alpha: 0.14),
+          color: task.status.color(context).withValues(alpha: 0.14),
           borderRadius: BorderRadius.circular(6),
-          border: Border.all(color: task.status.color.withValues(alpha: 0.3)),
+          border: Border.all(
+            color: task.status.color(context).withValues(alpha: 0.3),
+          ),
         ),
         child: Text(
           task.status.arabicName,
           style: TextStyle(
-            color: task.status.color,
+            color: task.status.color(context),
             fontSize: 12,
             fontWeight: FontWeight.w600,
           ),

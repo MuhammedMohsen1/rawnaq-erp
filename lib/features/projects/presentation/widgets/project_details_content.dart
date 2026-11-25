@@ -1,3 +1,4 @@
+import 'package:rawnaq/core/widgets/app_toast.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -174,7 +175,8 @@ class _LoadedContent extends StatelessWidget {
                 : () => _addNewExpense(context),
             onLoadMore: () {
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
+                AppToast.build(
+                  tone: ToastTone.info,
                   duration: const Duration(seconds: 2),
                   content: Text('تحميل المزيد - قريباً'),
                 ),
@@ -217,7 +219,8 @@ class _LoadedContent extends StatelessWidget {
 
     if (filePaths.isEmpty && fileBytes.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
+        AppToast.build(
+          tone: ToastTone.error,
           duration: const Duration(seconds: 2),
           content: Text('تعذر قراءة الملفات المحددة'),
         ),
@@ -234,7 +237,8 @@ class _LoadedContent extends StatelessWidget {
     final state = context.read<ProjectFinancialCubit>().state;
     if (state is ProjectFinancialLoaded) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
+        AppToast.build(
+          tone: ToastTone.success,
           duration: const Duration(seconds: 2),
           content: Text('تم رفع المرفقات بنجاح'),
         ),
@@ -272,7 +276,8 @@ class _LoadedContent extends StatelessWidget {
     final state = context.read<ProjectFinancialCubit>().state;
     if (state is ProjectFinancialLoaded) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
+        AppToast.build(
+          tone: ToastTone.success,
           duration: const Duration(seconds: 2),
           content: Text('تم حذف المرفق'),
         ),
@@ -325,7 +330,8 @@ class _LoadedContent extends StatelessWidget {
       onConfirm: () {
         context.read<ProjectFinancialCubit>().deleteTransaction(transaction.id);
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
+          AppToast.build(
+            tone: ToastTone.success,
             duration: const Duration(seconds: 2),
             content: Text('تم حذف المعاملة'),
           ),
@@ -405,7 +411,8 @@ class _ContractActions extends StatelessWidget {
       );
       if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
+        AppToast.build(
+          tone: ToastTone.success,
           duration: const Duration(seconds: 2),
           content: Text(
             project.type == ProjectType.design
@@ -417,7 +424,8 @@ class _ContractActions extends StatelessWidget {
     } catch (e) {
       if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
+        AppToast.build(
+          tone: ToastTone.error,
           duration: const Duration(seconds: 2),
           content: Text('فشل تأكيد العقد: $e'),
         ),
@@ -484,11 +492,15 @@ class _ErrorView extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(Icons.error_outline, size: 64, color: AppColors.error),
+          Icon(
+            Icons.error_outline,
+            size: 64,
+            color: AppColors.of(context).error,
+          ),
           const SizedBox(height: 16),
           Text(
             message,
-            style: const TextStyle(color: AppColors.textSecondary),
+            style: TextStyle(color: AppColors.of(context).textSecondary),
             textAlign: TextAlign.center,
           ),
         ],
@@ -502,15 +514,19 @@ class _NotFoundView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Center(
+    return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.search_off, size: 64, color: AppColors.textMuted),
+          Icon(
+            Icons.search_off,
+            size: 64,
+            color: AppColors.of(context).textMuted,
+          ),
           SizedBox(height: 16),
           Text(
             'المشروع غير موجود',
-            style: TextStyle(color: AppColors.textSecondary),
+            style: TextStyle(color: AppColors.of(context).textSecondary),
           ),
         ],
       ),

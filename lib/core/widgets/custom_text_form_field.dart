@@ -89,17 +89,17 @@ class _CustomTextFormFieldState extends State<CustomTextFormField> {
               text: widget.label!,
               style:
                   widget.labelStyle ??
-                  const TextStyle(
+                  TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w500,
-                    color: AppColors.textPrimary,
+                    color: AppColors.of(context).textPrimary,
                   ),
               children: [
                 if (widget.required)
-                  const TextSpan(
+                  TextSpan(
                     text: ' *',
                     style: TextStyle(
-                      color: AppColors.error,
+                      color: AppColors.of(context).error,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
@@ -130,21 +130,25 @@ class _CustomTextFormFieldState extends State<CustomTextFormField> {
           focusNode: widget.focusNode,
           style:
               widget.textStyle ??
-              const TextStyle(fontSize: 16, color: AppColors.textPrimary),
+              TextStyle(fontSize: 16, color: AppColors.of(context).textPrimary),
           decoration: InputDecoration(
             hintText: widget.hint,
             hintStyle:
                 widget.hintStyle ??
-                const TextStyle(fontSize: 16, color: AppColors.textSecondary),
+                TextStyle(
+                  fontSize: 16,
+                  color: AppColors.of(context).textSecondary,
+                ),
             helperText: widget.helperText,
             filled: true,
-            fillColor: widget.fillColor ?? AppColors.white,
+            fillColor:
+                widget.fillColor ?? AppColors.of(context).inputBackground,
             prefixIcon: widget.prefixIcon,
             suffixIcon: widget.obscureText
                 ? IconButton(
                     icon: Icon(
                       _obscureText ? Icons.visibility : Icons.visibility_off,
-                      color: AppColors.textSecondary,
+                      color: AppColors.of(context).textSecondary,
                     ),
                     onPressed: () {
                       setState(() {
@@ -158,27 +162,33 @@ class _CustomTextFormFieldState extends State<CustomTextFormField> {
                 const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
             border: OutlineInputBorder(
               borderRadius: widget.borderRadius ?? BorderRadius.circular(12),
-              borderSide: const BorderSide(color: AppColors.border),
+              borderSide: BorderSide(color: AppColors.of(context).border),
             ),
             enabledBorder: OutlineInputBorder(
               borderRadius: widget.borderRadius ?? BorderRadius.circular(12),
-              borderSide: const BorderSide(color: AppColors.border),
+              borderSide: BorderSide(color: AppColors.of(context).border),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: widget.borderRadius ?? BorderRadius.circular(12),
-              borderSide: const BorderSide(color: AppColors.primary, width: 2),
+              borderSide: BorderSide(
+                color: AppColors.of(context).primary,
+                width: 2,
+              ),
             ),
             errorBorder: OutlineInputBorder(
               borderRadius: widget.borderRadius ?? BorderRadius.circular(12),
-              borderSide: const BorderSide(color: AppColors.error),
+              borderSide: BorderSide(color: AppColors.of(context).error),
             ),
             focusedErrorBorder: OutlineInputBorder(
               borderRadius: widget.borderRadius ?? BorderRadius.circular(12),
-              borderSide: const BorderSide(color: AppColors.error, width: 2),
+              borderSide: BorderSide(
+                color: AppColors.of(context).error,
+                width: 2,
+              ),
             ),
             disabledBorder: OutlineInputBorder(
               borderRadius: widget.borderRadius ?? BorderRadius.circular(12),
-              borderSide: const BorderSide(color: AppColors.lightGrey),
+              borderSide: BorderSide(color: AppColors.of(context).lightGrey),
             ),
           ),
         ),

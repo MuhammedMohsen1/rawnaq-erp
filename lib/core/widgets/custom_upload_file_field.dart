@@ -71,17 +71,17 @@ class _CustomUploadFileFieldState extends State<CustomUploadFileField> {
               text: widget.label!,
               style:
                   widget.labelStyle ??
-                  const TextStyle(
+                  TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w500,
-                    color: AppColors.textPrimary,
+                    color: AppColors.of(context).textPrimary,
                   ),
               children: [
                 if (widget.required)
-                  const TextSpan(
+                  TextSpan(
                     text: ' *',
                     style: TextStyle(
-                      color: AppColors.error,
+                      color: AppColors.of(context).error,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
@@ -101,37 +101,59 @@ class _CustomUploadFileFieldState extends State<CustomUploadFileField> {
             hintText: widget.hint ?? 'Enter image URL',
             hintStyle:
                 widget.hintStyle ??
-                const TextStyle(fontSize: 16, color: AppColors.textSecondary),
-            prefixIcon: const Icon(Icons.image, color: AppColors.textSecondary),
-            fillColor: widget.fillColor ?? AppColors.white,
+                TextStyle(
+                  fontSize: 16,
+                  color: AppColors.of(context).textSecondary,
+                ),
+            prefixIcon: Icon(
+              Icons.image,
+              color: AppColors.of(context).textSecondary,
+            ),
+            fillColor:
+                widget.fillColor ?? AppColors.of(context).inputBackground,
             filled: true,
             contentPadding:
                 widget.contentPadding ??
                 const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
             border: OutlineInputBorder(
               borderRadius: widget.borderRadius ?? BorderRadius.circular(12),
-              borderSide: const BorderSide(color: AppColors.border, width: 1),
+              borderSide: BorderSide(
+                color: AppColors.of(context).border,
+                width: 1,
+              ),
             ),
             enabledBorder: OutlineInputBorder(
               borderRadius: widget.borderRadius ?? BorderRadius.circular(12),
-              borderSide: const BorderSide(color: AppColors.border, width: 1),
+              borderSide: BorderSide(
+                color: AppColors.of(context).border,
+                width: 1,
+              ),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: widget.borderRadius ?? BorderRadius.circular(12),
-              borderSide: const BorderSide(color: AppColors.primary, width: 2),
+              borderSide: BorderSide(
+                color: AppColors.of(context).primary,
+                width: 2,
+              ),
             ),
             errorBorder: OutlineInputBorder(
               borderRadius: widget.borderRadius ?? BorderRadius.circular(12),
-              borderSide: const BorderSide(color: AppColors.error, width: 2),
+              borderSide: BorderSide(
+                color: AppColors.of(context).error,
+                width: 2,
+              ),
             ),
             focusedErrorBorder: OutlineInputBorder(
               borderRadius: widget.borderRadius ?? BorderRadius.circular(12),
-              borderSide: const BorderSide(color: AppColors.error, width: 2),
+              borderSide: BorderSide(
+                color: AppColors.of(context).error,
+                width: 2,
+              ),
             ),
             disabledBorder: OutlineInputBorder(
               borderRadius: widget.borderRadius ?? BorderRadius.circular(12),
-              borderSide: const BorderSide(
-                color: AppColors.textSecondary,
+              borderSide: BorderSide(
+                color: AppColors.of(context).textSecondary,
                 width: 1,
               ),
             ),
@@ -142,8 +164,8 @@ class _CustomUploadFileFieldState extends State<CustomUploadFileField> {
             padding: const EdgeInsets.only(top: 8, left: 12),
             child: Text(
               widget.helperText!,
-              style: const TextStyle(
-                color: AppColors.textSecondary,
+              style: TextStyle(
+                color: AppColors.of(context).textSecondary,
                 fontSize: 12,
               ),
             ),
